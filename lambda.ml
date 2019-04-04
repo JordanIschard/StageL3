@@ -222,7 +222,3 @@ module LambdaCalcul =
 
   end
 
-(* A faire
- parser
- *)
-open LambdaCalcul;;
