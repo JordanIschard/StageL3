@@ -26,17 +26,18 @@ module ISWIM =
       [] -> ""
       | h::t -> h^" "^(concat_string_liste t)
 
-    (* Affiche une expression *)
-    let afficherExpr expression =
-      let rec aux expr =
-        match expr with 
+    let rec string_of_expr expr =
+      match expr with 
         Var var -> var
         | Const const -> string_of_int const
-        | App (expr1,expr2) -> "("^(aux expr1)^" "^(aux expr2)^")"
-        | Abs (abs,expr) -> "(lambda "^abs^"."^(aux expr)^")"
-        | Op (op,liste_expr) -> "("^op^" "^(concat_string_liste (List.map aux  liste_expr))^")"
-      in Printf.printf "%s\n" (aux expression) 
+        | App (expr1,expr2) -> "("^(string_of_expr expr1)^" "^(string_of_expr expr2)^")"
+        | Abs (abs,expr) -> "(lambda "^abs^"."^(string_of_expr expr)^")"
+        | Op (op,liste_expr) -> "("^op^" "^(concat_string_liste (List.map string_of_expr  liste_expr))^")"
 
+    (* Affiche une expression *)
+    let afficherExpr expression =
+      Printf.printf "%s\n" (string_of_expr expression) 
+    
     (* Affiche une liste de string *)
     let rec afficherList liste =
       match liste with
