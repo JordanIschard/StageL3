@@ -1,5 +1,6 @@
 open LangISWIM.ISWIM;;
 open Cc.CCMachine ;;
+open Scc.SCCMachine ;;
 
 
 (* Test *)
@@ -29,5 +30,5 @@ Printf.printf "Réduction \n" ;;
 let res4 = n_red expression4 ;;
 
 Printf.printf "Test de la MachineCC\n" ;;
-lancer expression4 ;;
-lancer expression5 ;;
+lancerCC expression5 ;;
+lancerCC expression4 ;;

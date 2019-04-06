@@ -1,5 +1,6 @@
 open Printf ;;
 
+(* Module qui implémente le langage ISWIM *)
 module ISWIM =
   struct
 
