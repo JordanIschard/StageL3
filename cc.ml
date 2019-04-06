@@ -11,17 +11,21 @@ module CCMachine =
 
     (**** Fonctions utiles ****)
 
+    (* Convertit une expression et une liste d'expression en chaîne de caractère *)
     let string_of_cc cs c =
       " ("^(string_of_expr cs )^" ,[ "^(concat_string_liste(List.map string_of_expr c ))^"])\n"
 
+    (* Affiche une étape de la machine CC *)
     let afficherCC cs c =
       Printf.printf "MachineCC : %s" (string_of_cc cs c)
 
+    (* Donne le 1er élément non variable d'une liste d'expression *)
     let rec premNonVarListe liste_expr =
       match liste_expr with
       [] -> raise FormatOpErreur
       | h::t -> if (estVariable h) then premNonVarListe t else h
 
+    (* Remplace le 1er élément non vrariable d'une liste d'expression par un Trou *)
     let trouPremNonVarListe liste_expr =
       let rec aux pas_pris liste =
         match liste with 
@@ -33,6 +37,7 @@ module CCMachine =
                           else h::(aux pas_pris t)
     in aux true liste_expr
 
+    (* Remplace le 1er Trou de la liste d'expression par l'élément donné *)
     let rec rempTrou elem liste_expr =
       let rec aux pasChanger liste_expr =
         match liste_expr with
@@ -98,6 +103,7 @@ module CCMachine =
     (* Lance et affiche le résultat de l'expression *)
     let lancerCC expression =
       Printf.printf "Le résultat est %s \n" (string_of_expr (machineCC expression []))
+      
   end
 
                                                     

@@ -1,13 +1,15 @@
 open Cc.CCMachine ;;
 open LangISWIM.ISWIM ;;
 
+(* Module qui implémente la machine SCC *)
 module SCCMachine =
   struct
 
     (**** Fonctions utiles ****)
 
-    let afficherCC cs c =
-      Printf.printf "MachineCC : %s" (string_of_cc cs c)
+    (* Affiche une étape de la machine SCC *)
+    let afficherSCC cs c =
+      Printf.printf "MachineSCC : %s" (string_of_cc cs c)
 
     (**** Machine SCC ****)  
 
@@ -26,7 +28,7 @@ module SCCMachine =
 
           | _ -> raise EtatInconnu
       in
-      afficherCC control_string context ;
+      afficherSCC control_string context ;
 
       match (control_string,context) with 
 

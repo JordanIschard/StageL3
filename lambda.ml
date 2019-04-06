@@ -2,6 +2,7 @@ open Printf;;
 open List ;;
 open String ;;
 
+(* Module qui implémente les lambda-calculs *)
 module LambdaCalcul =
   struct
 
@@ -27,6 +28,7 @@ module LambdaCalcul =
 
     (********************* Fonction pratiques ***************************)
 
+    (* Convertit un terme en chaîne de caractère *)
     let rec string_of_term terme =
       match terme with 
         Var_term var -> var
@@ -229,7 +231,7 @@ module LambdaCalcul =
                    (* On a rien trouvé d'intéressant donc on ne réduit pas *)
                       | _ -> Abs_term(el,(eta_red t))
 
-
+    (* Applique une réduction tant que c'est possible *)
     let rec n_red terme =
       let red = eta_red (beta_reduction_term terme) in
       if (equals_terme terme red) then red else n_red red

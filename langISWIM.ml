@@ -27,6 +27,7 @@ module ISWIM =
       [] -> ""
       | h::t -> h^" "^(concat_string_liste t)
 
+    (* Convertit une expression en chaîne de caractère *)
     let rec string_of_expr expr =
       match expr with 
         Var var -> var
@@ -300,6 +301,7 @@ module ISWIM =
           alpha_eq liste_pair expression1 expression2
         with EquivalenceImpossible -> false 
 
+      (* Réduit en forme normale si c'est possible*)
       let rec n_red expression =
         (afficherExpr expression);
         try let newExpr = (delta_red (beta_red expression)) in
