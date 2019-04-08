@@ -4,6 +4,7 @@ open Cc.CCMachine ;;
 open Scc.SCCMachine ;;
 open Ck.CKMachine ;;
 open Cek.CEKMachine ;;
+open Secd.SECDMachine ;;
 
 
 (* Test *)
@@ -100,3 +101,7 @@ Printf.printf "\n" ;;
 
 lancerCEK expression4 ;;
 Printf.printf "\n" ;;
+
+Printf.printf " Test de la MachineSECD\n\n" ;;
+
+Printf.printf "%s\n" (secdLanguage_of_exprISWIM expression5) ;;
