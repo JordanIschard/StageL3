@@ -80,5 +80,5 @@ Printf.printf "\n" ;;
 lancerCK expression5 ;;
 Printf.printf "\n" ;;
 
-lancerSCC expression4 ;;
+lancerCK expression4 ;;
 Printf.printf "\n" ;;

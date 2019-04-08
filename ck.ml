@@ -2,8 +2,7 @@ open Cc.CCMachine ;;
 open Scc.SCCMachine ;;
 open LangISWIM.ISWIM ;;
 
-(* La machine ck est une paire comportant une expression d'un côté et un etat une expression et un triplet de l'autre *)
-
+(* Module qui implémente la machine CK *)
 module CKMachine =
   struct
 
@@ -14,10 +13,6 @@ module CKMachine =
       | Arg of exprISWIM * k
       | Opd of (exprISWIM list * string) * (exprISWIM list) * k
       | MT
-
-    (**** Exception ****)
-
-    exception ContextInconnu 
 
     (**** Fonctions utiles ****)
 
@@ -48,11 +43,13 @@ module CKMachine =
     let afficherCK expression registre =
         Printf.printf "MachineCK : %s" (string_of_ck expression registre)
 
+    (* Vérifie si une liste est vide *)
     let estVide liste =
       match liste with 
         [] -> true
         | _ -> false
 
+    (* Retourne la liste privée de son 1er élément *)
     let enleverTete liste =
       match liste with
       [] -> []
@@ -60,7 +57,9 @@ module CKMachine =
 
     (**** Machine CK ****)
 
+    (* Applique les règles de la machine CK en affichant les étapes *)
     let rec machineCK expression registre = 
+
       let testRegistre registre expr =
         match registre with
 
@@ -75,7 +74,7 @@ module CKMachine =
                 begin
                   let newliste = List.append [expr] liste_expr in
                   if (List.for_all estConst newliste)
-                    then machineCK (calcul op (convert_liste_expr_liste_int newliste)) mt
+                    then machineCK (calcul op (List. rev (convert_liste_expr_liste_int newliste))) mt
                     else raise EtatInconnu
                 end
 
@@ -115,6 +114,8 @@ module CKMachine =
       
       | ((Var var),registre) -> testRegistre registre (Var var)
 
+    
+    (* Lance et affiche le résultat de l'expression *)
     let lancerCK expression =
       Printf.printf "Le résultat est %s \n" (string_of_expr (machineCK expression MT))
 
