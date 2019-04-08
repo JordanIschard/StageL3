@@ -19,16 +19,20 @@ module CEKMachine =
       | MT_CEK
 
 
+    (**** Exception ****)
+
     exception AucuneSubPossible
 
     (**** Fonctions utiles ****)
 
+    (* Vérifie si le registre est vide *)
     let estMT_CEK mt =
       match mt with
         MT_CEK -> true
         | _ -> false
 
 
+    (* Convertit une clause en chaîne de caractère *)
     let rec string_of_clause clause =
       let string_of_env env =
         match env with
@@ -58,11 +62,13 @@ module CEKMachine =
     let afficherCEK expression registre =
         Printf.printf "MachineCEK : %s" (string_of_cek expression registre)
 
+    (* Convertit une expr en clause *)
     let rec clause_of_expr env liste =
       match liste with
         [] -> []
         | h::t -> (Clause(h,env))::(clause_of_expr env t)
 
+    (* Vérifie si une variable est dans l'environnement *)
     let rec estDansEnv env var =
       match env with
         [] -> false
@@ -71,11 +77,13 @@ module CEKMachine =
               then true
               else estDansEnv t var 
 
+    (* Ajoute une variable et sa substitution dans l'environnement *)
     let ajoutEnv env varARemp clauseDeRemp =
       if (estDansEnv env varARemp)
         then env
         else List.append env [(varARemp,clauseDeRemp)]
 
+    (* Substitue une variable par sa clause qui lui est assignée dans l'nevironnement *)
     let rec substitution var env =
       match env with
         [] -> raise AucuneSubPossible
@@ -84,11 +92,13 @@ module CEKMachine =
               then clause
               else substitution var t
 
+    (* Vérifie si une clause contient une constante *)
     let rec estConstClause clause =
       match clause with
         (Clause((Const const),env)) -> true
         | _ -> false
 
+    (* Convertit une liste de clause, contenant des constantes, en une liste d'entier *)
     let rec convert_liste_clause_liste_int liste =
       match liste with
         [] -> []
