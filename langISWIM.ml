@@ -33,7 +33,7 @@ module ISWIM =
         Var var -> var
         | Const const -> string_of_int const
         | App (expr1,expr2) -> "("^(string_of_expr expr1)^" "^(string_of_expr expr2)^")"
-        | Abs (abs,expr) -> "(lambda "^abs^"."^(string_of_expr expr)^")"
+        | Abs (abs,expr) -> "(lam "^abs^"."^(string_of_expr expr)^")"
         | Op (op,liste_expr) -> "("^op^" "^(concat_string_liste (List.map string_of_expr  liste_expr))^")"
 
     (* Affiche une expression *)
