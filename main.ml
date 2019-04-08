@@ -3,6 +3,7 @@ open LangISWIM.ISWIM;;
 open Cc.CCMachine ;;
 open Scc.SCCMachine ;;
 open Ck.CKMachine ;;
+open Cek.CEKMachine ;;
 
 
 (* Test *)
@@ -81,4 +82,21 @@ lancerCK expression5 ;;
 Printf.printf "\n" ;;
 
 lancerCK expression4 ;;
+Printf.printf "\n" ;;
+
+Printf.printf " Test de la MachineCEK\n\n" ;;
+
+let registreCEK  = Fun_CEK ((Clause((Abs("x",Var "x")),[])),MT_CEK) ;;
+let expressionCEK = Clause(Const 1,[]) ;;
+let clause = (Clause(Abs("x",Var "x"),[])) ;;
+
+Printf.printf "%s\n" (string_of_clause clause) ;;
+
+afficherCEK expressionCEK registreCEK ;;
+Printf.printf "\n" ;;
+
+lancerCEK expression5 ;;
+Printf.printf "\n" ;;
+
+lancerCEK expression4 ;;
 Printf.printf "\n" ;;
