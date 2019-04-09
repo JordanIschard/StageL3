@@ -1,10 +1,13 @@
 open Printf ;;
+open String ;;
+open List ;;
 
 (* Module qui implémente le langage ISWIM *)
 module ISWIM =
   struct
 
     (**** Types ****)
+    
     type operateur = 
       Add1 
       | Sub1
@@ -21,11 +24,19 @@ module ISWIM =
       | Op of operateur * exprISWIM list
       | Const of int
 
+
+
+
+
     (***** Exception *****)
 
     exception EquivalenceImpossible
     exception FormatOpErreur
     exception NotConstErreur
+
+
+
+
 
     (**** Affichage ****)
 
@@ -45,13 +56,6 @@ module ISWIM =
       | Sub -> "-"
       | Mult -> "*"
       | Div -> "/"
-
-    (* Donne le nombre d'opérande requis pour utilisé l'opérateur *)
-    let getNbrOperande op =
-      match op with
-      Add1 | Sub1 | IsZero -> 1
-      | Add | Sub | Mult | Div -> 2
-
     
     (* Convertit une expression en chaîne de caractère *)
     let rec string_of_expr expr =
@@ -60,10 +64,10 @@ module ISWIM =
         | Const const -> string_of_int const
         | App (expr1,expr2) -> "("^(string_of_expr expr1)^" "^(string_of_expr expr2)^")"
         | Abs (abs,expr) -> "(lam "^abs^"."^(string_of_expr expr)^")"
-        | Op (op,liste_expr) -> "("^(string_of_operateur op)^" "^(concat_string_liste (List.map string_of_expr  liste_expr))^")"
+        | Op (op,liste_expr) -> "("^(string_of_operateur op)^" "^(concat_string_liste ( map string_of_expr  liste_expr))^")"
 
     (* Affiche une expression *)
-    let afficherExpr expression = Printf.printf "%s\n" (string_of_expr expression) 
+    let afficherExpr expression = printf "%s\n" (string_of_expr expression) 
     
     (* Affiche une liste de pair de string *)
     let rec afficherPairList liste =
@@ -71,16 +75,26 @@ module ISWIM =
       [] -> printf "\n"
       | (e1,e2)::t -> printf " (%s,%s)  " e1 e2 ; afficherPairList t
     
+
+
+
+
     (**** Fonctions utiles ****)
+
+    (* Donne le nombre d'opérande requis pour utilisé l'opérateur *)
+    let getNbrOperande op =
+      match op with
+      Add1 | Sub1 | IsZero -> 1
+      | Add | Sub | Mult | Div -> 2
 
     (* Donne l'ensemble des variables *)
     let rec liste_variable expression =
       match expression with
       Var var -> [var]
       | Abs(abs,expr) -> liste_variable expr
-      | App(expr1,expr2) -> List.append (liste_variable expr1) (liste_variable expr2)
+      | App(expr1,expr2) ->  append (liste_variable expr1) (liste_variable expr2)
       | Const const -> []
-      | Op (op,liste_expr) -> List.flatten(List.map liste_variable liste_expr)
+      | Op (op,liste_expr) ->  flatten( map liste_variable liste_expr)
 
 
     (* Donne l'ensemble des variables liées de l'expression *)
@@ -88,9 +102,9 @@ module ISWIM =
       match expression with
         Var var -> []
        | Abs (el,expr) -> el::lie expr
-       | App (expr1,expr2) -> List.append (lie expr1) (lie expr2)
+       | App (expr1,expr2) ->  append (lie expr1) (lie expr2)
        | Const const -> []
-       | Op (op,liste_expr) -> List.flatten(List.map lie liste_expr)
+       | Op (op,liste_expr) ->  flatten( map lie liste_expr)
 
     
     (* Donne l'ensemble des variables libres du terme *)
@@ -98,11 +112,11 @@ module ISWIM =
       let varlie = lie expression in
       let rec aux expr =
         match expr with
-          Var var -> if (List.mem var varlie) then [] else [var]
+          Var var -> if ( mem var varlie) then [] else [var]
          | Abs (el,expr) -> aux expr
-         | App (expr1,expr2) -> List.append (aux expr1) (aux expr2)
+         | App (expr1,expr2) ->  append (aux expr1) (aux expr2)
          | Const const -> []
-         | Op (op,liste_expr) -> List.flatten(List.map aux liste_expr)
+         | Op (op,liste_expr) ->  flatten( map aux liste_expr)
       in aux expression
 
       (* Vérifie si l'expression est une variable *)
@@ -131,12 +145,16 @@ module ISWIM =
         match liste with
         [] -> false
         | (h1,h2)::t -> 
-          if (String.equal elem h1) 
+          if ( equal elem h1) 
             then true 
-            else if (String.equal elem h2) 
+            else if ( equal elem h2) 
                     then true
                     else estDansUnCouple elem t
     
+
+
+
+
     (**** La réduction ****)
 
     (* Donne un nouveau nom de var (À améliorer pour éviter la liste finie) *)
@@ -145,7 +163,7 @@ module ISWIM =
       let rec aux liste_interdit variables =
         match variables with
         |[] -> "lkihgoihoi"
-        |h::t -> if (List.mem h liste_interdit)
+        |h::t -> if ( mem h liste_interdit)
                  then aux liste_interdit t
                  else h
       in aux liste_interdit variables
@@ -157,8 +175,8 @@ module ISWIM =
       let librevarDeRemp = libre varDeRemp
       in
       let rec aux abs =
-        if((List.mem abs libreexpr) || (List.mem abs librevarDeRemp))
-          then aux (renommage (List.append libreexpr librevarDeRemp))
+        if(( mem abs libreexpr) || ( mem abs librevarDeRemp))
+          then aux (renommage ( append libreexpr librevarDeRemp))
           else abs
       in aux abs
 
@@ -168,16 +186,16 @@ module ISWIM =
       Const const -> Const const
 
       | Var var -> 
-        if (String.equal varARemp var)
+        if ( equal varARemp var)
           then varDeRemp
           else Var var
 
       | App(expr1,expr2) -> App((reduction varARemp expr1 varDeRemp),(reduction varARemp expr2 varDeRemp))
 
-      | Op(op,liste_expr) -> Op(op,(List.map (fun x -> reduction varARemp x varDeRemp) liste_expr))
+      | Op(op,liste_expr) -> Op(op,( map (fun x -> reduction varARemp x varDeRemp) liste_expr))
 
       | Abs(abs,expr) -> 
-        if (String.equal abs varARemp) 
+        if ( equal abs varARemp) 
           then Abs(abs,expr)
           else let newX = (renommer abs expr varARemp varDeRemp) in
             Abs(newX,(reduction varARemp (reduction abs expr (Var newX)) varDeRemp))
@@ -200,7 +218,7 @@ module ISWIM =
 
       | Abs(abs,expr) -> Abs(abs,(beta_red expr))
 
-      | Op(op,liste_expr) -> Op(op,(List.map beta_red liste_expr))
+      | Op(op,liste_expr) -> Op(op,( map beta_red liste_expr))
 
       (* 
         Si tous les éléments de l'opération sont des constantes,
@@ -238,11 +256,11 @@ module ISWIM =
         | Abs(abs,expr) -> Abs(abs,(delta_red expr))
 
         | Op(op, liste_expr) -> 
-          if (List.for_all estConst liste_expr) 
+          if ( for_all estConst liste_expr) 
             then 
               try (calcul op (convert_liste_expr_liste_int liste_expr))
-              with  FormatOpErreur -> Printf.printf "Nombre d'élément invalide\n" ; Op(op, liste_expr)
-            else Op(op,(List.map delta_red liste_expr))
+              with  FormatOpErreur -> printf "Nombre d'élément invalide\n" ; Op(op, liste_expr)
+            else Op(op,( map delta_red liste_expr))
 
       (* 
         Créer une liste de pair qui correspond au variable lié 
@@ -255,15 +273,15 @@ module ISWIM =
         
         | (Const const1,Const const2) -> []
 
-        | (App(expr1 ,expr2),App(expr3,expr4)) -> List.append (pre_alpha_eq expr1 expr3) (pre_alpha_eq expr2 expr4)
+        | (App(expr1 ,expr2),App(expr3,expr4)) ->  append (pre_alpha_eq expr1 expr3) (pre_alpha_eq expr2 expr4)
 
-        | (Abs(abs1,expr1),Abs(abs2,expr2)) -> List.append [(abs1,abs2)] (pre_alpha_eq expr1 expr2)
+        | (Abs(abs1,expr1),Abs(abs2,expr2)) ->  append [(abs1,abs2)] (pre_alpha_eq expr1 expr2)
 
         | (Op(op1,liste_expr1),Op(op2,liste_expr2)) -> 
           begin
             match (liste_expr1,liste_expr2) with
               ([],[]) -> []
-              | (h1::t1,h2::t2) -> List.append (pre_alpha_eq h1 h2) (pre_alpha_eq (Op(op1,t1)) (Op(op2,t2))) 
+              | (h1::t1,h2::t2) ->  append (pre_alpha_eq h1 h2) (pre_alpha_eq (Op(op1,t1)) (Op(op2,t2))) 
               | _ -> raise EquivalenceImpossible
           end
         | (_,_) -> raise EquivalenceImpossible
@@ -277,9 +295,7 @@ module ISWIM =
           
           | (Var var1 , Var var2) -> 
             if ((estDansUnCouple var1 liste_pair_lie) || (estDansUnCouple var2 liste_pair_lie)) 
-              then if (List.mem (var1,var2) liste_pair_lie)
-                    then true
-                    else false
+              then ( mem (var1,var2) liste_pair_lie)
               else true
           
           | (App(expr1,expr2),App(expr3,expr4)) -> (aux expr1 expr3) && (aux expr2 expr4)
@@ -309,8 +325,6 @@ module ISWIM =
       let rec n_red expression =
         (afficherExpr expression);
         try let newExpr = (delta_red (beta_red expression)) in
-            if (equalExpr expression newExpr)
-              then newExpr
-              else n_red newExpr
-        with _ -> Printf.printf "Une erreur est survenue\n" ; Const 0
+            if (equalExpr expression newExpr) then newExpr else n_red newExpr
+        with _ -> printf "Une erreur est survenue\n" ; Const 0
   end

@@ -1,6 +1,7 @@
+open String ;;
+open Printf ;;
+open List ;;
 open Cc.CCMachine ;;
-open Scc.SCCMachine ;;
-open Ck.CKMachine ;;
 open Cek.CEKMachine ;;
 open LangISWIM.ISWIM ;;
 
@@ -35,7 +36,10 @@ module SECDMachine =
 
     type secd = MachineSECD of stack * env * control_string * dump
 
-    (**** Fonctions utiles ****)
+
+
+
+    (**** Affichage ****)
 
     (* Concatène une liste de chaîne de caractère en une seule chaîne de caractère *)
     let rec concat_liste_secd liste =
@@ -51,9 +55,9 @@ module SECDMachine =
             
         | (Var var) -> [Var_C var]
             
-        | (App(expr1,expr2)) -> List.append ( List.append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
+        | (App(expr1,expr2)) ->  append (  append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
             
-        | (Op(op,liste_expr)) -> List.append (List.flatten(List.map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
+        | (Op(op,liste_expr)) ->  append ( flatten( map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
             
         | (Abs(abs,expr)) -> [Pair(abs,(secdLanguage_of_exprISWIM expr))]
 
@@ -61,15 +65,15 @@ module SECDMachine =
     let rec string_of_control_string expression =
       match expression with
         [] -> ""
-       
+      
         | ((Const_C const)::t) -> (string_of_int const)^" "^(string_of_control_string t)
-       
+      
         | ((Var_C var)::t) -> var^" "^(string_of_control_string t)
-       
+      
         | ((Ap)::t) -> "ap "^(string_of_control_string t)
-       
+      
         | ((Pair(abs,liste_expr))::t) -> "("^abs^",("^(string_of_control_string liste_expr)^") "^(string_of_control_string t)
-       
+      
         | ((Prim(op))::t) -> "prim "^(string_of_operateur op)^" "^(string_of_control_string t)
 
     (* Convertit un environnement en chaîne de caractère *)
@@ -77,7 +81,7 @@ module SECDMachine =
       match env with
         [] -> ""
         | (Env(var,(control_string,env)))::t ->
-                     "["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_env env)^"]] , "^(string_of_env t)
+                    "["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_env env)^"]] , "^(string_of_env t)
 
     (* Convertit une pile en chaîne de caractère *)
     let rec string_of_stack stack =
@@ -90,23 +94,27 @@ module SECDMachine =
       match dump with 
         Vide_D -> ""
         | Save(stack,env,control_string,dump) -> "( "^(string_of_stack stack)^" , "^(string_of_env env)^" , "^(string_of_control_string control_string)^" , "^(string_of_dump dump)^" )"
-  
+
     (* Convertit une machine SECD en chaîne de caractère *)
     let rec string_of_secdMachine machine =
       match machine with
         MachineSECD(stack,env,control_string,dump) -> "( "^(string_of_stack stack)^" , "^(string_of_env env)^" , "^(string_of_control_string control_string)^" , "^(string_of_dump dump)^" )\n"
-    
+
     (* Affiche la machine SECD *)
     let afficherSECD machine = 
-      Printf.printf "MachineSECD : %s" (string_of_secdMachine machine)
+       printf "MachineSECD : %s" (string_of_secdMachine machine)
 
+
+
+
+    (**** Fonctions utiles ****)
 
     (* Substitue une variable à sa clause lié*)
     let rec substitution_secd x env =
       match env with
         [] -> raise AucuneSubPossible
         | (Env(var,(control_string,env)))::t -> 
-            if (String.equal x var)
+            if ( equal x var)
               then Clause_secd(control_string,env)
               else substitution_secd x t
 
@@ -124,11 +132,26 @@ module SECDMachine =
         | (h::t,nbr) -> nbrElemRetirer t (nbr - 1)
         | (_,_) -> raise FormatOpErreur
 
-    (* Ajoute une clause à l'nevironnement *)
+    (* Vérifie si une variable est dans l'environnement *)
+    let rec estDansEnvSECD env var =
+      match env with
+        [] -> false
+        | (Env(var1,(control_string,env)))::t -> 
+            if ( equal var1 var)
+              then true
+              else estDansEnvSECD t var 
+
+
+    (* Ajoute une clause à l'environnement *)
     let rec ajoutEnv_secd e1 varARemp clause =
-      match clause with
-      Clause_secd (control_string,env) ->  (Env(varARemp,(control_string,env)))::e1
+      if(estDansEnvSECD e1 varARemp)
+      then e1
+      else  match clause with
+              Clause_secd (control_string,env) ->  (Env(varARemp,(control_string,env)))::e1
     
+
+
+              
     (**** Machine SECD ****)
 
     (* Applique les règles de la machine SECD en affichant les étapes *)
@@ -152,7 +175,7 @@ module SECDMachine =
           begin
             let nbrOperande = getNbrOperande op in 
             try machineSECD (MachineSECD (
-                              (Clause_secd(secdLanguage_of_exprISWIM (calcul op (List.rev (convert_liste_clause_secd_liste_int s nbrOperande))),[]))::(nbrElemRetirer s nbrOperande)
+                              (Clause_secd(secdLanguage_of_exprISWIM (calcul op ( rev (convert_liste_clause_secd_liste_int s nbrOperande))),[]))::(nbrElemRetirer s nbrOperande)
                               ,e
                               ,c
                               ,d)
@@ -187,10 +210,8 @@ module SECDMachine =
 
       | _-> raise EtatInconnu
 
-
-
     (* Lance et affiche le résultat de l'expression *)
     let lancerSECD expression =
-      Printf.printf "Le résultat est %s \n" (string_of_control_string (machineSECD (MachineSECD([],[],(secdLanguage_of_exprISWIM expression),Vide_D))))
+       printf "Le résultat est %s \n" (string_of_control_string (machineSECD (MachineSECD([],[],(secdLanguage_of_exprISWIM expression),Vide_D))))
     
   end

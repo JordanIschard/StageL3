@@ -6,7 +6,7 @@ open String ;;
 module LambdaCalcul =
   struct
 
-    (********************* Le type et quelques définition **************************)
+    (**** Le type et quelques définition ****)
 
 
     (* Type terme qui est soit une variable Var,
@@ -26,7 +26,9 @@ module LambdaCalcul =
     let si = Abs_term("v",Abs_term("t",Abs_term("f",App_term(App_term(Var_term "v",Var_term "t"),Var_term "f"))))
 
 
-    (********************* Fonction pratiques ***************************)
+
+
+    (**** Affichage ****)
 
     (* Convertit un terme en chaîne de caractère *)
     let rec string_of_term terme =
@@ -36,7 +38,10 @@ module LambdaCalcul =
         | Abs_term (abs,terme) -> "(lambda "^abs^"."^(string_of_term terme)^")"
 
     (* Affiche un terme *)
-    let afficherTerme terme = Printf.printf "%s\n" (string_of_term terme)
+    let afficherTerme terme = printf "%s\n" (string_of_term terme)
+
+
+    (**** Fonctions utiles ****)
 
     (* Donne l'ensemble des variables liées du terme *)
     let rec lie term =
@@ -72,7 +77,7 @@ module LambdaCalcul =
       let rec aux liste =
         match liste with
         |[] -> []
-        |h::t -> if (String.equal var h)
+        |h::t -> if ( equal var h)
                  then aux t
                  else h::(aux t)
       in aux liste
@@ -83,7 +88,7 @@ module LambdaCalcul =
       let rec aux liste_interdit variables =
         match variables with
         |[] -> "lkihgoihoi"
-        |h::t -> if (List.mem h liste_interdit)
+        |h::t -> if (mem h liste_interdit)
                  then aux liste_interdit t
                  else h
       in aux liste_interdit variables
@@ -93,10 +98,13 @@ module LambdaCalcul =
       let libreexpr = libre expr  in
       let librevarDeRemp = libre varDeRemp in
       let rec aux abs =
-        if((List.mem abs libreexpr) || (List.mem abs librevarDeRemp))
-          then aux (renommage (List.append libreexpr librevarDeRemp))
+        if((mem abs libreexpr) || (mem abs librevarDeRemp))
+          then aux (renommage (append libreexpr librevarDeRemp))
           else abs
       in aux abs
+
+
+
 
     (**** La réduction ****)
 

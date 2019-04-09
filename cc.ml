@@ -1,4 +1,6 @@
-open String;;
+open Printf ;;
+open List ;;
+open Printf ;;
 open LangISWIM.ISWIM;;
 
 (* Module qui implémente la machine CC *)
@@ -9,15 +11,23 @@ module CCMachine =
 
     exception EtatInconnu
 
-    (**** Fonctions utiles ****)
+
+
+
+    (**** Affichage ****)
 
     (* Convertit une expression et une liste d'expression en chaîne de caractère *)
     let string_of_cc cs c =
-      " ("^(string_of_expr cs )^" ,[ "^(concat_string_liste(List.map string_of_expr c ))^"])\n"
+      " ("^(string_of_expr cs )^" ,[ "^(concat_string_liste( map string_of_expr c ))^"])\n"
 
     (* Affiche une étape de la machine CC *)
     let afficherCC cs c =
-      Printf.printf "MachineCC : %s" (string_of_cc cs c)
+       printf "MachineCC : %s" (string_of_cc cs c)
+
+    
+
+
+    (**** Fonctions utiles ****)
 
     (* Donne le 1er élément non variable d'une liste d'expression *)
     let rec premNonVarListe liste_expr =
@@ -25,7 +35,7 @@ module CCMachine =
       [] -> raise FormatOpErreur
       | h::t -> if (estVariable h) then premNonVarListe t else h
 
-    (* Remplace le 1er élément non vrariable d'une liste d'expression par un Trou *)
+    (* Remplace le 1er élément non variable d'une liste d'expression par un Trou *)
     let trouPremNonVarListe liste_expr =
       let rec aux pas_pris liste =
         match liste with 
@@ -45,6 +55,9 @@ module CCMachine =
         | (Var "[ ]")::t -> elem::(aux false t)
         | h::t -> h::(aux pasChanger t)
       in aux true liste_expr 
+
+
+
 
     (**** Machine CC ****)
 
@@ -77,24 +90,24 @@ module CCMachine =
         if (estVariable expr1) 
           then if (estVariable expr2)
                   then raise EtatInconnu 
-                  else machineCC expr2 (List.append [(App(expr2,Var "[ ]"))] context)
-          else machineCC expr1 (List.append [(App(Var "[ ]" , expr2))] context)
+                  else machineCC expr2 ( append [(App(expr2,Var "[ ]"))] context)
+          else machineCC expr1 ( append [(App(Var "[ ]" , expr2))] context)
 
 
       | (Op(op,liste_expr),context) -> 
-        if (List.for_all estConst liste_expr) 
+        if ( for_all estConst liste_expr) 
           then 
             try machineCC (calcul op (convert_liste_expr_liste_int liste_expr)) context
             with  FormatOpErreur -> raise EtatInconnu
-          else machineCC (premNonVarListe liste_expr) (List.append [(Op(op,(trouPremNonVarListe liste_expr)))] context)
+          else machineCC (premNonVarListe liste_expr) ( append [(Op(op,(trouPremNonVarListe liste_expr)))] context)
       
       | (Const b,context) -> 
-        if (List.length context) = 0 
+        if ( length context) = 0 
           then Const b 
           else testContext context (Const b)
 
       | (Abs(abs,expr),context) -> 
-        if (List.length context) = 0 
+        if ( length context) = 0 
           then Abs(abs,expr) 
           else testContext context (Abs(abs,expr))
 
@@ -102,7 +115,7 @@ module CCMachine =
 
     (* Lance et affiche le résultat de l'expression *)
     let lancerCC expression =
-      Printf.printf "Le résultat est %s \n" (string_of_expr (machineCC expression []))
+       printf "Le résultat est %s \n" (string_of_expr (machineCC expression []))
       
   end
 

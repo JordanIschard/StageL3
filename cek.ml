@@ -1,3 +1,6 @@
+open String ;;
+open Printf ;;
+open List ;;
 open Cc.CCMachine ;;
 open Scc.SCCMachine ;;
 open Ck.CKMachine ;;
@@ -19,11 +22,16 @@ module CEKMachine =
       | MT_CEK
 
 
+
+
     (**** Exception ****)
 
     exception AucuneSubPossible
 
-    (**** Fonctions utiles ****)
+
+
+
+    (**** Affichage ****)
 
     (* Vérifie si le registre est vide *)
     let estMT_CEK mt =
@@ -36,10 +44,10 @@ module CEKMachine =
     let rec string_of_clause clause =
       let string_of_env env =
         match env with
-         (var,clause) -> "("^var^" , "^(string_of_clause clause)^")"
+        (var,clause) -> "("^var^" , "^(string_of_clause clause)^")"
       in
       match clause with
-       Clause(expr,env) -> "("^(string_of_expr expr)^" , {"^(concat_string_liste(List.map string_of_env env))^"} )"
+      Clause(expr,env) -> "("^(string_of_expr expr)^" , {"^(concat_string_liste( map string_of_env env))^"} )"
 
     (* Convertit le registre en chaîne de caractère *)
     let rec string_of_registre_CEK registre =
@@ -49,18 +57,23 @@ module CEKMachine =
         | (Arg_CEK(clause,mt)) -> if (estMT_CEK mt) then "(arg , "^(string_of_clause clause)^" , mt)"
                                           else "(arg , "^(string_of_clause clause)^" , "^(string_of_registre_CEK mt)^")"
         | (Opd_CEK((liste_clause,op),liste_clause1,mt)) -> if (estMT_CEK mt) 
-        then "(opd , ["^(concat_string_liste(List.map string_of_clause liste_clause ))^", "^(string_of_operateur op)^"] , [ "^(concat_string_liste(List.map string_of_clause liste_clause1 ))^"] , mt)"
-        else "(opd , ["^(concat_string_liste(List.map string_of_clause liste_clause ))^", "^(string_of_operateur op)^"] , [ "^(concat_string_liste(List.map string_of_clause liste_clause1 ))^"] , "^(string_of_registre_CEK mt)^")"
+        then "(opd , ["^(concat_string_liste( map string_of_clause liste_clause ))^", "^(string_of_operateur op)^"] , [ "^(concat_string_liste( map string_of_clause liste_clause1 ))^"] , mt)"
+        else "(opd , ["^(concat_string_liste( map string_of_clause liste_clause ))^", "^(string_of_operateur op)^"] , [ "^(concat_string_liste( map string_of_clause liste_clause1 ))^"] , "^(string_of_registre_CEK mt)^")"
         | MT_CEK -> "mt"
       
-    
+
     (* Convertit un état de la machine CEK en chaîne de caractère *)
     let string_of_cek clause registre =
       "("^(string_of_clause clause)^" , "^(string_of_registre_CEK registre)^")\n" 
 
     (* Affiche un état de la machine CK *)
     let afficherCEK expression registre =
-        Printf.printf "MachineCEK : %s" (string_of_cek expression registre)
+         printf "MachineCEK : %s" (string_of_cek expression registre)
+
+
+
+
+    (**** Fonctions utiles ****)
 
     (* Convertit une expr en clause *)
     let rec clause_of_expr env liste =
@@ -73,7 +86,7 @@ module CEKMachine =
       match env with
         [] -> false
         | (var1,clause)::t -> 
-            if (String.equal var1 var)
+            if ( equal var1 var)
               then true
               else estDansEnv t var 
 
@@ -81,16 +94,14 @@ module CEKMachine =
     let ajoutEnv env varARemp clauseDeRemp =
       if (estDansEnv env varARemp)
         then env
-        else List.append env [(varARemp,clauseDeRemp)]
+        else  append env [(varARemp,clauseDeRemp)]
 
     (* Substitue une variable par sa clause qui lui est assignée dans l'nevironnement *)
     let rec substitution var env =
       match env with
         [] -> raise AucuneSubPossible
         | (var1,clause)::t -> 
-            if(String.equal var1 var) 
-              then clause
-              else substitution var t
+            if( equal var1 var) then clause else substitution var t
 
     (* Vérifie si une clause contient une constante *)
     let rec estConstClause clause =
@@ -104,7 +115,10 @@ module CEKMachine =
         [] -> []
         | (Clause(Const const,env))::t -> const::(convert_liste_clause_liste_int t)
         | _ -> raise NotConstErreur
+      
         
+
+
     (**** Machine CEK ****)
 
     (* Applique les règles de la machine CEK en affichant les étapes *)
@@ -120,15 +134,15 @@ module CEKMachine =
             if (estVide liste_clause1)
               then 
                 begin
-                  let newliste = List.append [clause] liste_clause in
-                  if (List.for_all estConstClause newliste)
-                    then machineCEK (Clause(calcul op (List.rev (convert_liste_clause_liste_int newliste)),[])) mt
+                  let newliste =  append [clause] liste_clause in
+                  if ( for_all estConstClause newliste)
+                    then machineCEK (Clause(calcul op ( rev (convert_liste_clause_liste_int newliste)),[])) mt
                     else raise EtatInconnu
                 end
 
               else 
                 begin
-                  let newliste = List.append [clause] liste_clause in
+                  let newliste =  append [clause] liste_clause in
                   machineCEK (getPremElem liste_clause1) (Opd_CEK((newliste,op),(enleverTete liste_clause1),mt))
                 end
 
@@ -164,6 +178,6 @@ module CEKMachine =
 
     (* Lance et affiche le résultat de l'expression *)
     let lancerCEK expression =
-      Printf.printf "Le résultat est %s \n" (string_of_expr (machineCEK (Clause(expression,[])) MT_CEK))
+       printf "Le résultat est %s \n" (string_of_expr (machineCEK (Clause(expression,[])) MT_CEK))
 
   end

@@ -1,3 +1,6 @@
+open String ;;
+open Printf ;;
+open List ;;
 open Cc.CCMachine ;;
 open Scc.SCCMachine ;;
 open LangISWIM.ISWIM ;;
@@ -14,7 +17,10 @@ module CKMachine =
       | Opd of (exprISWIM list * operateur) * (exprISWIM list) * k
       | MT
 
-    (**** Fonctions utiles ****)
+
+
+
+    (**** Affichage ****)
 
     (* Vérifie si k est mt ,c'est-à-dire qu'il n'y ait plus rien dans le registre *)
     let estMT k = 
@@ -30,10 +36,9 @@ module CKMachine =
         | (Arg(expr,mt)) -> if (estMT mt) then "(arg , "^(string_of_expr expr)^" , mt)"
                                           else "(arg , "^(string_of_expr expr)^" , "^(string_of_registre mt)^")"
         | (Opd((liste_expr,op),liste_expr1,mt)) -> if (estMT mt) 
-        then "(opd , ["^(concat_string_liste(List.map string_of_expr liste_expr ))^", "^(string_of_operateur op)^"] , [ "^(concat_string_liste(List.map string_of_expr liste_expr1 ))^"] , mt)"
-        else "(opd , ["^(concat_string_liste(List.map string_of_expr liste_expr ))^", "^(string_of_operateur op)^"] , [ "^(concat_string_liste(List.map string_of_expr liste_expr1 ))^"] , "^(string_of_registre mt)^")"
+        then "(opd , ["^(concat_string_liste( map string_of_expr liste_expr ))^", "^(string_of_operateur op)^"] , [ "^(concat_string_liste( map string_of_expr liste_expr1 ))^"] , mt)"
+        else "(opd , ["^(concat_string_liste( map string_of_expr liste_expr ))^", "^(string_of_operateur op)^"] , [ "^(concat_string_liste( map string_of_expr liste_expr1 ))^"] , "^(string_of_registre mt)^")"
         | MT -> "mt"
-
 
     (* Convertit un état de la machine Ck en chaîne de caractère *)
     let string_of_ck expr registre =
@@ -41,7 +46,12 @@ module CKMachine =
 
     (* Affiche un état de la machine CK *)
     let afficherCK expression registre =
-        Printf.printf "MachineCK : %s" (string_of_ck expression registre)
+         printf "MachineCK : %s" (string_of_ck expression registre)
+
+
+
+
+    (**** Fonctions utiles ****)
 
     (* Vérifie si une liste est vide *)
     let estVide liste =
@@ -54,6 +64,9 @@ module CKMachine =
       match liste with
       [] -> []
       | h::t -> t
+
+
+
 
     (**** Machine CK ****)
 
@@ -72,15 +85,15 @@ module CKMachine =
               then 
 
                 begin
-                  let newliste = List.append [expr] liste_expr in
-                  if (List.for_all estConst newliste)
-                    then machineCK (calcul op (List. rev (convert_liste_expr_liste_int newliste))) mt
+                  let newliste =  append [expr] liste_expr in
+                  if ( for_all estConst newliste)
+                    then machineCK (calcul op (  rev (convert_liste_expr_liste_int newliste))) mt
                     else raise EtatInconnu
                 end
 
               else 
                 begin
-                  let newliste = List.append [expr] liste_expr in
+                  let newliste =  append [expr] liste_expr in
                   machineCK (getPremElem liste_expr1) (Opd((newliste,op),(enleverTete liste_expr1),mt))
                 end
 
@@ -117,6 +130,6 @@ module CKMachine =
     
     (* Lance et affiche le résultat de l'expression *)
     let lancerCK expression =
-      Printf.printf "Le résultat est %s \n" (string_of_expr (machineCK expression MT))
+       printf "Le résultat est %s \n" (string_of_expr (machineCK expression MT))
 
   end

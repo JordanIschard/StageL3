@@ -1,3 +1,6 @@
+open String ;;
+open Printf ;;
+open List ;;
 open Cc.CCMachine ;;
 open LangISWIM.ISWIM ;;
 
@@ -5,11 +8,16 @@ open LangISWIM.ISWIM ;;
 module SCCMachine =
   struct
 
-    (**** Fonctions utiles ****)
+    (**** Affichage ****)
 
     (* Affiche une étape de la machine SCC *)
     let afficherSCC cs c =
-      Printf.printf "MachineSCC : %s" (string_of_cc cs c)
+     printf "MachineSCC : %s" (string_of_cc cs c)
+
+
+
+
+    (**** Fonctions utiles ****)
 
     (* Retourne le 1er élément d'une liste *)
     let getPremElem liste = 
@@ -56,6 +64,8 @@ module SCCMachine =
             else h1::(trouSuivantDeElem expr (h2::t))
 
 
+
+            
     (**** Machine SCC ****)  
 
     (* Applique les règles de la machine SCC en affichant les étapes *)
@@ -71,7 +81,7 @@ module SCCMachine =
                                         then 
                                           begin
                                             let newListe = rempTrou expr1 liste_expr in
-                                            if (List.for_all estConst newListe )
+                                            if ( for_all estConst newListe )
                                               then machineSCC (calcul op (convert_liste_expr_liste_int newListe)) t
                                               else raise EtatInconnu 
                                           end
@@ -87,18 +97,18 @@ module SCCMachine =
 
       match (control_string,context) with 
 
-      | (App(expr1,expr2),context) -> machineSCC expr1 (List.append [(App(Var "[ ]" , expr2))] context)
+      | (App(expr1,expr2),context) -> machineSCC expr1 ( append [(App(Var "[ ]" , expr2))] context)
 
 
-      | (Op(op,liste_expr),context) -> machineSCC (getPremElem liste_expr) (List.append [(Op(op,(trouPremElem liste_expr)))] context)
+      | (Op(op,liste_expr),context) -> machineSCC (getPremElem liste_expr) ( append [(Op(op,(trouPremElem liste_expr)))] context)
 
       | (Const b,context) -> 
-          if (List.length context) = 0 
+          if ( length context) = 0 
             then Const b 
             else testContext context (Const b)
   
       | (Abs(abs,expr),context) -> 
-          if (List.length context) = 0 
+          if ( length context) = 0 
             then Abs(abs,expr) 
             else testContext context (Abs(abs,expr))
       
@@ -107,6 +117,6 @@ module SCCMachine =
 
     (* Lance et affiche le résultat de l'expression *)
     let lancerSCC expression =
-      Printf.printf "Le résultat est %s \n" (string_of_expr (machineSCC expression []))
+       printf "Le résultat est %s \n" (string_of_expr (machineSCC expression []))
 
   end
