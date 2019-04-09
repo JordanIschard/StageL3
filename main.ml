@@ -87,11 +87,11 @@ Printf.printf "\n" ;;
 
 Printf.printf " Test de la MachineCEK\n\n" ;;
 
-let registreCEK  = Fun_CEK ((Clause((Abs("x",Var "x")),[])),MT_CEK) ;;
-let expressionCEK = Clause(Const 1,[]) ;;
-let clause = (Clause(Abs("x",Var "x"),[])) ;;
+let registreCEK  = Fun_CEK ((Fermeture((Abs("x",Var "x")),[])),MT_CEK) ;;
+let expressionCEK = Fermeture(Const 1,[]) ;;
+let clause = (Fermeture(Abs("x",Var "x"),[])) ;;
 
-Printf.printf "%s\n" (string_of_clause clause) ;;
+Printf.printf "%s\n" (string_of_fermeture clause) ;;
 
 afficherCEK expressionCEK registreCEK ;;
 Printf.printf "\n" ;;

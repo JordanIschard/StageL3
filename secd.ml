@@ -25,7 +25,7 @@ module SECDMachine =
 
     type env = e list
 
-    type s = Clause_secd of (control_string * env) 
+    type s =  Fermeture_secd of (control_string * env) 
 
 
     type stack = s list
@@ -87,7 +87,7 @@ module SECDMachine =
     let rec string_of_stack stack =
       match stack with
         [] -> ""
-        | (Clause_secd(control_string,env))::t -> "["^(string_of_control_string control_string)^" , {"^(string_of_env env)^"}]"^(string_of_stack t)
+        | ( Fermeture_secd(control_string,env))::t -> "["^(string_of_control_string control_string)^" , {"^(string_of_env env)^"}]"^(string_of_stack t)
 
     (* Convertit la sauvegarde en chaîne de caractère *)
     let rec string_of_dump dump =
@@ -109,20 +109,20 @@ module SECDMachine =
 
     (**** Fonctions utiles ****)
 
-    (* Substitue une variable à sa clause liée *)
+    (* Substitue une variable à sa  fermeture liée *)
     let rec substitution_secd x env =
       match env with
         [] -> raise AucuneSubPossible
         | (Env(var,(control_string,env)))::t -> 
             if ( equal x var)
-              then Clause_secd(control_string,env)
+              then  Fermeture_secd(control_string,env)
               else substitution_secd x t
 
-    (* Convertit une liste de clause contenant des constante en liste d'entier *)
-    let rec convert_liste_clause_secd_liste_int stack nbrOperande =
+    (* Convertit une liste de  fermeture contenant des constante en liste d'entier *)
+    let rec convert_liste_fermeture_secd_liste_int stack nbrOperande =
       match (stack,nbrOperande) with
         (_,0) -> []
-        | ((Clause_secd([(Const_C b)],env))::t,nbr) -> b::(convert_liste_clause_secd_liste_int t (nbr - 1)) 
+        | (( Fermeture_secd([(Const_C b)],env))::t,nbr) -> b::(convert_liste_fermeture_secd_liste_int t (nbr - 1)) 
         | (_,_) -> raise FormatOpErreur
 
     (* Retire un nombre n d'élément d'une liste *)
@@ -142,12 +142,12 @@ module SECDMachine =
               else estDansEnvSECD t var 
 
 
-    (* Ajoute une clause à l'environnement *)
-    let rec ajoutEnv_secd e1 varARemp clause =
+    (* Ajoute une  fermeture à l'environnement *)
+    let rec ajoutEnv_secd e1 varARemp  fermeture =
       if(estDansEnvSECD e1 varARemp)
       then e1
-      else  match clause with
-              Clause_secd (control_string,env) ->  (Env(varARemp,(control_string,env)))::e1
+      else  match  fermeture with
+               Fermeture_secd (control_string,env) ->  (Env(varARemp,(control_string,env)))::e1
     
 
 
@@ -159,55 +159,31 @@ module SECDMachine =
       
       afficherSECD machine ; 
       match machine with
-        MachineSECD(s,e,(Const_C b)::c,d) -> machineSECD (MachineSECD(
-                                                            (Clause_secd( [Const_C b] , e) :: s)
-                                                            ,e
-                                                            ,c
-                                                            ,d)
-                                                          )
-        | MachineSECD(s,e,(Var_C x)::c,d) -> machineSECD (MachineSECD(
-                                                            ((substitution_secd x e) :: s)
-                                                            ,e
-                                                            ,c
-                                                            ,d)
-                                                          )
+
+        MachineSECD(s,e,(Const_C b)::c,d) -> machineSECD (MachineSECD( ( Fermeture_secd([Const_C b] , e) :: s) , e , c , d ))
+
+        | MachineSECD(s,e,(Var_C x)::c,d) -> machineSECD (MachineSECD( ((substitution_secd x e) :: s) , e , c , d ))
 
         | MachineSECD(s,e,(Prim(op))::c,d) -> 
             begin
               let nbrOperande = getNbrOperande op in 
               try machineSECD (MachineSECD (
-                                (Clause_secd(secdLanguage_of_exprISWIM (calcul op ( rev (convert_liste_clause_secd_liste_int s nbrOperande))),[]))::(nbrElemRetirer s nbrOperande)
-                                ,e
-                                ,c
-                                ,d)
-                              )
+                                (Fermeture_secd(secdLanguage_of_exprISWIM (calcul op ( rev (convert_liste_fermeture_secd_liste_int s nbrOperande))),[]))::(nbrElemRetirer s nbrOperande)
+                                , e , c ,d ))
               with _ -> raise EtatInconnu
             end
         
         | MachineSECD(s,e,(Pair(abs,control_string))::c,d) -> machineSECD (MachineSECD(
-                                                                            (Clause_secd([Pair(abs,control_string)],e) :: s)
-                                                                            ,e
-                                                                            ,c
-                                                                            ,d)
-                                                                          )
+                                                                            ( Fermeture_secd([Pair(abs,control_string)],e) :: s)
+                                                                            , e , c , d ))
         
-        | MachineSECD(v::(Clause_secd([Pair(abs,c1)],e1))::s,e,(Ap)::c,d) -> machineSECD (MachineSECD(
-                                                                                          []
-                                                                                          ,(ajoutEnv_secd e1 abs v)
-                                                                                          ,c1
-                                                                                          , Save(s,e,c,d))
-                                                                                        )
+        | MachineSECD(v::( Fermeture_secd([Pair(abs,c1)],e1))::s,e,(Ap)::c,d) -> machineSECD (MachineSECD( [] , (ajoutEnv_secd e1 abs v) , c1 , Save(s,e,c,d) ))
                                                                           
-        | MachineSECD(v::s,e,[],Save(s1,e1,c,d)) -> machineSECD (MachineSECD(
-                                                    v::s1
-                                                    ,e1
-                                                    ,c
-                                                    ,d)
-                                                  )
+        | MachineSECD(v::s,e,[],Save(s1,e1,c,d)) -> machineSECD (MachineSECD( v::s1 , e1 , c , d ))
 
-        | MachineSECD((Clause_secd([Const_C const],env))::s,e,[],Vide_D) -> [Const_C const]
+        | MachineSECD(( Fermeture_secd([Const_C const],env))::s,e,[],Vide_D) -> [Const_C const]
 
-        | MachineSECD((Clause_secd([Pair(abs,c)],env))::s,e,[],Vide_D) -> [Pair(abs,c)]
+        | MachineSECD(( Fermeture_secd([Pair(abs,c)],env))::s,e,[],Vide_D) -> [Pair(abs,c)]
 
         | _-> raise EtatInconnu
 
