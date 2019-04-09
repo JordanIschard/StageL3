@@ -44,10 +44,10 @@ module CEKMachine =
     let rec string_of_clause clause =
       let string_of_env env =
         match env with
-        (var,clause) -> "("^var^" , "^(string_of_clause clause)^")"
+          (var,clause) -> "("^var^" , "^(string_of_clause clause)^")"
       in
       match clause with
-      Clause(expr,env) -> "("^(string_of_expr expr)^" , {"^(concat_string_liste( map string_of_env env))^"} )"
+        Clause(expr,env) -> "("^(string_of_expr expr)^" , {"^(concat_string_liste( map string_of_env env))^"} )"
 
     (* Convertit le registre en chaîne de caractère *)
     let rec string_of_registre_CEK registre =
@@ -75,7 +75,7 @@ module CEKMachine =
 
     (**** Fonctions utiles ****)
 
-    (* Convertit une expr en clause *)
+    (* Convertit une expression en clause *)
     let rec clause_of_expr env liste =
       match liste with
         [] -> []
@@ -96,7 +96,7 @@ module CEKMachine =
         then env
         else  append env [(varARemp,clauseDeRemp)]
 
-    (* Substitue une variable par sa clause qui lui est assignée dans l'nevironnement *)
+    (* Substitue une variable par sa clause qui lui est assignée dans l'environnement *)
     let rec substitution var env =
       match env with
         [] -> raise AucuneSubPossible
@@ -154,27 +154,27 @@ module CEKMachine =
 
       match (clause,registre) with
 
-      (Clause(App(expr1,expr2),env),mt) -> machineCEK (Clause(expr1,env)) (Arg_CEK((Clause(expr2,env),mt))) 
+        (Clause(App(expr1,expr2),env),mt) -> machineCEK (Clause(expr1,env)) (Arg_CEK((Clause(expr2,env),mt))) 
 
-      | (Clause(Op(op,liste_expr),env),mt) -> 
-          begin
-            match liste_expr with
-              [] -> raise FormatOpErreur
-              | [h] -> machineCEK (Clause(h,env)) (Opd_CEK(([],op),[],mt))
-              | h::t -> machineCEK (Clause(h,env)) (Opd_CEK(([],op),(clause_of_expr env t),mt))
-          end
+        | (Clause(Op(op,liste_expr),env),mt) -> 
+            begin
+              match liste_expr with
+                [] -> raise FormatOpErreur
+                | [h] -> machineCEK (Clause(h,env)) (Opd_CEK(([],op),[],mt))
+                | h::t -> machineCEK (Clause(h,env)) (Opd_CEK(([],op),(clause_of_expr env t),mt))
+            end
 
-      | (Clause(Const b,env),registre) -> 
-          if (estMT_CEK registre)
-            then Const b 
-            else testRegistre registre (Clause(Const b,env))
-  
-      | (Clause(Abs(abs,expr),env),registre) -> 
-          if (estMT_CEK registre)
-            then Abs(abs,expr) 
-            else testRegistre registre (Clause(Abs(abs,expr),env))
-      
-      | (Clause((Var var),env),registre) -> machineCEK (substitution var env) registre
+        | (Clause(Const b,env),registre) -> 
+            if (estMT_CEK registre)
+              then Const b 
+              else testRegistre registre (Clause(Const b,env))
+    
+        | (Clause(Abs(abs,expr),env),registre) -> 
+            if (estMT_CEK registre)
+              then Abs(abs,expr) 
+              else testRegistre registre (Clause(Abs(abs,expr),env))
+        
+        | (Clause((Var var),env),registre) -> machineCEK (substitution var env) registre
 
     (* Lance et affiche le résultat de l'expression *)
     let lancerCEK expression =

@@ -22,18 +22,18 @@ module SCCMachine =
     (* Retourne le 1er élément d'une liste *)
     let getPremElem liste = 
       match liste with
-      | [] -> raise FormatOpErreur
-      | h::t -> h
+        | [] -> raise FormatOpErreur
+        | h::t -> h
 
     (* Remplace le 1er élément par un Trou *)
     let trouPremElem liste =
       let rec aux premier liste =
         match liste with
-        | [] -> []
-        | h::t -> 
-          if (premier) 
-            then (Var "[ ]")::(aux false t)
-            else h::(aux premier t)
+          | [] -> []
+          | h::t -> 
+            if (premier) 
+              then (Var "[ ]")::(aux false t)
+              else h::(aux premier t)
       in aux true liste
 
     (* Le dernière élément d'une liste est un Trou *)

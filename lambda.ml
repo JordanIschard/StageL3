@@ -6,31 +6,18 @@ open String ;;
 module LambdaCalcul =
   struct
 
-    (**** Le type et quelques définition ****)
+    (**** Type ****)
 
-
-    (* Type terme qui est soit une variable Var,
-       soit un niveau astraction Abs,
-       soit une application entre deux termes
-       Les variables sont représentées par des chaines caractères
-     *)
+    (* Type terme qui est soit une variable Var, soit un niveau abstraction Abs,soit une application entre deux termes.
+     Les variables sont représentées par des chaînes caractères *)
     type term = Var_term of string | Abs_term of string * term  | App_term of term * term
-
-    (* retourne le première élément *)
-    let vrai = Abs_term("x",Abs_term("y",Var_term "x"))
-
-    (* retourne le second élément *)
-    let faux =  Abs_term("x",Abs_term("y",Var_term "y"))
-
-    (* v est le booléen, t la solution choisie si vrai et f la solution choisie si false *)
-    let si = Abs_term("v",Abs_term("t",Abs_term("f",App_term(App_term(Var_term "v",Var_term "t"),Var_term "f"))))
 
 
 
 
     (**** Affichage ****)
 
-    (* Convertit un terme en chaîne de caractère *)
+    (* Convertit un terme en chaîne de caractères *)
     let rec string_of_term terme =
       match terme with 
         Var_term var -> var
@@ -47,8 +34,8 @@ module LambdaCalcul =
     let rec lie term =
       match term with
         Var_term var -> []
-       |Abs_term (el,t) -> el::lie t
-       |App_term (t1,t2) -> append (lie t1) (lie t2)
+        |Abs_term (el,t) -> el::lie t
+        |App_term (t1,t2) -> append (lie t1) (lie t2)
 
     (* Donne l'ensemble des variables libres du terme *)
     let libre term =
@@ -56,8 +43,8 @@ module LambdaCalcul =
       let rec aux term =
         match term with
           Var_term var -> if (mem var varlie) then [] else [var]
-         |Abs_term (el,t) -> aux t
-         |App_term (t1,t2) -> append (aux t1) (aux t2)
+          |Abs_term (el,t) -> aux t
+          |App_term (t1,t2) -> append (aux t1) (aux t2)
       in aux term
 
     (* Retourne un booléen représentant l'égalité de deux termes *)
@@ -76,21 +63,21 @@ module LambdaCalcul =
     let retirerEl var liste =
       let rec aux liste =
         match liste with
-        |[] -> []
-        |h::t -> if ( equal var h)
-                 then aux t
-                 else h::(aux t)
+          [] -> []
+          |h::t -> if ( equal var h)
+                  then aux t
+                  else h::(aux t)
       in aux liste
 
-    (* Donne un nouveau nom de var (À améliorer pour éviter la liste finie) *)
+    (* Donne un nouveau nom de variable (À améliorer pour éviter la liste finie) *)
     let renommage liste_interdit =
       let variables = ["x";"y";"z";"w"] in
       let rec aux liste_interdit variables =
         match variables with
-        |[] -> "lkihgoihoi"
-        |h::t -> if (mem h liste_interdit)
-                 then aux liste_interdit t
-                 else h
+           [] -> "lkihgoihoi"
+          |h::t -> if (mem h liste_interdit)
+                  then aux liste_interdit t
+                  else h
       in aux liste_interdit variables
 
     (* Renomme si nécessaire *)
@@ -108,83 +95,59 @@ module LambdaCalcul =
 
     (**** La réduction ****)
 
-    (*
-       Réduit le terme en remplaçant la variable à remplacer par le terme
-       de remplacement en suivant les règles de béta-réduction
-     *)
+    (* Réduit le terme en remplaçant la variable à remplacer par le terme
+       de remplacement en suivant les règles de la béta-réduction *)
     let rec reduireb varARemp terme termeDeRemp =
 
       (* On regarde à quoi ressemble le terme *)
       match terme with
 
-        (* Le terme est une variable du coup on teste si
-           le terme est égal à la variable à remplacer *)
+        (* Le terme est une variable du coup on teste si le terme est égal à la variable à remplacer *)
         Var_term var -> if (equal var varARemp)
 
                     (* C'est le cas du coup on remplace *)
-                   then termeDeRemp
+                    then termeDeRemp
 
                     (* Ce n'est pas le cas du coup on ne remplace pas*)
-                   else Var_term var
+                    else Var_term var
 
-      (* Le terme est une application du coup on
-         cherche dans ces deux termes si on peut béta-réduire *)
-      | App_term(terme1 , terme2) -> App_term((reduireb varARemp terme1 termeDeRemp)
-                                   ,(reduireb varARemp terme2 termeDeRemp))
+        (* Le terme est une application du coup on cherche dans ces deux termes si on peut béta-réduire *)
+        | App_term(terme1 , terme2) -> App_term((reduireb varARemp terme1 termeDeRemp),(reduireb varARemp terme2 termeDeRemp))
 
-      (*
-         Le terme est une abstraction du coup on teste si la variable de
-         l'abstraction est égal à la variable à remplacer
-       *)
-      | Abs_term(var,terme1) -> if (equal var varARemp)
+        (* Le terme est une abstraction du coup on teste si la variable de l'abstraction est égal à la variable à remplacer *)
+        | Abs_term(var,terme1) -> if (equal var varARemp)
 
-                                (* C'est le cas du coup on ne remplace pas *)
-                           then Abs_term(var,terme1)
+                            (* C'est le cas du coup on ne remplace pas *)
+                            then Abs_term(var,terme1)
 
-                                   (* Ce n'est pas le cas du coup on remplace *)
-                           else
-                             (* On commence par renommer var *)
-                             let newvar = (renommer var terme1 varARemp termeDeRemp) in
+                            (* Ce n'est pas le cas du coup on remplace *)
+                            else
+                              (* On commence par renommer var *)
+                              let newvar = (renommer var terme1 varARemp termeDeRemp) in
 
-                             Abs_term(newvar,
+                              (* On remplace l'ancien var par newvar dans le terme *)
+                              let termeRenommer = (reduireb var terme1 (Var_term newvar)) in
 
-                                 (* On remplace var par le terme de remplacement *)
-                                 (reduireb varARemp
-
-                                    (* On remplace l'ancien var par newvar dans le terme *)
-                                    (reduireb var terme1 (Var_term newvar))
-
-                                    termeDeRemp )
-                               )
+                              (* On remplace var par le terme de remplacement *)
+                              Abs_term(newvar,(reduireb varARemp termeRenommer termeDeRemp ) )
 
     (* Donne le terme avec ZERO ou UNE béta-réduction faite sur le terme *)
     let rec beta_reduction_term terme =
 
       match terme with
 
-        (*
-          On a une application contenant une abstraction et un terme,
-          c'est le cas que l'on cherche du coup on applique la béta-réduction
-         *)
+        (* On a une application contenant une abstraction et un terme, c'est le cas que l'on cherche du coup on applique la béta-réduction *)
         App_term(Abs_term (var,term1),term2) -> (reduireb var term1 term2)
 
-       (*
-      On a une application contenant deux termes générique,
-      on applique beta-red sur ces deux termes à la recherche d'une réduction possible
-        *)
-       |App_term(term1,term2) -> App_term((beta_reduction_term term1),(beta_reduction_term term2))
+        (* On a une application contenant deux termes générique,
+          on applique beta-red sur ces deux termes à la recherche d'une réduction possible *)
+        | App_term(term1,term2) -> App_term((beta_reduction_term term1),(beta_reduction_term term2))
 
-       (*
-      On a une abstraction du coup on applique beta_red sur term
-      à la reche rche d'une réduction possible
-        *)
-       |Abs_term(var,term) -> Abs_term(var,(beta_reduction_term term))
+        (* On a une abstraction du coup on applique beta_red sur term à la recherche d'une réduction possible *)
+        | Abs_term(var,term) -> Abs_term(var,(beta_reduction_term term))
 
-       (*
-      On a une variables on ne peut pas chercher une réduction possible
-      sur une variable du coup on fait rien
-        *)
-       |Var_term var -> Var_term var
+        (* On a une variables on ne peut pas chercher une réduction possible sur une variable du coup on fait rien *)
+        | Var_term var -> Var_term var
 
 
     (* Donne le terme avec ZERO ou UNE êta réduction faite sur le terme *)
@@ -195,34 +158,26 @@ module LambdaCalcul =
         (* Le terme est une variable donc pas d'eta-réduction*)
         Var_term var -> Var_term var
 
-       (*
-      Le terme est une application ducoup on regarde dans ces deux termes si
-      une  eta-r     éduction est possible     *)
-       |App_term (t1,t2) -> App_term((eta_red t1),(eta_red t2))
+        (*  Le terme est une application ducoup on regarde dans ces deux termes si une  eta-réduction est possible *)
+        | App_term (t1,t2) -> App_term((eta_red t1),(eta_red t2))
 
-       (*
-        Le terme est une abstraction, c'est ce qui nous intéresse on regarde si on a la forme
-        recherchée
-      *)
-       |Abs_term (el,t) -> match t with
+        (* Le terme est une abstraction, c'est ce qui nous intéresse on regarde si on a la forme recherchée *)
+        | Abs_term (el,t) -> match t with
 
-                      (* On regarde t le terme lié à l'abstraction et on a une application *)
-                      | App_term(t1,Var_term var) ->
+                        (* On regarde t le terme lié à l'abstraction et on a une application *)
+                        | App_term(t1,Var_term var) ->
 
-                         (*
-                       On vérifie que el est égal à la variable var et que el n'est pas une
-                       variable libre de t1
-                          *)
-                         if ((equal el var) && (not(mem el (libre t1))))
+                          (* On vérifie que el est égal à la variable var et que el n'est pas une variable libre de t1 *)
+                          if ((equal el var) && (not(mem el (libre t1))))
 
-                     (* On a toute les conditions réunit donc on réduit *)
-                         then (eta_red t1)
+                          (* On a toutes les conditions réunit donc on réduit *)
+                          then (eta_red t1)
 
-                                (* On est pas dans les conditions nécessaires donc on ne réduit pas *)
-                         else Abs_term(el,(eta_red t))
+                          (* On n'est pas dans les conditions nécessaires donc on ne réduit pas *)
+                          else Abs_term(el,(eta_red t))
 
-                   (* On a rien trouvé d'intéressant donc on ne réduit pas *)
-                      | _ -> Abs_term(el,(eta_red t))
+                        (* On a rien trouvé d'intéressant donc on ne réduit pas *)
+                        | _ -> Abs_term(el,(eta_red t))
 
     (* Applique une réduction tant que c'est possible *)
     let rec n_red terme =

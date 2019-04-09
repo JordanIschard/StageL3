@@ -25,8 +25,8 @@ module CKMachine =
     (* Vérifie si k est mt ,c'est-à-dire qu'il n'y ait plus rien dans le registre *)
     let estMT k = 
       match k with
-      MT -> true
-      | _ -> false
+        MT -> true
+        | _ -> false
 
     (* Convertit le registre en chaîne de caractère *)
     let rec string_of_registre registre =
@@ -62,8 +62,8 @@ module CKMachine =
     (* Retourne la liste privée de son 1er élément *)
     let enleverTete liste =
       match liste with
-      [] -> []
-      | h::t -> t
+        [] -> []
+        | h::t -> t
 
 
 
@@ -105,27 +105,27 @@ module CKMachine =
 
       match (expression,registre) with
 
-      (App(expr1,expr2),mt) -> machineCK expr1 (Arg(expr2,mt)) 
+        (App(expr1,expr2),mt) -> machineCK expr1 (Arg(expr2,mt)) 
 
-      | (Op(op,liste_expr),mt) -> 
-          begin
-            match liste_expr with
-              [] -> raise FormatOpErreur
-              | [h] -> machineCK h (Opd(([],op),[],mt))
-              | h::t -> machineCK h (Opd(([],op),t,mt))
-          end
+        | (Op(op,liste_expr),mt) -> 
+            begin
+              match liste_expr with
+                [] -> raise FormatOpErreur
+                | [h] -> machineCK h (Opd(([],op),[],mt))
+                | h::t -> machineCK h (Opd(([],op),t,mt))
+            end
 
-      | (Const b,registre) -> 
-          if (estMT registre)
-            then Const b 
-            else testRegistre registre (Const b)
-  
-      | (Abs(abs,expr),registre) -> 
-          if (estMT registre)
-            then Abs(abs,expr) 
-            else testRegistre registre (Abs(abs,expr))
-      
-      | ((Var var),registre) -> testRegistre registre (Var var)
+        | (Const b,registre) -> 
+            if (estMT registre)
+              then Const b 
+              else testRegistre registre (Const b)
+    
+        | (Abs(abs,expr),registre) -> 
+            if (estMT registre)
+              then Abs(abs,expr) 
+              else testRegistre registre (Abs(abs,expr))
+        
+        | ((Var var),registre) -> testRegistre registre (Var var)
 
     
     (* Lance et affiche le résultat de l'expression *)
