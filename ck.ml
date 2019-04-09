@@ -11,7 +11,7 @@ module CKMachine =
     type k = 
       Fun of exprISWIM * k 
       | Arg of exprISWIM * k
-      | Opd of (exprISWIM list * string) * (exprISWIM list) * k
+      | Opd of (exprISWIM list * operateur) * (exprISWIM list) * k
       | MT
 
     (**** Fonctions utiles ****)
@@ -30,8 +30,8 @@ module CKMachine =
         | (Arg(expr,mt)) -> if (estMT mt) then "(arg , "^(string_of_expr expr)^" , mt)"
                                           else "(arg , "^(string_of_expr expr)^" , "^(string_of_registre mt)^")"
         | (Opd((liste_expr,op),liste_expr1,mt)) -> if (estMT mt) 
-        then "(opd , ["^(concat_string_liste(List.map string_of_expr liste_expr ))^", "^op^"] , [ "^(concat_string_liste(List.map string_of_expr liste_expr1 ))^"] , mt)"
-        else "(opd , ["^(concat_string_liste(List.map string_of_expr liste_expr ))^", "^op^"] , [ "^(concat_string_liste(List.map string_of_expr liste_expr1 ))^"] , "^(string_of_registre mt)^")"
+        then "(opd , ["^(concat_string_liste(List.map string_of_expr liste_expr ))^", "^(string_of_operateur op)^"] , [ "^(concat_string_liste(List.map string_of_expr liste_expr1 ))^"] , mt)"
+        else "(opd , ["^(concat_string_liste(List.map string_of_expr liste_expr ))^", "^(string_of_operateur op)^"] , [ "^(concat_string_liste(List.map string_of_expr liste_expr1 ))^"] , "^(string_of_registre mt)^")"
         | MT -> "mt"
 
 

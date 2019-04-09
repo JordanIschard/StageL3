@@ -15,7 +15,7 @@ module CEKMachine =
     type k_CEK = 
       Fun_CEK of clause * k_CEK
       | Arg_CEK of clause * k_CEK
-      | Opd_CEK of (clause list * string) * (clause list) * k_CEK
+      | Opd_CEK of (clause list * operateur) * (clause list) * k_CEK
       | MT_CEK
 
 
@@ -49,8 +49,8 @@ module CEKMachine =
         | (Arg_CEK(clause,mt)) -> if (estMT_CEK mt) then "(arg , "^(string_of_clause clause)^" , mt)"
                                           else "(arg , "^(string_of_clause clause)^" , "^(string_of_registre_CEK mt)^")"
         | (Opd_CEK((liste_clause,op),liste_clause1,mt)) -> if (estMT_CEK mt) 
-        then "(opd , ["^(concat_string_liste(List.map string_of_clause liste_clause ))^", "^op^"] , [ "^(concat_string_liste(List.map string_of_clause liste_clause1 ))^"] , mt)"
-        else "(opd , ["^(concat_string_liste(List.map string_of_clause liste_clause ))^", "^op^"] , [ "^(concat_string_liste(List.map string_of_clause liste_clause1 ))^"] , "^(string_of_registre_CEK mt)^")"
+        then "(opd , ["^(concat_string_liste(List.map string_of_clause liste_clause ))^", "^(string_of_operateur op)^"] , [ "^(concat_string_liste(List.map string_of_clause liste_clause1 ))^"] , mt)"
+        else "(opd , ["^(concat_string_liste(List.map string_of_clause liste_clause ))^", "^(string_of_operateur op)^"] , [ "^(concat_string_liste(List.map string_of_clause liste_clause1 ))^"] , "^(string_of_registre_CEK mt)^")"
         | MT_CEK -> "mt"
       
     

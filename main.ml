@@ -21,12 +21,12 @@ Printf.printf "\n" ;;
 Printf.printf "Tests du langage ISWIM \n\n" ;;
 
 
-let expression = (App((Abs("w",(App(Var "w",Op("+",[Const 2;Var "w"]))))),Const 2)) ;;
+let expression = (App((Abs("w",(App(Var "w",Op(Add,[Const 2;Var "w"]))))),Const 2)) ;;
 let expression1 = (App(Abs("x",App(Var "x", Var "y" )),Var "z"));;
 let expression2 = (App(Abs("x",Abs("y",App(Var "x", Var "y"))),Abs("y",App(Var "y",Var "f"))));;
 let expression3 = (App(Abs("z",Abs("b",App(Var "z", Var "b"))),Abs("a",App(Var "a",Var "g"))));;
-let expression4 = (App(Abs("w",Op("-",[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op("+",[Var "z";Var "y"]))))));;
-let expression5 = (App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op("+",[Var "y";Var "y"]))),Const 1));;
+let expression4 = (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
+let expression5 = (App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1));;
 
 afficherExpr expression ;;
 let res = beta_red expression ;;
@@ -74,7 +74,7 @@ Printf.printf "\n" ;;
 
 Printf.printf " Test de la MachineCK\n\n" ;;
 
-let registreCK  = Fun (Abs("x",Var "x"),Arg((Var "y"),(Opd(([(Const 1);(Var "z")],"+"),[],MT)))) ;;
+let registreCK  = Fun (Abs("x",Var "x"),Arg((Var "y"),(Opd(([(Const 1);(Var "z")],Add),[],MT)))) ;;
 
 afficherCK (Var "coucou") registreCK ;;
 Printf.printf "\n" ;;
@@ -104,4 +104,12 @@ Printf.printf "\n" ;;
 
 Printf.printf " Test de la MachineSECD\n\n" ;;
 
-Printf.printf "%s\n" (secdLanguage_of_exprISWIM expression5) ;;
+afficherExpr expression5 ;;
+let secd = MachineSECD([],[],(secdLanguage_of_exprISWIM expression5),Vide_D) ;;
+afficherSECD secd ;;
+
+lancerSECD expression5 ;;
+Printf.printf "\n" ;;
+
+lancerSECD expression4 ;;
+Printf.printf "\n" ;;

@@ -4,13 +4,21 @@ open Printf ;;
 module ISWIM =
   struct
 
-    (**** Type ****)
+    (**** Types ****)
+    type operateur = 
+      Add1 
+      | Sub1
+      | IsZero
+      | Add
+      | Sub
+      | Mult
+      | Div 
 
     type exprISWIM = 
       Var of string 
       | Abs of string * exprISWIM 
       | App of exprISWIM * exprISWIM
-      | Op of string * exprISWIM list
+      | Op of operateur * exprISWIM list
       | Const of int
 
     (***** Exception *****)
@@ -27,6 +35,24 @@ module ISWIM =
       [] -> ""
       | h::t -> h^" "^(concat_string_liste t)
 
+    (* Convertit un opérateur en chaîne de carctère *)
+    let string_of_operateur op =
+      match op with
+      Add1 -> "++"
+      | Sub1 -> "--"
+      | IsZero -> "== 0"
+      | Add -> "+"
+      | Sub -> "-"
+      | Mult -> "*"
+      | Div -> "/"
+
+    (* Donne le nombre d'opérande requis pour utilisé l'opérateur *)
+    let getNbrOperande op =
+      match op with
+      Add1 | Sub1 | IsZero -> 1
+      | Add | Sub | Mult | Div -> 2
+
+    
     (* Convertit une expression en chaîne de caractère *)
     let rec string_of_expr expr =
       match expr with 
@@ -34,17 +60,10 @@ module ISWIM =
         | Const const -> string_of_int const
         | App (expr1,expr2) -> "("^(string_of_expr expr1)^" "^(string_of_expr expr2)^")"
         | Abs (abs,expr) -> "(lam "^abs^"."^(string_of_expr expr)^")"
-        | Op (op,liste_expr) -> "("^op^" "^(concat_string_liste (List.map string_of_expr  liste_expr))^")"
+        | Op (op,liste_expr) -> "("^(string_of_operateur op)^" "^(concat_string_liste (List.map string_of_expr  liste_expr))^")"
 
     (* Affiche une expression *)
-    let afficherExpr expression =
-      Printf.printf "%s\n" (string_of_expr expression) 
-    
-    (* Affiche une liste de string *)
-    let rec afficherList liste =
-      match liste with
-      [] -> printf "\n"
-      | e::t -> printf "%s" e ; afficherList t
+    let afficherExpr expression = Printf.printf "%s\n" (string_of_expr expression) 
     
     (* Affiche une liste de pair de string *)
     let rec afficherPairList liste =
@@ -188,38 +207,23 @@ module ISWIM =
         on applique le calcul et lève une exception sile nombre de paramètre est erroné 
       *)
       let calcul op liste_expr =
-        if (String.equal op "add1")
-          then match liste_expr with
-                [h] -> Const (h+1)
-                | _ -> raise FormatOpErreur
-        else
-          if (String.equal op "sub1")
-            then match liste_expr with
-              [h] -> Const (h-1)
-              | _ -> raise FormatOpErreur
-            else
-              if (String.equal op "iszero")
-                then match liste_expr with
-                  [h] -> if h = 0
-                          then Abs("x",Abs("y",Var "x")) else Abs("x",Abs("y",Var "y"))
-                  | _ -> raise FormatOpErreur
-                else
-                  if (String.equal op "+")
-                    then match liste_expr with
-                      [h;h1] -> Const (h+h1)
-                      | _ -> raise FormatOpErreur
-                    else
-                      if (String.equal op "-")
-                        then match liste_expr with
-                          [h;h1] -> Const (h-h1)
-                          | _ -> raise FormatOpErreur
-                        else
-                          if (String.equal op "*")
-                            then match liste_expr with
-                              [h;h1] -> Const (h*h1)
-                              | _ -> raise FormatOpErreur
-                            else
-                              raise FormatOpErreur
+        match (op,liste_expr) with
+          (Add1,[h]) -> Const (h+1)
+
+          | (Sub1,[h]) -> Const (h-1)
+
+          | (IsZero,[h]) -> 
+            if h = 0 then Abs("x",Abs("y",Var "x")) else Abs("x",Abs("y",Var "y"))
+
+          | (Add,[h;h1]) -> Const (h+h1)
+
+          | (Sub,[h;h1]) -> Const (h-h1)
+          
+          | (Mult,[h;h1]) -> Const (h*h1)
+          
+          | (Div,[h;h1]) -> Const (h/h1) 
+          
+          | (_,_) -> raise FormatOpErreur
 
       (* Applique une delta réduction sur l'expression*)
       let rec  delta_red expression =

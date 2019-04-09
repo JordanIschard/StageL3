@@ -36,8 +36,7 @@ module LambdaCalcul =
         | Abs_term (abs,terme) -> "(lambda "^abs^"."^(string_of_term terme)^")"
 
     (* Affiche un terme *)
-    let afficherTerme terme =
-      Printf.printf "%s\n" (string_of_term terme)
+    let afficherTerme terme = Printf.printf "%s\n" (string_of_term terme)
 
     (* Donne l'ensemble des variables liées du terme *)
     let rec lie term =
@@ -45,12 +44,6 @@ module LambdaCalcul =
         Var_term var -> []
        |Abs_term (el,t) -> el::lie t
        |App_term (t1,t2) -> append (lie t1) (lie t2)
-
-    (* Affiche une liste de string (Provisoire)*)
-    let rec afficherList liste =
-      match liste with
-    [] -> printf "\n"
-      | e::t -> printf "%s ;" e ; afficherList t
 
     (* Donne l'ensemble des variables libres du terme *)
     let libre term =
@@ -67,12 +60,12 @@ module LambdaCalcul =
       match (term1,term2) with
         (Var_term var1,Var_term var2) -> (equal var1 var2)
 
-      | (Abs_term(var1,terme1),Abs_term(var2,terme2)) -> if (equal var1 var2)
-                                               then (equals_terme terme1 terme2)
-                                               else false
-      | (App_term(terme1,terme2),App_term(terme3,terme4)) -> (equals_terme terme1 terme3)
-                                                   && (equals_terme terme2 terme4)
-      | (_,_) -> false
+        | (Abs_term(var1,terme1),Abs_term(var2,terme2)) -> if (equal var1 var2)
+                                                then (equals_terme terme1 terme2)
+                                                else false
+        | (App_term(terme1,terme2),App_term(terme3,terme4)) -> (equals_terme terme1 terme3)
+                                                    && (equals_terme terme2 terme4)
+        | (_,_) -> false
 
     (* Retire l'élément donné en paramètre *)
     let retirerEl var liste =
@@ -97,23 +90,15 @@ module LambdaCalcul =
 
     (* Renomme si nécessaire *)
     let renommer abs expr varARemp varDeRemp =
-      let libreexpr = libre expr 
-      in
-      let librevarDeRemp = libre varDeRemp
-      in
+      let libreexpr = libre expr  in
+      let librevarDeRemp = libre varDeRemp in
       let rec aux abs =
         if((List.mem abs libreexpr) || (List.mem abs librevarDeRemp))
           then aux (renommage (List.append libreexpr librevarDeRemp))
           else abs
       in aux abs
 
-    let rec inter list1 list2 =
-      match list1 with
-        [] -> []
-      | h::t -> if mem h list2 then h :: (inter t list2) else (inter t list2)
-
-
-    (*************************LA REDUCTION**************************************)
+    (**** La réduction ****)
 
     (*
        Réduit le terme en remplaçant la variable à remplacer par le terme
@@ -128,10 +113,10 @@ module LambdaCalcul =
            le terme est égal à la variable à remplacer *)
         Var_term var -> if (equal var varARemp)
 
-                        (* C'est le cas du coup on remplace *)
+                    (* C'est le cas du coup on remplace *)
                    then termeDeRemp
 
-                          (* Ce n'est pas le cas du coup on ne remplace pas*)
+                    (* Ce n'est pas le cas du coup on ne remplace pas*)
                    else Var_term var
 
       (* Le terme est une application du coup on
@@ -208,9 +193,9 @@ module LambdaCalcul =
        |App_term (t1,t2) -> App_term((eta_red t1),(eta_red t2))
 
        (*
-     Le terme est une abstraction, c'est ce qui nous intéresse on regarde si on a la forme
-     recherchée
-    *)
+        Le terme est une abstraction, c'est ce qui nous intéresse on regarde si on a la forme
+        recherchée
+      *)
        |Abs_term (el,t) -> match t with
 
                       (* On regarde t le terme lié à l'abstraction et on a une application *)
