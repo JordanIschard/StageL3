@@ -29,7 +29,7 @@ module SECDMachine =
 
     type e =  
        Env of (string * (control_string * e list))  (* (s,(C,Env)) *)
-      | Bind of id                                  (* (bind,s) *)
+      | Bind of id                                  (* (init,s) *)
       | Emit_Env of id                              (* (emit,s) *)
 
     type env = e list
@@ -126,7 +126,7 @@ module SECDMachine =
                     "["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_env env)^"]] , "^(string_of_env t)
         | (Emit_Env(signal))::t -> "[emit,"^signal^"] , "^(string_of_env t)
        
-        | (Bind(signal))::t -> "[bind,"^signal^"] , "^(string_of_env t)
+        | (Bind(signal))::t -> "[init,"^signal^"] , "^(string_of_env t)
 
     (* Convertit une pile en chaîne de caractère *)
     let rec string_of_stack stack =
@@ -200,12 +200,14 @@ module SECDMachine =
               else estDansEnvSECD t var 
         | _::t -> estDansEnvSECD t var
 
+    (* Vérifie si c'est un init *)
     let rec estBind env signal =
       match env with
        [] -> false
         | (Bind(signal1))::t -> if (equal signal signal1) then true else estBind t signal
         | _::t -> estBind t signal
 
+    (* Vérifie si c'est une émission *)
     let rec estEmit env signal =
       match env with
         [] -> false
@@ -220,40 +222,47 @@ module SECDMachine =
                Fermeture_secd (control_string,env1) ->  (Env(varARemp,(control_string,env1)))::env
               | Remp -> raise EtatInconnu
 
+    (* Ajoute un signal initialisé dans l'environnement *)
     let rec ajoutBind env signal = 
       if(estBind env signal)
         then raise SignalDejaInit
         else (Bind(signal))::env
     
+    (* Ajoute une émission dans l'environnement *)
     let rec ajoutEmit env signal = 
       if(estEmit env signal)
         then raise SignalDejaEmit
         else (Emit_Env(signal))::env
     
+    (* Retire la partie du spawn du control string *)
     let rec spawnRetirer control_string =
       match control_string with
         [] -> raise FinSpawnNonTrouvable
         | Espawn::t -> t
         | h::t -> spawnRetirer t
 
+    (* Récupère la partie du spawn du control string *)
     let rec spawnRecup control_string =
       match control_string with
         [] -> raise FinSpawnNonTrouvable
         | Espawn::t -> []
         | h::t -> h::(spawnRecup t)
 
+    (* Retire les emissions de la liste d'environnement *)
     let rec emitRetirer env =
       match env with
         [] -> []
         | (Emit_Env(signal))::t -> emitRetirer t
         | h::t -> h::(emitRetirer t)
  
+    (* Dans le cas où le signal attendu n'est pas emit on applique le second choix*)
     let rec secondChoix st =
       match st with
         [] -> []
         | (signal,Save(s,e,((Present_SECD(signal1,c1,c2))::c),d))::t -> (Save( s , (emitRetirer e) , (append c2 c) , d ))::(secondChoix t)
         | _ -> raise EtatInconnu
 
+    (* Donne la liste des éléments de stuck qui réagisse au signal*)
     let rec reveil signal stuck =
       match stuck with
        [] -> []
@@ -262,6 +271,7 @@ module SECDMachine =
             then save::(reveil signal t)
             else (reveil signal t)
 
+    (* Donne la liste des éléments de stuck qui ne réagisse pas au signal *)
     let rec resteStuck signal stuck =
       match stuck with
         [] -> []
