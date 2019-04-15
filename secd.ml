@@ -164,7 +164,7 @@ module SECDMachine =
 
         | MachineSECD(s,e,(Var_C x)::c,d) -> machineSECD (MachineSECD( ((substitution_secd x e) :: s) , e , c , d ))
 
-        | MachineSECD(s,e,(Prim(op))::c,d) -> 
+        | MachineSECD(s,e,(Prim(op))::c,d) ->
             begin
               let nbrOperande = getNbrOperande op in 
               try machineSECD (MachineSECD (

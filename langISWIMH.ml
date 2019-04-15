@@ -2,7 +2,7 @@ open Printf ;;
 open String ;;
 open List ;;
 
-(* Module qui implémente le langage ISWIM avec les erreurs *)
+(* Module qui implémente le langage ISWIM avec les erreurs et des gestionnaire d'erreur *)
 module ISWIM =
   struct
 
@@ -24,6 +24,8 @@ module ISWIM =
       | Op of operateur * exprISWIM list
       | Const of int
       | Erreur of string
+      | Throw of int
+      | Catch of exprISWIM * (string * exprISWIM) (* A continuer *)
 
 
 
@@ -67,7 +69,7 @@ module ISWIM =
         | App (expr1,expr2) -> "("^(string_of_expr expr1)^" "^(string_of_expr expr2)^")"
         | Abs (abs,expr) -> "(lam "^abs^"."^(string_of_expr expr)^")"
         | Op (op,liste_expr) -> "("^(string_of_operateur op)^" "^(concat_string_liste ( map string_of_expr  liste_expr))^")"
-        | Erreur(erreur) -> erreur
+        
 
     (* Affiche une expression *)
     let afficherExpr expression = printf "%s\n" (string_of_expr expression) 
@@ -83,6 +85,12 @@ module ISWIM =
 
 
     (**** Fonctions utiles ****)
+
+    let getStringErreur n =
+      match n with
+        0 -> "Une abstraction est contenu dans la liste de l'opération"
+        | 1 -> "Nombre d'élément Invalide"
+        | 2 -> "La constante  ne peut pas être utilisé"
 
     (* Donne le nombre d'opérande requis pour utiliser l'opérateur *)
     let getNbrOperande op =
@@ -227,7 +235,7 @@ module ISWIM =
 
                 | (_,Erreur erreur) -> Erreur("Erreur : "^erreur) 
 
-                | (Const const,_) -> Erreur("La constante "^(string_of_int const)^" ne peut pas être utilisé")
+                | (Const const,_) -> Throw 2
 
                 | (Abs(abs,Erreur erreur),expr2) ->   Erreur("Erreur :"^erreur)
 
@@ -287,10 +295,10 @@ module ISWIM =
                 begin
                   if ((getNbrOperande op) = (length liste_expr) )
                         then (calcul op (convert_liste_expr_liste_int liste_expr))
-                        else Erreur "Nombre d'élément Invalide"           
+                        else Throw 1           
                 end 
               else if (aux liste_expr) 
-                    then Erreur "Une abstraction est contenu dans la liste de l'opération"
+                    then Throw 0
                     else Op(op,( map delta_red liste_expr))
           
             | Erreur erreur -> Erreur erreur
