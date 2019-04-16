@@ -10,7 +10,7 @@ let expression6 = (
   Signal("signal",
     (App(
       (Spawn
-        (Present("signal",expression5,Const 3))
+        (Present("signal",Op(Add,[expression5;Signal("coucou",Present("coucou",Const 5,Const 65))]),Const 3))
       )
       ,(Spawn
         (Emit "signal"))
