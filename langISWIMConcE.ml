@@ -28,6 +28,7 @@ module ISWIM =
       | Emit of string 
       | Signal of string * exprISWIM
       | Throw of int
+      | Catch of int * exprISWIM * exprISWIM
 
 
 
@@ -74,6 +75,7 @@ module ISWIM =
         | Emit (signal) -> "emit "^signal 
         | Signal (signal,expr) -> "signal "^signal^" in "^(string_of_expr expr)
         | Throw erreur -> "ERREUR"
+        | Catch (erreur,expr1,expr2) -> "try "^(string_of_expr expr1)^" catch ERREUR in "^(string_of_expr expr2)
 
     (* Affiche une expression *)
     let afficherExpr expression = printf "%s\n" (string_of_expr expression) 
