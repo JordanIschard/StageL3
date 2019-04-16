@@ -29,8 +29,7 @@ module SECDMachine =
 
     type e =  
        Env of (string * (control_string * e list))  (* (s,(C,Env)) *)
-      | Bind of id                                  (* (init,s) *)
-      | Emit_Env of id                              (* (emit,s) *)
+      | Init of id                                  (* (init,s) *)
 
     type env = e list
 
@@ -40,6 +39,9 @@ module SECDMachine =
 
     type stack = s list
 
+    type signal = Emit_SI of string                 (* (emit,s) *)
+
+    type si = signal list
 
     type dump =
         Vide_D
@@ -51,7 +53,12 @@ module SECDMachine =
 
     type stuck = st list
 
-    type secd = MachineSECD of stack * env * control_string * wait * stuck * dump
+    type secd = MachineSECD of stack * env * control_string * wait * stuck * si * dump
+
+
+
+
+    (**** Exception ****)
 
     exception AucuneSubPossible
     exception EtatInconnu
@@ -60,6 +67,7 @@ module SECDMachine =
     exception SignalDejaInit
     exception SignalDejaEmit
     exception SignalNonInit
+    exception EtatDumpInconnu
 
 
 
@@ -124,9 +132,8 @@ module SECDMachine =
         [] -> ""
         | (Env(var,(control_string,env)))::t ->
                     "["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_env env)^"]] , "^(string_of_env t)
-        | (Emit_Env(signal))::t -> "[emit,"^signal^"] , "^(string_of_env t)
        
-        | (Bind(signal))::t -> "[init,"^signal^"] , "^(string_of_env t)
+        | (Init(signal))::t -> "[init,"^signal^"] , "^(string_of_env t)
 
     (* Convertit une pile en chaîne de caractère *)
     let rec string_of_stack stack =
@@ -141,25 +148,39 @@ module SECDMachine =
         Vide_D -> ""
         | Save(stack,env,control_string,dump) -> "( "^(string_of_stack stack)^" , "^(string_of_env env)^" , "^(string_of_control_string control_string)^" , "^(string_of_dump dump)^" )"
 
+    (* Convertit la liste des éléments en attente en chaîne de caractère *)
     let rec string_of_wait wait =
       match wait with 
         [] -> ""
         | dump::t -> "("^(string_of_dump dump)^") , "^(string_of_wait t)
 
+    (* Convertit la liste des éléments bloqués en chaîne de caractère *)
     let rec string_of_stuck stuck =
       match stuck with 
         [] -> ""
-        | (signal,dump)::t -> "( "^signal^" , "^(string_of_dump dump)^") , "^(string_of_stuck t)
+        | (signal,dump)::t -> "( "^signal^", "^(string_of_dump dump)^" , "^(string_of_stuck t)
+
+    (* Convertit la liste des signaux émits en chaîne de caractère *)
+    let rec string_of_si si =
+      match si with
+        [] -> ""
+        | (Emit_SI(signal))::t -> "[emit,"^signal^"] , "^(string_of_si t) 
 
     (* Convertit une machine SECD en chaîne de caractère *)
     let rec string_of_secdMachine machine =
       match machine with
-        MachineSECD(stack,env,control_string,wait,stuck,dump) -> "( "^(string_of_stack stack)^" , "^(string_of_env env)^
-        " , "^(string_of_control_string control_string)^" , "^(string_of_wait wait)^" , "^(string_of_stuck stuck)^" , "^(string_of_dump dump)^" )\n"
+        MachineSECD(stack,env,control_string,wait,stuck,si,dump) -> 
+        "( STACK : "^(string_of_stack stack)^" \n
+              , ENV : "^(string_of_env env)^" \n
+              , CONTROL : "^(string_of_control_string control_string)^" \n
+              , WAIT : "^(string_of_wait wait)^" \n
+              , STUCK : "^(string_of_stuck stuck)^" \n
+              , SI : "^(string_of_si si)^" \n
+              , DUMP : "^(string_of_dump dump)^" \n)"
 
     (* Affiche la machine SECD *)
     let afficherSECD machine = 
-       printf "MachineSECD : %s" (string_of_secdMachine machine)
+       printf "MachineSECD : %s\n" (string_of_secdMachine machine)
 
 
 
@@ -201,18 +222,18 @@ module SECDMachine =
         | _::t -> estDansEnvSECD t var
 
     (* Vérifie si c'est un init *)
-    let rec estBind env signal =
+    let rec estInit env signal =
       match env with
        [] -> false
-        | (Bind(signal1))::t -> if (equal signal signal1) then true else estBind t signal
-        | _::t -> estBind t signal
+        | (Init(signal1))::t -> if (equal signal signal1) then true else estInit t signal
+        | _::t -> estInit t signal
 
     (* Vérifie si c'est une émission *)
-    let rec estEmit env signal =
-      match env with
+    let rec estEmit si signal =
+      match si with
         [] -> false
-        | (Emit_Env(signal1))::t -> if (equal signal signal1) then true else estEmit t signal
-        | _::t -> estEmit t signal
+        | (Emit_SI(signal1))::t -> if (equal signal signal1) then true else estEmit t signal
+
 
     (* Ajoute une  fermeture à l'environnement *)
     let rec ajoutEnv_secd env varARemp  fermeture =
@@ -223,17 +244,11 @@ module SECDMachine =
               | Remp -> raise EtatInconnu
 
     (* Ajoute un signal initialisé dans l'environnement *)
-    let rec ajoutBind env signal = 
-      if(estBind env signal)
+    let rec ajoutInit env signal = 
+      if(estInit env signal)
         then raise SignalDejaInit
-        else (Bind(signal))::env
-    
-    (* Ajoute une émission dans l'environnement *)
-    let rec ajoutEmit env signal = 
-      if(estEmit env signal)
-        then raise SignalDejaEmit
-        else (Emit_Env(signal))::env
-    
+        else (Init(signal))::env
+
     (* Retire la partie du spawn du control string *)
     let rec spawnRetirer control_string =
       match control_string with
@@ -248,18 +263,12 @@ module SECDMachine =
         | Espawn::t -> []
         | h::t -> h::(spawnRecup t)
 
-    (* Retire les emissions de la liste d'environnement *)
-    let rec emitRetirer env =
-      match env with
-        [] -> []
-        | (Emit_Env(signal))::t -> emitRetirer t
-        | h::t -> h::(emitRetirer t)
  
     (* Dans le cas où le signal attendu n'est pas emit on applique le second choix*)
     let rec secondChoix st =
       match st with
         [] -> []
-        | (signal,Save(s,e,((Present_SECD(signal1,c1,c2))::c),d))::t -> (Save( s , (emitRetirer e) , (append c2 c) , d ))::(secondChoix t)
+        | (signal,Save(s,e,((Present_SECD(signal1,c1,c2))::c),d))::t -> (Save( s , e , (append c2 c) , d ))::(secondChoix t)
         | _ -> raise EtatInconnu
 
     (* Donne la liste des éléments de stuck qui réagisse au signal*)
@@ -276,9 +285,15 @@ module SECDMachine =
       match stuck with
         [] -> []
         | (signal1,save)::t -> 
-        if (equal signal signal1) 
-          then (resteStuck signal t)
-          else (signal1,save)::(resteStuck signal t)
+          if (equal signal signal1) 
+            then (resteStuck signal t)
+            else (signal1,save)::(resteStuck signal t)
+    
+    (* Ajoute un signal à la liste de signaux émits *)
+    let rec ajoutSI si signal =
+      if (estEmit si signal)
+        then si
+        else append si [(Emit_SI(signal))]
 
     (**** Machine SECD ****)
 
@@ -288,65 +303,68 @@ module SECDMachine =
       afficherSECD machine ; 
       match machine with
 
-        MachineSECD(s,e,(Const_C b)::c,w,st,d) -> machineSECD (MachineSECD( ( Fermeture_secd([Const_C b] , e) :: s) , e , c , w , st , d ))
+        MachineSECD(s,e,(Const_C b)::c,w,st,si,d) -> machineSECD (MachineSECD( ( Fermeture_secd([Const_C b] , e) :: s) , e , c , w , st , si , d ))
 
-        | MachineSECD(s,e,(Var_C x)::c,w,st,d) -> machineSECD (MachineSECD( ((substitution_secd x e) :: s) , e , c , w , st , d ))
+        | MachineSECD(s,e,(Var_C x)::c,w,st,si,d) -> machineSECD (MachineSECD( ((substitution_secd x e) :: s) , e , c , w , st , si , d ))
 
-        | MachineSECD(s,e,(Prim(op))::c,w,st,d) ->
+        | MachineSECD(s,e,(Prim(op))::c,w,st,si,d) ->
             begin
               let nbrOperande = getNbrOperande op in 
               try machineSECD (MachineSECD (
                                 (Fermeture_secd(secdLanguage_of_exprISWIM (calcul op ( rev (convert_liste_fermeture_secd_liste_int s nbrOperande))),[]))::(nbrElemRetirer s nbrOperande)
-                                , e , c , w , st , d ))
+                                , e , c , w , st , si , d ))
               with _ -> raise EtatInconnu
             end
         
-        | MachineSECD(s,e,(Pair(abs,control_string))::c,w,st,d) -> machineSECD (MachineSECD(
+        | MachineSECD(s,e,(Pair(abs,control_string))::c,w,st,si,d) -> machineSECD (MachineSECD(
                                                                             ( Fermeture_secd([Pair(abs,control_string)],e) :: s)
-                                                                            , e , c , w , st , d ))
+                                                                            , e , c , w , st , si , d ))
+                                                                                  
+        | MachineSECD(v::Remp::s,e,(Ap)::c,w,st,si,d) -> machineSECD (MachineSECD(v::s,e,c,w,st,si,d))
 
-        | MachineSECD(v::Remp::s,e,(Ap)::c,w,st,d) -> machineSECD (MachineSECD(v::s,e,c,w,st,d))
+        | MachineSECD(Remp::v::s,e,(Ap)::c,w,st,si,d) -> machineSECD (MachineSECD(v::s,e,c,w,st,si,d))
 
-        | MachineSECD(Remp::v::s,e,(Ap)::c,w,st,d) -> machineSECD (MachineSECD(v::s,e,c,w,st,d))
+        | MachineSECD(v::( Fermeture_secd([Pair(abs,c1)],e1))::s,e,(Ap)::c,w,st,si,d) -> machineSECD (MachineSECD( [] , (ajoutEnv_secd e1 abs v) , c1 , w , st , si , Save(s,e,c,d) ))
 
-        | MachineSECD(v::( Fermeture_secd([Pair(abs,c1)],e1))::s,e,(Ap)::c,w,st,d) -> machineSECD (MachineSECD( [] , (ajoutEnv_secd e1 abs v) , c1 , w , st , Save(s,e,c,d) ))
+        | MachineSECD(v::s,e,[], w , st , si ,Save(s1,e1,c,d)) -> machineSECD (MachineSECD( v::s1 , e1 , c , w , st , si , d ))
 
-        | MachineSECD(v::s,e,[], w , st ,Save(s1,e1,c,d)) -> machineSECD (MachineSECD( v::s1 , e1 , c , w , st , d ))
+        | MachineSECD(s,e,(Bspawn)::c,w,st,si,d) -> machineSECD (MachineSECD( Remp::s , e , (spawnRetirer c) , (append w [(Save(s,e,(spawnRecup c),d))] ), st , si , d ))
 
-        | MachineSECD(s,e,(Bspawn)::c,w,st,d) -> machineSECD (MachineSECD( Remp::s , e , (spawnRetirer c) , (append w [(Save(s,e,(spawnRecup c),d))] ), st , d ))
+        | MachineSECD(s,e,(Signal_SECD(signal,c1))::c,w,st,si,d) -> machineSECD (MachineSECD( [] , (ajoutInit e signal) , c1 , w , st , si , Save(s,e,c,d)))
 
-        | MachineSECD(s,e,(Signal_SECD(signal,c1))::c,w,st,d) -> machineSECD (MachineSECD( [] , (ajoutBind e signal) , c1 , w , st , Save(s,e,c,d)))
-
-        | MachineSECD(s,e,(Present_SECD(signal,c1,c2))::c,w,st,d) ->
-          if (estBind e signal)
+        | MachineSECD(s,e,(Present_SECD(signal,c1,c2))::c,w,st,si,d) ->
+          if (estInit e signal)
             then 
-              if (estEmit e signal)
-                then machineSECD (MachineSECD( s , e ,(append c1 c) , w , st , d ))
+              if (estEmit si signal)
+                then machineSECD (MachineSECD( s , e ,(append c1 c) , w , st , si , d ))
 
                 else 
                   match w with
-                    [] -> machineSECD (MachineSECD( [] , [] , [] , [] , (append st [(signal,(Save(s,e,(Present_SECD(signal,c1,c2))::c,d)))]) , Vide_D ))
-                    | (Save(s,e,c,d))::t -> machineSECD (MachineSECD( s , e , c , t , (append st [(signal,(Save(s,e,(Present_SECD(signal,c1,c2))::c,d)))]) , Vide_D ))
+
+                    [] -> machineSECD (MachineSECD( [] , [] , [] , [] , (append st [(signal,(Save(s,e,(Present_SECD(signal,c1,c2))::c,d)))]) , si , Vide_D ))
+
+                    | (Save(s,e,c3,d))::t -> machineSECD (MachineSECD( s , e , c3 , t , (append st [(signal,(Save(s,e,(Present_SECD(signal,c1,c2))::c,d)))]) , si , Vide_D ))
+
                     | _ -> raise EtatInconnu
 
             else raise SignalNonInit
 
-        | MachineSECD([],[],[],(Save(s,e,c,d))::w,st,Vide_D) -> machineSECD (MachineSECD( s , e , c , w , st , d ))
+        | MachineSECD(s1,e1,[],(Save(s,e,c,d))::w,st,si,Vide_D) -> machineSECD (MachineSECD( s , e , c , w , st , si , d ))
 
-        | MachineSECD(s,e,(Emit_SECD(signal))::c,w,st,d) -> machineSECD (MachineSECD( Remp::s , (ajoutEmit e signal) , c , (append (reveil signal st) w) , (resteStuck signal st) , d ))
+        | MachineSECD(s,e,(Emit_SECD(signal))::c,w,st,si,d) -> machineSECD (MachineSECD( Remp::s , e , c , (append (reveil signal st) w) , (resteStuck signal st) , (ajoutSI si signal) , d ))
         
-        | MachineSECD([],[],[],[],st,Vide_D) -> machineSECD (MachineSECD( [] , [] , [] , (secondChoix st) , [] , Vide_D ))
+        | MachineSECD([],[],[],[],st,si,Vide_D) -> machineSECD (MachineSECD( [] , [] , [] , (secondChoix st) , [] , [] , Vide_D ))
 
-        | MachineSECD(( Fermeture_secd([Const_C const],env))::s,e,[],[],[],Vide_D) -> [Const_C const]
+        | MachineSECD(( Fermeture_secd([Const_C const],env))::s,e,[],[],[],si,Vide_D) -> [Const_C const]
 
-        | MachineSECD(Remp::s,e,[],w,st,Vide_D) -> raise FinEtrange
+        | MachineSECD(Remp::s,e,[],w,st,si,Vide_D) -> [Var_C "unit"]
 
-        | MachineSECD(( Fermeture_secd([Pair(abs,c)],env))::s,e,[],[],[],Vide_D) -> [Pair(abs,c)]
+        | MachineSECD(( Fermeture_secd([Pair(abs,c)],env))::s,e,[],[],[],si,Vide_D) -> [Pair(abs,c)]
 
-        | _-> raise EtatInconnu
+        | _ -> raise EtatInconnu
 
     (* Lance et affiche le résultat de l'expression *)
     let lancerSECD expression =
-       printf "Le résultat est %s \n" (string_of_control_string (machineSECD (MachineSECD([],[],(secdLanguage_of_exprISWIM expression),[],[],Vide_D))))
+       printf "Le résultat est %s \n" (string_of_control_string (machineSECD (MachineSECD([],[],(secdLanguage_of_exprISWIM expression),[],[],[],Vide_D))))
     
   end
