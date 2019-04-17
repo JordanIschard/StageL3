@@ -17,7 +17,7 @@ let expression6 = (
       )
     )
   )
-) ;;
+);;
 
 Printf.printf " Test de la MachineSECD\n\n" ;;
 

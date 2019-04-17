@@ -24,7 +24,7 @@ module SECDMachine =
     | Present_SECD of id * c list * c list          (* present s in t1 t2 *)
     | Signal_SECD of id * c list                    (* signal s in t *)
     | Throw_SECD of int
-    | Catch_SECD of int * c list * c list 
+    | Catch_SECD of int * c list * (variable * c list) 
 
     type control_string = c list
 
@@ -87,7 +87,6 @@ module SECDMachine =
 
 
 
-
     (**** Affichage ****)
 
     (* Concatène une liste de chaîne de caractère en une seule chaîne de caractère *)
@@ -119,7 +118,7 @@ module SECDMachine =
 
         | (Throw erreur) -> [Throw_SECD(erreur)]
 
-        | (Catch(erreur,expr1,expr2)) -> [Catch_SECD(erreur,(secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr1))]
+        | (Catch(erreur,expr1,(abs,expr2))) -> [Catch_SECD(erreur,(secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
 
 
     let message_of_erreur erreur =
@@ -132,6 +131,7 @@ module SECDMachine =
         | 6 ->  "ERREUR : Le spawn n'est pas bien délimité"
         | 7 ->  "ERREUR : Signal non initialisé"
         | 8 ->  "ERREUR : Signal déjà initialisé"
+        | 9 ->  "ERREUR : Format du catch invalide"
         | _ ->  "ERREUR : Cette erreur n'existe pas "
 
     (* Convertit la chaîne de contrôle en une chaîne de caractère *)
@@ -161,7 +161,7 @@ module SECDMachine =
 
         | ((Throw_SECD(erreur))::t) -> (message_of_erreur erreur)^" "^(string_of_control_string t)
 
-        | ((Catch_SECD(erreur,expr1,expr2))::t) -> "try "^(string_of_control_string expr1)^" catch "^(message_of_erreur erreur)^" in ("^(string_of_control_string expr2)^")"^(string_of_control_string t) 
+        | ((Catch_SECD(erreur,expr1,(abs,expr2)))::t) -> "try "^(string_of_control_string expr1)^" catch "^(message_of_erreur erreur)^" in ("^abs^" , "^(string_of_control_string expr2)^")"^(string_of_control_string t) 
 
     (* Convertit un environnement en chaîne de caractère *)
     let rec string_of_env env =
@@ -202,9 +202,9 @@ module SECDMachine =
           match handler with
             Vide_H -> ""
             | SaveHandler(erreur,(stack,env,control_string,wait,stuck,si,dump,hand)) -> 
-            "\n     STACK   : "^(string_of_stack stack)^" \n    ENV     : "^(string_of_env env)^" \n    CONTROL : "^(string_of_control_string control_string)^" \n"^
-            "     WAIT    : "^(string_of_wait wait)^" \n    STUCK   : "^(string_of_stuck stuck)^" \n    SI      : "^(string_of_si si)^" \n    DUMP    : "^(string_of_dump dump)^" \n"^
-            " HANDLER    : "^(string_of_handler hand)^" \n"
+            "\n   ERREUR : "^(message_of_erreur erreur)^"\n   STACK   : "^(string_of_stack stack)^" \n   ENV     : "^(string_of_env env)^" \n   CONTROL : "^(string_of_control_string control_string)^" \n"^
+            "   WAIT    : "^(string_of_wait wait)^" \n   STUCK   : "^(string_of_stuck stuck)^" \n   SI      : "^(string_of_si si)^" \n   DUMP    : "^(string_of_dump dump)^" \n"^
+            "   HANDLER : "^(string_of_handler hand)^" \n"
 
     (* Convertit une machine SECD en chaîne de caractère *)
     let rec string_of_secdMachine machine =
@@ -324,6 +324,19 @@ module SECDMachine =
     (* Applique les règles de la machine SECD en affichant les étapes *)
     let rec machineSECD machine =
       
+      let rec testHandler handler erreur =
+        match handler with
+          
+          Vide_H -> [Throw_SECD erreur]
+          
+          | SaveHandler(erreur1,(s1,e1,(Pair(abs,c2))::c1,w1,st1,si1,d1,h1)) -> printf " %d %d\n" erreur erreur1 ;
+            if (erreur == erreur1)
+              then machineSECD (MachineSECD( [] , (ajoutEnv_secd e1 abs (Fermeture_secd([Throw_SECD(erreur)] , []))) ,  c2 , w1 , st1 , si1 , Save(s1,e1,c1,d1) , h1 ))
+              else testHandler h1 erreur      
+          
+          | _ -> [Throw_SECD 9]
+
+      in
       afficherSECD machine ; 
       match machine with
 
@@ -333,7 +346,7 @@ module SECDMachine =
         (* Si on a une variable en tête de la chaîne de contrôle, on la substitue par son élément lié dans l'environnement et on la mets dans la pile *)
         | MachineSECD(s,e,(Var_C x)::c,w,st,si,d,h) -> machineSECD (MachineSECD( ((substitution_secd x e) :: s) , e , c , w , st , si , d , h))
 
-        | MachineSECD(s,e,(Throw_SECD erreur)::c,w,st,si,d,h) -> [Throw_SECD erreur] (* ce cas à modifier en vérifiant la présence d'un catch *)
+        | MachineSECD(s,e,(Throw_SECD erreur)::c,w,st,si,d,h) -> printf "uehfoeuh %s\n" (string_of_handler h);testHandler h erreur
 
         (* Si on a un opérateur, on prends le nombre d'opérande requis par l'opérateur et on fais le calcul dans la pile *)
         | MachineSECD(s,e,(Prim(op))::c,w,st,si,d,h) ->
@@ -342,8 +355,10 @@ module SECDMachine =
               try machineSECD (MachineSECD (
                                 (Fermeture_secd(secdLanguage_of_exprISWIM (calcul op ( rev (convert_liste_fermeture_secd_liste_int s nbrOperande))),[]))::(nbrElemRetirer s nbrOperande)
                                 , e , c , w , st , si , d , h ))
-              with FormatOpErreur -> machineSECD (MachineSECD([],[],[Throw_SECD(5)],[],[],[],Vide_D,Vide_H))
+              with FormatOpErreur -> machineSECD (MachineSECD([],[],[Throw_SECD(5)],[],[],[],Vide_D,h))
             end
+
+        | MachineSECD(s,e,(Catch_SECD(erreur,c1,(abs,c2)))::c,w,st,si,d,h) -> machineSECD (MachineSECD( s , e ,(append c1 c) , w , st , si , d , SaveHandler(erreur,(s,e,(append [Pair(abs,c2)] c),w,st,si,d,h))))
         
         (* Si on a une abstraction dans la chaîne de contrôle, on la mets dans la pile *)
         | MachineSECD(s,e,(Pair(abs,control_string))::c,w,st,si,d,h) -> machineSECD (MachineSECD( (Fermeture_secd([Pair(abs,control_string)],e) :: s) , e , c , w , st , si , d , h ))
@@ -359,7 +374,7 @@ module SECDMachine =
         | MachineSECD(v::( Fermeture_secd([Pair(abs,c1)],e1))::s,e,(Ap)::c,w,st,si,d,h) -> 
             begin
               try machineSECD (MachineSECD( [] , (ajoutEnv_secd e1 abs v) , c1 , w , st , si , Save(s,e,c,d) , h ))
-              with EtatEnvInvalide -> machineSECD (MachineSECD([],[],[Throw_SECD 4],[],[],[],Vide_D,Vide_H))
+              with EtatEnvInvalide -> machineSECD (MachineSECD([],[],[Throw_SECD 4],[],[],[],Vide_D,h))
             end
 
         (* Si la chaîne de contrôle est vide mais pas le dépôt, on prends la sauvegarde et on la replace dans la machine *)
@@ -370,14 +385,14 @@ module SECDMachine =
         | MachineSECD(s,e,(Bspawn)::c,w,st,si,d,h) -> 
           begin
             try machineSECD (MachineSECD( Remp::s , e , (spawnRetirer c) , (append w [(Save(s,e,(spawnRecup c),d))] ), st , si , d , h ))
-            with FinSpawnNonTrouvable -> machineSECD (MachineSECD([],[],[Throw_SECD(6)],[],[],[],Vide_D,Vide_H))
+            with FinSpawnNonTrouvable -> machineSECD (MachineSECD([],[],[Throw_SECD(6)],[],[],[],Vide_D,h))
           end
 
         (* Si on a un signal, on l'ajoute dans l'environnement on fait une sauvegarde et on mets l'expression lié au signal dans la chaîne de contrôle*)
         | MachineSECD(s,e,(Signal_SECD(signal,c1))::c,w,st,si,d,h) -> 
           begin
             try machineSECD (MachineSECD( [] , (ajoutInit e signal) , c1 , w , st , si , Save(s,e,c,d) , h ))
-            with SignalDejaInit -> machineSECD (MachineSECD([],[],[Throw_SECD (8)],[],[],[],Vide_D,Vide_H))
+            with SignalDejaInit -> machineSECD (MachineSECD([],[],[Throw_SECD (8)],[],[],[],Vide_D,h))
           end
 
         (* Si on a un present, plusieurs choix sont possibles *)
@@ -404,10 +419,10 @@ module SECDMachine =
                     | (Save(s,e,c3,d))::t -> machineSECD (MachineSECD( s , e , c3 , t , (append st [(signal,(Save(s,e,(Present_SECD(signal,c1,c2))::c,d)))]) , si , Vide_D , h))
 
                     (* elle n'est pas de la forme attendu du coup on lève une exception *)
-                    | _ -> machineSECD (MachineSECD([],[],[Throw_SECD(3)],[],[],[],Vide_D,Vide_H))
+                    | _ -> machineSECD (MachineSECD([],[],[Throw_SECD(3)],[],[],[],Vide_D,h))
             
             (* le signal n'est pas initialisé donc on lève une exception *)
-            else machineSECD (MachineSECD([],[],[Throw_SECD (7)],[],[],[],Vide_D,Vide_H))
+            else machineSECD (MachineSECD([],[],[Throw_SECD (7)],[],[],[],Vide_D,h))
 
         (* Si la chaîne de contrôle ainsi que le depôt sont vide on prend dans la liste d'attente la tête qui est une sauvegarde que l'on mets comme nouvelle état de la machine *)
         | MachineSECD(s1,e1,[],(Save(s,e,c,d))::w,st,si,Vide_D,h) -> machineSECD (MachineSECD( s , e , c , w , st , si , d , h ))
@@ -421,7 +436,7 @@ module SECDMachine =
         | MachineSECD([],[],[],[],st,si,Vide_D,h) -> 
           begin 
             try machineSECD (MachineSECD( [] , [] , [] , (secondChoix st) , [] , [] , Vide_D , h ))
-            with EtatStuckInvalide -> machineSECD (MachineSECD([],[],[Throw_SECD 2],[],[],[],Vide_D,Vide_H))
+            with EtatStuckInvalide -> machineSECD (MachineSECD([],[],[Throw_SECD 2],[],[],[],Vide_D,h))
           end
 
         (* Si tout est vide excepté la pile, l'environnement et la liste de signaux émit, on finit le focntionnement de la machine et on retourne l'élément en tête de pile. Ici une constante *)
