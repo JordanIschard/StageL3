@@ -244,15 +244,15 @@ module SECDMachine =
 
         | Signal_ISWIM (signal,expr)               ->   [Signal (signal,(secdLanguage_of_exprISWIM expr))]
 
-        | (Throw_ISWIM error)                     ->   [Throw(error)]
+        | (Throw_ISWIM error)                      ->   [Throw(error)]
 
-        | (Catch_ISWIM(error,expr1,(abs,expr2)))  ->   [Catch(error,(secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
+        | (Catch_ISWIM(error,expr1,(abs,expr2)))   ->   [Catch(error,(secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
 
 
     (* Donne une chaîne de caractères contenant un message d'erreur par rapport à l'identifiant de l'erreur *)
     let error_message error =
       match error with
-          0  ->  "ERREUR : Etrange..."                                         (* StrangeEnd            *)
+          0  ->  "ERREUR : Etrange..."                                           (* StrangeEnd            *)
 
         | 1   ->   "ERREUR : Format de la machine invalide :/"                   (* UnknowState           *)
         | 2   ->   "ERREUR : Format de la liste bloqué invalide"                 (* UnknowStuckState      *)
@@ -265,7 +265,7 @@ module SECDMachine =
         | 8   ->   "ERREUR : Signal non initialisé"                              (* SignalNotInit         *)
         | 9   ->   "ERREUR : Signal déjà initialisé"                             (* SignalAlreadyInit     *)
         
-        | 10   ->   "ERREUR : Aucune substitution possible"                       (* NoSubPossible         *)
+        | 10  ->   "ERREUR : Aucune substitution possible"                       (* NoSubPossible         *)
 
         | 11  ->   "ERREUR : Le format du spawn est invalide"                    (* EndSpawnNotFound      *)
 
@@ -290,7 +290,7 @@ module SECDMachine =
       
         | (Ap)::t                              ->   "ap "^(string_of_control_string t)
       
-        | (Pair(abs,expr_list))::t             ->   "("^abs^",("^(string_of_control_string expr_list)^") "^(string_of_control_string t)
+        | (Pair(abs,expr_list))::t             ->   "("^abs^",("^(string_of_control_string expr_list)^")) "^(string_of_control_string t)
       
         | (Prim(op))::t                        ->   "prim "^(string_of_operateur op)^" "^(string_of_control_string t)
 
@@ -378,8 +378,8 @@ module SECDMachine =
     (* Convertit la liste des threads en chaîne de caractères *)
     let rec string_of_thread_list thread_list =
       match thread_list with
-        (wait,stuck)  ->    "\n   WAIT    : "^(string_of_wait wait)
-                           ^"\n   STUCK   : "^(string_of_stuck stuck)^"\n"
+        (wait,stuck)  ->    "\n     WAIT    : "^(string_of_wait wait)
+                           ^"\n     STUCK   : "^(string_of_stuck stuck)
 
     
     
@@ -411,7 +411,7 @@ module SECDMachine =
     (* Convertit la liste des signaux partagés lié à leurs threads en chaîne de caractères *)
     let rec string_of_shared_signals shared_signals =
       match shared_signals with
-          []                           ->   ""
+          []                              ->   ""
 
         | SSI(id_thread,signals_list)::t  ->   "["^(string_of_int id_thread)^" : {"^(string_of_ssi signals_list)^"}] , "^(string_of_shared_signals t)  
 
@@ -419,8 +419,8 @@ module SECDMachine =
     (* Convertit la liste de tous les signaux en chaîne de caractères *)
     let rec string_of_signals signals =
       match signals with
-        (current_signals,shared_signals)  ->    "\n   CURRENT  : "^(string_of_current_signals current_signals)
-                                               ^"\n   SHARED   : "^(string_of_shared_signals shared_signals)^"\n"
+        (current_signals,shared_signals)  ->    "\n     CURRENT  : "^(string_of_current_signals current_signals)
+                                               ^"\n     SHARED   : "^(string_of_shared_signals shared_signals)
 
     
     (* Convertit le gestionnaire en chaîne de caractères *)
@@ -428,23 +428,23 @@ module SECDMachine =
       match handler with
           Vide_H                                                                                                 ->   ""
         
-        | SaveHandler(error,(id,stack,env,control_string,thread_list,signals,dump,handler,identifier_producer))  ->    "\n   ERREUR  : "^(error_message error)
-                                                                                                                      ^"\n   ID      : "^(string_of_int id)
-                                                                                                                      ^"\n   STACK   : "^(string_of_stack stack)
-                                                                                                                      ^"\n   ENV     : "^(string_of_environment env)
-                                                                                                                      ^"\n   CONTROL : "^(string_of_control_string control_string)
-                                                                                                                      ^"\n   THREADS : "^(string_of_thread_list thread_list)
-                                                                                                                      ^"\n   SIGNALS : "^(string_of_signals signals)
-                                                                                                                      ^"\n   DUMP    : "^(string_of_dump dump)
-                                                                                                                      ^"\n   HANDLER : "^(string_of_handler handler)
-                                                                                                                      ^"\n   IP      : "^(string_of_int identifier_producer)
+        | SaveHandler(error,(id,stack,env,control_string,thread_list,signals,dump,handler,identifier_producer))  ->    "\n      ERREUR  : "^(error_message error)
+                                                                                                                      ^"\n      ID      : "^(string_of_int id)
+                                                                                                                      ^"\n      STACK   : "^(string_of_stack stack)
+                                                                                                                      ^"\n      ENV     : "^(string_of_environment env)
+                                                                                                                      ^"\n      CONTROL : "^(string_of_control_string control_string)
+                                                                                                                      ^"\n      THREADS : "^(string_of_thread_list thread_list)
+                                                                                                                      ^"\n      SIGNALS : "^(string_of_signals signals)
+                                                                                                                      ^"\n      DUMP    : "^(string_of_dump dump)
+                                                                                                                      ^"\n      HANDLER : "^(string_of_handler handler)
+                                                                                                                      ^"\n      IP      : "^(string_of_int identifier_producer)
                                                                                                                       ^"\n"
 
 
     (* Convertit une machine SECD en chaîne de caractères *)
     let rec string_of_secdMachine machine =
       match machine with
-        MachineSECD(id,stack,env,control_string,thread_list,signals,dump,handler,identifier_producer)  ->    "\n   ID      : "^(string_of_int id)
+        MachineSECD(id,stack,env,control_string,thread_list,signals,dump,handler,identifier_producer)  ->    "\n    ID      : "^(string_of_int id)
                                                                                                              ^"\n   STACK   : "^(string_of_stack stack)
                                                                                                              ^"\n   ENV     : "^(string_of_environment env)
                                                                                                              ^"\n   CONTROL : "^(string_of_control_string control_string)
@@ -453,7 +453,7 @@ module SECDMachine =
                                                                                                              ^"\n   DUMP    : "^(string_of_dump dump)
                                                                                                              ^"\n   HANDLER : "^(string_of_handler handler)
                                                                                                              ^"\n   IP      : "^(string_of_int identifier_producer)
-                                                                                                             ^"\n"
+                                                                                                             ^"\n\n"
 
 
     (* Affiche la machine SECD *)
@@ -496,7 +496,7 @@ module SECDMachine =
       match (stack,nbrOperande) with
           (_,0)                       ->   []
 
-        | (Stack_const b::t,nbr)  ->   b::(convert_stack_element_to_int_list t (nbr - 1)) 
+        | (Stack_const b::t,nbr)      ->   b::(convert_stack_element_to_int_list t (nbr - 1)) 
 
         | (_,nbr)                     ->   if nbr = 0 then raise NotAllConstants else raise OpFormatError
 
@@ -607,7 +607,7 @@ module SECDMachine =
 
  
     (* Dans le cas où le signal attendu n'est pas emit on applique le second choix*)
-    let end_of_the_moment thread_list =
+    let end_of_the_moment_thread thread_list =
       let rec aux stuck =
         match stuck with
             []                                                          ->   []
@@ -617,33 +617,68 @@ module SECDMachine =
           | _                                                           ->   raise UnknowStuckState
       in
       match thread_list with
-        (wait,stuck)                                                    ->   aux stuck 
+        (wait,stuck)                                                    ->   ((aux stuck),[]) 
+
+
+    (* Remet à zero les signaux en vidant la liste des valeurs et en mettant l'émission à faux *)
+    let rec reset_current_signals current_signals =
+      let rec aux signal_list =
+        match signal_list with
+            []                    ->   []
+
+          | (signal,_,init,_)::t  ->   (signal,[],init,false)::(aux t)
+      in
+      match current_signals with
+          []                      ->   []
+
+        | CS(id,signal_list)::t   ->   CS(id,(aux signal_list))::(reset_current_signals t)
+
+
+    (* Prends les signaux dans la liste des signaux courants et les mets dans la liste des signaux partagés *)
+    let rec share current_signals =
+      let rec aux signal_list =
+        match signal_list with
+            []                          ->   []
+
+          | (signal,values,_,true)::t   ->   (signal,values)::(aux t)
+
+          | (signal,values,_,false)::t  ->  (aux t)
+      in
+      match current_signals with
+          []                            ->   []
+
+        | CS(id,signal_list)::t         ->   SSI(id,(aux signal_list))::(share t)
+
+
+    (* Quand l'instant est fini ont remet à zéro les signaux courant et on change les signaux partagés *)
+    let end_of_the_moment_signals signals =
+      match signals with
+        (current_signals,_)  ->   ((reset_current_signals current_signals),(share current_signals)) 
 
 
     (* Donne la liste des éléments de stuck qui réagisse au signal*)
-    let wake_up signal thread_list =
-      let rec aux stuck =
-        match stuck with
-            []                   ->   []
+    let rec wake_up signal stuck =
+      match stuck with
+          []                   ->   []
 
-          | (signal1,thread)::t  ->   if (equal signal signal1) then thread::(aux t) else (aux t)
-      in
-      match thread_list with
-        (wait,stuck)             ->   aux stuck
+        | (signal1,thread)::t  ->   if (equal signal signal1) then thread::(wake_up signal t) else (wake_up signal t)
 
 
     (* Donne la liste des éléments de stuck qui ne réagisse pas au signal *)
-    let rec remains_blocked signal thread_list =
-      let rec aux stuck =
-        match stuck with
-            []                   ->   []
+    let rec remains_blocked signal stuck =
+      match stuck with
+          []                   ->   []
 
-          | (signal1,thread)::t  ->   if (equal signal signal1) then (aux t) else thread::(aux t)
-      in
+        | (signal1,thread)::t  ->   if (equal signal signal1) then (remains_blocked signal t) else (signal1,thread)::(remains_blocked signal t)
+
+
+    (* Vérifie si l'émission d'un signal réveil des threads bloqués*)
+    let check_thread_list signal thread_list = 
       match thread_list with
-        (wait,stuck)             ->   aux stuck
+        (wait,stuck) -> ((append wait (wake_up signal stuck)),(remains_blocked signal stuck))
     
-    (* Ajoute un signal à la liste de signaux émits *)
+
+    (* Mets vrai pour l'émission du signal dans liste de signaux *)
     let rec emit_signal signals id signal =
       let rec aux1 signals =
         match signals with
@@ -666,7 +701,7 @@ module SECDMachine =
           | (current_signals,shared_signals)  ->   ((aux current_signals id ),shared_signals)
 
 
-    (**** Donne la pile avec le calcul fait ****)
+    (* Donne la pile avec le calcul fait *)
     let calculate operator stack environment = 
       let operand_number = getOperandNb operator in
       let result = calcul operator (rev (convert_stack_element_to_int_list stack operand_number)) in
@@ -678,10 +713,12 @@ module SECDMachine =
         | _              ->   raise ImpossibleResult
 
 
+    (* Mets à faux l'initilisation du signal dans la liste des signaux *)
     let remove_init_signal signals id signal =
       let rec aux1 signals =
         match signals with
             (signal1,liste,init,emit)::t      ->   if (signal == signal1) then (append [(signal1,liste,false,emit)]  t) else (append [(signal1,liste,init,emit)]  (aux1 t))
+
           | []                                ->   raise SignalNotInit
 
           in
@@ -709,72 +746,127 @@ module SECDMachine =
         match handler with
             Vide_H                                                       ->   [Throw error]
   
-          | SaveHandler(id_error,(id,s,e,Pair(abs,c1)::c,tl,si,d,h,ip))  ->   if (error == id_error) then machineSECD (MachineSECD(id,s,e,Pair(abs,c1)::Error error::c,tl,si,d,h,ip)) 
+          | SaveHandler(id_error,(id,s,e,Pair(abs,c1)::c,tl,si,d,h,ip))  ->   if (error == id_error) then machineSECD (MachineSECD(id,s,e,Pair(abs,c1)::Error error::Ap::c,tl,si,d,h,ip)) 
                                                                                                      else error_handling error h
 
           | _                                                            ->   raise UnknowHandlerState
       in
+      afficherSECD machine ;
       match machine with
 
           (* On a une constante dans la chaîne de contrôle, on la place dans la pile *)
-          MachineSECD(id,s,e,Constant b::c,tl,si,d,h,ip)                                      ->   machineSECD (MachineSECD( id , Stack_const b::s , e , c , tl , si , d , h , ip )) 
+        | MachineSECD(id,s,e,Constant b::c,tl,si,d,h,ip)                          ->   machineSECD (MachineSECD( id , Stack_const b::s , e , c , tl , si , d , h , ip )) 
 
           (* On a une variable dans la chaîne de contrôle, on place sa substitution (stockée dans l'environnement) dans la pile *)
-        | MachineSECD(id,s,e,Variable x::c,tl,si,d,h,ip)                                      ->   machineSECD (MachineSECD( id , (substitution x e)::s , e , c , tl , si , d , h , ip )) 
+        | MachineSECD(id,s,e,Variable x::c,tl,si,d,h,ip)                          ->   machineSECD (MachineSECD( id , (substitution x e)::s , e , c , tl , si , d , h , ip )) 
 
         (* On a une variable dans la chaîne de contrôle, on place sa substitution (stockée dans l'environnement) dans la pile *)
-        | MachineSECD(id,s,e,Error error::c,tl,si,d,h,ip)                                     ->   machineSECD (MachineSECD( id , Stack_error error::s , e , c , tl , si , d , h , ip )) 
+        | MachineSECD(id,s,e,Error error::c,tl,si,d,h,ip)                         ->   machineSECD (MachineSECD( id , Stack_error error::s , e , c , tl , si , d , h , ip )) 
 
           (* On a prim dans la chaîne de contrôle, on prends le nombre d'élément nécessaire au bon fonctionnement de l'opérateur lié à prim dans la pile 
              et on effectue le calcul. On mets le résultat dans la pile *)
-        | MachineSECD(id,s,e,Prim op::c,tl,si,d,h,ip)                                          ->   
+        | MachineSECD(id,s,e,Prim op::c,tl,si,d,h,ip)                             -> 
                                         begin
                                           try   machineSECD (MachineSECD( id , (calculate op s e) , e , c , tl , si , d , h , ip )) 
                                           with    NotAllConstants        ->   machineSECD (MachineSECD( id , s , e , Throw 12::c , tl , si , d , h , ip ))
+
                                                 | OpFormatError          ->   machineSECD (MachineSECD( id , s , e , Throw 15::c , tl , si , d , h , ip )) 
+
                                                 | InvalidOperandNb       ->   machineSECD (MachineSECD( id , s , e , Throw 13::c , tl , si , d , h , ip ))
+
                                                 | InsufficientOperandNb  ->   machineSECD (MachineSECD( id , s , e , Throw 14::c , tl , si , d , h , ip ))
                                         end
 
           (* On a une abstraction dans la chaîne de contrôle, on place une fermeture ,qui comporte l'abstraction et l'environnment courant, dans la pile *)
-        | MachineSECD(id,s,e,Pair(abs,c1)::c,tl,si,d,h,ip)                                     ->   machineSECD (MachineSECD( id, Closure([Pair(abs,c1)],e)::s , e , c , tl , si , d , h , ip ))  
+        | MachineSECD(id,s,e,Pair(abs,c1)::c,tl,si,d,h,ip)                        ->   machineSECD (MachineSECD( id, Closure([Pair(abs,c1)],e)::s , e , c , tl , si , d , h , ip ))  
         
           (* On a une erreur dans la chaîne de contrôle, on appelle le sous-programme qui gère les erreurs *)
-        | MachineSECD(id,s,e,Throw error::c,tl,si,d,h,ip)                                      ->   (error_handling error h)
+        | MachineSECD(id,s,e,Throw error::c,tl,si,d,h,ip)                         ->   (error_handling error h)
         
           (* On a un gestionnaire d'erreur dans la chaîne de contrôle, on sauvegarde la machine entière dans le handler avec la seconde chaîne de contrôle avec l'erreur liée et  
              on mets la première chaîne de contrôle dans l'état courant*)
-        | MachineSECD(id,s,e,Catch(error,c1,(abs,c2))::c,tl,si,d,h,ip)                         ->   
-                                          machineSECD (MachineSECD( id , s , e , (append c1 c) , tl , si , d , SaveHandler(error,(id,s,e,(append [Pair(abs,c2)] c),tl,si,d,h,ip)) , ip ))
+        | MachineSECD(id,s,e,Catch(error,c1,(abs,c2))::c,tl,si,d,h,ip)            ->   
+                                          machineSECD (MachineSECD( id , Unit::s , e , (append c1 c) , tl , si , d , SaveHandler(error,(id,s,e,(append [Pair(abs,c2)] c),tl,si,d,h,ip)) , ip ))
 
           (* On a Bspawn dans la chaîne de contrôle, on prends la partie de la chaîne de contrôle compris entre Bspawn et Espawn et le mets dans un nouveau thread *)
-        | MachineSECD(id,s,e,Bspawn::c,(w,st),si,d,h,ip)                                       -> 
+        | MachineSECD(id,s,e,Bspawn::c,(w,st),si,d,h,ip)                          -> 
                                         begin 
-                                          try   machineSECD (MachineSECD( id , s , e , (remove_spawn c) , (append w [Thread(ip,s,e,(recover_spawn c),d)],st) , si , d , h , (ip+1) ))
+                                          try   machineSECD (MachineSECD( id , Unit::s , e , (remove_spawn c) , (append w [Thread(ip,s,e,(recover_spawn c),d)],st) , si , d , h , (ip+1) ))
                                           with  EndSpawnNotFound  ->   machineSECD (MachineSECD( id , s , e , Throw 11::c , (w,st) , si , d , h , ip ))
                                         end
 
           (* On a Ap dans la chaîne de contrôle, on sauvegarde une partie de la machine dans le dépôt, on prends l'environnement de la fermeture et on ajoute la nouvelle substitution *)
-        | MachineSECD(id,v::Closure([Pair(abs,c1)],e1)::s,e,Ap::c,tl,si,d,h,ip)                ->   machineSECD (MachineSECD( id , [] , (add_environment e1 abs v) , c1 , tl , si , Save(s,e,c,d) , h , ip ))
+        | MachineSECD(id,v::Closure([Pair(abs,c1)],e1)::s,e,Ap::c,tl,si,d,h,ip)   ->   machineSECD (MachineSECD( id , [] , (add_environment e1 abs v) , c1 , tl , si , Save(s,e,c,d) , h , ip ))
 
           (* On a Ap dans la chaîne de contrôle et on a un Unit, on enlève Ap et Unit *)
-        | MachineSECD(id,v::Unit::s,e,Ap::c,tl,si,d,h,ip)                                      ->   machineSECD (MachineSECD( id , v::s , e , c , tl , si , d , h , ip ))
+        | MachineSECD(id,v::Unit::s,e,Ap::c,tl,si,d,h,ip)                         ->   machineSECD (MachineSECD( id , v::s , e , c , tl , si , d , h , ip ))
               
           (* On a Ap dans la chaîne de contrôle et on a un Unit, on enlève Ap et Unit *)       
-        | MachineSECD(id,Unit::v::s,e,Ap::c,tl,si,d,h,ip)                                      ->   machineSECD (MachineSECD( id , v::s , e , c , tl , si , d , h , ip ))   
+        | MachineSECD(id,Unit::v::s,e,Ap::c,tl,si,d,h,ip)                         ->   machineSECD (MachineSECD( id , v::s , e , c , tl , si , d , h , ip ))   
          
           (* On a la chaîne de contrôle vide et le dépôt à une sauvegarde, on prends la sauvegarde et on l'applique sur la machine *)
-        | MachineSECD( id , v::s , e , [] , tl , si , Save(s1,e1,c,d) , h , ip )               ->   machineSECD (MachineSECD( id , v::s1 , e1 , c , tl , si , d , h , ip ))
+        | MachineSECD(id,v::s,e,[],tl,si,Save(s1,e1,c,d),h,ip)                    ->   machineSECD (MachineSECD( id , v::s1 , e1 , c , tl , si , d , h , ip ))
 
           (* On a la chaîne de contrôle vide et le dépôt à une sauvegarde avec signal, on prends la sauvegarde et on l'applique sur la machine en pensant à retirer initialisation du signal dans la liste *)                             
-        | MachineSECD( id , v::s , e , [] , tl , si , SaveSignal(signal,s1,e1,c,d) , h , ip )  ->  
+        | MachineSECD(id,v::s,e,[],tl,si,SaveSignal(signal,s1,e1,c,d),h,ip)       -> 
                                         begin
                                           try   machineSECD (MachineSECD( id , v::s1 , e1 , c , tl , (remove_init_signal si id signal ) , d , h , ip ))
-                                          with  SignalNotInit  ->   machineSECD (MachineSECD( id , s , e , Throw 8::c , (w,st) , si , d , h , ip )) 
+                                          with  SignalNotInit  ->   machineSECD (MachineSECD( id , s , e , Throw 8::c , tl , si , d , h , ip )) 
                                         end
-                                        
-        | _                                                                                    ->   raise UnknowState
-    
+
+          (* On a un signal s in t dans la chaîne de contrôle, on remplace la chaîne de contrôle (que l'on stock dans le dépôt) par t et on sauvegarde dans le dépôt le reste plus le signal *)
+        | MachineSECD(id,s,e,Signal(signal,c1)::c,tl,si,d,h,ip)                   -> 
+                                        begin
+                                          try   machineSECD (MachineSECD( id , [] , e , c1 , tl , (add_init_signal si id signal) , SaveSignal(signal,Unit::s,e,c,d) , h , ip ))
+                                          with  SignalAlreadyInit ->  machineSECD (MachineSECD( id , s , e , Throw 9::c , tl , si , d , h , ip ))
+                                        end
+
+          (* On a un present dans la chaîne de contrôle, on regarde si le signal est émit : si oui on prends la première possibilités sinon on le mets dans la liste de threads bloqués *)
+        | MachineSECD(id,s,e,Present(signal,c1,c2)::c,tl,si,d,h,ip)               -> 
+                                        if (isInit si id signal)
+                                          then if (isEmit si id signal)
+                                                  then machineSECD (MachineSECD( id , Unit::s , e , (append c1 c) , tl , si , d , h , ip ))
+
+                                                  else match tl with
+                                                          ([],st)                          -> 
+                                                            machineSECD (MachineSECD( ip , [] , [] , [] , ([],(append st [(signal,Thread(id,s,e,Present(signal,c1,c2)::c,d))])) , si , Vide_D , h , (ip+1) ))
+
+                                                        | (Thread(id1,s1,e1,c3,d1)::w,st)  -> 
+                                                            machineSECD (MachineSECD( id1 , s1 , e1 , c3 , (w,(append st [(signal,Thread(id,s,e,Present(signal,c1,c2)::c,d))])) , si , d1 , h , ip ))
+
+                                          else machineSECD (MachineSECD( id , s , e , Throw 8::c , tl , si , d , h , ip ))
+
+          (* On a un emit dans la chaîne de contrôle, on réveil les threads bloqués en attente de ce signal et je le mets comme émit dans la liste des signaux *)
+        | MachineSECD(id,s,e,Emit signal::c,tl,si,d,h,ip)                         -> 
+                                        machineSECD (MachineSECD( id , Unit::s , e , c , (check_thread_list signal tl) , (emit_signal si id signal) , d , h , ip))
+                                          
+          (* On a rien dans la chaîne de contrôle et le dépôt est vide mais la liste d'attente à au moins un élément, on prends un thread dans la liste d'attente *)                         
+        | MachineSECD(id,s,e,[],(Thread(id1,s1,e1,c,d)::w,st),si,Vide_D,h,ip)     ->   machineSECD (MachineSECD( id1 , s1 , e1 , c , (w,st) , si , d , h , ip ))
+
+          (* On a rien dans la chaîne de contrôle, le dépôt est vide et la liste d'attente aussi, 
+             c'est la fin d'un instant où la fin du fonctionnement de la machine SECD si la liste de threads bloqués est vide *)
+        | MachineSECD(id,v::s,e,[],([],st),si,Vide_D,h,ip)                        -> 
+                                        begin
+                                          match st with
+                                            []       ->
+                                                  begin
+                                                    match v with
+                                                        Unit                      ->   [Variable "Unit"]
+          
+                                                      | Stack_const b             ->   [Constant b]
+          
+                                                      | Stack_error e             ->   [Variable (error_message e)]
+          
+                                                      | Closure([Pair(x,c)],env)  ->   [Pair(x,c)]
+          
+                                                      | _                         ->   raise UnknowStackState
+                                                  end
+
+                                            | _  ->   machineSECD (MachineSECD( id , v::s , e , [] , (end_of_the_moment_thread ([],st)) , (end_of_the_moment_signals si) , Vide_D , h , ip ))
+                                        end
+          (* Je ne connais pas cette état ... *)
+        | _                                                                       ->   raise StrangeEnd
+  
 
     (* Lance et affiche le résultat de l'expression *)
     let lancerSECD expression =
