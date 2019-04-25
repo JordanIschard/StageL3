@@ -31,6 +31,7 @@ let expression7 = (Catch_ISWIM(8,
   )
 ,("uygig",Const 7685))) ;;
 
+let expression8 = App(Signal_ISWIM("signal",Put_ISWIM("signal",6)),Const 65);;
 
 Printf.printf " Test de la MachineSECD\n\n" ;;
 
@@ -44,4 +45,7 @@ lancerSECD expression6 ;;
 Printf.printf "\n" ;;
 
 lancerSECD expression7 ;;
+Printf.printf "\n" ;;
+
+lancerSECD expression8 ;;
 Printf.printf "\n" ;;

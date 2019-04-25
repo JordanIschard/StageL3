@@ -13,10 +13,10 @@ module SECDMachine =
     (**** Types ****)
 
     (* Petits types très pratique pour ne pas se mélanger dans la compréhension des types suivants*)
-    type id_signal = string
-    type variable = string
-    type id_thread = int
-    type id_error = int
+    type id_signal  =   string
+    type variable   =   string
+    type id_thread  =   int
+    type id_error   =   int
 
 
 
@@ -25,19 +25,21 @@ module SECDMachine =
 
     (* type intermédiaire qui va servir à représenter la chaîne de contrôle *)
     type c =
-      Constant of int                                         (* constante b               *)
-    | Variable of variable                                    (* variable X                *)
-    | Ap                                                      (* application               *)
-    | Prim of operateur                                       (* opérateur                 *)
-    | Pair of variable * c list                               (* abstraction               *)
-    | Bspawn                                                  (* début du spawn            *)
-    | Espawn                                                  (* fin du spawn              *)
-    | Emit of id_signal                                       (* emet s                    *)
-    | Present of id_signal * c list * c list                  (* present s in t1 t2        *)
-    | Signal of id_signal * c list                            (* signal s in t             *)
-    | Throw of id_error                                       (* lève l'erreur             *)
-    | Catch of id_error * c list * (variable * c list)        (* try and catch classique   *)
-    | Error of id_error                                       (* une erreur traitée, elle sera utilisée comme une variable *)
+        Constant of int                                         (* constante b               *)
+      | Variable of variable                                    (* variable X                *)
+      | Ap                                                      (* application               *)
+      | Prim of operateur                                       (* opérateur                 *)
+      | Pair of variable * c list                               (* abstraction               *)
+      | Bspawn                                                  (* début du spawn            *)
+      | Espawn                                                  (* fin du spawn              *)
+      | Emit of id_signal                                       (* emet s                    *)
+      | Present of id_signal * c list * c list                  (* present s in t1 t2        *)
+      | Signal of id_signal * c list                            (* signal s in t             *)
+      | Throw of id_error                                       (* lève l'erreur             *)
+      | Catch of id_error * c list * (variable * c list)        (* try and catch classique   *)
+      | Error of id_error                                       (* une erreur traitée, elle sera utilisée comme une variable *)
+      | Put of id_signal
+      | Get of id_signal
 
     (* Ce type représente la chaîne de contrôle de la machine SECD, c'est notre entrée *)
     type control_string = c list
@@ -79,13 +81,13 @@ module SECDMachine =
 
     (* type intermédiaire contenant pour un id de thread donné, sa liste de signaux qui ont eux même 
        leurs liste de valeurs, un booléen qui représente leurs initialisations et un autre leurs émissions *)
-    type cs = CS of id_thread * (id_signal * int list * bool * bool) list
+    type cs = CS of id_signal * (id_thread * int list * bool) list * bool
 
     (* Ce type représente les signaux courants, c'est-à-dire, les signaux qui sont initialisé et émit à l'instant courant *)
     type current_signals = cs list
 
     (* type intermédiaire contenant pour un id de thread donné, sa liste de signaux qui ont eux mếme leurs liste de valeurs *)
-    type ssi = SSI of id_thread * (id_signal * int list ) list
+    type ssi = SSI of id_signal * (id_thread * int list * id_thread list ) list
 
     (* Ce type représente les signaux partagés, c'est-à-dire, les signaux qui ont été émit à l'instant précédent *)
     type shared_signals = ssi list
@@ -226,27 +228,31 @@ module SECDMachine =
     (* Convertit le langage ISWIM en langage SECD *)
     let rec secdLanguage_of_exprISWIM expression =
       match expression with
-        (Const const)                              ->   [Constant const]
+          Const const                           ->   [Constant const]
             
-        | (Var var)                                ->   [Variable var]
+        | Var var                               ->   [Variable var]
             
-        | (App(expr1,expr2))                       ->   append (  append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
+        | App(expr1,expr2)                      ->   append (  append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
             
-        | (Op(op,liste_expr))                      ->   append ( flatten( map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
+        | Op(op,liste_expr)                     ->   append ( flatten( map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
             
-        | (Abs(abs,expr))                          ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
+        | Abs(abs,expr)                         ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
 
-        | (Spawn expr)                             ->   append [Bspawn] (append (secdLanguage_of_exprISWIM expr) [Espawn])
+        | Spawn expr                            ->   append [Bspawn] (append (secdLanguage_of_exprISWIM expr) [Espawn])
 
-        | Present_ISWIM (signal,expr1,expr2)       ->   [Present (signal,(secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr2))]
+        | Present_ISWIM (signal,expr1,expr2)    ->   [Present (signal,(secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr2))]
 
-        | Emit_ISWIM (signal)                      ->   [Emit (signal)]
+        | Emit_ISWIM (signal)                   ->   [Emit (signal)]
 
-        | Signal_ISWIM (signal,expr)               ->   [Signal (signal,(secdLanguage_of_exprISWIM expr))]
+        | Signal_ISWIM (signal,expr)            ->   [Signal (signal,(secdLanguage_of_exprISWIM expr))]
 
-        | (Throw_ISWIM error)                      ->   [Throw(error)]
+        | Throw_ISWIM error                     ->   [Throw(error)]
 
-        | (Catch_ISWIM(error,expr1,(abs,expr2)))   ->   [Catch(error,(secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
+        | Catch_ISWIM(error,expr1,(abs,expr2))  ->   [Catch(error,(secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
+
+        | Put_ISWIM(signal,value)               ->   [Constant value ; Put signal]
+
+        | Get_ISWIM(signal,id_thread)           ->   [Constant id_thread ; Get signal]
 
 
     (* Donne une chaîne de caractères contenant un message d'erreur par rapport à l'identifiant de l'erreur *)
@@ -282,36 +288,40 @@ module SECDMachine =
     let rec string_of_control_string expression =
       match expression with
 
-          []                                   ->   ""
+          []                                 ->   ""
       
-        | (Constant const)::t                  ->   (string_of_int const)^" "^(string_of_control_string t)
+        | Constant const::t                  ->   (string_of_int const)^" "^(string_of_control_string t)
       
-        | (Variable var)::t                    ->   var^" "^(string_of_control_string t)
+        | Variable var::t                    ->   var^" "^(string_of_control_string t)
       
-        | (Ap)::t                              ->   "ap "^(string_of_control_string t)
+        | Ap::t                              ->   "ap "^(string_of_control_string t)
       
-        | (Pair(abs,expr_list))::t             ->   "("^abs^",("^(string_of_control_string expr_list)^")) "^(string_of_control_string t)
+        | Pair(abs,expr_list)::t             ->   "("^abs^",("^(string_of_control_string expr_list)^")) "^(string_of_control_string t)
       
-        | (Prim(op))::t                        ->   "prim "^(string_of_operateur op)^" "^(string_of_control_string t)
+        | Prim(op)::t                        ->   "prim "^(string_of_operateur op)^" "^(string_of_control_string t)
 
-        | (Bspawn)::t                          ->   "bspawn "^(string_of_control_string t)
+        | Bspawn::t                          ->   "bspawn "^(string_of_control_string t)
 
-        | (Espawn)::t                          ->   " espawn "^(string_of_control_string t)
+        | Espawn::t                          ->   " espawn "^(string_of_control_string t)
 
-        | (Present(signal,expr1,expr2))::t     ->    " present "^signal^" in "^(string_of_control_string expr1)^" "
+        | Present(signal,expr1,expr2)::t     ->    " present "^signal^" in "^(string_of_control_string expr1)^" "
                                                     ^(string_of_control_string expr2)^" "^(string_of_control_string t)
 
-        | (Emit signal)::t                     ->   "emit "^signal^" "^(string_of_control_string t)
+        | Emit signal::t                     ->   "emit "^signal^" "^(string_of_control_string t)
 
-        | (Signal(signal,expr))::t             ->   "signal "^signal^" in "^(string_of_control_string expr)^" "^(string_of_control_string t)
+        | Signal(signal,expr)::t             ->   "signal "^signal^" in "^(string_of_control_string expr)^" "^(string_of_control_string t)
 
-        | (Throw(error))::t                    ->   (error_message error)^" "^(string_of_control_string t)
+        | Throw(error)::t                    ->   (error_message error)^" "^(string_of_control_string t)
 
-        | (Catch(error,expr1,(abs,expr2)))::t  ->    "try "^(string_of_control_string expr1)
+        | Catch(error,expr1,(abs,expr2))::t  ->    "try "^(string_of_control_string expr1)
                                                     ^" catch "^(error_message error)
                                                     ^" in ("^abs^" , "^(string_of_control_string expr2)^")"^(string_of_control_string t) 
 
-        | (Error error)::t                     ->   (error_message error)^" "^(string_of_control_string t)
+        | Error error::t                     ->   (error_message error)^" "^(string_of_control_string t)
+
+        | Put signal::t                      ->   "put  in "^signal^(string_of_control_string t)
+       
+        | Get signal::t                      ->   "get "^signal^(string_of_control_string t)
 
 
     (* Convertit un environnement en chaîne de caractères *)
@@ -389,23 +399,22 @@ module SECDMachine =
       match cs_list with
           []                               ->   ""
 
-        | (id_signal,values,init,emit)::t  ->    "("^id_signal^","^(concat_secd_list(map string_of_int values))
-                                                ^","^(string_of_bool init)^","^(string_of_bool emit)^") "^(string_of_cs t)
+        | (id_thread,values,init)::t       ->    "("^(string_of_int id_thread)^","^(concat_secd_list(map string_of_int values))^","^(string_of_bool init)^") "^(string_of_cs t)
 
 
     (* Convertit la liste des signaux courant liés à leurs threads en chaîne de caractères *)
     let rec string_of_current_signals current_signals =
       match current_signals with
-          []                             ->   "" 
+          []                                 ->   "" 
 
-        | CS(id_thread,signals_list)::t  ->   "["^(string_of_int id_thread)^" : {"^(string_of_cs signals_list)^"}] , "^(string_of_current_signals t) 
+        | CS(id_signal,thread_list,emit)::t  ->   "["^id_signal^" : {"^(string_of_cs thread_list)^","^(string_of_bool emit)^"}] , "^(string_of_current_signals t) 
 
     (* Convertit la liste des signaux partagés en chaîne de caractères *)
     let rec string_of_ssi ssi_list = 
       match ssi_list with
           []                     ->   ""
 
-        | (id_signal,values)::t  ->   "("^id_signal^","^(concat_secd_list(map string_of_int values))^") "^(string_of_ssi t)
+        | (id_thread,values,pointers)::t  ->   "("^(string_of_int id_thread)^","^(concat_secd_list(map string_of_int values))^" , pointeurs : "^(concat_secd_list(map string_of_int pointers))^") "^(string_of_ssi t)
 
     
     (* Convertit la liste des signaux partagés lié à leurs threads en chaîne de caractères *)
@@ -413,7 +422,7 @@ module SECDMachine =
       match shared_signals with
           []                              ->   ""
 
-        | SSI(id_thread,signals_list)::t  ->   "["^(string_of_int id_thread)^" : {"^(string_of_ssi signals_list)^"}] , "^(string_of_shared_signals t)  
+        | SSI(id_signal,thread_list)::t  ->   "["^id_signal^" : {"^(string_of_ssi thread_list)^"}] , "^(string_of_shared_signals t)  
 
 
     (* Convertit la liste de tous les signaux en chaîne de caractères *)
@@ -522,37 +531,40 @@ module SECDMachine =
 
     
     (* Retourne la liste des signaux courant par rapport à un identifiant d'un thread *)
-    let give_signals signals id =
-      let rec aux current_signals id =
+    let give_signals signals signal=
+      let rec aux current_signals =
         match current_signals with
             []                     ->   []
   
-          | CS(id1,signals)::t     ->   if (id == id1) then signals else aux t id
+          | CS(signal1,threads,_)::t     ->   if (signal = signal1) then threads else aux t
         in
       match signals with
           ([],_)                   ->   []
   
-        | (current_signals,_)      ->   aux current_signals id
+        | (current_signals,_)      ->   aux current_signals
 
 
     (* Vérifie si c'est un init *)
     let isInit signals id signal =
-      let rec aux signals signal =
-        match signals with
+      let rec aux threads =
+        match threads with
             []                     ->   false
 
-          | (signal1,_,init,_)::t  ->   if (signal == signal1) then init else aux t signal
-    in aux (give_signals signals id) signal
+          | (id1,_,init)::t  ->   if (id = id1) then init else aux t
+      in
+      let temp = (give_signals signals signal) in  aux temp
 
 
     (* Vérifie si c'est une émission *)
-    let isEmit signals id signal =
-      let rec aux signals signal =
-        match signals with
+    let isEmit signals signal =
+      let rec aux current_signals =
+        match current_signals with
             []                     ->   false
 
-          | (signal1,_,_,emit)::t  ->   if (signal == signal1) then emit else aux t signal
-    in aux (give_signals signals id) signal
+          | CS(signal1,_,emit)::t  ->   if (signal = signal1) then emit else aux t
+      in
+      match signals with
+        (cs,_)                     ->   aux cs 
 
 
     (* Ajoute une fermeture à l'environnement *)
@@ -572,18 +584,24 @@ module SECDMachine =
 
     (* Ajoute un signal initialisé dans l'environnement *)
     let add_init_signal signals id signal = 
-      let rec aux current_signals id signal =
+      let rec aux1 threads =
+        match threads with
+            (id1,values,init)::t                  ->   if (id = id1) then append [(id,values,true)] t else append [(id1,values,init)] (aux1 t)
+
+          | []                                    ->   [(id,[],true)]
+      in
+      let rec aux current_signals =
         match current_signals with
-            CS(id1,signals)::t                    ->   if (id == id1) then (append [CS(id,[(signal,[],true,false)])] t) else (append [CS(id1,signals)] (aux t id signal))
+            CS(signal1,threads,emit)::t           ->   if (signal = signal1) then (append [CS(signal,(aux1 threads),emit)] t) else (append [CS(signal1,threads,emit)] (aux t))
           
-          | []                                    ->   [CS(id,[(signal,[],true,false)])]
+          | []                                    ->   [CS(signal,[(id,[],true)],false)]
         in
       if (isInit signals id signal)
         then raise SignalAlreadyInit
         else match signals with
-                ([],shared_signals)               ->   ([CS(id,[(signal,[],true,false)])],shared_signals)
+                ([],shared_signals)               ->   ([CS(signal,[(id,[],true)],false)],shared_signals)
               
-              | (current_signals,shared_signals)  ->   ((aux current_signals id signal),shared_signals)
+              | (current_signals,shared_signals)  ->   ((aux current_signals),shared_signals)
 
 
     (* Retire la partie du spawn de la chaîne de contrôle *)
@@ -622,32 +640,32 @@ module SECDMachine =
 
     (* Remet à zero les signaux en vidant la liste des valeurs et en mettant l'émission à faux *)
     let rec reset_current_signals current_signals =
-      let rec aux signal_list =
-        match signal_list with
-            []                    ->   []
+      let rec aux thread_list =
+        match thread_list with
+            []                            ->   []
 
-          | (signal,_,init,_)::t  ->   (signal,[],init,false)::(aux t)
+          | (thread,_,init)::t            ->   (thread,[],init)::(aux t)
       in
       match current_signals with
-          []                      ->   []
+          []                              ->   []
 
-        | CS(id,signal_list)::t   ->   CS(id,(aux signal_list))::(reset_current_signals t)
+        | CS(signal,thread_list,emit)::t  ->   CS(signal,(aux thread_list),false)::(reset_current_signals t)
 
 
     (* Prends les signaux dans la liste des signaux courants et les mets dans la liste des signaux partagés *)
     let rec share current_signals =
-      let rec aux signal_list =
-        match signal_list with
-            []                          ->   []
+      let rec aux thread_list =
+        match thread_list with
+            []                             ->   []
 
-          | (signal,values,_,true)::t   ->   (signal,values)::(aux t)
-
-          | (signal,values,_,false)::t  ->  (aux t)
+          | (thread,values,_)::t           ->   (thread,values,[])::(aux t)
       in
       match current_signals with
-          []                            ->   []
+          []                               ->   []
 
-        | CS(id,signal_list)::t         ->   SSI(id,(aux signal_list))::(share t)
+        | CS(signal,thread_list,true)::t   ->   SSI(signal,(aux thread_list))::(share t)
+
+        | CS(signal,thread_list,false)::t  ->  (share t)
 
 
     (* Quand l'instant est fini ont remet à zéro les signaux courant et on change les signaux partagés *)
@@ -680,25 +698,20 @@ module SECDMachine =
 
     (* Mets vrai pour l'émission du signal dans liste de signaux *)
     let rec emit_signal signals id signal =
-      let rec aux1 signals =
-        match signals with
-            (signal1,liste,true,emit)::t      ->   if (signal == signal1) then (append [(signal1,liste,true,true)]  t) else (append [(signal1,liste,true,emit)]  (aux1 t))
+      let rec aux current_signals =
+        if isInit signals id signal
+          then match current_signals with
 
-          | (signal1,liste,false,emit)::t     ->   if (signal == signal1) then raise SignalNotInit else (append [(signal1,liste,false,emit)]  (aux1 t))
+                  CS(signal1,threads,emit)::t  ->   if (signal = signal1) then (append [CS(signal1,threads,true)]  t) else (append [CS(signal1,threads,emit)]  (aux t))
+                
+                | []                           ->   raise SignalNotInit  
 
-          | []                                ->   raise SignalNotInit
-
-          in
-      let rec aux current_signals id =
-        match current_signals with
-            CS(id1,signals)::t                ->   if (id == id1) then (append [CS(id1,(aux1 signals))]  t) else (append [CS(id1,signals)] (aux t id))
-          
-          | []                                ->   raise SignalNotInit
+          else raise SignalNotInit
         in
         match signals with
-            ([],shared_signals)               ->   raise SignalNotInit
+            ([],shared_signals)                ->   raise SignalNotInit
               
-          | (current_signals,shared_signals)  ->   ((aux current_signals id ),shared_signals)
+          | (current_signals,shared_signals)   ->   ((aux current_signals),shared_signals)
 
 
     (* Donne la pile avec le calcul fait *)
@@ -715,23 +728,65 @@ module SECDMachine =
 
     (* Mets à faux l'initilisation du signal dans la liste des signaux *)
     let remove_init_signal signals id signal =
+      let rec aux1 threads =
+        match threads with
+            (id1,values,init)::t            ->   if (id = id1) then (append [(id1,values,false)]  t) else (append [(id1,values,init)]  (aux1 t))
+
+          | []                              ->   raise SignalNotInit
+        in
+      let rec aux current_signals  =
+        match current_signals with
+            CS(signal1,threads,emit)::t     ->   if (signal = signal1) then (append [CS(signal1,(aux1 threads),emit)]  t) else (append [CS(signal1,threads,emit)] (aux t))
+          
+          | []                              ->   raise SignalNotInit
+      in
+      match signals with
+          ([],shared_signals)               ->   raise SignalNotInit
+              
+        | (current_signals,shared_signals)  ->   ((aux current_signals),shared_signals)
+
+    
+    (* Ajoute un élément dans la liste des variables liés au signal et à l'id du thread courant *)
+    let put si signal id b = 
       let rec aux1 signals =
         match signals with
-            (signal1,liste,init,emit)::t      ->   if (signal == signal1) then (append [(signal1,liste,false,emit)]  t) else (append [(signal1,liste,init,emit)]  (aux1 t))
+          (id1,values,true)::t     ->   if (id = id1) then (append [(id1,(append values [b]),true)] t) else (append [(id1,values,true)]  (aux1 t))
 
-          | []                                ->   raise SignalNotInit
+        | (id1,values,false)::t    ->   if (id = id1) then raise SignalNotInit else (append [(id1,values,false)]  (aux1 t))
 
-          in
-      let rec aux current_signals id =
+        | []                       ->   raise SignalNotInit
+      in
+      let rec aux current_signal =
+        match current_signal with
+            CS(signal1,threads,emit)::t  ->   if (signal = signal1) then (append [CS(signal1,(aux1 threads),emit)]  t) else (append [CS(signal1,threads,emit)] (aux t))
+
+          | []                           ->   raise SignalNotInit
+      in
+      match si with
+          ([],_)                         ->   raise SignalNotInit
+
+        | (cs,ssi)                       ->   ((aux cs),ssi)
+
+
+    (* *)
+    let clone id_current_thread id_new_thread signals =
+      let rec aux1 threads =
+        match threads with
+            [] -> []
+          | (id,values,init)::t -> if (id = id_current_thread) then  append [(id,values,init);(id_new_thread,values,init)] t else append [(id,values,init)] (aux1 t)
+      in
+      let rec aux current_signals =
         match current_signals with
-            CS(id1,signals)::t                ->   if (id == id1) then (append [CS(id1,(aux1 signals))]  t) else (append [CS(id1,signals)] (aux t id))
-          
-          | []                                ->   raise SignalNotInit
-        in
-        match signals with
-            ([],shared_signals)               ->   raise SignalNotInit
-              
-          | (current_signals,shared_signals)  ->   ((aux current_signals id ),shared_signals)
+            CS(signal,threads,emit)::t ->   CS(signal,(aux1 threads),emit)::(aux t)
+
+          | []                  ->   []
+      in
+      match signals with
+          ([],ssi)              ->   ([],ssi)
+
+        | (cs,ssi)              ->   ((aux cs),ssi)
+
+
 
 
 
@@ -791,9 +846,11 @@ module SECDMachine =
           (* On a Bspawn dans la chaîne de contrôle, on prends la partie de la chaîne de contrôle compris entre Bspawn et Espawn et le mets dans un nouveau thread *)
         | MachineSECD(id,s,e,Bspawn::c,(w,st),si,d,h,ip)                          -> 
                                         begin 
-                                          try   machineSECD (MachineSECD( id , Unit::s , e , (remove_spawn c) , (append w [Thread(ip,s,e,(recover_spawn c),d)],st) , si , d , h , (ip+1) ))
+                                          try   machineSECD (MachineSECD( id , Unit::s , e , (remove_spawn c) , (append w [Thread(ip,s,e,(recover_spawn c),d)],st) , (clone id ip si) , d , h , (ip+1) ))
                                           with  EndSpawnNotFound  ->   machineSECD (MachineSECD( id , s , e , Throw 11::c , (w,st) , si , d , h , ip ))
                                         end
+
+        | MachineSECD(id,Stack_const b::s,e,Put signal::c,tl,si,d,h,ip)           ->   machineSECD (MachineSECD( id , Unit::s , e , c , tl , (put si signal id b) , d , h , ip ))
 
           (* On a Ap dans la chaîne de contrôle, on sauvegarde une partie de la machine dans le dépôt, on prends l'environnement de la fermeture et on ajoute la nouvelle substitution *)
         | MachineSECD(id,v::Closure([Pair(abs,c1)],e1)::s,e,Ap::c,tl,si,d,h,ip)   ->   machineSECD (MachineSECD( id , [] , (add_environment e1 abs v) , c1 , tl , si , Save(s,e,c,d) , h , ip ))
@@ -817,14 +874,14 @@ module SECDMachine =
           (* On a un signal s in t dans la chaîne de contrôle, on remplace la chaîne de contrôle (que l'on stock dans le dépôt) par t et on sauvegarde dans le dépôt le reste plus le signal *)
         | MachineSECD(id,s,e,Signal(signal,c1)::c,tl,si,d,h,ip)                   -> 
                                         begin
-                                          try   machineSECD (MachineSECD( id , [] , e , c1 , tl , (add_init_signal si id signal) , SaveSignal(signal,Unit::s,e,c,d) , h , ip ))
+                                          try   machineSECD (MachineSECD( id , [] , e , c1 , tl , (add_init_signal si id signal) , SaveSignal(signal,s,e,c,d) , h , ip ))
                                           with  SignalAlreadyInit ->  machineSECD (MachineSECD( id , s , e , Throw 9::c , tl , si , d , h , ip ))
                                         end
 
           (* On a un present dans la chaîne de contrôle, on regarde si le signal est émit : si oui on prends la première possibilités sinon on le mets dans la liste de threads bloqués *)
         | MachineSECD(id,s,e,Present(signal,c1,c2)::c,tl,si,d,h,ip)               -> 
                                         if (isInit si id signal)
-                                          then if (isEmit si id signal)
+                                          then if (isEmit si signal)
                                                   then machineSECD (MachineSECD( id , Unit::s , e , (append c1 c) , tl , si , d , h , ip ))
 
                                                   else match tl with
@@ -845,10 +902,10 @@ module SECDMachine =
 
           (* On a rien dans la chaîne de contrôle, le dépôt est vide et la liste d'attente aussi, 
              c'est la fin d'un instant où la fin du fonctionnement de la machine SECD si la liste de threads bloqués est vide *)
-        | MachineSECD(id,v::s,e,[],([],st),si,Vide_D,h,ip)                        -> 
+        | MachineSECD(id,s,e,[],([],st),si,Vide_D,h,ip)                        -> 
                                         begin
-                                          match st with
-                                            []       ->
+                                          match (s,st) with
+                                            (v::s1,[])       ->
                                                   begin
                                                     match v with
                                                         Unit                      ->   [Variable "Unit"]
@@ -862,7 +919,7 @@ module SECDMachine =
                                                       | _                         ->   raise UnknowStackState
                                                   end
 
-                                            | _  ->   machineSECD (MachineSECD( id , v::s , e , [] , (end_of_the_moment_thread ([],st)) , (end_of_the_moment_signals si) , Vide_D , h , ip ))
+                                            | _  ->   machineSECD (MachineSECD( id , s , e , [] , (end_of_the_moment_thread ([],st)) , (end_of_the_moment_signals si) , Vide_D , h , ip ))
                                         end
           (* Je ne connais pas cette état ... *)
         | _                                                                       ->   raise StrangeEnd

@@ -33,15 +33,15 @@ let expression7 = (Catch(7,
 
 
 Printf.printf " Test de la MachineSECD\n\n" ;;
-
+(*
 lancerSECD expression5 ;;
 Printf.printf "\n" ;;
 
 lancerSECD expression4 ;;
 Printf.printf "\n" ;;
-
+*)
 lancerSECD expression6 ;;
 Printf.printf "\n" ;;
-
+(*
 lancerSECD expression7 ;;
-Printf.printf "\n" ;;
+Printf.printf "\n" ;;*)
