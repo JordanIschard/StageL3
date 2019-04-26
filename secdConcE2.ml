@@ -198,6 +198,10 @@ module SECDMachine =
     exception SignalAlreadyInit
     exception SignalAlreadyEmit
     exception SignalNotInit
+    exception SignalNotShared
+    exception ThreadValuesNotFound
+    exception ThreadSharedNotFound
+    exception PointerNotExist
 
     exception UnknowState
     exception UnknowStackState
@@ -283,6 +287,10 @@ module SECDMachine =
         | 16  ->   "ERREUR : Résultat impossible"                                (* ImpossibleResult      *)
 
         | 17  ->   "ERREUR : Aucune valeurs partagées"                           (* NoSharedValues        *)
+        | 18  ->   "ERREUR : Le signal n'a pas été partagé"                      (* SignalNotShared       *)
+        | 19  ->   "ERREUR : Le thread n'a pas partagé de valeurs"               (* ThreadValuesNotFound  *)
+        | 20  ->   "ERREUR : Le thread n'est pas trouvé"                         (* ThreadSharedNotFound  *)
+        | 21  ->   "ERREUR : Le pointeur n'existe pas"                           (* PointerNotExist       *)
 
         | _   ->   "ERREUR : Cette erreur n'existe pas "
 
@@ -801,31 +809,71 @@ module SECDMachine =
 
 
     (* Vérifie si c'est la première fois que l'on pioche dans une liste de valeurs *)
-    let first_get signals id_thread signal =
+    let rec first_get id_thread values =
+      match values with
+          []                       ->   true
+
+        | (_,pointers)::t          ->   if (mem id_thread pointers) then false else first_get id_thread t
+
+    
+    (* Ajoute un pointeur dans une liste de pointeurs *)
+    let addIt it pointers = append pointers [it]
+
+
+    (* Retire un pointeur d'une liste de pointeurs *)
+    let removeIt it pointers =
+      let rec aux pointers =
+        match pointers with
+            []    ->   []
+
+          | h::t  ->   if (h = it) then aux t else h::(aux t)
+      in
+      if (mem it pointers) then aux pointers else raise PointerNotExist
+
+
+    (* Retourne la valeur présent dans la liste de valeurs partagés lié au signal et à l'identifant donné 
+       qui est la suivante de celle pointé part le pointeurs lié à ton thread *)    
+    let get signals id_thread signal my_thread =
+      let rec aux3 values =
+        match values with
+            []                       ->   raise NoSharedValues
+
+          | (value,pointers)::t      ->   (value,(append [(value,(addIt my_thread pointers))] t))
+      in
       let rec aux2 values =
         match values with
-            []                       ->   true
+            []                       ->   raise NoSharedValues
 
-          | (_,pointers)::t          ->   if (mem id_thread pointers) then false else aux2 t
+          | (value,pointers)::t      ->   if (mem my_thread pointers) 
+                                            then let (res,new_values)  =   aux3 t in (res,(append [(value,(removeIt my_thread pointers))] new_values)) 
+                                            else let (res,new_values)  =   aux2 t in (res,(append [(value,pointers)] new_values))
       in
-      let rec aux1 threads = 
+      let rec aux1 threads =
         match threads with
-            []                       ->   raise NoSharedValues
+            (id,[])::t               ->   if (id = id_thread) 
+                                            then raise ThreadValuesNotFound 
+                                            else let (res,new_threads)   =   aux1 t      in (res,append new_threads [(id,[])])
+          
+          | (id,values)::t           ->   if (id = id_thread) 
+                                            then if(first_get id_thread values) 
+                                              then let (res,new_values)   =   aux3 values in (res,append [(id,new_values)] t) 
+                                              else let (res,new_values)   =   aux2 values in (res,append [(id,new_values)] t) 
+                                            else   let (res,new_threads)  =   aux1 t      in (res,append [(id,values)] new_threads)
 
-          | (id,values)::t           ->   if (id = id_thread) then aux2 values else aux1 t
+          | [] -> raise ThreadSharedNotFound
       in
-      let rec aux shared_signals =
+      let rec aux shared_signals = 
         match shared_signals with
-            []                       ->   raise NoSharedValues
+            []                       ->   raise SignalNotShared
 
-          | SSI(signal1,threads)::t  ->   if (signal = signal1) then aux1 threads else aux t
+          | SSI(signal1,threads)::t  ->   if (signal1 = signal) 
+                                            then let (res,new_threads)  =   aux1 threads in (res,(append [SSI(signal1,new_threads)] t))  
+                                            else let (res,new_ssi)      =   aux t        in (res,(append [SSI(signal1,threads)] new_ssi)) 
       in
       match signals with
-          (_,[])                     ->   raise NoSharedValues
+          (cs,[])                     ->   raise NoSharedValues
 
-        | (_,ssi)                    ->   aux ssi
-
-
+        | (cs,ssi)                    ->   let (res,new_ssi) = aux ssi in (res,(cs,new_ssi))
 
 
 
@@ -835,6 +883,7 @@ module SECDMachine =
 
 
 
+        
     (**** Machine SECD ****)
 
     (* Applique les règles de la machine SECD en affichant les étapes *)
@@ -898,10 +947,27 @@ module SECDMachine =
                                           with  EndSpawnNotFound  ->   machineSECD (MachineSECD( id , s , e , Throw 11::c , (w,st) , si , d , h , ip ))
                                         end
 
+          (* On a put dans la chaîne de contrôle, on prend la constante en tête dans la pile et on la mets dans le signal *)
         | MachineSECD(id,Stack_const b::s,e,Put signal::c,tl,si,d,h,ip)           ->   
                                         begin
                                           try   machineSECD (MachineSECD( id , Unit::s , e , c , tl , (put si signal id b) , d , h , ip ))
                                           with  SignalNotInit  ->   machineSECD (MachineSECD( id , s , e , Throw 8::c , tl , si , d , h , ip )) 
+                                        end
+
+          (* EN COURS  *)
+        | MachineSECD(id,Stack_const b::s,e,Get signal::c,tl,si,d,h,ip)           ->    
+                                        begin
+                                          try   let (res,new_si) = get si b signal id in
+                                                machineSECD (MachineSECD( id , Stack_const res::s , e , c , tl , new_si , d , h , ip ))
+                                          with    NoSharedValues        ->   machineSECD (MachineSECD( id , s , e , Throw 17::c , tl , si , d , h , ip )) 
+
+                                                | SignalNotShared       ->   machineSECD (MachineSECD( id , s , e , Throw 18::c , tl , si , d , h , ip )) 
+
+                                                | ThreadSharedNotFound  ->   machineSECD (MachineSECD( id , s , e , Throw 19::c , tl , si , d , h , ip ))
+
+                                                | ThreadValuesNotFound  ->   machineSECD (MachineSECD( id , s , e , Throw 20::c , tl , si , d , h , ip ))
+
+                                                | PointerNotExist       ->   machineSECD (MachineSECD( id , s , e , Throw 21::c , tl , si , d , h , ip ))
                                         end
                                           
           (* On a Ap dans la chaîne de contrôle, on sauvegarde une partie de la machine dans le dépôt, on prends l'environnement de la fermeture et on ajoute la nouvelle substitution *)
