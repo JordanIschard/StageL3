@@ -329,7 +329,7 @@ module SECDMachine =
           
           Vide_H -> [Throw_SECD erreur]
           
-          | SaveHandler(erreur1,(s1,e1,(Pair(abs,c2))::c1,w1,st1,si1,d1,h1)) -> printf " %d %d\n" erreur erreur1 ;
+          | SaveHandler(erreur1,(s1,e1,(Pair(abs,c2))::c1,w1,st1,si1,d1,h1)) ->
             if (erreur == erreur1)
               then machineSECD (MachineSECD( [] , (ajoutEnv_secd e1 abs (Fermeture_secd([Throw_SECD(erreur)] , []))) ,  c2 , w1 , st1 , si1 , Save(s1,e1,c1,d1) , h1 ))
               else testHandler h1 erreur      
@@ -346,7 +346,7 @@ module SECDMachine =
         (* Si on a une variable en tête de la chaîne de contrôle, on la substitue par son élément lié dans l'environnement et on la mets dans la pile *)
         | MachineSECD(s,e,(Var_C x)::c,w,st,si,d,h) -> machineSECD (MachineSECD( ((substitution_secd x e) :: s) , e , c , w , st , si , d , h))
 
-        | MachineSECD(s,e,(Throw_SECD erreur)::c,w,st,si,d,h) -> printf "uehfoeuh %s\n" (string_of_handler h);testHandler h erreur
+        | MachineSECD(s,e,(Throw_SECD erreur)::c,w,st,si,d,h) -> testHandler h erreur
 
         (* Si on a un opérateur, on prends le nombre d'opérande requis par l'opérateur et on fais le calcul dans la pile *)
         | MachineSECD(s,e,(Prim(op))::c,w,st,si,d,h) ->
