@@ -32,12 +32,28 @@ let expression7 = (Catch_ISWIM(8,
   )
 ,("uygig",Const 7685))) ;;
 
-let expression8 = Signal_ISWIM("signal",App(
-                       Spawn(App(Put_ISWIM("signal",6),App(Put_ISWIM("signal",3),Emit_ISWIM "signal")))
-                      ,Spawn(Signal_ISWIM("coucou",Present_ISWIM("coucou",Const 98,Op(Sub,[Get_ISWIM("signal",1);Get_ISWIM("signal",1)]))
-                                        )
-                           )
-                      ));;
+let expression8 = Signal_ISWIM("signal",
+                                    App(
+                                       Spawn(
+                                          Signal_ISWIM("coucou",
+                                                Present_ISWIM("coucou",Const 98,Op(Sub,[Get_ISWIM("signal",2);Get_ISWIM("signal",2)]))
+                                                )
+                                            )
+                                      ,App(
+                                         Spawn(
+                                            App(
+                                               Put_ISWIM("signal",6)
+                                              ,App(Put_ISWIM("signal",3),Emit_ISWIM "signal")
+                                              )
+                                            )
+                                        ,Spawn(
+                                          Signal_ISWIM("coucou",
+                                                  Present_ISWIM("coucou",Const 98,Op(Add,[Get_ISWIM("signal",2);Get_ISWIM("signal",2)]))
+                                                  )
+                                             )
+                                         )
+                                      )
+                              );;
 
 Printf.printf " Test de la MachineSECD\n\n" ;;
 

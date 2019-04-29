@@ -12,11 +12,13 @@ module SECDMachine =
 
     (**** Types ****)
 
-    (* Petits types très pratique pour ne pas se mélanger dans la compréhension des types suivants*)
+    (* Petits types très pratique pour ne pas se mélanger dans la compréhension des types suivants *)
     type id_signal  =   string
     type variable   =   string
     type id_thread  =   int
     type id_error   =   int
+    type emit       =   bool
+    type init       =   bool
 
 
 
@@ -37,9 +39,9 @@ module SECDMachine =
       | Signal of id_signal * c list                            (* signal s in t             *)
       | Throw of id_error                                       (* lève l'erreur             *)
       | Catch of id_error * c list * (variable * c list)        (* try and catch classique   *)
-      | Error of id_error                                       (* une erreur traitée, elle sera utilisée comme une variable *)
-      | Put of id_signal
-      | Get of id_signal
+      | Error of id_error                                       (* une erreur traitée        *)
+      | Put of id_signal                                        (* place dans un signal      *)
+      | Get of id_signal                                        (* prends dans un signal     *)
 
     (* Ce type représente la chaîne de contrôle de la machine SECD, c'est notre entrée *)
     type control_string = c list
@@ -51,8 +53,8 @@ module SECDMachine =
 
     (* type intermédiaire qui va servir à représenter l'environnement *)
     type e =   
-        EnvClos of (variable * (control_string * e list))     (* (X,(C,Env))               *)
-      | EnvVar of (variable * control_string)                 (* (X,V) V une constante ou une erreur *)
+        EnvClos of (variable * (control_string * e list))     (* (X,(C,Env))                   *)
+      | EnvVar  of (variable * control_string)                (* (X,V) V une constante/erreur  *)
 
     (* Ce type représente l'environnement de la machine SECD, c'est notre liste de substitution *)
     type environment = e list
@@ -65,10 +67,10 @@ module SECDMachine =
 
     (* type intermédiaire contenant une fermeture qui lie une abstraction à un environnement ou juste une constante ou encore une erreur *)
     type s =  
-        Unit                                                  (* remplace                  *)
-      | Stack_const of int                                    (* constante ou une erreur   *)
-      | Stack_error of id_error
-      | Closure of (control_string * environment)             (* fermeture (C,Env)         *)
+        Unit                                                  (* remplace             *)
+      | Stack_const of int                                    (* constante            *)
+      | Stack_error of id_error                               (* une erreur           *)
+      | Closure of (control_string * environment)             (* fermeture (C,Env)    *)
 
     
     (* Ce type représente la pile de la machine SECD, c'est la où la machine travaille *)
@@ -81,7 +83,7 @@ module SECDMachine =
 
     (* type intermédiaire contenant pour un id de thread donné, sa liste de signaux qui ont eux même 
        leurs liste de valeurs, un booléen qui représente leurs initialisations et un autre leurs émissions *)
-    type cs = CS of id_signal * (id_thread * int list * bool) list * bool
+    type cs = CS of id_signal * (id_thread * int list * init) list * emit
 
     (* Ce type représente les signaux courants, c'est-à-dire, les signaux qui sont initialisé et émit à l'instant courant *)
     type current_signals = cs list
@@ -104,9 +106,9 @@ module SECDMachine =
     (* Ce type représente le dépôt de la machine SECD, c'est-à-dire, l'endroit où l'on sauvegarde une partie de l'état 
        de la machine pour travailler sur une autre partie de la chaîne de contrôle *)
     type dump =
-        Vide_D                                                                      (* le dépôt est vide         *)
-      | Save of stack * environment * control_string * dump                         (* (s,e,c,d)                 *)
-      | SaveSignal of id_signal * stack * environment * control_string * dump       (* (signal,s,e,c,d)          *)
+        Vide_D                                                                      (* le dépôt est vide      *)
+      | Save       of stack * environment * control_string * dump                   (* (s,e,c,d)              *)
+      | SaveSignal of id_signal * stack * environment * control_string * dump       (* (signal,s,e,c,d)       *)
 
 
 
@@ -185,31 +187,30 @@ module SECDMachine =
 
     (**** Exception ****)
 
-    exception NoSubPossible
-    exception StrangeEnd
-    exception EndSpawnNotFound
-    exception NoSharedValues
+    exception NoSubPossible                    (* Aucune substitution possible pour cette variable dans l'environnement             *)
+    exception StrangeEnd                       (* Même moi je ne sais pas ce qu'il sait passé ...                                   *)
+    exception EndSpawnNotFound                 (* La délimitation de fin du spawn n'est pas trouvé dans la chaîne de contrôle       *)
+    exception NoSharedValues                   (* Il n'y a pas de valeurs partagées                                                 *)
 
-    exception NotAllConstants
-    exception InvalidOperandNb
-    exception InsufficientOperandNb
-    exception ImpossibleResult
+    exception NotAllConstants                  (* Tous les éléments de la pile prisent pour l'opérateurs ne sont pas des constantes *)
+    exception InsufficientOperandNb            (* Le nombre d'opérande est insuffisante par rapport au nombre requis                *)
+    exception ImpossibleResult                 (* Le résultat n'est pas dans un format autorisé, soit un entier ou une abstraction  *)
 
-    exception SignalAlreadyInit
-    exception SignalAlreadyEmit
-    exception SignalNotInit
-    exception SignalNotShared
-    exception ThreadValuesNotFound
-    exception ThreadSharedNotFound
-    exception PointerNotExist
+    exception SignalAlreadyInit                (* Le signal est déjà initialisé dans ce thread                                      *)
+    exception SignalAlreadyEmit                (* Le signal est déjà émit dans la machine                                           *)
+    exception SignalNotInit                    (* Le signal n'est pas initialisé dans ce thread                                     *)
+    exception SignalNotShared                  (* Le signal n'est pas dans la liste des signaux partagés                            *)
+    exception ThreadValuesNotFound             (* Les valeurs lié à un thread n'existe pas                                          *)
+    exception ThreadSharedNotFound             (* L'identifiant de thread lié à un signal n'existe pas                              *)
+    exception PointerNotExist                  (* Le pointeur n'existe pas                                                          *)
 
-    exception UnknowState
-    exception UnknowStackState
-    exception UnknowEnvState
-    exception UnknowWaitState
-    exception UnknowStuckState
-    exception UnknowDumpState
-    exception UnknowHandlerState
+    exception UnknowState                      (* Le format de la machine est invalide et/ou inconnu                                *)
+    exception UnknowStackState                 (* Le format de la pile est invalide et/ou inconnu                                   *)
+    exception UnknowEnvState                   (* Le format de l'environnement est invalide et/ou inconnu                           *)
+    exception UnknowWaitState                  (* Le format de la liste d'attente est invalide et/ou inconnu                        *)
+    exception UnknowStuckState                 (* Le format de la liste d'élément bloqués est invalide et/ou inconnu                *)
+    exception UnknowDumpState                  (* Le format du dépôt est invalide et/ou inconnu                                     *)
+    exception UnknowHandlerState               (* Le format du gestionnaire d'erreur est invalide et/ou inconnu                     *)
 
 
 
@@ -283,7 +284,6 @@ module SECDMachine =
         | 11  ->   "ERREUR : Le format du spawn est invalide"                    (* EndSpawnNotFound      *)
 
         | 12  ->   "ERREUR : Ce ne sont pas tous des constantes"                 (* NotAllConstants       *)
-        | 13  ->   "ERREUR : Nombre d'opérande invalide"                         (* InvalidOperandNb      *)
         | 14  ->   "ERREUR : Nombre d'opérande insuffisant"                      (* InsufficientOperandNb *)
         | 15  ->   "ERREUR : Format de l'opérateur invalid"                      (* OpFormatError         *)
         | 16  ->   "ERREUR : Résultat impossible"                                (* ImpossibleResult      *)
@@ -315,26 +315,26 @@ module SECDMachine =
 
         | Bspawn::t                          ->   "bspawn "^(string_of_control_string t)
 
-        | Espawn::t                          ->   " espawn "^(string_of_control_string t)
+        | Espawn::t                          ->   "espawn "^(string_of_control_string t)
 
-        | Present(signal,expr1,expr2)::t     ->    " present "^signal^" in "^(string_of_control_string expr1)^" "
-                                                    ^(string_of_control_string expr2)^" "^(string_of_control_string t)
+        | Present(signal,expr1,expr2)::t     ->    "present "^signal^" in "^(string_of_control_string expr1)
+                                                  ^(string_of_control_string expr2)^(string_of_control_string t)
 
         | Emit signal::t                     ->   "emit "^signal^" "^(string_of_control_string t)
 
-        | Signal(signal,expr)::t             ->   "signal "^signal^" in "^(string_of_control_string expr)^" "^(string_of_control_string t)
+        | Signal(signal,expr)::t             ->   "signal "^signal^" in "^(string_of_control_string expr)^(string_of_control_string t)
 
         | Throw(error)::t                    ->   (error_message error)^" "^(string_of_control_string t)
 
         | Catch(error,expr1,(abs,expr2))::t  ->    "try "^(string_of_control_string expr1)
-                                                    ^" catch "^(error_message error)
-                                                    ^" in ("^abs^" , "^(string_of_control_string expr2)^")"^(string_of_control_string t) 
+                                                  ^"catch "^(error_message error)
+                                                  ^" in ("^abs^" , "^(string_of_control_string expr2)^")"^(string_of_control_string t) 
 
         | Error error::t                     ->   (error_message error)^" "^(string_of_control_string t)
 
-        | Put signal::t                      ->   "put  in "^signal^(string_of_control_string t)
+        | Put signal::t                      ->   "put in "^signal^" "^(string_of_control_string t)
        
-        | Get signal::t                      ->   "get "^signal^(string_of_control_string t)
+        | Get signal::t                      ->   "get "^signal^" "^(string_of_control_string t)
 
 
     (* Convertit un environnement en chaîne de caractères *)
@@ -364,13 +364,13 @@ module SECDMachine =
     (* Convertit la sauvegarde en chaîne de caractères *)
     let rec string_of_dump dump =
       match dump with 
-         Vide_D                                             ->   ""
+          Vide_D                                            ->   ""
 
-        | Save(stack,env,control_string,dump)               ->    "( "^(string_of_stack stack)^" , "^(string_of_environment env)^" , "
-                                                                 ^(string_of_control_string control_string)^" , "^(string_of_dump dump)^" )"
+        | Save(stack,env,control_string,dump)               ->    "("^(string_of_stack stack)^" , "^(string_of_environment env)^" , "
+                                                                 ^(string_of_control_string control_string)^" , "^(string_of_dump dump)^")"
 
-        | SaveSignal(signal,stack,env,control_string,dump)  ->    "( "^signal^" , "^(string_of_stack stack)^" , "^(string_of_environment env)^" , "
-                                                                 ^(string_of_control_string control_string)^" , "^(string_of_dump dump)^" )"
+        | SaveSignal(signal,stack,env,control_string,dump)  ->    "("^signal^" , "^(string_of_stack stack)^" , "^(string_of_environment env)^" , "
+                                                                 ^(string_of_control_string control_string)^" , "^(string_of_dump dump)^")"
         
 
       
@@ -386,7 +386,9 @@ module SECDMachine =
     let rec string_of_wait wait =
       match wait with 
           []         ->   "" 
-
+        
+        | [thread]   ->   (string_of_thread thread)
+        
         | thread::t  ->   (string_of_thread thread)^" , "^(string_of_wait t)
 
 
@@ -395,7 +397,9 @@ module SECDMachine =
       match stuck with 
           []                  ->   "" 
 
-        | (signal,thread)::t  ->   "( "^signal^", "^(string_of_thread thread)^" , "^(string_of_stuck t)
+        | [(signal,thread)]   ->   "( "^signal^", "^(string_of_thread thread)^" )"
+
+        | (signal,thread)::t  ->   "( "^signal^", "^(string_of_thread thread)^" ) , "^(string_of_stuck t)
 
 
     (* Convertit la liste des threads en chaîne de caractères *)
@@ -412,13 +416,15 @@ module SECDMachine =
       match cs_list with
           []                               ->   ""
 
-        | (id_thread,values,init)::t       ->    "("^(string_of_int id_thread)^","^(concat_secd_list(map string_of_int values))^","^(string_of_bool init)^") "^(string_of_cs t)
+        | (id_thread,values,init)::t       ->    "("^(string_of_int id_thread)^",{"^(concat_secd_list(map string_of_int values))^"},"^(string_of_bool init)^") "^(string_of_cs t)
 
 
     (* Convertit la liste des signaux courant liés à leurs threads en chaîne de caractères *)
     let rec string_of_current_signals current_signals =
       match current_signals with
           []                                 ->   "" 
+
+        | [CS(id_signal,thread_list,emit)]   ->   "["^id_signal^" : {"^(string_of_cs thread_list)^","^(string_of_bool emit)^"}]"
 
         | CS(id_signal,thread_list,emit)::t  ->   "["^id_signal^" : {"^(string_of_cs thread_list)^","^(string_of_bool emit)^"}] ; "^(string_of_current_signals t) 
 
@@ -429,18 +435,22 @@ module SECDMachine =
         match values with
             []                     ->   ""
 
+          | [(value,pointers)]     ->   "("^( string_of_int value)^",{"^(concat_secd_list(map string_of_int pointers))^"})"
+
           | (value,pointers)::t    ->   "("^( string_of_int value)^",{"^(concat_secd_list(map string_of_int pointers))^"});"^(aux t)
       in
       match ssi_list with
           []                       ->   ""
 
-        | (id_thread,values)::t    ->   "("^(string_of_int id_thread)^", ["^(aux values)^" ]) "^(string_of_ssi t)
+        | (id_thread,values)::t    ->   " ("^(string_of_int id_thread)^",["^(aux values)^"]) "^(string_of_ssi t)
 
     
     (* Convertit la liste des signaux partagés lié à leurs threads en chaîne de caractères *)
     let rec string_of_shared_signals shared_signals =
       match shared_signals with
-          []                              ->   ""
+          []                             ->   ""
+
+        | [SSI(id_signal,thread_list)]   ->   "["^id_signal^" : {"^(string_of_ssi thread_list)^"}]" 
 
         | SSI(id_signal,thread_list)::t  ->   "["^id_signal^" : {"^(string_of_ssi thread_list)^"}] , "^(string_of_shared_signals t)  
 
@@ -537,7 +547,7 @@ module SECDMachine =
       match (stack,nbrOperand) with
           (stack,0)   ->   stack
 
-        | (h::t,nbr)  ->   if nbr > 0 then remove_elements t (nbr - 1) else raise InvalidOperandNb
+        | (h::t,nbr)  ->   if nbr > 0 then remove_elements t (nbr - 1) else raise InsufficientOperandNb
 
         | ([],_)      ->   raise InsufficientOperandNb
 
@@ -925,8 +935,6 @@ module SECDMachine =
                                           with    NotAllConstants        ->   machineSECD (MachineSECD( id , s , e , Throw 12::c , tl , si , d , h , ip ))
 
                                                 | OpFormatError          ->   machineSECD (MachineSECD( id , s , e , Throw 15::c , tl , si , d , h , ip )) 
-
-                                                | InvalidOperandNb       ->   machineSECD (MachineSECD( id , s , e , Throw 13::c , tl , si , d , h , ip ))
 
                                                 | InsufficientOperandNb  ->   machineSECD (MachineSECD( id , s , e , Throw 14::c , tl , si , d , h , ip ))
                                         end
