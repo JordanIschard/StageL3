@@ -227,7 +227,9 @@ module SECDMachine =
       match secd_list with
           []    ->   "" 
 
-        | h::t  ->   h^" "^(concat_secd_list t)
+        | [h]     ->   h
+        
+        | h::t  ->   h^";"^(concat_secd_list t)
 
 
     (* Convertit le langage ISWIM en langage SECD *)
@@ -427,7 +429,7 @@ module SECDMachine =
         match values with
             []                     ->   ""
 
-          | (value,pointers)::t    ->   "("^( string_of_int value)^","^(concat_secd_list(map string_of_int pointers))^") ;"^(aux t)
+          | (value,pointers)::t    ->   "("^( string_of_int value)^",{"^(concat_secd_list(map string_of_int pointers))^"});"^(aux t)
       in
       match ssi_list with
           []                       ->   ""
@@ -852,10 +854,10 @@ module SECDMachine =
         match threads with
             (id,[])::t               ->   if (id = id_thread) 
                                             then raise ThreadValuesNotFound 
-                                            else let (res,new_threads)   =   aux1 t      in (res,append new_threads [(id,[])])
+                                            else let (res,new_threads)   =   aux1 t       in (res,append new_threads [(id,[])])
           
           | (id,values)::t           ->   if (id = id_thread) 
-                                            then if(first_get id_thread values) 
+                                            then if(first_get my_thread values) 
                                               then let (res,new_values)   =   aux3 values in (res,append [(id,new_values)] t) 
                                               else let (res,new_values)   =   aux2 values in (res,append [(id,new_values)] t) 
                                             else   let (res,new_threads)  =   aux1 t      in (res,append [(id,values)] new_threads)
@@ -954,7 +956,7 @@ module SECDMachine =
                                           with  SignalNotInit  ->   machineSECD (MachineSECD( id , s , e , Throw 8::c , tl , si , d , h , ip )) 
                                         end
 
-          (* EN COURS  *)
+          (* On a get dans la chaîne de contrôle, on prends la constante dans la liste des valeurs partagées liées à un signal et u identifant de thread *)
         | MachineSECD(id,Stack_const b::s,e,Get signal::c,tl,si,d,h,ip)           ->    
                                         begin
                                           try   let (res,new_si) = get si b signal id in
