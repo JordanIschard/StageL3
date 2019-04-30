@@ -89,7 +89,7 @@ module SECDMachine =
     type current_signals = cs list
 
     (* type intermédiaire contenant pour un id de thread donné, sa liste de signaux qui ont eux mếme leurs liste de valeurs *)
-    type ssi = SSI of id_signal * ((id_thread * ((int * (id_thread list)) list) ) list)
+    type ssi = SSI of id_signal * ((id_thread * ((int * (id_thread list)) list) * id_thread list ) list)
 
     (* Ce type représente les signaux partagés, c'est-à-dire, les signaux qui ont été émit à l'instant précédent *)
     type shared_signals = ssi list
@@ -203,6 +203,7 @@ module SECDMachine =
     exception ThreadValuesNotFound             (* Les valeurs lié à un thread n'existe pas                                          *)
     exception ThreadSharedNotFound             (* L'identifiant de thread lié à un signal n'existe pas                              *)
     exception PointerNotExist                  (* Le pointeur n'existe pas                                                          *)
+    exception AllValuesTaken                   (* Toutes les valeurs de la listes ont déjà été prise                                *)
 
     exception UnknowState                      (* Le format de la machine est invalide et/ou inconnu                                *)
     exception UnknowStackState                 (* Le format de la pile est invalide et/ou inconnu                                   *)
@@ -293,6 +294,7 @@ module SECDMachine =
         | 19  ->   "ERREUR : Le thread n'a pas partagé de valeurs"               (* ThreadValuesNotFound  *)
         | 20  ->   "ERREUR : Le thread n'est pas trouvé"                         (* ThreadSharedNotFound  *)
         | 21  ->   "ERREUR : Le pointeur n'existe pas"                           (* PointerNotExist       *)
+        | 22  ->   "ERREUR : Toutes les constantes ont été prise"                (* AllValuesTaken        *)
 
         | _   ->   "ERREUR : Cette erreur n'existe pas "
 
@@ -433,16 +435,16 @@ module SECDMachine =
     let rec string_of_ssi ssi_list = 
       let rec aux values =
         match values with
-            []                     ->   ""
+            []                                 ->   ""
 
-          | [(value,pointers)]     ->   "("^( string_of_int value)^",{"^(concat_secd_list(map string_of_int pointers))^"})"
+          | [(value,pointers)]                 ->   "("^( string_of_int value)^",{"^(concat_secd_list(map string_of_int pointers))^"})"
 
-          | (value,pointers)::t    ->   "("^( string_of_int value)^",{"^(concat_secd_list(map string_of_int pointers))^"});"^(aux t)
+          | (value,pointers)::t                ->   "("^( string_of_int value)^",{"^(concat_secd_list(map string_of_int pointers))^"});"^(aux t)
       in
       match ssi_list with
-          []                       ->   ""
+          []                                   ->   ""
 
-        | (id_thread,values)::t    ->   " ("^(string_of_int id_thread)^",["^(aux values)^"]) "^(string_of_ssi t)
+        | (id_thread,values,thread_list)::t    ->   " ("^(string_of_int id_thread)^",["^(aux values)^"],{"^(concat_secd_list( map string_of_int thread_list))^"}) "^(string_of_ssi t)
 
     
     (* Convertit la liste des signaux partagés lié à leurs threads en chaîne de caractères *)
@@ -690,7 +692,7 @@ module SECDMachine =
         match thread_list with
             []                             ->   []
 
-          | (thread,values,_)::t           ->   (thread,(map (fun x -> (x,[])) values))::(aux t)
+          | (thread,values,_)::t           ->   (thread,(map (fun x -> (x,[])) values),[])::(aux t)
       in
       match current_signals with
           []                               ->   []
@@ -823,9 +825,9 @@ module SECDMachine =
     (* Vérifie si c'est la première fois que l'on pioche dans une liste de valeurs *)
     let rec first_get id_thread values =
       match values with
-          []                       ->   true
+          []                     ->   true
 
-        | (_,pointers)::t          ->   if (mem id_thread pointers) then false else first_get id_thread t
+        | (_,pointers)::t        ->   if (mem id_thread pointers) then false else first_get id_thread t
 
     
     (* Ajoute un pointeur dans une liste de pointeurs *)
@@ -850,27 +852,39 @@ module SECDMachine =
         match values with
             []                       ->   raise NoSharedValues
 
-          | (value,pointers)::t      ->   (value,(append [(value,(addIt my_thread pointers))] t))
+          | (value,pointers)::t      ->   (append [(value,(addIt my_thread pointers))] t)
       in
       let rec aux2 values =
         match values with
             []                       ->   raise NoSharedValues
 
+          | [(value,pointers)]       ->   if (mem my_thread pointers) 
+                                            then (value,[(value,(removeIt my_thread pointers))],true) 
+                                            else raise NoSharedValues
+
           | (value,pointers)::t      ->   if (mem my_thread pointers) 
-                                            then let (res,new_values)  =   aux3 t in (res,(append [(value,(removeIt my_thread pointers))] new_values)) 
-                                            else let (res,new_values)  =   aux2 t in (res,(append [(value,pointers)] new_values))
+                                            then let new_values               =   aux3 t in (value,(append [(value,(removeIt my_thread pointers))] new_values),false) 
+                                            else let (res,new_values,end_it)  =   aux2 t in (res,(append [(value,pointers)] new_values),end_it)
       in
       let rec aux1 threads =
         match threads with
-            (id,[])::t               ->   if (id = id_thread) 
+            (id,[],end_list)::t               ->   if (id = id_thread) 
                                             then raise ThreadValuesNotFound 
-                                            else let (res,new_threads)   =   aux1 t       in (res,append new_threads [(id,[])])
+                                            else let (res,new_threads)   =   aux1 t       in (res,append new_threads [(id,[],end_list)])
           
-          | (id,values)::t           ->   if (id = id_thread) 
-                                            then if(first_get my_thread values) 
-                                              then let (res,new_values)   =   aux3 values in (res,append [(id,new_values)] t) 
-                                              else let (res,new_values)   =   aux2 values in (res,append [(id,new_values)] t) 
-                                            else   let (res,new_threads)  =   aux1 t      in (res,append [(id,values)] new_threads)
+          | (id,values,end_list)::t           ->   if (id = id_thread) 
+                                            then if(mem my_thread end_list)
+                                                    then raise AllValuesTaken
+                                                    else if(first_get my_thread values) 
+                                                            then  match values with 
+                                                                      (value,pointers)::t1  ->   (value,append [(id,append [(value,pointers)] (aux3 t1),end_list)] t) 
+                                                                    | []             ->   raise NoSharedValues
+                                                            else let (res,new_values,end_it)   =   aux2 values in 
+                                                                                                        if end_it 
+                                                                                                          then (res,append [(id,new_values,append [my_thread] end_list)] t)
+                                                                                                          else (res,append [(id,new_values,end_list)] t) 
+
+                                            else   let (res,new_threads)  =   aux1 t      in (res,append [(id,values,end_list)] new_threads)
 
           | [] -> raise ThreadSharedNotFound
       in
@@ -978,6 +992,8 @@ module SECDMachine =
                                                 | ThreadValuesNotFound  ->   machineSECD (MachineSECD( id , s , e , Throw 20::c , tl , si , d , h , ip ))
 
                                                 | PointerNotExist       ->   machineSECD (MachineSECD( id , s , e , Throw 21::c , tl , si , d , h , ip ))
+
+                                                | AllValuesTaken        ->   machineSECD (MachineSECD( id , s , e , Throw 22::c , tl , si , d , h , ip ))
                                         end
                                           
           (* On a Ap dans la chaîne de contrôle, on sauvegarde une partie de la machine dans le dépôt, on prends l'environnement de la fermeture et on ajoute la nouvelle substitution *)
