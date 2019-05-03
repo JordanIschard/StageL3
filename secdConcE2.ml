@@ -44,7 +44,7 @@ module SECDMachine =
       | Get of id_signal                                        (* prends dans un signal     *)
 
     (* Ce type représente la chaîne de contrôle de la machine SECD, c'est notre entrée *)
-    type control_string = c list
+    type control_string = c list   
 
 
     
@@ -200,10 +200,8 @@ module SECDMachine =
     exception SignalAlreadyEmit                (* Le signal est déjà émit dans la machine                                           *)
     exception SignalNotInit                    (* Le signal n'est pas initialisé dans ce thread                                     *)
     exception SignalNotShared                  (* Le signal n'est pas dans la liste des signaux partagés                            *)
-    exception ThreadValuesNotFound             (* Les valeurs lié à un thread n'existe pas                                          *)
     exception ThreadSharedNotFound             (* L'identifiant de thread lié à un signal n'existe pas                              *)
     exception PointerNotExist                  (* Le pointeur n'existe pas                                                          *)
-    exception AllValuesTaken                   (* Toutes les valeurs de la listes ont déjà été prise                                *)
 
     exception UnknowState                      (* Le format de la machine est invalide et/ou inconnu                                *)
     exception UnknowStackState                 (* Le format de la pile est invalide et/ou inconnu                                   *)
@@ -212,6 +210,7 @@ module SECDMachine =
     exception UnknowStuckState                 (* Le format de la liste d'élément bloqués est invalide et/ou inconnu                *)
     exception UnknowDumpState                  (* Le format du dépôt est invalide et/ou inconnu                                     *)
     exception UnknowHandlerState               (* Le format du gestionnaire d'erreur est invalide et/ou inconnu                     *)
+    exception UnknowSSIState                   (* Le format de la liste de signaux partagés est invalide                            *)
 
 
 
@@ -259,9 +258,9 @@ module SECDMachine =
 
         | Catch_ISWIM(error,expr1,(abs,expr2))  ->   [Catch(error,(secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
 
-        | Put_ISWIM(signal,value)               ->   [Constant value ; Put signal]
+        | Put_ISWIM(signal,value)               ->   [Constant value ; Put(signal)]
 
-        | Get_ISWIM(signal,id_thread)           ->   [Constant id_thread ; Get signal]
+        | Get_ISWIM(signal,id_thread)           ->   [Constant id_thread ;Get(signal)]
 
 
     (* Donne une chaîne de caractères contenant un message d'erreur par rapport à l'identifiant de l'erreur *)
@@ -291,10 +290,8 @@ module SECDMachine =
 
         | 17  ->   "ERREUR : Aucune valeurs partagées"                           (* NoSharedValues        *)
         | 18  ->   "ERREUR : Le signal n'a pas été partagé"                      (* SignalNotShared       *)
-        | 19  ->   "ERREUR : Le thread n'a pas partagé de valeurs"               (* ThreadValuesNotFound  *)
         | 20  ->   "ERREUR : Le thread n'est pas trouvé"                         (* ThreadSharedNotFound  *)
         | 21  ->   "ERREUR : Le pointeur n'existe pas"                           (* PointerNotExist       *)
-        | 22  ->   "ERREUR : Toutes les constantes ont été prise"                (* AllValuesTaken        *)
 
         | _   ->   "ERREUR : Cette erreur n'existe pas "
 
@@ -334,9 +331,9 @@ module SECDMachine =
 
         | Error error::t                     ->   (error_message error)^" "^(string_of_control_string t)
 
-        | Put signal::t                      ->   "put in "^signal^" "^(string_of_control_string t)
+        | Put signal::t                      ->   signal^" put "^(string_of_control_string t)
        
-        | Get signal::t                      ->   "get "^signal^" "^(string_of_control_string t)
+        | Get signal::t                      ->   signal^" get "^(string_of_control_string t)
 
 
     (* Convertit un environnement en chaîne de caractères *)
@@ -850,35 +847,32 @@ module SECDMachine =
     let get signals id_thread signal my_thread =
       let rec aux3 values =
         match values with
-            []                       ->   raise NoSharedValues
+            []                       ->   raise UnknowSSIState
 
           | (value,pointers)::t      ->   (append [(value,(addIt my_thread pointers))] t)
       in
       let rec aux2 values =
         match values with
-            []                       ->   raise NoSharedValues
+            []                       ->   raise UnknowSSIState
 
           | [(value,pointers)]       ->   if (mem my_thread pointers) 
-                                            then (value,[(value,(removeIt my_thread pointers))],true) 
-                                            else raise NoSharedValues
+                                            then (Stack_const value,[(value,(removeIt my_thread pointers))],true) 
+                                            else raise UnknowSSIState
 
           | (value,pointers)::t      ->   if (mem my_thread pointers) 
-                                            then let new_values               =   aux3 t in (value,(append [(value,(removeIt my_thread pointers))] new_values),false) 
+                                            then let new_values               =   aux3 t in (Stack_const value,(append [(value,(removeIt my_thread pointers))] new_values),false) 
                                             else let (res,new_values,end_it)  =   aux2 t in (res,(append [(value,pointers)] new_values),end_it)
       in
       let rec aux1 threads =
-        match threads with
-            (id,[],end_list)::t               ->   if (id = id_thread) 
-                                            then raise ThreadValuesNotFound 
-                                            else let (res,new_threads)   =   aux1 t       in (res,append new_threads [(id,[],end_list)])
+        match threads with 
           
-          | (id,values,end_list)::t           ->   if (id = id_thread) 
+            (id,values,end_list)::t  ->   if (id = id_thread) 
                                             then if(mem my_thread end_list)
-                                                    then raise AllValuesTaken
+                                                    then (Unit,append [(id,values,end_list)] t)
                                                     else if(first_get my_thread values) 
                                                             then  match values with 
-                                                                      (value,pointers)::t1  ->   (value,append [(id,append [(value,pointers)] (aux3 t1),end_list)] t) 
-                                                                    | []             ->   raise NoSharedValues
+                                                                      (value,pointers)::t1  ->   (Stack_const value,append [(id,append [(value,pointers)] (aux3 t1),end_list)] t) 
+                                                                    | []                    ->   (Unit,append [(id,[],append [my_thread] end_list)] t)
                                                             else let (res,new_values,end_it)   =   aux2 values in 
                                                                                                         if end_it 
                                                                                                           then (res,append [(id,new_values,append [my_thread] end_list)] t)
@@ -893,8 +887,8 @@ module SECDMachine =
             []                       ->   raise SignalNotShared
 
           | SSI(signal1,threads)::t  ->   if (signal1 = signal) 
-                                            then let (res,new_threads)  =   aux1 threads in (res,(append [SSI(signal1,new_threads)] t))  
-                                            else let (res,new_ssi)      =   aux t        in (res,(append [SSI(signal1,threads)] new_ssi)) 
+                                            then let (res,new_threads)  =   aux1 threads in (res,(append [SSI(signal1,new_threads)]       t))  
+                                            else let (res,new_ssi)      =   aux t        in (res,(append [SSI(signal1,threads)    ] new_ssi)) 
       in
       match signals with
           (cs,[])                     ->   raise NoSharedValues
@@ -982,18 +976,14 @@ module SECDMachine =
         | MachineSECD(id,Stack_const b::s,e,Get signal::c,tl,si,d,h,ip)           ->    
                                         begin
                                           try   let (res,new_si) = get si b signal id in
-                                                machineSECD (MachineSECD( id , Stack_const res::s , e , c , tl , new_si , d , h , ip ))
+                                                machineSECD (MachineSECD( id , res::s , e , c , tl , new_si , d , h , ip ))
                                           with    NoSharedValues        ->   machineSECD (MachineSECD( id , s , e , Throw 17::c , tl , si , d , h , ip )) 
 
                                                 | SignalNotShared       ->   machineSECD (MachineSECD( id , s , e , Throw 18::c , tl , si , d , h , ip )) 
 
                                                 | ThreadSharedNotFound  ->   machineSECD (MachineSECD( id , s , e , Throw 19::c , tl , si , d , h , ip ))
 
-                                                | ThreadValuesNotFound  ->   machineSECD (MachineSECD( id , s , e , Throw 20::c , tl , si , d , h , ip ))
-
                                                 | PointerNotExist       ->   machineSECD (MachineSECD( id , s , e , Throw 21::c , tl , si , d , h , ip ))
-
-                                                | AllValuesTaken        ->   machineSECD (MachineSECD( id , s , e , Throw 22::c , tl , si , d , h , ip ))
                                         end
                                           
           (* On a Ap dans la chaîne de contrôle, on sauvegarde une partie de la machine dans le dépôt, on prends l'environnement de la fermeture et on ajoute la nouvelle substitution *)
@@ -1008,7 +998,7 @@ module SECDMachine =
           (* On a la chaîne de contrôle vide et le dépôt à une sauvegarde, on prends la sauvegarde et on l'applique sur la machine *)
         | MachineSECD(id,v::s,e,[],tl,si,Save(s1,e1,c,d),h,ip)                    ->   machineSECD (MachineSECD( id , v::s1 , e1 , c , tl , si , d , h , ip ))
 
-          (* On a la chaîne de contrôle vide et le dépôt à une sauvegarde avec signal, on prends la sauvegarde et on l'applique sur la machine en pensant à retirer initialisation du signal dans la liste *)                             
+          (* On a la chaîne de contrôle vide et le dépôt à une sauvegarde avec signal, on prends la sauvegarde et on l'applique sur la machine en pensant à retirer initialisation du signal dans la  liste *)                             
         | MachineSECD(id,v::s,e,[],tl,si,SaveSignal(signal,s1,e1,c,d),h,ip)       -> 
                                         begin
                                           try   machineSECD (MachineSECD( id , v::s1 , e1 , c , tl , (remove_init_signal si id signal ) , d , h , ip ))

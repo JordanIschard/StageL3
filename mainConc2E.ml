@@ -32,23 +32,23 @@ let expression7 = (Catch_ISWIM(8,
   )
 ,("uygig",Const 7685))) ;;
 
-let expression8 = Signal_ISWIM("signal",
+let expression8 = Signal_ISWIM("salut",
                                     App(
                                        Spawn(
                                           Signal_ISWIM("coucou",
-                                                Present_ISWIM("coucou",Const 98,Op(Sub,[Get_ISWIM("signal",2);Get_ISWIM("signal",2)]))
+                                                Present_ISWIM("coucou",Const 98,App(Op(Sub,[Get_ISWIM("salut",2);Get_ISWIM("salut",2)]),Get_ISWIM("salut",2)))
                                                 )
                                             )
                                       ,App(
                                          Spawn(
                                             App(
-                                               Put_ISWIM("signal",6)
-                                              ,App(Put_ISWIM("signal",3),Emit_ISWIM "signal")
+                                               Put_ISWIM("salut",6)
+                                              ,App(Put_ISWIM("salut",3),Emit_ISWIM "salut")
                                               )
                                             )
                                         ,Spawn(
                                           Signal_ISWIM("coucou",
-                                                  Present_ISWIM("coucou",Const 98,Op(Add,[Get_ISWIM("signal",2);Get_ISWIM("signal",2)]))
+                                                  Present_ISWIM("coucou",Const 98,App(Op(Add,[Get_ISWIM("salut",2);Get_ISWIM("salut",2)]),Get_ISWIM("salut",2)))
                                                   )
                                              )
                                          )
