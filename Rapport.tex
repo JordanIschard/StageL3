@@ -666,7 +666,7 @@
 					\begin{itemize}
 						\item [] on va découper cette élément pour mieux en comprendre le sens :
 						\item[] - $\{...,*,...\}$ Une liste. 
-						\item[] - $\langle s,{...,**,...},emit\rangle$ \\
+						\item[] - $\langle s,\{...,**,...\},emit\rangle$ \\
 						Une liste composée de trinôme comportant le identifiant du signal, une sous-liste et un booléen exprimant l'émission de ce signal.
 						\item[] - $\langle id,\{...,b,...\},init\rangle$ \\
 						Une sous-liste composée d'un trinôme comportant l'identifiant du thread, une liste de valeur et un booléen exprimant l'initialisation de ce signal pour ce thread.
@@ -759,14 +759,14 @@
 				\item[]
 				\item $\langle I,s$ $b$ $S,E,put$ $C,TL,\langle \{...,\langle s,\{...,\langle I,values,true\rangle,...\},emit\rangle,...\},SSI\rangle,D,H,IP\rangle \\\longrightarrow_{secdv4} \langle I,Unit$ $S,E,C,TL,\langle \{...,\langle s,\{...,\langle I,values $ $b,true\rangle,...\},emit\rangle,...\},SSI\rangle,D,H,IP\rangle$
 				\item[]
-				\item $\langle I,s$ $b$ $S,E,get$ $C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...,\langle n,\{...,I,...\}\rangle,\langle m,\{...\}\rangle,...\},\{...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle \\\longrightarrow_{secdv4} \langle I,n$ $S,E,C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...,\langle n,\{...\}\rangle,\langle m,\{...,I\}\rangle,...\},\{...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle$
+				\item $\langle I,s$ $b$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...,\langle n,\{...,I,...\}\rangle,\langle m,\{...\}\rangle,...\},\{...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle \\\longrightarrow_{secdv4} \langle I,n$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...,\langle n,\{...\}\rangle,\langle m,\{...,I\}\rangle,...\},\{...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle$
 				\item[]
-				\item $\langle I,s$ $b$ $S,E,get$ $C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...,\langle n,\{...,I,...\}\rangle\},\{...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle \\\longrightarrow_{secdv4} \langle I,n$ $S,E,C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...,\langle n,\{...\}\rangle\},\{...,I\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle$
+				\item $\langle I,s$ $b$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...,\langle n,\{...,I,...\}\rangle\},\{...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle \\\longrightarrow_{secdv4} \langle I,n$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...,\langle n,\{...\}\rangle\},\{...,I\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle$
 				\item[]
-				\item $\langle I,s$ $b$ $S,E,get$ $C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{\langle n,\{\}\rangle,\langle m,\{...\}\rangle,...\},\{...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle \\\longrightarrow_{secdv4} \langle I,n$ $S,E,C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{\langle n,\{\}\rangle,\langle m,\{...,I\}\rangle,...\},\{...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle$
+				\item $\langle I,s$ $b$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{\langle n,\{\}\rangle,\langle m,\{...\}\rangle,...\},\{...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle \\\longrightarrow_{secdv4} \langle I,n$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{\langle n,\{\}\rangle,\langle m,\{...,I\}\rangle,...\},\{...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle$
 				\item[]
-				\item $\langle I,s$ $b$ $S,E,get$ $C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...\},\{...,I,...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle
-				\\\longrightarrow_{secdv4} \langle I,Unit$ $S,E,C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...\},\{...,I,...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle$
+				\item $\langle I,s$ $b$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...\},\{...,I,...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle
+				\\\longrightarrow_{secdv4} \langle I,Unit$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...\},\{...,I,...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle$
 				\item[]
 				\item $\langle I,V$ $S,E,\epsilon,TL,\langle\{...,\langle s,\{...,\langle I,\{...\},init\rangle,...\},emit\rangle,...\},SSI\rangle,\langle s,\langle S',E',C,D\rangle\rangle,H,IP\rangle 
 				\\\longrightarrow_{secdv4} \langle I,V$ $S',E',C,TL,\langle\{...,\langle s,\{...,\langle I,\{...\},false\rangle,...\},emit\rangle,...\},SSI\rangle,D,H,IP\rangle$
