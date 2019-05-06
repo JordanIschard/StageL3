@@ -1,0 +1,1160 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=1.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{amssymb}
+\usepackage{enumitem}
+\usepackage{pifont}
+\usepackage{hyperref}
+\usepackage{textcomp}
+\usepackage{ulem}
+
+\begin{document}
+		
+	\title{\textbf{Rapport de stage \\ Développement d'un noyau de programmation synchrone}}
+	\date{25 Mars 2019}
+	\author{Jordan Ischard\\3ème année de licence Informatque \\ Université d'Orléans}
+	\maketitle
+	\newpage
+	
+	
+	\tableofcontents
+	\newpage
+	
+	\section{Remerciement}
+		Avant tout développement sur mon sujet de stage, j'aimerai remercié mes 2 professeurs qui m'ont encadrés pour m'avoir permis de faire ce stage de recherche et de m'avoir aidé tout le long de celui-ci. J'ai beaucoup appris grâce à eux. Je remercie donc Madame Bousdira et Monsieur Dabrowski pour tout.
+	\bigbreak
+	
+	\section{Introduction}
+	
+	
+	
+	\newpage
+	
+	\section{Journal de bord}
+		\subsection{Mars}
+			\subsubsection{Semaine 25 au 29 Mars}
+			\medbreak
+			Afin de me remettre dans le contexte du stage et de comprendre ces problématiques, le lundi a été entièrement consacré à la relecture et lecture des deux articles ,proposés durant l'entretien, un sur le RéactiveML\hyperref[ReactiveML]{[1]} et un sur le ZINC\hyperref[ZINC]{[2]}.
+			\medbreak
+			Toutes mes notes, qui sont un résumé de ce que j'ai compris, sont données dans la section \hyperref[Recherche]{\textbf{Recherche d'Informations}}.
+			\medbreak
+			
+			Le mardi matin a servie à clarifier mes questions en une petite liste présentée lors de la réunion. La réunion s'est déroulée l'après-midi et a permis d'apporter des réponses aux questions pré-écrite le matin et à fixer des objectifs. 
+			\\La réunion en a fixé 2:
+			\smallbreak
+			\begin{enumerate}
+				\item Impl\'{e}menter les $\lambda$-calculs
+				\item Impl\'{e}menter la machine SECD
+			\end{enumerate}
+			2 semaines m'ont été accordé pour réaliser ces objectifs dans le langage de programmation \textit{Ocaml}. J'ai eu, pour cela, un article traitant des $\lambda$-calculs\hyperref[Calculi]{[3]} afin de m'aider dans ma démarche.\\
+			Il a été décidé que tous les programmes seront partagé sur un github qui a pour adresse :\\ \textit{https://github.com/JordanIschard/StageL3}.\\
+			Le reste de la journée a été utilisé pour commencer ce dit article.
+			\medbreak
+			
+			La compréhension des $\lambda$-calcul a été étalé sur le reste de la semaine.
+			\\
+			Cependant l'avancement a été perturbé le mercredi à cause d'un problème de compréhension des règles de priorité dans les $\lambda$-calculs. Ce temps perdu en compréhension a été compensé dans l'écriture de ce rapport.
+			\medbreak
+			M. Dabrowski m'a aidé à régler ce problème le jeudi matin ce qui m'a permis d'assimilé en presque totalité les $\lambda$-calculs et de commencer l'implémentation de ceux-ci en Ocaml.
+			
+			\subsection{Avril}
+			
+			\subsubsection{Semaine du 1 au 5 Avril}
+			L'implémentation des $\lambda$-calculs a presque été terminé à l'exception du parser, de l'$\alpha$-réduction et d'un petit bug de renommage lié à la règle de $\beta$-réduction suivante :
+			\smallbreak
+			\begin{itemize}
+				\item [] ($\lambda$X$_{1}$.M$_{1}$)[X$_{2}$ $\leftarrow$ M$_{2}$] = ($\lambda$X$_{3}$.M$_{1}$[X$_{1}$ $\leftarrow$ X$_{3}$][X$_{2}$ $\leftarrow$ M$_{2}$]) 
+				\\où X$_{1}$$\neq$X$_{2}$, X$_{3}$$\notin$ FV(M$_{2}$) 
+				et X$_{3}$$\notin$ FV(M$_{1}$)$\backslash${X$_{1}$} 
+			\end{itemize}
+			La réunion a changé les objectifs de base , en gardant le langage Ocaml, par les objectifs suivants : 
+			\begin{enumerate}
+				\item Implémenter les $\lambda$-calculs
+				\item Implémenter la machine CC et par extension la machine SCC
+				\item Implémenter la machine CK et par extension la machine CEK
+				\item Implémenter la machine SECD
+			\end{enumerate}
+			Une semaine supplémentaire m'a été accordé pour faire cela.
+			\medbreak
+			La compréhension des différentes machines ont été faite le lundi après la réunion, le mardi et le mercredi, toutes les informations récolté sont dans la partie \hyperref[Machine]{traitant des différentes machines}. \smallbreak
+			Cependant rien a été implémenté à cause d'un problème lié à Ocaml et Emacs. En effet, Ocaml propose un système de module pour pouvoir séparer des parties de codes dans différents fichiers.
+			\smallbreak
+			Malheureusement après une après-midi complète de recherche sur ce sujet, Je n'ai pas réussi à trouver une solution. Un mail a donc été envoyé à M. Dabrowski et Mme Bousdira pour avoir une aide le mercredi matin.
+			\smallbreak 
+			La structure des méthodes et leurs contenus a commencé à être écrit sur papier jusqu'au jeudi midi. En effet, M. Dabrowski m'a aidé avec les modules en Ocaml. Il fallait laisser tomber emacs et son intéraction dynamique et faire une compilation grâce à \textit{ocamlbuild}.
+			\smallbreak
+			L'implémentation du langage ISWIM a été fait le vendredi . La machinne CC est presque terminé mais un bug lié aux opérations créer une erreur. L'implémentation de la machine SCC sera faite durant la semaine prochaine. Le problème de l'implémentation des $\lambda$-calculs a été fixé ainsi que le bug de la machine CC durant le week-end.
+			
+			\newpage
+		
+		\subsubsection{Semaine du 8 au 12}
+			L'implémentation des machines CK,CEK et SECD ont été faite le lundi et le mardi. La réunion hebdomadaire ne s'est pas déroulé le lundi par manque de temps, donc les nouvelles consignes de mes professeurs n'ont pas été donné. En attendant le mardi après-midi a été utilisé pour lire la suite de l 'article \hyperref[Calculi]{[3]}.
+			\smallbreak
+			Une implémentation du systèmes d'erreur a été faite le mercredi matin. 
+			Une réunion a été placé le jeudi à 14h. Le temps entre mercredi matin et jeudi après-midi fut utilisé à la lecture du même article et plus précisément la mise en place de gestionnaire d'erreur et le système d'affectation.
+			\smallbreak
+			La réunion a permis de mettre en place un objectif ainsi qu'un objectif secondaire :
+			\begin{enumerate}
+				\item Implémenter une concurrence dans la machine SECD avec les notions suivantes :
+					\begin{enumerate}
+						\item \textbf{spawn t} : lance un nouveau thread et le mets en attente
+						\item \textbf{present s in t1 t2} : si le signal s est présent prends t1 sinon attend le prochain temps logique et prends t2
+						\item \textbf{emit s} : émet le signal s
+						\item \textbf{signal s in t} : initialise le signal s pour t 
+					\end{enumerate}
+				\item Implémenter une gestion d'erreur dans la machine SECD 
+			\end{enumerate}
+			Ces 2 objectifs doivent être atteint en 3 semaines maximum.
+			\medbreak
+			Le reste de la semaine a été utilisé pour écrire les règles de la machine SECD avec les nouvelles notions. En effet, toute la difficulté du rajout de notion dans une machine est de ne pas "casser" les règles de base.Pour cela, un petit point théorique est obligatoire.
+			\smallbreak
+			Tout d'abord, il faut distinguer deux types de thread différentes :
+			\begin{itemize}
+				\item ceux qui attendent
+				\item ceux qui sont bloquées
+			\end{itemize}
+			\bigbreak
+			
+			
+			Ce qui oblige de rajouter à notre machine SECD deux élément en plus, $\widehat{W}$ les éléments qui attendent et $\widehat{ST}$ les éléments qui sont bloqués.
+			\bigbreak
+			
+			
+			La question suivante se pose : \textbf{Que doit contenir les éléments de ces deux listes ?}
+			\smallbreak
+			
+			La réponse est : le nécessaire au fonctionnement des threads indépendamment les uns des autres. Comme dit plus haut ils sont indépendant les uns des autres , leurs piles, leurs environnements, leurs chaînes de contrôle et leurs dépôts sont obligatoirement indépendants pour ne pas créer de conflits mais par contre la liste d'attente et la liste d'éléments bloqués sont eux communs à tous.
+			\medbreak
+			
+			Donc $\widehat{W}$ contient une liste de sauvegarde de la machine SECD c'est-à-dire une liste de $\widehat{D}$. $\widehat{ST}$ contient une liste de couple contenant une sauvegarde et le signal attendu.On a pour l'instant :
+			
+			\begin{itemize}
+				\item[] $\widehat{W}$ = $\{\widehat{D},...\}$
+				\item[] $\widehat{ST}$ = $\{\langle s,\widehat{D}\rangle,...\}$ avec s un signal 
+			\end{itemize}
+		
+			Ensuite, il faut savoir quand un signal est émit et enfin le plus dur quand est-ce que le signal n'est pas émit.
+			\\
+			La liste de signaux émits doit-il être commun ou privé à chacun ? La question mérite d'être posé et après plusieurs essais le plus simple reste commun car pour vérifier la présence d'un signal émit par un autre thread avant il faut partager cette liste. Du coup on a $\widehat{SI}$ qui est une liste de signaux émits.
+			\smallbreak
+			On dit qu'un signal n'est pas émit si pendant tout un instant logique on a pas d'émission de ce signal. \textbf{Comment est représenté la fin d'un instant logique ?} Il est représenté par la $\widehat{W}$ vide, $\widehat{D}$ vide et $\widehat{C}$ vide. 
+			\smallbreak
+			Du coup quand ces trois conditions sont réunit, on peut prendre tous les éléments de $\widehat{ST}$ et les travailler en prenant en compte que le signal n'a pas été émit.
+			\smallbreak
+			Une première version sans le \textbf{signal s in t} a commencé à être conçu.
+			\newpage
+			
+			
+		\subsubsection{Semaine du 15 au 19}
+			La 1ère version des règles de la nouvelle machine SECD fût terminé le lundi et vous pouvez trouvez ces dites règles en \hyperref[SECDConc1]{Annexe}. 
+			Un ajout a été fait en plus dans la 1ère version, quand on tombe sur un élément comme \textbf{spawn} ou  \textbf{emit} il faut continuer de faire fonctionner la machine. Donc une constante \textbf{Remp} a été ajouté dans l'optique de ne pas casser le fonctionnement de la machine SECD de base.
+			\\ Cette version est inutilisable car elle part dans l'optique que tous les signaux sont déjà initialisé.
+			\smallbreak
+			Pour palier à ce problème une 2ème version de ces règles fût créer le lundi matin, vous pouvez les retrouver en \hyperref[SECDConc2]{Annexe} comme pour la 1ère version.
+			\medbreak
+			L'implémentation de ces règles a été faite le lundi après-midi. Cette implémentation semble concluante mais il reste potentiellement des failles. Cette semaine aucune réunion sera faites donc je présenterai mes travaux à la réunion de la semaine prochaine pour avoir l'approbation de mes professeurs.
+			\smallbreak
+			L'objectif principal étant atteint, je me suis penché sur l'objectif secondaire le mardi. 
+			\smallbreak
+			Tout d'abord, j'ai rajouté un système d'erreur dans la machine SECD qui arrête le fonctionnement de celle-ci et renvoie un message d'erreur et non qui s'arrête par la gestion d'erreur de Ocaml. Le système fonctionnant, j'ai changé les erreurs par des \textbf{Throw} en prévision de son utilisation futur. M'inspirant des règles créé pout la machine CCH présenté dans \hyperref[Calculi]{[3]} j'ai aussi rajouté un autre élément à la machine SECD concurrente : le \textbf{Handler}. Le \textbf{Handler} doit contenir une sauvegarde de la machine secd au complet. Donc on a:
+			
+			\begin{itemize}
+				\item[] $\widehat{H}$ = Vide | $\langle erreur,\langle\widehat{S},\widehat{E},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle\rangle$
+			\end{itemize}
+			\smallbreak
+			
+			Pour aller de pair avec le \textbf{Throw} j'ai aussi rajouté un \textbf{Catch}.
+			Une 3ème version des règles de la machine SECD concurrente fût créé le mardi après-midi. Elle se trouve ,elle aussi, en \hyperref[SECDConc3]{Annexe}. L'implémentation a été faite le mercredi matin.
+			\medbreak
+			
+			Ayant terminé le travail demandé, j'ai envoyé un mail le mercredi pour avoir plus ample information sur le travail à faire ensuite. Un mail contenant la suite m'a été envoyé le mercredi vers midi. Après avoir créer des threads et les avoir fait travaillé indépendamment, le but est ici de donner la possibilité de partager des valeurs.
+			\smallbreak
+			
+			 Pour cela il faut :
+			\begin{enumerate}
+				\item Un \textbf{identifiant unique} à chaque thread
+				\item une \textbf{liste de valeurs} liés à un signal et un thread précis
+				\item une opération \textbf{put s v} qui met une valeur v dans la liste de valeurs associé à s qui est lui même associé au thread 
+				\item une opération \textbf{get id s} qui récupère une valeur v dans la liste de valeurs associé à s qui est lui même associé au thread id 
+			\end{enumerate}
+			Un temps de réflexion sur ces ajouts ,et les questions qui vont avec, a été faite le mercredi après-midi. Les questions étaient lié à quand est-ce que l'on met à jour les valeurs partagés principalement mais aussi comment avec le get on récupère les informations. 
+			\newpage
+			Tout le jeudi et le vendredi ont été utilisé pour voir les ajouts à la machine. Voilà le fruit de mes réflexions.
+			Reprenons dans l'ordre :
+			\begin{itemize}
+				\item Un \textbf{identifiant unique} à chaque thread : Cela implique deux choses. 
+					\begin{enumerate}
+						\item Il faut garder en mémoire l'id de chaque thread, en soit il faut rajouté un élément dans la machine car un thread en cours est une machine secd classique donc on rajoute $\widehat{I}$ l'identifiant et il faut le garder aussi dans la sauvegarde faite pour la mise en attente;
+						\item Il faut que l'id soit unique, pour cela deux possibilités : 
+							\begin{enumerate}
+								\item un id d'un thread fini peut être réutilisé mais cela peut créer des conflit plus tard (De plus, le vendredi un mail de M. Dabrowski confirmera mes craintes et privilegiera la 2nd option dans un premier temps)
+								\item un id d'un thread fini est bloqué jusqu'à la fin du fonctionnement de la machine. Pour cela, il faut garder un entier dans la machine qui va être pris pour chaque nouveau thread et qui va s'incrémenter. On a donc $\widehat{AI}$ un entier. 
+							\end{enumerate}
+					\end{enumerate}
+				\item une \textbf{liste de valeurs} liés à un signal et un thread précis : Cela implique de modifier la liste des signaux pour ajouter une liste de valeur et un identifiant de thread liés.
+				\smallbreak
+				De plus, dans la version précdente les signaux initialisés étaient dans l'environnement mais ici cela impliquerai de garder deux listes de valeurs indépendante pour le même signal et le même thread. Ce serai un gâchis d'espace mémoire. Du coup, on va tout mettre dans $\widehat{SI}$ avec la forme suivante : \smallbreak
+				 $\widehat{SI}$  = $\{ \langle id , \{\langle signal , \{valeur,...\},init,emit\rangle\}\rangle,...\}$ 
+				 \\ avec id = un identifiant de thread
+				 \\ avec init = un booléen indiquant si il est initialisé ou non
+				 \\ avec emit = un booléen indiquant si il est émit ou non
+				 \medbreak
+				 
+				 On peut légitimemment se poser la question de pourquoi un booléen init, et je vais vous expliquer pourquoi.
+				 \smallbreak
+				 En effet, quand on mets un signal dans cette liste c'est qu'il a été initialisé à un moment dans le fonctionnement de la machine. \textbf{A un moment} est la partie importante car en effet un signal peut ne plus être initialisé dans le thread en cours (par exemple en terminant un \textit{signal s in t}) mais avoir été émit avant. Donc pour gagner de l'espace je préfère un booléen à la place d'une liste de valeurs en double.
+				 
+				 \item les opérateurs \textbf{put} et \textbf{get} ,qui eux une fois les points précédémment expliqués seront implémentés, rajouteront deux règles mais ne provoquera pas de gros changement.
+				 \smallbreak 
+				 Seul le \textbf{get} va être un peu plus difficile car on a la contrainte de ne pouvoir prendre qu'une fois une valeur dans une liste. On va donc devoir rajouter dans la liste des valeurs partagées que l'on va définir plus loin une liste d'identifiant à chaque élément de la liste de valeurs pour simuler un pointeur.
+			\end{itemize}
+			\bigbreak
+			
+			
+		\subsubsection{Semaine du 22 au 26}
+			
+			L'implémentation de la nouvelle structure a pris le mardi au complet et le mercredi matin. Mais manquait de plusieurs choses et avait des failles. 
+			\smallbreak
+			La liste de signal $\widehat{SI}$ était un bon commencement mais il me manquait la liste de valeurs partagées. Pour cela $\widehat{SI}$ va devenir un couple de liste de la forme $\langle\widehat{CS},\widehat{SSI}\rangle$. Les signaux courants comme 1ère élément qui a la structure de l'ancien $\widehat{SI}$ et le 2nd élément qui va regroupé les valeurs partagées. Avant de parler de sa structure, il faut remettre en question la structure de $\widehat{CS}$. 
+			\smallbreak
+			Après avoir fini l'implémentation et mis en phase de test la machine j'ai remarqué 2 problèmes : 
+				\begin{itemize}
+					\item trier par threads puis par signaux est moins pratique que trier par signaux puis par threads. Du coup la structure de $\widehat{CS}$ sera $\{ \langle signal , \{\langle id , \{valeur,...\},init\rangle\},emit\rangle,...\}$ .
+					\item quand on créé un nouveau thread, j'avais omis de dupliqué les signaux initialisé plus tôt pour le nouveau thread créé dans la liste des signaux. Ceci a été fixé. 
+				\end{itemize} 
+			\bigbreak
+			
+			
+			Une 4ème version a donc été écrit avec les put et get et les améliorations et peut être retrouvé dans la \hyperref[SECDConc4]{Dernière version de la machine SECD concurrente}. La définition des éléments de la machine y sont aussi. Toutes ces modifications ont été faites durant le reste de la semaine.
+		\newpage
+		\subsection{Mai}
+		
+		\subsubsection{Semaine du 29 Avril au 3}
+			Ayant terminé l'implémentation de la 4ème version, les tests ont été fait le lundi en attendant la réunion hebdomadaire. La réunion a été reporté du coup par mail j'ai demandé la suite du travail à produire. Madame Bousdira m'a donc répondu et voici le nouvelle objectif :
+				\begin{enumerate}
+					\item Faire une preuve prouvant le déterminisme de la machine
+				\end{enumerate} 
+			\bigbreak
+			Ne sachant pas comment mis prendre, les recherches ont été faite sur internet et j'ai trouvé cet article\hyperref[Turing]{[4]} montrant le déterminisme de la machine de Turing par un automate déterministe. Les différentes tentatives fut des échecs car il me manquait la différenciation entre le déterminisme d'un automate et d'une machine, je m'explique :
+				\begin{itemize}
+					\item[] \textbf{Définition du déterminisme d'un automate} : Un automate fini déterministe, parfois abrégé en AFD (en anglais deterministic finite automaton, abrégé en DFA) est un automate fini dont les transitions à partir de chaque état sont déterminées de façon unique par le symbole d'entrée. \hyperref[AFD]{[5]}
+					\item[] \textbf{Définition du déterminisme d'une machine via un algorithme} : Un algorithme déterministe est un algorithme qui, étant donné une entrée particulière, produira toujours la même sortie, avec la machine sous-jacente passant toujours par la même séquence d'états. 
+					\smallbreak
+					Formellement, un algorithme déterministe calcule une fonction mathématique ; une fonction ayant une valeur unique pour n'importe quelle entrée dans son ensemble de définition, l'algorithme produit cette valeur en sortie. \hyperref[MFD]{[6]}
+				\end{itemize} 
+		\medbreak
+		Ce problème de compréhension a été détecté par Mme Bousdira le jeudi matin et réglé le jeudi après-midi avec Mme Bousdira et Mr Dabrowski. Une preuve par induction a été indiqué comme une solution.\smallbreak
+		Avant cela la réécriture des nouvelles règles au propre a été nécessaire et fait le vendredi pour que mes professeurs puissent vérifier mon travail avant de commencer la preuve.  
+		
+		\subsubsection{Semaine du 6 au 10}
+		
+		\subsubsection{Semaine du 13 au 17}
+		
+		\subsubsection{Semaine du 20 au 24}
+	\newpage
+	
+	\section{Recherche d'Informations}\label{Recherche}
+		\subsection{Le Réactive ML}
+				Modèle de programmation $\longrightarrow$ concurrence coopérative 
+				\smallbreak
+				L'analyse est découpé en 2 sous analyse :
+				\begin{itemize}
+					\item \textbf{statique} : système de type et d'effet
+					\item \textbf{réactive} : détecter les erreurs de concurrence
+				\end{itemize}
+				\bigbreak
+			
+			
+				Ordonnancement coopératif$\ast$ $\longrightarrow$ \textit{\small{chaque processus va r\'{e}guli\`{e}rement "laisser la main aux autres"}}
+				\smallbreak
+				Ordonnancement pr\'{e}emptif $\longrightarrow$ \textit{\small{le syst\`{e}me va "donner un temps de parole" \`{a} chacun}}
+				\medbreak
+				
+				Points fort :
+				\begin{itemize}
+					\item \textit{\small{impl\'{e}mentation s\'{e}quentielle efficace}}
+					\item \textit{\small{pas de probl\`{e}me de parall\'{e}lisme}}
+				\end{itemize}
+				\medbreak
+				
+				Points faible : 
+				\begin{itemize}
+					\item \textit{\small{responsabilit\'{e} de la r\'{e}activit\'{e} au dev}}
+				\end{itemize}
+				\medbreak
+				
+				Le mod\`{e}le r\'{e}actif synchrone d\'{e}finit une notion de temps logique qui est une succession d'instant.
+				\smallbreak
+				\textbf{
+					Un programme est r\'{e}actif is son ex\'{e}cution fait progresser les instants logique.
+				}
+				\medbreak
+				
+				\textbf{Exemple}
+				\medbreak
+				
+				\begin{enumerate}
+				 	\item let process clock timer s =
+				 	\item $\quad$ let time = ref(Unix.gettimeofday()) in
+				 	\item $\quad$ loop
+				 	\item $\quad$ $\quad$ let time' = Unix.gettimeofday() in
+				 	\item $\quad$ $\quad$ if time' -. !time >= timer
+				 	\item $\quad$ $\quad$ then(emit s(); time := time')
+				 	\item $\quad$ end 
+				\end{enumerate}
+				\medbreak
+				
+				Le probl\`{e}me ici est que le contenu de la boucle peut s'effectuer instantann\'{e}ment or il faut attendre un instant logique pour. Du coup, on doit ajouter une \textbf{pause entre la ligne 6 et 7}.
+				\bigbreak
+				
+				Une \textbf{condition suffisante} pour q'un \textbf{processus r\'{e}cursif soit r\'{e}actif} est qu'il ait \textbf{toujours} au moins \textbf{un instant logique entre l'instanciation du processus et l'appel r\'{e}cursif}.
+				
+				
+		
+			\newpage
+			
+			\subsection{Les  $\lambda$-calculs}
+				
+				\subsubsection{Les règles de $\beta$-réduction}
+					\begin{itemize}
+						\item X$_{1}$[X$_{1}$ $\leftarrow$ M] = M
+						\item X$_{2}$[X$_{1}$ $\leftarrow$ M] = X$_{2}$ 
+						\\où X$_{1}$$\neq$X$_{2}$
+						\item ($\lambda$X$_{1}$.M$_{1}$)[X$_{1}$ $\leftarrow$ M$_{2}$] =  ($\lambda$X$_{1}$.M$_{1}$)
+						\item ($\lambda$X$_{1}$.M$_{1}$)[X$_{2}$ $\leftarrow$ M$_{2}$] = ($\lambda$X$_{3}$.M$_{1}$[X$_{1}$ $\leftarrow$ X$_{3}$][X$_{2}$ $\leftarrow$ M$_{2}$]) 
+						\\où X$_{1}$$\neq$X$_{2}$, X$_{3}$$\notin$ FV(M$_{2}$) 
+						et X$_{3}$$\notin$ FV(M$_{1}$)$\backslash${X$_{1}$} 
+						\item (M$_{1}$ M$_{2}$)[X $\leftarrow$ M$_{3}$] = 
+						(M$_{1}$[X $\leftarrow$ M$_{3}$] M$_{2}$[X $\leftarrow$ M$_{3}$])
+					\end{itemize}
+			
+				\subsubsection{Les règles de réduction générale}
+					\begin{itemize}
+						\item ($\lambda$X$_{1}$.M) $\alpha$ ($\lambda$X$_{1}$.M[X$_{1}$ $\leftarrow$ X$_{2}$])
+						où X$_{2}$$\notin$  FV(M)
+						\item (($\lambda$X$_{1}$.M$_{1}$)M$_{2}$) $\beta$ M$_{1}$[X $\leftarrow$ M$_{2}$]
+						\item ($\lambda$X.(M X)) $\eta$ M 
+						où X$\notin$  FV(M)
+					\end{itemize}
+				
+				\textit{La réduction générale \textbf{n} = $\alpha \cup \beta \cup \eta$}.
+				
+				\subsubsection{Les règles de priorité}
+					\begin{itemize}
+						\item Application associative à gauche : M1 M2 M3 = ((M1 M2)M3)
+						\item Application prioritaire par rapport au abstraction : $\lambda$X.M1 M2 =  $\lambda$X.(M1 M2)
+						\item Les abstractions consécutives peuvent être regroupé : $\lambda$XYZ.M = ($\lambda$X.($\lambda$Y.($\lambda$Z.M)))
+					\end{itemize}
+				
+				
+				\subsubsection{Comment savoir si on a une forme normal ?}
+				
+				Une expression est une forme normale si on ne peut pas r\'{e}duire l'expression via une $\beta$ ou $\eta$ r\'{e}dution.
+				\medbreak
+				
+				\textbf{Th\'{e}or\`{e}me de la forme normale} :
+				Si on peut r\'{e}duire L tels que L =$_{n}$ M et L =$_{n}$ N et que N et M sont en forme normal alors M = N à n renommage pr\`{e}s.
+				\medbreak	
+				
+				\textbf{Th\'{e}or\`{e}me de Church-Rosser ( pour =$_{n}$ )}:
+				Si on a M =n N, alors il existe un L' tels que M $\twoheadrightarrow n_{n}$ L' et N $\twoheadrightarrow n_{n}$ L'.
+				\medbreak
+				
+				Certaines lambda calcul expression n'a pas de forme normal comme: (($\lambda$x.x x) ($\lambda$x.x x). 
+				\newline
+				D'autres en ont une mais on peut rentrer dans une boucle infini de r\'{e}duction si on choisi la mauvaise r\'{e}duction.
+				\medbreak
+				Le probl\`{e}me est quand on \'{e}value un argument de la fonction qui n'est jamais utilis\'{e}. Pour palier \`{a} ça, on utilise la strat\'{e}gie d'appliquer toujours les $\beta$ et $\eta$ réduction le plus \`{a} gauche. Ces règles sont les suivantes:
+				\medbreak
+				
+				\begin{itemize}
+					\item M $\longrightarrow_{\bar{n}}$ N if M $\beta$ N
+					\item M $\longrightarrow_{\bar{n}}$ N if M $\eta$ N
+					\item ($\lambda$X.M) $\longrightarrow_{\bar{n}}$ ($\lambda$X.N)
+					\item (M N) $\longrightarrow_{\bar{n}}$ (M' N) if M $\longrightarrow_{\bar{n}}$ M'
+					\\ et $\forall$L, (M N) $\beta$ L impossible et (M N) $\eta$ L impossible
+					\item (M N) $\longrightarrow_{\bar{n}}$ (M N') if N $\longrightarrow_{\bar{n}}$ N'
+					\\ et M est une forme normale
+					\\ et  $\forall$L, (M N) $\beta$ L impossible et (M N) $\eta$ L impossible
+				\end{itemize}
+				
+				Cette solution est s\^{u}r mais reste peut utilis\'{e} car elle est assez lente. 
+			\newpage
+			\subsection{ISWIM}	
+			
+				ISWIM à une grammaire étendue de la grammaire des $\lambda$-calcul.
+				\smallbreak
+				M,N,L,K =
+				\begin{itemize}
+					\item[|] X (les variables)
+					\item[|] ($\lambda$X.M)
+					\item[|] (M M)
+					\item[|] b (les constantes b )
+					\item[|] (o$^{n}$ M ... M) avec o$^{n}$ les fonctions primitives
+				\end{itemize}
+				\medbreak
+				
+				V,U,W =
+				\begin{itemize}
+					\item[|] b
+					\item[|] X
+					\item[|] $(\lambda X.M)$
+				\end{itemize}
+				
+				
+				Une application n'est jamais une valeur alors qu'une abstraction est toujours une valeur.
+				\medbreak
+				Les règles de $\beta$-réductions sont les mêmes que celle pour les $\lambda$-calcul avec 2 ajouts:
+				\begin{itemize}
+					\item b[X $\longleftarrow$ M] = b
+					\item (o$^{n}$ M$_{1}$ ... M$_{n}$)[X $\longleftarrow$ M] = (o$^{n}$ M$_{1}$[X $\longleftarrow$ M] ... M$_{n}$[X $\longleftarrow$ M])
+				\end{itemize}
+				
+				La réduction est la même quand lambda calcul mais on vérifie juste que la réduction est faite avec une valeur. (($\lambda$X.M) V) $\beta_{v}$ M[X $\longleftarrow$ V]. Cette restriction permet une sorte d'ordre dans les calculs.
+				\smallbreak
+				$\eta$ et $\alpha$ réduction ne sont plus vue comme tel.L'$\eta$-réduction n'est pas utilisé et l'$\alpha$-réduction sera utilisé que pour chercher une équivalence entre deux termes.
+				\medbreak
+				Cependant on ajoute une $\delta$-réduction en plus qui va s'occuper de gérer les réductions avec opérations.
+				\bigbreak
+				\newpage
+			\subsection{Les différentes machines traitées}\label{Machine}
+				\subsubsection{CC Machine}
+					
+					CC vient des termes \textbf{Control string} et \textbf{Context} qui représente respectivement:
+					\begin{itemize}
+						\item la partie du $\lambda$-calcul que l'on traite
+						\item la partie du $\lambda$-calcul que l'on met en attente 
+					\end{itemize}
+					Elle utilise le language ISWIM.
+					\bigbreak
+				
+					Les règles définit pour cette machine sont les suivantes :
+					\begin{enumerate}
+						\item $\langle(M$ $N),E\rangle \longmapsto_{cc} \langle M,E[([]$ $N)]\rangle$ $si M \notin V$
+						\item $\langle(V_{1}$ $N),E\rangle \longmapsto_{cc}  \langle M,E[(V_{1}$ $[])]\rangle$ $ si M \notin V$
+						\item $\langle(o^{n}$ $V_{1}...V_{i}$ $M$ $N ...),E\rangle \longmapsto_{cc}  
+						\langle M,E[(o^{n}$ $V_{1}...V_{i}$ $[]$ $N ...)]\rangle$ $ si M \notin V$
+						\item $\langle((\lambda X.M) V),E\rangle \longmapsto_{cc} \langle M[X\longleftarrow V],E\rangle$
+						\item $\langle(o^{n}$ $b_{1}...b_{n}),E\rangle \longmapsto_{cc}  \langle V,E\rangle$ avec $V = \delta(o^{n},b_{1}...b_{n})$ 
+						\item $\langle V,E[(U$ $[])]\rangle \longmapsto_{cc} \langle(U$ $V),E\rangle$ 
+						\item $\langle V,E[[]$ $N)]\rangle \longmapsto_{cc} \langle(V$ $N),E\rangle$ 
+						\item $\langle V,E[(o^{n}$ $V_{1}...V_{i}$ $[]$ $N ...)]\rangle \longmapsto_{cc} \langle(o^{n}$ $V_{1}...V_{i}$ $V$ $N ...),E\rangle$ 
+					\end{enumerate}
+					\bigbreak
+					
+					La machine peut s'arrêter dans 3 états différents:
+					\begin{itemize}
+						\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle M,[]\rangle \twoheadrightarrow_{cc} \langle b,[]\rangle$;
+						\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle M,[]\rangle \twoheadrightarrow_{cc} \langle\lambda X.N,[]\rangle$;
+						\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
+					\end{itemize}
+					\hyperref[CC]{Un exemple de la machine CC est fait dans les Annexes.}
+					\bigbreak
+					
+					
+				\subsubsection{SCC Machine}
+					Le SCC est une simplification de règle du CC. En effet, le CC exploite uniquement les informations de la chaîne de contrôle (Control string). Du coup on combine certaines règles pour en faire qu'une.
+					\bigbreak
+					
+					Les règles qui définisse la machine SCC sont les suivantes :
+					
+					\begin{enumerate}
+							\item $\langle(M$ $N),E\rangle \longmapsto_{scc} \langle M,E[([]$ $N)]\rangle$
+							\item $\langle(o^{n}$ $M$ $N...),E\rangle \longmapsto_{scc} \langle M,E[(o^{n}$ $[]$ $N...)]\rangle$
+							\item $\langle V,E[((\lambda X.M)$ $[])]\rangle \longmapsto_{scc} \langle M[X\leftarrow V],E\rangle$
+							\item $\langle V,E[[]$ $N)]\rangle \longmapsto_{scc} \langle N,E[(V$ $[])]\rangle$
+							\item $\langle b,E[(o^{n},b_{1},...b_{i},[])]\rangle \longmapsto_{scc} \langle V,E\rangle$ avec $\delta (o^{n},b_{1},...b_{i},b)=V$ 
+							\item $\langle V,E[(o^{n},V_{1},...V_{i},[],N$ $L)]\rangle \longmapsto_{scc} \langle N,E[(o^{n},V_{1},...V_{i},V,[],L)]\rangle$
+					\end{enumerate}
+					\bigbreak
+					
+					De même que pour la machine CC,la machine SCC peut s'arrêter dans 3 états différents:
+					\begin{itemize}
+						\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle M,[]\rangle \twoheadrightarrow_{scc} \langle b,[]\rangle$;
+						\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle M,[]\rangle \twoheadrightarrow_{scc} \langle\lambda X.N,[]\rangle$;
+						\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
+					\end{itemize}
+					\bigbreak
+					\hyperref[SCC]{Un exemple de la machine SCC est fait dans les Annexes.}
+					\newpage
+				\subsubsection{CK Machine}
+					
+					Les machines CC et SCC fonctionnent en allant chercher le plus à l'intérieur, c'est-à-dire que si l'on a une application on va en créer une intermédiaire dans le context avec un trou et traité la partie gauche de cette application etc jusqu'à arriver à un état traitable pour pouvoir "reconstruire", en reprenant l'application intermédiaire. C'est le style \textbf{ LIFO (Last In, First Out)}. Ce qui fait que les étapes de transition dépendent directement de la forme du 1ère élément et non de la structure générale.
+					\smallbreak
+					Pour palier à ce problème, la machine CK ajoute un nouvelle élément le \textbf{registre de contexte d'évaluation}, nommé $\kappa$, qui garde la partie "le plus à l'intérieur" accessible facilement.
+					\smallbreak
+					
+					$\kappa$ = mt
+					\begin{itemize}
+						\item[|] $\langle fun,V,\kappa \rangle$
+						\item[|] $\langle arg,N,\kappa \rangle$
+						\item[|] $\langle opd,\langle V,...,V,o^{n}\rangle,\langle N,... \rangle,\kappa \rangle$
+					\end{itemize}
+					
+					Cette structure est nommé \textbf{la continuation}.
+					\medbreak
+					
+					Les règles qui définisse la machine CK sont les suivantes :
+					\begin{enumerate}
+						\item $\langle(M$ $N),\kappa\rangle \longmapsto_{ck} \langle M,\langle arg,N,\kappa\rangle\rangle$
+						\item $\langle(o^{n}$ $M$ $N...),\kappa\rangle \longmapsto_{ck} \langle M,\langle opd,\langle o^{n}\rangle,\langle N,...\rangle,\kappa\rangle\rangle$
+						\item $\langle V,\langle fun,(\lambda X.M),\kappa \rangle \rangle \longmapsto_{ck} \langle M[X \leftarrow V],\kappa\rangle$
+						\item $\langle V,\langle arg,N,\kappa \rangle \rangle \longmapsto_{ck} \langle N,\langle fun,V,\kappa \rangle \rangle$
+						\item $\langle b,\langle opd,\langle b_{i},...b_{1},o^{n}\rangle,\langle\rangle,\kappa\rangle\rangle \longmapsto_{ck} \langle V,\kappa\rangle$ avec $\delta(o^{n},b_{1},...b_{i},b) = V$
+						\item $\langle V,\langle opd,\langle V',...o^{n}\rangle,\langle N,L,...\rangle,\kappa\rangle\rangle \longmapsto_{ck} \langle N,\langle opd,\langle V,V',...o^{n}\rangle,\langle L,...\rangle,\kappa\rangle\rangle$
+					\end{enumerate}
+					\bigbreak
+					
+					la machine CK peut s'arrêter dans 3 états différents:
+					\begin{itemize}
+						\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle M,mt\rangle \twoheadrightarrow_{ck} \langle b,mt\rangle$;
+						\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle M,mt\rangle \twoheadrightarrow_{ck} \langle\lambda X.N,mt\rangle$;
+						\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
+					\end{itemize}
+				
+					\hyperref[CK]{Un exemple de la machine CK est fait dans les Annexes.}
+					\bigbreak
+				
+				\subsubsection{CEK Machine}
+					Pour toutes les machines vues pour l'instant la $\beta$-réduction était appliquée immédiatement. Cela coûte cher surtout quand l'expression devient grande. De plus, si notre substitution n'est pas une variable elle est traité avant d'être appliqué.
+					\smallbreak
+					Il est plus intéressant d'appliquer les substitutions quand on en a vraiment la necessitée. Pour cela, la machine CEK ajoute les clauses et un environnement $\varepsilon$ qui va stocker les substitutions à faire.
+					\medbreak
+					
+					On a alors:
+					\begin{itemize}
+						\item[] $\varepsilon$ = une fonction $\{\langle X,c\rangle,...\}$    c = $\{\langle M,\varepsilon\rangle$ $|$ $FV(M)\subset dom(\varepsilon)\}$    v = $\{\langle V,\varepsilon\rangle$ $|$ $\langle V,\varepsilon\rangle \in c\}$
+						\item[] $\varepsilon[X \leftarrow c]$ = $\{\langle X,c\rangle\}$ $\cup$ $\{\langle Y,c'\rangle$ $|$ $\langle Y,c'\rangle \in \varepsilon$ et $ Y \neq X\}$
+					\end{itemize}
+					\medbreak
+					
+					$\kappa$ est renommé $\overline{\kappa}$ et est définit par :
+					\smallbreak
+					$\overline{\kappa}$ = mt
+					\begin{itemize}
+						\item[|] $\langle fun,v,\overline{\kappa} \rangle$
+						\item[|] $\langle arg,c,\overline{\kappa} \rangle$
+						\item[|] $\langle opd,\langle v,...,v,o^{n}\rangle,\langle c,... \rangle,\overline{\kappa} \rangle$
+					\end{itemize}
+					\bigbreak
+					
+					
+					Les règles qui définisse la machine CEK sont les suivantes :
+					\begin{enumerate}
+						\item $\langle\langle(M$ $N),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle arg,\langle N,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$
+						\item $\langle\langle(o^{n}$ $M$ $N...),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle opd,\langle o^{n}\rangle,\langle \langle N,\varepsilon\rangle,...\rangle,\overline{\kappa}\rangle\rangle$
+						\item $\langle\langle V,\varepsilon\rangle,\langle fun,\langle (\lambda X1.M),\varepsilon'\rangle,\overline{\kappa} \rangle \rangle \longmapsto_{cek} \langle \langle M,\varepsilon'[X1 \leftarrow \langle V,\varepsilon\rangle]\rangle,\overline{\kappa}\rangle$ si $V \notin X$
+						\item  $\langle \langle V,\varepsilon\rangle,\langle arg,\langle N,\varepsilon'\rangle,\kappa\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle fun,\langle V,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
+						\item $\langle  \langle b,\varepsilon\rangle,\langle opd,\langle \langle b_{i},\varepsilon_{i}\rangle,...\langle b_{1},\varepsilon_{1}\rangle ,o^{n}\rangle,\langle\rangle,\overline{\kappa}\rangle\rangle \longmapsto_{cek} \langle \langle V,\emptyset\rangle,\overline{\kappa}\rangle$ avec $\delta(o^{n},b_{1},...b_{i},b) = V$
+						\item $\langle \langle V,\varepsilon\rangle,\langle opd,\langle v',...o^{n}\rangle,\langle  \langle N,\varepsilon'\rangle,c,...\rangle,\overline{\kappa}\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle opd,\langle  \langle V,\varepsilon\rangle,v',...o^{n}\rangle,\langle c,...\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$	
+						\item $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
+						
+					\end{enumerate}
+					\bigbreak
+					
+					la machine CEK peut s'arrêter dans 3 états différents:
+					\begin{itemize}
+						\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \langle M,\emptyset\rangle,mt\rangle \twoheadrightarrow_{cek} \langle\langle b,\varepsilon\rangle,mt\rangle$;
+						\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \langle M,\emptyset\rangle,mt\rangle \twoheadrightarrow_{cek} \langle\langle \lambda X.N,\varepsilon\rangle,mt\rangle$;
+						\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
+					\end{itemize}
+					\bigbreak
+				
+					
+					\hyperref[CEK]{Un exemple de la machine CEK est fait dans les Annexes.}
+					
+					\newpage
+					
+				\subsubsection{SECD Machine}
+					La différence entre la machine CEK et SECD est la façon dont le contexte est sauvegarder pendant que les sous-expressions sont évaluées.\\
+					En effet, dans la machine SECD le contexte est créer par un appel de fonction, quand toute est stocké dans $\widehat{D}$ pour laisser un espace de travail. Par contre pour la machine CEK, le contexte est créé quant on évalue une application ou un argument indépendamment de la complexité de celui-ci.
+					\smallbreak 
+					Dans les langages tels que Java, Pascal ou encore C la façon de faire de la machine SECD est plus naturel. Par contre  dans les langages $\lambda$-calculs, Scheme ou encore ML c'est la façon de faire de la machine CEK qui est la plus naturel.
+					\medbreak
+					
+					La machine SECD est composé d'une pile ($\widehat{S}$), d'un environnement ($\widehat{\varepsilon}$), d'une chaîne de contrôle ($\widehat{C}$) et d'une sauvegarde ($\widehat{D}$). Les différentes définitions de ces élément sont les suivantes :
+					\smallbreak
+					\begin{itemize}
+						\item[] $\widehat{S}$ = $\epsilon$ | $\widehat{V}$ $\widehat{S}$ 
+						\item[] $\widehat{\varepsilon}$ = une fonction $\{\langle X,\widehat{V}\rangle,...\}$
+						\item[] $\widehat{C}$ = $\epsilon$ | b $\widehat{C}$ | X $\widehat{C}$ | ap $\widehat{C}$ | $prim_{o^{n}}$ $\widehat{C}$ | $\langle X,\widehat{C}\rangle$ $\widehat{C}$
+						\item[] $\widehat{D}$ = $\epsilon$ | $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+						\item[] $\widehat{V}$ = b | $\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon}\rangle$
+						\item[] $\textlbrackdbl b\textrbrackdbl _{secd}$ = b
+						\item[] $\textlbrackdbl X\textrbrackdbl _{secd}$ = X
+						\item[] $\textlbrackdbl (M_{1}$ $M_{2})\textrbrackdbl _{secd}$ = $\textlbrackdbl M_{1}\textrbrackdbl _{secd}$ $\textlbrackdbl M_{2}\textrbrackdbl _{secd}$ ap
+						\item[] $\textlbrackdbl (o^{n}$ $M_{1}...M_{n})\textrbrackdbl _{secd}$ = $\textlbrackdbl M_{1}\textrbrackdbl _{secd}$ $...$ $\textlbrackdbl M_{n}\textrbrackdbl _{secd}$ $prim_{o^{n}}$
+						\item[]  $\textlbrackdbl(\lambda X.M)\textrbrackdbl _{secd}$ =  $\langle X,\textlbrackdbl M\textrbrackdbl _{secd}\rangle$
+					\end{itemize}
+					\bigbreak
+					
+					Les règles qui définisse la machine SECD sont les suivantes :
+					
+					\begin{enumerate}
+						\item $\langle\widehat{S},\widehat{\varepsilon},b$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle b$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+						\item $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
+						\item $\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
+						\item $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+						\item $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
+						\item $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle$
+					\end{enumerate}
+					\bigbreak
+					
+					la machine SECD peut s'arrêter dans 3 états différents:
+					\begin{itemize}
+						\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secd},\epsilon\rangle \twoheadrightarrow_{secd} \langle b,\widehat{\varepsilon},\epsilon,\epsilon\rangle$;
+						\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secd},\epsilon\rangle \twoheadrightarrow_{secd} \langle\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon'}\rangle,\widehat{\varepsilon},\epsilon,\epsilon\rangle$;
+						\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
+					\end{itemize}
+					\bigbreak
+					
+					
+					\hyperref[SECD]{Un exemple de la machine SECD est fait dans les Annexes.}
+					
+					\newpage
+		\section{Dernière version de la machine SECD concurrente}\label{SECDConc4}
+			La machine ayant beaucoup évoluée depuis le début du travail, je vais redéfinir chaque élément de la machine pour pouvoir mieux comprendre les nouvelles règles.
+			\bigbreak
+			
+			Soit $\langle$I,S,E,C,TL,SI,D,H,IP$\rangle$ avec :
+			
+			\begin{itemize}
+				\item[] V = b	
+				\begin{itemize}
+					\item[|] $\langle\langle$X,C'$\rangle$E$\rangle$
+					\item[|] $erreur_{e}$
+				\end{itemize}
+				\item[]
+				\item[] I = un entier représentant l'identifiant du thread
+				\item[] S =  $\emptyset$ 
+				\begin{itemize}
+					\item[|] Unit S
+					\item[|] V S
+					\item[|] signal S
+				\end{itemize}
+				\item[] E = $\{...,\langle X,V\rangle,...\}$
+				\item[] C = $\epsilon$
+				\begin{itemize}
+					\item[|] b C     ~~~~~~~~~~~~~~~~~~~~~~~~~(une constante)
+					\item[|] X C~~~~~~~~~~~~~~~~~~~~~~~~~(une variable)
+					\item[|] signal C~~~~~~~~~~~~~~~~~~~~(un signal)
+					\item[|]$\langle X,C'\rangle$ C~~~~~~~~~~~~~~~~~~(une abstraction)
+					\item[|] ap C~~~~~~~~~~~~~~~~~~~~~~~~(une application)
+					\item[|] $prim_{o^{n}}$ C~~~~~~~~~~~~~~~~~~(un opérateur)
+					\item[|] bspawn C~~~~~~~~~~~~~~~~~~(début d'un nouveau thread)
+					\item[|] espawn C~~~~~~~~~~~~~~~~~~(fin d'un nouveau thread)
+					\item[|] $\langle s, C',C''\rangle$ C~~~~~~~~~~~~~~(le test de présence d'un signal)
+					\item[|] emit C~~~~~~~~~~~~~~~~~~~~~~(émet un signal)
+					\item[|] $\langle s,C'\rangle$ C~~~~~~~~~~~~~~~~~~~(initialise un signal pour une chaîne de contrôle donné)
+					\item[|] put C~~~~~~~~~~~~~~~~~~~~~~~(insère une valeur dans la liste de valeurs d'un signal)
+					\item[|] get C~~~~~~~~~~~~~~~~~~~~~~~(prends une valeurs dans la liste de valeurs d'un signal)
+					\item[|] $erreur_{e}$ C~~~~~~~~~~~~~~~~~(une erreur)
+					\item[|] throw C~~~~~~~~~~~~~~~~~~~~(lève une erreur)
+					\item[|] $\langle e,\langle C'\langle X,C''\rangle\rangle\rangle$ C~~~~~~~(un gestionnaire d'erreur)
+				\end{itemize}
+				\item[] TL = $\langle W,ST\rangle$
+				\begin{itemize}
+					\item[] W = $\{...,\langle I,S,E,C,D\rangle,...\}$~~~~~~~~(liste des threads en attente)
+					\item[] ST = $\{...,\langle s,\langle I,S,E,C,D\rangle\rangle,...\}$~~(liste des threads en attente d'un signal)
+				\end{itemize} 
+				\newpage
+				\item[] SI = $\langle CS,SSI\rangle$
+				\begin{itemize}
+					\item[] CS = $\{...,\langle s,\{...,\langle id,\{...,b,...\},init\rangle,...\},emit\rangle,...\}$~~~~~~~~~~~~~~~~~~~~~~~~~~(liste des signaux courants)
+					\begin{itemize}
+						\item [] on va découper cette élément pour mieux en comprendre le sens :
+						\item[] - $\{...,*,...\}$ Une liste. 
+						\item[] - $\langle s,{...,**,...},emit\rangle$ \\
+						Une liste composée de trinôme comportant le identifiant du signal, une sous-liste et un booléen exprimant l'émission de ce signal.
+						\item[] - $\langle id,\{...,b,...\},init\rangle$ \\
+						Une sous-liste composée d'un trinôme comportant l'identifiant du thread, une liste de valeur et un booléen exprimant l'initialisation de ce signal pour ce thread.
+					\end{itemize}
+					\item[]
+					\item[] SSI =  $\{...,\langle s,\{...,\langle id,\{...,\langle b,\{...,id',...\}\rangle,...\},\{...,id'',...\}\rangle,...\}\rangle,...\}$~~~~~(liste des signaux partagés)
+					\begin{itemize}
+						\item[] comme pour CS on va découper cette élément pour pouvoir le comprendre :
+						\item[] - $\{...,*,...\}$ Une liste. 
+						\item[] - $\langle s,\{...,**,...\}\rangle$\\
+						Une liste composée d'un couple comportant un identifiant de signal et d'une sous-liste
+						\item[] - $\langle id,\{...,***,...\},\{...,id'',...\}\rangle$\\
+						Une sous-liste composée d'un trinôme comportant un identifiant d'un thread, d'un liste et d'une sous-sous-liste d'identifiant de thread représentant la liste des threads ayant fini leurs parcours de la sous-sous-liste.
+						\item[] - $\langle b,\{...,id',...\}\rangle$\\
+						Une sous-sous-liste composée d'un couple comportant une valeur et une liste d'identifiant de threads qui représente un pointeur
+					\end{itemize}
+				\end{itemize}
+				\item[] D = $\emptyset$
+				\begin{itemize}
+					\item[|] $\langle S,E,C,D\rangle$~~~~~~~~~(une sauvegarde liée à une abstraction)
+					\item[|] $\langle s,\langle S,E,C,D\rangle\rangle$~~~~(une sauvegarde liée à l'initialisation d'un signal)
+				\end{itemize}
+				\item[] H = $\emptyset$ 
+				\begin{itemize}
+					\item[|] $\langle e\langle I,S,E,\langle X,C' \rangle C,TL,SI,D,H,IP\rangle\rangle$
+				\end{itemize} 
+				\item[] IP = un entier servant à attribuer l'identifiant à un nouveau thread 
+			\end{itemize}
+			\bigbreak
+			\bigbreak
+			la machine SECD version 4 peut s'arrêter dans 4 états différents:
+			\begin{itemize}
+				\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv4},\langle\emptyset,\emptyset\rangle,\langle\emptyset,\emptyset\rangle,\emptyset,\emptyset,\emptyset,1\rangle \\
+				\twoheadrightarrow_{secdv4} \langle I,b$ $S,E,\epsilon,\langle\emptyset,\emptyset\rangle,SI,\emptyset,H,IP\rangle$;
+				\item[] 
+				\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que
+				$\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv4},\langle\emptyset,\emptyset\rangle,\langle\emptyset,\emptyset\rangle,\emptyset,\emptyset,\emptyset,1\rangle \\
+				\twoheadrightarrow_{secdv4} \langle I,\langle\langle X,C\rangle,E'\rangle$ $S,E,\epsilon,\langle\emptyset,\emptyset\rangle,SI,\emptyset,H,IP\rangle$;
+				\item[] 
+				\item[]$\longrightarrow$ on a un \textbf{remplacement} tels que 
+				$\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv4},\langle\emptyset,\emptyset\rangle,\langle\emptyset,\emptyset\rangle,\emptyset,\emptyset,\emptyset,1\rangle \\
+				\twoheadrightarrow_{secdv4} \langle I,Unit$ $S,E,\epsilon,\langle\emptyset,\emptyset\rangle,SI,\emptyset,H,IP\rangle$;
+				\item[] 
+				\item[]$\longrightarrow$ on a une \textbf{erreur e} tels que 
+				$\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv4},\langle\emptyset,\emptyset\rangle,\langle\emptyset,\emptyset\rangle,\emptyset,\emptyset,\emptyset,1\rangle \\
+				\twoheadrightarrow_{secdv4} \langle I,erreur_{e}$ $S,E,\epsilon,\langle\emptyset,\emptyset\rangle,SI,\emptyset,H,IP\rangle$;
+			\end{itemize}
+		
+			\newpage
+			
+			Les éléments étant expliqués, voici les nouvelles règles de la machine :
+			\medbreak
+			\begin{enumerate}
+				\item $\langle I,S,E,b$ $C,TL,SI,D,H,IP\rangle 
+				\\\longrightarrow_{secdv4} \langle I,b$ $S,E,C,TL,SI,D,H,IP\rangle$
+				\item[]
+				\item $\langle I,S,E,X$ $C,TL,SI,D,H,IP\rangle
+				\\\longrightarrow_{secdv4} \langle I,V$ $S,E,C,TL,SI,D,H,IP\rangle$ avec E(X) = V
+				\item[]
+				\item $\langle I,S,E,erreur_{e}$ $C,TL,SI,D,H,IP\rangle
+				\\ \longrightarrow_{secdv4} \langle I,erreur_{e}$ $S,E,C,TL,SI,D,H,IP\rangle$
+				\item[]
+				\item $\langle I,b_{n}...b_{1}S,E,prim_{o^{n}}$ $C,TL,SI,D,H,IP\rangle
+				\\ \longrightarrow_{secdv4} \langle I,V$ $S,E,C,TL,SI,D,H,IP\rangle$ avec $\delta(b_{1}...b_{n})$ = V
+				\item[]
+				\item $\langle I,S,E,\langle X,C'\rangle$ $C,TL,SI,D,H,IP\rangle
+				\\ \longrightarrow_{secdv4} \langle I,\langle\langle X,C'\rangle,E\rangle$ $S,E,C,TL,SI,D,H,IP\rangle$
+				\item[]
+				\item $\langle I,V$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,ap$ $C,TL,SI,D,H,IP\rangle
+				\\ \longrightarrow_{secdv4} \langle I,\emptyset,E'[X \leftarrow V],C',TL,SI,\langle S,E,C,D\rangle,H,IP\rangle$
+				\item[]
+				\item $\langle I,V$ $Unit$ $S,E,ap$ $C,TL,SI,D,H,IP\rangle
+				\\ \longrightarrow_{secdv4} \langle I,V$ $S,E,C,TL,SI,D,H,IP\rangle$
+				\item[]
+				\item $\langle I,Unit$ $V$ $S,E,ap$ $C,TL,SI,D,H,IP\rangle
+				\\ \longrightarrow_{secdv4} \langle I,V$ $S,E,C,TL,SI,D,H,IP\rangle$
+				\item[]
+				\item $\langle I,V$ $S,E,\epsilon,TL,SI,\langle S',E',C,D\rangle,H,IP\rangle
+				\\ \longrightarrow_{secdv4} \langle I,V$ $S',E',C,TL,SI,D,H,IP\rangle$
+				\item[]
+				\item $\langle I,erreur_{e}$ $S,E,throw$ $C,TL,SI,D,\langle e\langle I',S',E',\langle X,C'' \rangle C',TL',SI',D',H,IP'\rangle\rangle,IP\rangle \\\longrightarrow_{secdv4} \langle I',S',E',\langle X,C' \rangle$ $erreur_{e}$ $ap$ $C',TL',SI',D',H,IP'\rangle$
+				\item[]
+				\item $\langle I,erreur_{e}$ $S,E,throw$ $C,TL,SI,D,\langle e'\langle I',S',E',\langle X,C'' \rangle C',TL',SI',D',H,IP'\rangle\rangle,IP\rangle \\\longrightarrow_{secdv4}\langle I,erreur_{e}$ $S,E,throw$ $ C,TL,SI,D,H,IP\rangle$
+				\item[]
+				\item $\langle I,S,E,\langle e,\langle C'\langle X,C''\rangle\rangle\rangle$ $C,TL,SI,D,H,IP\rangle 
+				\\\longrightarrow_{secdv4} \langle I,Unit$ $S,E,C'$ $C,TL,SI,D,\langle e\langle I,S,E,\langle X,C'' \rangle C,TL,SI,D,H,IP\rangle\rangle,IP\rangle$
+				\item[]
+				\item $\langle I,S,E,bspawn$ $C'$ $espawn$ $C,\langle W,ST\rangle,SI,D,H,IP\rangle 
+				\\\longrightarrow_{secdv4} \langle I,Unit$ $S,E,C,\langle W$ $\langle IP,S,E,C',D\rangle,ST\rangle,SI,D,H,IP+1\rangle$
+				\item[]
+				\item $\langle I,s$ $b$ $S,E,put$ $C,TL,\langle \{...,\langle s,\{...,\langle I,values,true\rangle,...\},emit\rangle,...\},SSI\rangle,D,H,IP\rangle \\\longrightarrow_{secdv4} \langle I,Unit$ $S,E,C,TL,\langle \{...,\langle s,\{...,\langle I,values $ $b,true\rangle,...\},emit\rangle,...\},SSI\rangle,D,H,IP\rangle$
+				\item[]
+				\item $\langle I,s$ $b$ $S,E,get$ $C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...,\langle n,\{...,I,...\}\rangle,\langle m,\{...\}\rangle,...\},\{...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle \\\longrightarrow_{secdv4} \langle I,n$ $S,E,C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...,\langle n,\{...\}\rangle,\langle m,\{...,I\}\rangle,...\},\{...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle$
+				\item[]
+				\item $\langle I,s$ $b$ $S,E,get$ $C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...,\langle n,\{...,I,...\}\rangle\},\{...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle \\\longrightarrow_{secdv4} \langle I,n$ $S,E,C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...,\langle n,\{...\}\rangle\},\{...,I\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle$
+				\item[]
+				\item $\langle I,s$ $b$ $S,E,get$ $C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{\langle n,\{\}\rangle,\langle m,\{...\}\rangle,...\},\{...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle \\\longrightarrow_{secdv4} \langle I,n$ $S,E,C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{\langle n,\{\}\rangle,\langle m,\{...,I\}\rangle,...\},\{...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle$
+				\item[]
+				\item $\langle I,s$ $b$ $S,E,get$ $C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...\},\{...,I,...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle
+				\\\longrightarrow_{secdv4} \langle I,Unit$ $S,E,C,TL,\langle CS,\{...,\langle s,\{...,\langle b,\{...\},\{...,I,...\}\rangle,...\}\rangle,...\}\rangle,D,H,IP\rangle$
+				\item[]
+				\item $\langle I,V$ $S,E,\epsilon,TL,\langle\{...,\langle s,\{...,\langle I,\{...\},init\rangle,...\},emit\rangle,...\},SSI\rangle,\langle s,\langle S',E',C,D\rangle\rangle,H,IP\rangle 
+				\\\longrightarrow_{secdv4} \langle I,V$ $S',E',C,TL,\langle\{...,\langle s,\{...,\langle I,\{...\},false\rangle,...\},emit\rangle,...\},SSI\rangle,D,H,IP\rangle$
+				\item[]
+				\item $\langle I,S,E,\langle s,C'\rangle$ $C,TL,\langle \{...,\langle s,\{...,\langle I,\{...\},false\rangle,...\},emit\rangle,...\},SSI\rangle,D,H,IP\rangle 
+				\\\longrightarrow_{secdv4} \langle I,\emptyset,E,C',TL,\langle \{...,\langle s,\{...,\langle I,\{...\},true\rangle,...\},emit\rangle,...\},SSI\rangle,\langle s,\langle S,E,C,D\rangle\rangle,H,IP\rangle$ 
+				\item[]	
+				\item $\langle I,S,E,\langle s,C'\rangle$ $C,TL,\langle \{...,\langle s,values,emit\rangle,...\},SSI\rangle,D,H,IP\rangle 
+				\\\longrightarrow_{secdv4} \langle I,\emptyset,E,C',TL,\langle \{...,\langle s,values$ $\langle I,\{\},true\rangle,emit\rangle,...\},SSI\rangle,\langle s,\langle S,E,C,D\rangle\rangle,H,IP\rangle$\\ si s n'a pas déjà été initialisé pour ce thread
+				\item[]	
+				\item $\langle I,S,E,\langle s,C'\rangle$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
+				\\\longrightarrow_{secdv4} \langle I,\emptyset,E,C',TL,\langle CS$ $\langle s,\{\langle I,\{\},true\rangle\},false\rangle,SSI\rangle,\langle s,\langle S,E,C,D\rangle\rangle,H,IP\rangle$\\ si s n'a pas déjà été initialisé
+				\item[]	
+				\item $\langle I,S,E,\langle s,C',C''\rangle$ $C,TL,\langle \{...,\langle s,\{...,\langle I,\{...\},true\rangle,...\},true\rangle,...\},SSI\rangle,D,H,IP\rangle 
+				\\\longrightarrow_{secdv4} \langle I,Unit$ $S,E,C'$ $C,TL,\langle \{...,\langle s,\{...,\langle I,\{...\},true\rangle,...\},emit\rangle,...\},SSI\rangle,D,H,IP\rangle$ 
+				\item[]
+				\item $\langle I,S,E,\langle s,C',C''\rangle$ $C,\langle\langle I',S',E',C''',D'\rangle W,ST\rangle,\langle \{...,\langle s,\{...,\langle I,\{...\},true\rangle,...\},false\rangle,...\},SSI\rangle,D,H,IP\rangle 
+				\\\longrightarrow_{secdv4} \langle I',S',E',C''',\langle W,ST\langle s,\langle I,S,E,\langle s,C',C''\rangle$ $C,D\rangle\rangle\rangle,\langle \{...,\langle s,\{...,\langle I,\{...\},true\rangle,...\},emit\rangle,...\},SSI\rangle,D',H,IP\rangle$ 
+				\item[]	
+				\item $\langle I,S,E,\langle s,C',C''\rangle$ $C,\langle \emptyset,ST\rangle,\langle \{...,\langle s,\{...,\langle I,\{...\},true\rangle,...\},false\rangle,...\},SSI\rangle,D,H,IP\rangle 
+				\\\longrightarrow_{secdv4} \langle IP,\emptyset,\epsilon,\emptyset,\langle W,ST\langle s,\langle I,S,E,\langle s,C',C''\rangle$ $C,D\rangle\rangle\rangle,\langle \{...,\langle s,\{...,\langle I,\{...\},true\rangle,...\},emit\rangle,...\},SSI\rangle,\emptyset,H,IP+1\rangle$ 
+				\item[]	
+				\item $\langle I,s$ $S,E,emit$ $C,TL,\langle \{...,\langle s,\{...,\langle I,\{...\},true\rangle,...\},false\rangle,...\},SSI\rangle,D,H,IP\rangle 
+				\\\longrightarrow_{secdv4} \langle I,Unit$ $S,E,C,TL',\langle \{...,\langle s,\{...,\langle I,\{...\},true\rangle,...\},true\rangle,...\},SSI\rangle,D,H,IP\rangle$\\
+				avec TL' = $\langle W',ST'\rangle$ et TL = $\langle W,ST\rangle$ :
+				\begin{itemize}
+					\item[] W' = W $\cup$ les éléments de ST qui attendent le signal s 
+					\item[] ST' = ST $\setminus$ les éléments de ST qui attendent le signal s 
+				\end{itemize}
+				\item[]
+				\item $\langle I,V$ $S,E,\epsilon,\langle\langle I',S',E',C,D\rangle W,ST\rangle,SI,\emptyset,H,IP\rangle 
+				\\\longrightarrow_{secdv4} \langle I',V$ $S',E',C,\langle W,ST\rangle,SI,D,H,IP\rangle$
+				\item[]
+				\item $\langle I,V$ $S,E,\epsilon,\langle\emptyset,ST\rangle,SI,\emptyset,H,IP\rangle 
+				\\\longrightarrow_{secdv4} \langle I,V$ $S,E,\epsilon,\langle W,\emptyset\rangle,SI',\emptyset,H,IP\rangle$\\
+				avec W = ST avec tous ces éléments qui prennent en compte l'absence de l'émission du signal attendu
+				\\ SI' = $\langle CS',SSI'\rangle$ et SI = $\langle CS,SSI\rangle$
+				\begin{itemize}
+					\item[] CS' = CS avec les listes de valeurs remise à zéro ainsi que le booléen représentant l'émission est mis à faux
+					\item[] SSI' = SSI avec tous les signaux émit à l'instant qui vient de finir et leurs listes de valeurs associé
+				\end{itemize}
+				\item[]
+			\end{enumerate}
+		\newpage
+		\section{Conclusion}
+		
+		\newpage
+		
+		\section{Annexes}
+			\subsection{Les Exemples des machines étudiées}
+				\subsubsection{Exemple de fonctionnement de la machine CC}\label{CC}
+			
+					Voici un exemple de fonctionnement de la machine CC:
+					
+					\begin{itemize}
+						\item[] CC machine : $\langle(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner),[]\rangle$
+						\item[] > $\langle(M$ $N),E\rangle \longmapsto_{cc} \langle M,E[([]$ $N)]\rangle$ $si M \notin V$
+						\item[] CC machine : $\langle((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y)),[([]$ $\ulcorner 1\urcorner)]\rangle$
+						\item[] > $\langle((\lambda X.M) V),E\rangle \longmapsto_{cc} \langle M[X\longleftarrow V],E\rangle$
+						\item[] CC machine : $\langle(\lambda x.f$ $x)[f \leftarrow \lambda y.(+$ $y$ $y)],[([]$ $\ulcorner 1\urcorner)]\rangle$
+						\item[] CC machine : $\langle(\lambda x.(\lambda y.(+$ $y$ $y))$ $x),[([]$ $\ulcorner 1\urcorner)]\rangle$
+						\item[] > $\langle V,E[[]$ $N)]\rangle \longmapsto_{cc} \langle(V$ $N),E\rangle$ 
+						\item[] CC machine : $\langle((\lambda x.(\lambda y.(+$ $y$ $y))$ $x)$ $\ulcorner 1\urcorner),[]\rangle$
+						\item[] > $\langle((\lambda X.M) V),E\rangle \longmapsto_{cc} \langle M[X\longleftarrow V],E\rangle$
+						\item[] CC machine : $\langle((\lambda y.(+$ $y$ $y))$ $x)[x \leftarrow \ulcorner 1\urcorner],[]\rangle$
+						\item[] CC machine : $\langle((\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner),[]\rangle$
+						\item[] > $\langle((\lambda X.M) V),E\rangle \longmapsto_{cc} \langle M[X\longleftarrow V],E\rangle$
+						\item[] CC machine : $\langle(+$ $y$ $y)[y \leftarrow \ulcorner 1\urcorner],[]\rangle$
+						\item[] CC machine : $\langle(+$ $\ulcorner 1\urcorner$ $\ulcorner 1\urcorner),[]\rangle$
+						\item[] > $\langle(o^{n}$ $b_{1}...b_{n}),E\rangle \longmapsto_{cc}  \langle V,E\rangle$ avec $V = \delta(o^{n},b_{1}...b_{n})$
+						\item[] CC machine : $\langle\ulcorner 2\urcorner,[]\rangle$
+					\end{itemize}
+				
+				\subsubsection{Exemple de fonctionnement de la machine SCC}\label{SCC}
+				
+					Voici un exemple de fonctionnement de la machine SCC :
+					
+					\begin{itemize}
+						\item[] SCC machine : $\langle(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner),[]\rangle$
+						\item[] > $\langle(M$ $N),E\rangle \longmapsto_{scc} \langle M,E[([]$ $N)]\rangle$
+						\item[] SCC machine : $\langle((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y)),[([]$ $\ulcorner 1\urcorner)]\rangle$
+						\item[] > $\langle(M$ $N),E\rangle \longmapsto_{scc} \langle M,E[([]$ $N)]\rangle$
+						\item[] SCC machine : $\langle(\lambda f.\lambda x.f$ $x),[([]$ $\ulcorner 1\urcorner),([]$ $(\lambda y.(+$ $y$ $y)))]\rangle$
+						\item[] >  $\langle V,E[[]$ $N)]\rangle \longmapsto_{scc} \langle N,E[(V$ $[])]\rangle$
+						\item[] SCC machine : $\langle(\lambda y.(+$ $y$ $y)),[([]$ $\ulcorner 1\urcorner),((\lambda f.\lambda x.f$ $x)$ $[])]\rangle$
+						\item[] > $\langle V,E[((\lambda X.M)$ $[])]\rangle \longmapsto_{scc} \langle M[X\leftarrow V],E\rangle$
+						\item[] SCC machine : $\langle(\lambda x.f$ $x)[f\leftarrow(\lambda y.(+$ $y$ $y))],[([]$ $\ulcorner 1\urcorner)]\rangle$
+						\item[] SCC machine : $\langle(\lambda x.(\lambda y.(+$ $y$ $y))$ $x),[([]$ $\ulcorner 1\urcorner)]\rangle$
+						\item[] >  $\langle V,E[[]$ $N)]\rangle \longmapsto_{scc} \langle N,E[(V$ $[])]\rangle$
+						\item[] SCC machine : $\langle\ulcorner 1\urcorner,[((\lambda x.(\lambda y.(+$ $y$ $y))$ $x)$ $[])]\rangle$
+						\item[] > $\langle V,E[((\lambda X.M)$ $[])]\rangle \longmapsto_{scc} \langle M[X\leftarrow V],E\rangle$
+						\item[] SCC machine : $\langle((\lambda y.(+$ $y$ $y))$ $x)[x \leftarrow\ulcorner 1\urcorner],[]\rangle$
+						\item[] SCC machine : $\langle((\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner,[]\rangle$
+						\item[] > $\langle(M$ $N),E\rangle \longmapsto_{scc} \langle M,E[([]$ $N)]\rangle$
+						\item[] SCC machine : $\langle(\lambda y.(+$ $y$ $y)),[([]$ $\ulcorner 1\urcorner)]\rangle$
+						\item[] >  $\langle V,E[[]$ $N)]\rangle \longmapsto_{scc} \langle N,E[(V$ $[])]\rangle$
+						\item[] SCC machine : $\langle\ulcorner 1\urcorner,[(\lambda y.(+$ $y$ $y))$ $[])]\rangle$
+						\item[] > $\langle V,E[((\lambda X.M)$ $[])]\rangle \longmapsto_{scc} \langle M[X\leftarrow V],E\rangle$
+						\item[] SCC machine : $\langle(+$ $y$ $y)[y \leftarrow \ulcorner 1\urcorner],[]\rangle$	
+						\item[] SCC machine : $\langle(+$ $\ulcorner 1\urcorner$ $\ulcorner 1\urcorner),[]\rangle$	
+						\item[] > $\langle(o^{n}$ $M$ $N...),E\rangle \longmapsto_{scc} \langle M,E[(o^{n}$ $[]$ $N...)]\rangle$
+						\item[] SCC machine : $\langle\ulcorner 1\urcorner,(+$ $[]$ $\ulcorner 1\urcorner)\rangle$	
+						\item[] > $\langle V,E[(o^{n},V_{1},...V_{i},[],N$ $L)]\rangle \longmapsto_{scc} \langle N,E[(o^{n},V_{1},...V_{i},V,[],L)]\rangle$
+						\item[] SCC machine : $\langle\ulcorner 1\urcorner,(+$ $\ulcorner 1\urcorner$ $[])\rangle$	
+						\item[] $\langle b,E[(o^{n},b_{1},...b_{i},[])]\rangle \longmapsto_{scc} \langle V,E\rangle$ avec $\delta (o^{n},b_{1},...b_{i},b)=V$ 
+						\item[] SCC machine : $\langle\ulcorner 2\urcorner,[]\rangle$	
+					\end{itemize}
+				\newpage
+				\subsubsection{Exemple de fonctionnement de la machine CK}\label{CK}
+				
+					Voici un exemple de fonctionnement de la machine CK :
+					
+					\begin{itemize}
+						\item[] CK machine : $\langle(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner),mt\rangle$
+						\item[] > $\langle(M$ $N),\kappa\rangle \longmapsto_{ck} \langle M,\langle arg,N,\kappa\rangle\rangle$
+						\item[] CK machine : $\langle((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y)),\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle$
+						\item[] > $\langle(M$ $N),\kappa\rangle \longmapsto_{ck} \langle M,\langle arg,N,\kappa\rangle\rangle$
+						\item[] CK machine : $\langle(\lambda f.\lambda x.f$ $x),\langle arg,(\lambda y.(+$ $y$ $y)),\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle\rangle$	
+						\item[] > $\langle V,\langle arg,N,\kappa \rangle \rangle \longmapsto_{ck} \langle N,\langle fun,V,\kappa \rangle \rangle$
+						\item[] CK machine : $\langle(\lambda y.(+$ $y$ $y)),\langle fun,(\lambda f.\lambda x.f$ $x),\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle\rangle$	
+						\item[] > $\langle V,\langle fun,(\lambda X.M),\kappa \rangle \rangle \longmapsto_{ck} \langle M[X \leftarrow V],\kappa\rangle$
+						\item[] CK machine : $\langle(\lambda x.f$ $x)[f\leftarrow(\lambda y.(+$ $y$ $y))],\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle$	
+						\item[] CK machine : $\langle(\lambda x.(\lambda y.(+$ $y$ $y))$ $x),\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle$	
+						\item[] > $\langle V,\langle arg,N,\kappa \rangle \rangle \longmapsto_{ck} \langle N,\langle fun,V,\kappa \rangle \rangle$
+						\item[] CK machine : $\langle\ulcorner 1\urcorner,\langle fun,(\lambda x.(\lambda y.(+$ $y$ $y))$ $x),mt\rangle\rangle$
+						\item[] > $\langle V,\langle fun,(\lambda X.M),\kappa \rangle \rangle \longmapsto_{ck} \langle M[X \leftarrow V],\kappa\rangle$		
+						\item[] CK machine : $\langle((\lambda y.(+$ $y$ $y))$ $x)[x \leftarrow \ulcorner 1\urcorner ],mt\rangle$
+						\item[] CK machine : $\langle((\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner),mt\rangle$
+						\item[] > $\langle(M$ $N),\kappa\rangle \longmapsto_{ck} \langle M,\langle arg,N,\kappa\rangle\rangle$
+						\item[] CK machine : $\langle(\lambda y.(+$ $y$ $y)),\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle$	
+						\item[] > $\langle V,\langle arg,N,\kappa \rangle \rangle \longmapsto_{ck} \langle N,\langle fun,V,\kappa \rangle \rangle$
+						\item[] CK machine : $\langle\ulcorner 1\urcorner,\langle fun,(\lambda y.(+$ $y$ $y)),mt\rangle\rangle$	
+						\item[] > $\langle V,\langle fun,(\lambda X.M),\kappa \rangle \rangle \longmapsto_{ck} \langle M[X \leftarrow V],\kappa\rangle$	
+						\item[] CK machine : $\langle(+$ $y$ $y)[y \leftarrow\ulcorner 1\urcorner],mt\rangle$
+						\item[] CK machine : $\langle(+$ $\ulcorner 1\urcorner$ $\ulcorner 1\urcorner),mt\rangle$
+						\item[] > $\langle(o^{n}$ $M$ $N...),\kappa\rangle \longmapsto_{ck} \langle M,\langle opd,\langle o^{n}\rangle,\langle N,...\rangle,\kappa\rangle\rangle$
+						\item[] CK machine : $\langle\ulcorner 1\urcorner,\langle opd,\langle + \rangle,\langle\ulcorner 1\urcorner\rangle,mt\rangle\rangle$
+						\item[] > $\langle V,\langle opd,\langle V',...o^{n}\rangle,\langle N,L,...\rangle,\kappa\rangle\rangle \longmapsto_{ck} \langle N,\langle opd,\langle V,V',...o^{n}\rangle,\langle L,...\rangle,\kappa\rangle\rangle$
+						\item[] CK machine : $\langle\ulcorner 1\urcorner,\langle opd,\langle\ulcorner 1\urcorner,+ \rangle,\langle\rangle,mt\rangle\rangle$
+						\item[] > $\langle b,\langle opd,\langle b_{i},...b_{1},o^{n}\rangle,\langle\rangle,\kappa\rangle\rangle \longmapsto_{ck} \langle V,\kappa\rangle$ avec $\delta(o^{n},b_{1},...b_{i},b) = V$
+						\item[] CK machine : $\langle\ulcorner 2\urcorner,mt\rangle$
+					\end{itemize}
+				\newpage
+				
+				\subsubsection{Exemple de fonctionnement de la machine CEK}\label{CEK}
+					
+					Voici un exemple de fonctionnement de la machine CEK :
+					
+					\begin{itemize}
+						\item[] CEK machine : $\langle\langle(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner)\emptyset\rangle,mt\rangle$
+						\item[] > $\langle\langle(M$ $N),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle arg,\langle N,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$
+						\item[] CEK machine : $\langle\langle((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))\emptyset\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle$
+						\item[] > $\langle\langle(M$ $N),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle arg,\langle N,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$
+						\item[] CEK machine : $\langle\langle(\lambda f.\lambda x.f$ $x),\emptyset\rangle,\langle arg,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle\rangle$
+						\item[] >  $\langle \langle V,\varepsilon\rangle,\langle arg,\langle N,\varepsilon'\rangle,\kappa\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle fun,\langle V,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
+						\item[] CEK machine : $\langle\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,\langle fun,\langle(\lambda f.\lambda x.f$ $x),\emptyset\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle\rangle$
+						\item[] > $\langle\langle V,\varepsilon\rangle,\langle fun,\langle (\lambda X1.M),\varepsilon'\rangle,\overline{\kappa} \rangle \rangle \longmapsto_{cek} \langle \langle M,\varepsilon'[X1 \leftarrow \langle V,\varepsilon\rangle]\rangle,\overline{\kappa}\rangle$ si $V \notin X$
+						\item[] CEK machine : $\langle\langle(\lambda x.f$ $x),\emptyset[f \leftarrow \langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle]\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle$
+						\item[] CEK machine : $\langle\langle(\lambda x.f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle\}\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle$
+						\item[] >  $\langle \langle V,\varepsilon\rangle,\langle arg,\langle N,\varepsilon'\rangle,\kappa\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle fun,\langle V,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
+						\item[] CEK machine : $\langle\langle\ulcorner 1\urcorner,\emptyset\rangle,\langle fun,\langle(\lambda x.f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle\}\rangle,mt\rangle\rangle$
+						\item[] > $\langle\langle V,\varepsilon\rangle,\langle fun,\langle (\lambda X1.M),\varepsilon'\rangle,\overline{\kappa} \rangle \rangle \longmapsto_{cek} \langle \langle M,\varepsilon'[X1 \leftarrow \langle V,\varepsilon\rangle]\rangle,\overline{\kappa}\rangle$ si $V \notin X$
+						\item[] CEK machine : $\langle\langle(f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle\}[x \leftarrow \langle\ulcorner 1\urcorner,\emptyset\rangle]\rangle,mt\rangle$
+						\item[] CEK machine : $\langle\langle(f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,mt\rangle$
+						\item[] > $\langle\langle(M$ $N),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle arg,\langle N,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$
+						\item[] CEK machine : $\langle\langle f,\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,\langle arg,\langle x,\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,mt\rangle\rangle$
+						\item[] > $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
+						\item[] CEK machine : $\langle\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,\langle arg,\langle x,\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,mt\rangle\rangle$
+						\item[] > $\langle \langle V,\varepsilon\rangle,\langle arg,\langle N,\varepsilon'\rangle,\kappa\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle fun,\langle V,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
+						\item[] CEK machine : $\langle\langle x,\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,\langle fun,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,mt\rangle\rangle$	
+						\item[] > $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
+						\item[] CEK machine : $\langle \langle\ulcorner 1\urcorner,\emptyset\rangle,\langle fun,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,mt\rangle\rangle$	
+						\item[] > $\langle\langle V,\varepsilon\rangle,\langle fun,\langle (\lambda X1.M),\varepsilon'\rangle,\overline{\kappa} \rangle \rangle \longmapsto_{cek} \langle \langle M,\varepsilon'[X1 \leftarrow \langle V,\varepsilon\rangle]\rangle,\overline{\kappa}\rangle$ si $V \notin X$
+						\item[] CEK machine : $\langle\langle(+$ $y$ $y),\emptyset[y \leftarrow\langle\ulcorner 1\urcorner,\emptyset\rangle]\rangle ,mt\rangle$
+						\item[] CEK machine : $\langle\langle(+$ $y$ $y),\{\langle y,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle ,mt\rangle$
+						\item[] > $\langle\langle(o^{n}$ $M$ $N...),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle opd,\langle o^{n}\rangle,\langle \langle N,\varepsilon\rangle,...\rangle,\overline{\kappa}\rangle\rangle$
+						\item[] CEK machine : $\langle\langle y,\{\langle y,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle ,\langle opd,\langle+\rangle,\langle\langle y,\{\langle y,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle\rangle,mt\rangle\rangle$
+						\item[] > $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
+						\item[] CEK machine : $\langle\langle\ulcorner 1\urcorner,\emptyset\rangle,\langle opd,\langle+\rangle,\langle\langle y,\{\langle y,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle\rangle,mt\rangle\rangle$
+						\item[] > $\langle \langle V,\varepsilon\rangle,\langle opd,\langle v',...o^{n}\rangle,\langle  \langle N,\varepsilon'\rangle,c,...\rangle,\overline{\kappa}\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle opd,\langle  \langle V,\varepsilon\rangle,v',...o^{n}\rangle,\langle c,...\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
+						\item[] CEK machine : $\langle\langle y,\{\langle y,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,\langle opd,\langle\ulcorner 1\urcorner$ $+\rangle,\langle\rangle,mt\rangle\rangle$
+						\item[] > $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
+						\item[] CEK machine : $\langle\langle\ulcorner 1\urcorner,\emptyset\rangle,\langle opd,\langle\ulcorner 1\urcorner$ $+\rangle,\langle\rangle,mt\rangle\rangle$
+						\item[] > $\langle  \langle b,\varepsilon\rangle,\langle opd,\langle \langle b_{i},\varepsilon_{i}\rangle,...\langle b_{1},\varepsilon_{1}\rangle ,o^{n}\rangle,\langle\rangle,\overline{\kappa}\rangle\rangle \longmapsto_{cek} \langle \langle V,\emptyset\rangle,\overline{\kappa}\rangle$ avec $\delta(o^{n},b_{1},...b_{i},b) = V$
+						\item[] CEK machine : $\langle\langle\ulcorner 2\urcorner,\emptyset\rangle,mt\rangle$
+					\end{itemize}
+				\newpage
+				
+				\subsubsection{Exemple de fonctionnement de la machine SECD}\label{SECD}
+				
+					Voici un exemple de fonctionnement de la machine SECD :	
+					
+					\begin{itemize}
+						\item[] Conversion : $\textlbrackdbl(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner)\textrbrackdbl_{secd}$
+						\item[] Conversion : $\textlbrackdbl((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))\textrbrackdbl_{secd}$ $\textlbrackdbl\ulcorner 1\urcorner\textrbrackdbl_{secd}$ $ap$
+						\item[] Conversion : $\textlbrackdbl(\lambda f.\lambda x.f$ $x)\textrbrackdbl_{secd}$ $\textlbrackdbl\lambda y.(+$ $y$ $y)\textrbrackdbl_{secd}$ $ap$ $\ulcorner 1\urcorner$ $ap$
+						\item[] Conversion : $\langle f,\textlbrackdbl\lambda x.(f$ $x)\textrbrackdbl_{secd}\rangle$ $\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap$
+						\item[] Conversion : $\langle f,\langle x,\textlbrackdbl f$ $x\textrbrackdbl_{secd}\rangle\rangle$ $\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap$
+						\item[] Conversion : $\langle f,\langle x,f$ $x$ $ap\rangle\rangle$ $\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap$
+						\item[] SECD Machine : $\langle\epsilon,\emptyset,\langle f,\langle x,f$ $x$ $ap\rangle\rangle$ $\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap,\epsilon\rangle$ 
+						\item[] > $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+						\item[] SECD Machine : $\langle\langle\langle f,\langle x,f$ $x$ $ap\rangle\rangle,\emptyset\rangle,\emptyset,\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap,\epsilon\rangle$ 
+						\item[] > $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+						\item[] SECD Machine : $\langle\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle$ $\langle\langle f,\langle x,f$ $x$ $ap\rangle\rangle,\emptyset\rangle,\emptyset,ap$ $\ulcorner 1\urcorner$ $ap,\epsilon\rangle$
+						\item[] > $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
+						\item[] SECD Machine : $\langle\epsilon,\emptyset[f \leftarrow \langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle],\langle x,f$ $x$ $ap\rangle,\langle\epsilon,\emptyset,\ulcorner 1\urcorner$ $ap,\epsilon\rangle\rangle$
+						\item[] SECD Machine : $\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle\},\langle x,f$ $x$ $ap\rangle,\langle\epsilon,\emptyset,\ulcorner 1\urcorner$ $ap,\epsilon\rangle\rangle$
+						\item[] >  $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+						\item[] SECD Machine : $\langle\langle\langle x,f$ $x$ $ap\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle\}\rangle,\{f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\},\emptyset,\langle\epsilon,\emptyset,\ulcorner 1\urcorner$ $ap,\epsilon\rangle\rangle$
+						\item[] > $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle$
+						\item[] SECD Machine : $\langle\langle\langle x,f$ $x$ $ap\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle\}\rangle,\emptyset,\ulcorner 1\urcorner$ $ap,\epsilon\rangle$
+						\item[] >  $\langle\widehat{S},\widehat{\varepsilon},b$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle b$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+						\item[] SECD Machine :  $\langle\ulcorner 1\urcorner$ $\langle\langle x,f$ $x$ $ap\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle\}\rangle,\emptyset,ap,\epsilon\rangle$
+						\item[] >  $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
+						\item[] SECD Machine : $\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle\}[x \leftarrow \ulcorner 1\urcorner],f$ $x$ $ap,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
+						\item[] SECD Machine : $\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\},f$ $x$ $ap,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
+						\item[] > $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
+						\item[] SECD Machine : $\langle\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\},x$ $ap,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
+						\item[] > $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
+						\item[] SECD Machine : $\langle\ulcorner 1\urcorner$ $\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\},ap,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
+						\item[] >  $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
+						\item[] SECD Machine :	$\langle\epsilon,\emptyset[y \leftarrow \ulcorner 1\urcorner],y$ $y$ $prim_{+},\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
+						\item[] SECD Machine : $\langle\epsilon,\{\langle y,\ulcorner 1\urcorner\rangle\},y$ $y$ $prim_{+},\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
+						\item[] > $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
+						\item[] SECD Machine : $\langle\ulcorner 1\urcorner,\{\langle y,\ulcorner 1\urcorner\rangle\},y$ $prim_{+},\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
+						\item[] > $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
+						\item[] SECD Machine : $\langle\ulcorner 1\urcorner$ $\ulcorner 1\urcorner,\{\langle y,\ulcorner 1\urcorner\rangle\},prim_{+},\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
+						\item[] > $\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
+						\item[] SECD Machine : $\langle\ulcorner 2\urcorner,\{\langle y,\ulcorner 1\urcorner\rangle\},\emptyset,\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
+						\item[] > $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle$
+						\item[] SECD Machine : $\langle\ulcorner 2\urcorner,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
+						\item[] > $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle$
+						\item[] SECD Machine : $\langle\ulcorner 2\urcorner,\emptyset,\epsilon,\epsilon\rangle$
+					\end{itemize}
+					\newpage
+			
+			\subsection{Les différentes versions faite pour rendre la machine SECD concurrente}
+				\subsubsection{1ère version des règles de la machine SECD Concurrente}\label{SECDConc1}
+					Soit $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ avec :
+					
+					\begin{itemize}
+						\item[] $\widehat{S}$ = ... | $\langle C',C''\rangle$ $\widehat{S}$ | Remp $\widehat{S}$
+						\item[] $\widehat{\varepsilon}$ = ... 
+						\item[] $\widehat{C}$ = ... | bspawn $\widehat{C}$ | espawn $\widehat{C}$ | $\langle C',C''\rangle$ $\widehat{C}$ | $present_{s}$ $\widehat{C}$ | $emit_{s}$ $\widehat{C}$ 
+						\item[] $\widehat{W}$ = $\{\widehat{D},...\}$
+						\item[] $\widehat{ST}$ = $\{\langle s,\widehat{D}\rangle,...\}$
+						\item[] $\widehat{SI}$ = $\{ s,...\}$
+						\item[] $\widehat{D}$ = ...
+					\end{itemize}
+					\bigbreak
+					
+					
+					Les nouvelles règles sont les suivantes :
+					\smallbreak
+					\begin{enumerate}
+					\item $\langle\widehat{S},\widehat{\varepsilon},b$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle b$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+					\item $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
+					\item $\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
+					\item $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+					\item $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\widehat{W},\widehat{ST},\widehat{SI},\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
+					\item $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+					\item $\langle\widehat{V}$ Remp $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+					\item $\langle$ Remp $\widehat{V}\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+					\item $\langle$ Remp $\widehat{V}\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+					\item $\langle\widehat{S},\widehat{\varepsilon},bspawn$ $\widehat{C'}$ $espawn$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle$ Remp $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W}\langle\widehat{S},\widehat{E},\widehat{C'},\widehat{D}\rangle,\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+					\item $\langle\widehat{S},\widehat{\varepsilon},\langle C',C''\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\langle C',C''\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+					\item $\langle\langle C',C''\rangle $ $\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\widehat{W},\widehat{ST},s$ $\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\widehat{S},\widehat{\varepsilon},C'\widehat{C},\widehat{W},\widehat{ST},s$ $\widehat{SI},\widehat{D}\rangle$
+					\item $\langle\langle C',C''\rangle $ $\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{D'}\rangle$ $\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{W},\widehat{ST}\langle s,\langle\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\widehat{D}\rangle\rangle,\widehat{SI},\widehat{D'}\rangle$ avec s $\notin \widehat{SI}$ 
+					\item $\langle\langle C',C''\rangle $ $\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\emptyset,\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\emptyset,\emptyset,\emptyset,\emptyset,\widehat{ST}\langle s,\langle\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\widehat{D}\rangle\rangle,\emptyset,\emptyset\rangle$ avec s $\notin \widehat{SI}$ 
+					\item $\langle\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D'}\rangle$ $\widehat{W},\widehat{ST},\widehat{SI},\emptyset\rangle \longmapsto_{secdv1} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D'}\rangle$
+					\item  $\langle\widehat{S},\widehat{\varepsilon},\emptyset,\emptyset,\widehat{ST},\widehat{SI},\emptyset\rangle \longmapsto_{secdv1} \langle\widehat{S},\widehat{\varepsilon},\emptyset,\widehat{W},\emptyset,\emptyset,\emptyset\rangle$ avec $\widehat{W}$ = tout les éléments de $\widehat{ST}$ qui prennent leurs 2nd choix 
+					\item $\langle\widehat{S},\widehat{\varepsilon},emit_{s}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W'},\widehat{ST'},\widehat{SI},\widehat{D}\rangle$\\ avec $\widehat{W'}$ = $\widehat{W}$ $\cup$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s et\\
+					avec $\widehat{ST'}$ = $\widehat{ST}$ $\setminus$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s
+				\end{enumerate}
+				\bigbreak
+				
+				
+				la machine SECD version 1 peut s'arrêter dans 3 états différents:
+				\begin{itemize}
+					\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv1} \langle b,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon\rangle$;
+					\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv1} \langle\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon'}\rangle,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon\rangle$;
+					\item[]$\longrightarrow$ on a un \textbf{remplacement} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv1} \langle Remp,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon\rangle$;
+					\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
+				\end{itemize}
+				\newpage
+				
+				
+				
+				\subsubsection{2ème version des règles de la machine SECD Concurrente}\label{SECDConc2}
+				Soit $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ avec :
+				
+				\begin{itemize}
+					\item[] $\widehat{S}$  = ... | \sout{$\langle C',C''\rangle$ $\widehat{S}$}
+					\item[] $\widehat{\varepsilon}$ = ... | s (un signal initialisé)
+					\item[] $\widehat{C}$  = ... | [ $\langle C',C''\rangle$ $\widehat{C}$ | $present_{s}$ $\widehat{C}$ ] changé en $\langle s,C',C''\rangle$ $\widehat{C}$ | $\langle s,\widehat{C'}\rangle$ $\widehat{C}$ 
+					\item[] $\widehat{W}$  = ...
+					\item[] $\widehat{ST}$ = ...
+					\item[] $\widehat{SI}$ = ...
+					\item[] $\widehat{D}$  = ...
+				\end{itemize}
+				\bigbreak
+				
+				
+				Les nouvelles règles sont les suivantes :
+				\smallbreak
+				\begin{enumerate}
+					\item \sout{$\langle\widehat{S},\widehat{\varepsilon},\langle C',C''\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\langle C',C''\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$}
+					\item \sout{$\langle\langle C',C''\rangle $ $\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\widehat{W},\widehat{ST},s$ $\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\widehat{S},\widehat{\varepsilon},C'\widehat{C},\widehat{W},\widehat{ST},s$ $\widehat{SI},\widehat{D}\rangle$}
+					\item \sout{$\langle\langle C',C''\rangle $ $\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{D'}\rangle$ $\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{W},\widehat{ST}\langle s,\langle\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\widehat{D}\rangle\rangle,\widehat{SI},\widehat{D'}\rangle$ avec s $\notin \widehat{SI}$ }
+					\item \sout{$\langle\langle C',C''\rangle $ $\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\emptyset,\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\emptyset,\emptyset,\emptyset,\emptyset,\widehat{ST}\langle s,\langle\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\widehat{D}\rangle\rangle,\emptyset,\emptyset\rangle$ avec s $\notin \widehat{SI}$}
+					\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv2} \langle\widehat{S},\widehat{\varepsilon},C'$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ si s $\in \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+					\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\langle\widehat{S'},\widehat{\varepsilon'},C''',\widehat{D'}\rangle\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv2} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{W},\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\widehat{D'}\rangle$ si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+					\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\emptyset,\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv2} \langle\epsilon,\emptyset,\emptyset,\emptyset,\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\emptyset\rangle$ si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+					\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C'\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv2} \langle\epsilon,\widehat{\varepsilon}[init \leftarrow s],C',\widehat{W},\widehat{ST},\widehat{SI},\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
+				\end{enumerate}
+				\bigbreak
+				
+				
+				la machine SECD version 2 peut s'arrêter dans 4 états différents:
+				\begin{itemize}
+					\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv2},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv2} \langle b,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon\rangle$;
+					\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv2},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv2} \langle\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon'}\rangle,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon\rangle$;
+					\item[]$\longrightarrow$ on a un \textbf{remplacement} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv2},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv2} \langle Remp,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon\rangle$;
+					\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
+				\end{itemize}
+				\newpage
+				
+				\subsubsection{3ème version des règles de la machine SECD Concurrente}\label{SECDConc3}
+					Soit $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ avec :
+				
+				\begin{itemize}
+					\item[] $\widehat{S}$ = ... 
+					\item[] $\widehat{\varepsilon}$ = ... 
+					\item[] $\widehat{C}$ = ... |  $throw_{e} $ $\widehat{C}$ | $\langle e,\langle\widehat{C'},\langle X,\widehat{C''}\rangle\rangle\rangle$ $\widehat{C}$ 
+					\item[] $\widehat{W}$ = ...
+					\item[] $\widehat{ST}$ = ...
+					\item[] $\widehat{SI}$ = ...
+					\item[] $\widehat{D}$ = ...
+					\item[] $\widehat{H}$ = $\epsilon$ | $\langle e,\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle\rangle$ 
+					\item[] $\widehat{V}$ = ... | $erreur_{e}$
+				\end{itemize}
+				\bigbreak
+				
+				Les nouvelles règles sont les suivantes :
+				\smallbreak
+				\begin{enumerate}
+					\item $\langle\widehat{S},\widehat{\varepsilon},b$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle b$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ où $\widehat{V} = \varepsilon(X)$
+					\item $\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
+					\item $\langle\widehat{S},\widehat{\varepsilon},throw_{e}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle erreur_{e}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\widehat{W},\widehat{ST},\widehat{SI},\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle,\widehat{H}\rangle$
+					\item $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle,\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item $\langle\widehat{V}$ Remp $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item $\langle$ Remp $\widehat{V}\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item $\langle$ Remp $\widehat{V}\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item $\langle\widehat{S},\widehat{\varepsilon},bspawn$ $\widehat{C'}$ $espawn$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle$ Remp $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W}\langle\widehat{S},\widehat{E},\widehat{C'},\widehat{D}\rangle,\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+			    	\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\widehat{S},\widehat{\varepsilon},C'$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ si s $\in \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+			    	\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\langle\widehat{S'},\widehat{\varepsilon'},C''',\widehat{D'}\rangle\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{W},\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\widehat{D'},\widehat{H}\rangle$ si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+			    	\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\emptyset,\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\epsilon,\emptyset,\emptyset,\emptyset,\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\emptyset,\widehat{H}\rangle$ si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+				    \item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C'\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\epsilon,\widehat{\varepsilon}[init \leftarrow s],C',\widehat{W},\widehat{ST},\widehat{SI},\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle,\widehat{H}\rangle$
+					\item $\langle\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D'}\rangle$ $\widehat{W},\widehat{ST},\widehat{SI},\emptyset,\widehat{H}\rangle \longmapsto_{secdv3} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D'},\widehat{H}\rangle$
+					\item  $\langle\widehat{S},\widehat{\varepsilon},\emptyset,\emptyset,\widehat{ST},\widehat{SI},\emptyset,\widehat{H}\rangle \longmapsto_{secdv3} \langle\widehat{S},\widehat{\varepsilon},\emptyset,\widehat{W},\emptyset,\emptyset,\emptyset,\widehat{H}\rangle$\\ avec $\widehat{W}$ = tout les éléments de $\widehat{ST}$ qui prennent leurs 2nd choix 
+					\item $\langle\widehat{S},\widehat{\varepsilon},emit_{s}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W'},\widehat{ST'},\widehat{SI},\widehat{D},\widehat{H}\rangle$\\ avec $\widehat{W'}$ = $\widehat{W}$ $\cup$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s et\\
+					avec $\widehat{ST'}$ = $\widehat{ST}$ $\setminus$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s
+					\item $\langle\widehat{S},\widehat{\varepsilon},\langle e,\langle\widehat{C'},\langle X,\widehat{C''}\rangle\rangle\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\widehat{S},\widehat{\varepsilon},\widehat{C'}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\langle e,\langle\widehat{S},\widehat{\varepsilon},\langle X,\widehat{C''}\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle\rangle\rangle$
+					\item $\langle\widehat{S},\widehat{\varepsilon},throw_{e}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\langle e,\langle\widehat{S'},\widehat{\varepsilon'},\langle X,\widehat{C''}\rangle$ $\widehat{C'},\widehat{W'},\widehat{ST'},\widehat{SI'},\widehat{D'},\widehat{H}\rangle\rangle\rangle \longmapsto_{secdv3}$\\$ \langle\widehat{S'},\widehat{\varepsilon'},\langle X,\widehat{C''}\rangle$ $throw_{e}$ $\widehat{C},\widehat{W'},\widehat{ST'},\widehat{SI'},\widehat{D'},\widehat{H}\rangle$
+					\item $\langle\widehat{S},\widehat{\varepsilon},throw_{e}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\langle e',\langle\widehat{S'},\widehat{\varepsilon'},\langle X,\widehat{C''}\rangle$ $\widehat{C'},\widehat{W'},\widehat{ST'},\widehat{SI'},\widehat{D'},\widehat{H}\rangle\rangle\rangle \longmapsto_{secdv3}$\\on regarde dans $\widehat{H}$ récursivement si il y a un gestionnaire pour l'erreur e
+					\item $\langle\widehat{S},\widehat{\varepsilon},throw_{e}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\emptyset\rangle \longmapsto_{secdv3} \langle\widehat{S},\widehat{\varepsilon},throw_{e},\emptyset,\emptyset,\emptyset,\emptyset,\emptyset\rangle$  
+				\end{enumerate}
+				\bigbreak
+				
+				
+				la machine SECD version 3 peut s'arrêter dans 4 états différents:
+				\begin{itemize}
+					\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv3},\emptyset,\emptyset,\emptyset,\epsilon,\emptyset\rangle \twoheadrightarrow_{secdv3} \langle b,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon,\widehat{H}\rangle$;
+					\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv3},\emptyset,\emptyset,\emptyset,\epsilon,\emptyset\rangle \twoheadrightarrow_{secdv3} \langle\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon'}\rangle,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon,\widehat{H}\rangle$;
+					\item[]$\longrightarrow$ on a un \textbf{remplacement} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv3},\emptyset,\emptyset,\emptyset,\epsilon,\emptyset\rangle \twoheadrightarrow_{secdv3} \langle Remp,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon,\widehat{H}\rangle$;
+					\item[]$\longrightarrow$ on a une \textbf{erreur e} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv3},\emptyset,\emptyset,\emptyset,\epsilon,\emptyset\rangle \twoheadrightarrow_{secdv3} \langle erreur_{e},\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon,\widehat{H}\rangle$;
+				\end{itemize}
+		\newpage
+		\section{Bibliographie}
+			\begin{itemize}
+				\item[] [1] \textit{Réactivité des systèmes coopératifs : le cas Réactive ML} de Louis Mandrel et Cédric Pasteur\label{ReactiveML}
+				\item[] [2] \textit{The ZINC experiment: an economical implementation of the ML language} de Xavier Leroy\label{ZINC}
+				\item[] [3] \textit{Programming Languages And Lambda Calculi} de Mathias Felleisen et Matthew Flatt\label{Calculi}
+				\item[] [4] \textit{https://www.irif.fr/~carton/Enseignement/Complexite/MasterInfo/Cours/turing.html}\label{Turing}
+				\item[] [5] \textit{https://fr.wikipedia.org/wiki/Automate$\_$fini$\_$déterministe}\label{AFD}
+				\item[] [6] \textit{https://fr.wikipedia.org/wiki/Algorithme$\_$déterministe}\label{MFD}
+			\end{itemize}
+\end{document}
