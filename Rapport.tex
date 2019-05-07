@@ -633,8 +633,8 @@
 				\medbreak
 				$\gamma(\{...,\langle s,\{...,\langle id,valeurs,\{...,id',...\}\rangle,...\}\rangle,...\},s,id,id') = throw$ $erreur_{e}$
 				\item[]
-				\item[] $\iota(l,s,i) =$ la fonction qui pour une liste de signaux courant l, un signal s et un identifiant de thread i donnés, renvoie une liste des signaux courant avec le signal s initialisé.
-				\\\textbf{Exemple :} $\iota(\{...,\langle s,\{...\},emit\rangle,...\},s,id) = \{...,\langle s,\{...,\langle id,\{\}\rangle\},emit\rangle,...\}$
+				\item[] $\iota(l,s,i) =$ la fonction qui pour une liste de signaux courant l, un signal s, renvoie une liste des signaux courant avec le signal s initialisé.
+				\\\textbf{Exemple :} $\iota(\{...\},s) = \{...,\langle s,\{\},false\rangle\}$
 				\item[]
 				\item[] $\beta(l,s) =$ la fonction qui pour une liste de signal courant l et un signal s donnés, renvoie le booléen émit.
 				\\\textbf{Exemple :}
@@ -819,7 +819,7 @@
 				\item[] On initialise le signal via la fonction $\iota$.
 				\item $\langle I,s$ $S,E,init$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
 				\longrightarrow_{secdv4} \langle I,S,E,C,TL,\langle CS',SSI\rangle,D,H,IP\rangle$\\
-				 avec $\iota(CS,s,I) = CS'$
+				 avec $\iota(CS,s) = CS'$
 				\item[]	
 				\item[] On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il est émit donc on prends le 1er choix.
 				\item $\langle I,s$ $S,E,\langle C',C''\rangle$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
@@ -868,6 +868,11 @@
 				\item[] On a une application sur un élément, cela revient juste à rien faire.
 				\item $\langle I,V$ $S,E,ap$ $C,TL,SI,D,H,IP\rangle
 				\longrightarrow_{secdv4} \langle I,V$ $S,E,C,TL,SI,D,H,IP\rangle$
+				\item[]
+				\item[]
+				\item[] On a une application sur rien, cela revient juste à rien faire.
+				\item $\langle I,S,E,ap$ $C,TL,SI,D,H,IP\rangle
+				\longrightarrow_{secdv4} \langle I,S,E,C,TL,SI,D,H,IP\rangle$
 				\item[]
 			\end{enumerate}
 		

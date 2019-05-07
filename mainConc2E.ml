@@ -68,6 +68,7 @@ Printf.printf "\n" ;;
 
 lancerSECD expression7 ;;
 Printf.printf "\n" ;;
-
+(*
 lancerSECD expression8 ;;
 Printf.printf "\n" ;;
+*)

@@ -16,6 +16,7 @@ module ISWIM =
       | Sub
       | Mult
       | Div 
+      | HasNext
 
     type exprISWIM = 
         Var of string 
@@ -26,7 +27,7 @@ module ISWIM =
       | Spawn of exprISWIM
       | Present_ISWIM of string * exprISWIM * exprISWIM
       | Emit_ISWIM of string 
-      | Signal_ISWIM of string * exprISWIM
+      | Signal_ISWIM of string
       | Throw_ISWIM of int
       | Catch_ISWIM of int * exprISWIM * (string * exprISWIM)
       | Put_ISWIM of string * int
@@ -67,19 +68,21 @@ module ISWIM =
     (* Convertit un opérateur en chaîne de caractère *)
     let string_of_operateur op =
       match op with
-          Add1    ->   "++"
+          Add1       ->   "++"
 
-        | Sub1    ->   "--"
+        | Sub1       ->   "--"
 
-        | IsZero  ->   "== 0"
+        | IsZero     ->   "== 0"
 
-        | Add     ->   "+"
+        | Add        ->   "+"
 
-        | Sub     ->   "-"
+        | Sub        ->   "-"
 
-        | Mult    ->   "*"
+        | Mult       ->   "*"
 
-        | Div     ->   "/"
+        | Div        ->   "/"
+
+        | HasNext    ->   "hasNext"
       
 
     (* Convertit une expression en chaîne de caractère *)
@@ -101,7 +104,7 @@ module ISWIM =
 
         | Emit_ISWIM signal                       ->   "emit "^signal 
 
-        | Signal_ISWIM (signal,_)                     ->   "signal "^signal
+        | Signal_ISWIM signal                     ->   "signal "^signal
 
         | Throw_ISWIM erreur                      ->   "ERREUR"
 
@@ -129,7 +132,7 @@ module ISWIM =
     (* Donne le nombre d'opérande requis pour utiliser l'opérateur *)
     let getOperandNb op =
       match op with
-          Add1 | Sub1 | IsZero    ->   1
+          Add1 | Sub1 | IsZero | HasNext ->   1
 
         | Add | Sub | Mult | Div  ->   2
 
@@ -138,6 +141,8 @@ module ISWIM =
       let calcul op liste_expr =
         match (op,liste_expr) with
             (Add1,[h])     ->   Const (h+1)
+
+          | (HasNext,[h])  ->   Const 0
 
           | (Sub1,[h])     ->   Const (h-1)
 
