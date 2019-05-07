@@ -26,7 +26,7 @@ module ISWIM =
       | Spawn of exprISWIM
       | Present_ISWIM of string * exprISWIM * exprISWIM
       | Emit_ISWIM of string 
-      | Signal_ISWIM of string * exprISWIM
+      | Signal_ISWIM of string
       | Throw_ISWIM of int
       | Catch_ISWIM of int * exprISWIM * (string * exprISWIM)
       | Put_ISWIM of string * int
@@ -101,7 +101,7 @@ module ISWIM =
 
         | Emit_ISWIM signal                       ->   "emit "^signal 
 
-        | Signal_ISWIM (signal,expr)              ->   "signal "^signal^" in "^(string_of_expr expr)
+        | Signal_ISWIM signal                     ->   "signal "^signal
 
         | Throw_ISWIM erreur                      ->   "ERREUR"
 
