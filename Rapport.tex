@@ -796,9 +796,9 @@
 			    	\item[]
 			    	\newpage
 			    	
-			    	\item[]  \textbf{Création d'un gestionnaire d'erreur :} On a un try...catch donc on test avec la chaîne de contrôle du try et \\on sauvegarde catch dans le gestionnaire d'erreur.
-			    	\\ $\langle I,S,E,\langle e,\langle C'\langle X,C''\rangle\rangle\rangle$ $C,TL,SI,D,H,IP\rangle 
-			    	\\\longrightarrow_{secdv4} \langle I,S,E,C'$ $C,TL,SI,D,\langle e,\langle I,S,E,\langle X,C'' \rangle C,TL,SI,D,H,IP\rangle\rangle,IP\rangle$
+			    	\item[]  \textbf{Création d'un gestionnaire d'erreur :} On a un try...catch donc on test avec la chaîne de contrôle du try et on sauvegarde catch dans le gestionnaire d'erreur.
+			    	\\ $\langle I,erreur_{e}$ $S,E,\langle C',\langle X,C''\rangle\rangle$ $C,TL,SI,D,H,IP\rangle 
+			    	\\\longrightarrow_{secdv4} \langle I,S,E,C'$ $C,TL,SI,D,\langle e,\langle I,erreur_{e}$ $S,E,\langle X,C'' \rangle$ $C,TL,SI,D,H,IP\rangle\rangle,IP\rangle$
 			    \end{itemize}
 			    
 			    \item[]
@@ -1117,7 +1117,14 @@
 					\begin{itemize}
 						\item[] $\widehat{S}$ = ... | $\langle C',C''\rangle$ $\widehat{S}$ | Remp $\widehat{S}$
 						\item[] $\widehat{\varepsilon}$ = ... 
-						\item[] $\widehat{C}$ = ... | bspawn $\widehat{C}$ | espawn $\widehat{C}$ | $\langle C',C''\rangle$ $\widehat{C}$ | $present_{s}$ $\widehat{C}$ | $emit_{s}$ $\widehat{C}$ 
+						\item[] $\widehat{C}$ = ... 
+						\begin{itemize}
+							\item[|] bspawn $\widehat{C}$ 
+							\item[|] espawn $\widehat{C}$
+							\item[|] $\langle C',C''\rangle$ $\widehat{C}$
+							\item[|] $present_{s}$ $\widehat{C}$
+							\item[|] $emit_{s}$ $\widehat{C}$ 
+						\end{itemize}
 						\item[] $\widehat{W}$ = $\{\widehat{D},...\}$
 						\item[] $\widehat{ST}$ = $\{\langle s,\widehat{D}\rangle,...\}$
 						\item[] $\widehat{SI}$ = $\{ s,...\}$
@@ -1166,9 +1173,20 @@
 				Soit $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ avec :
 				
 				\begin{itemize}
-					\item[] $\widehat{S}$  = ... | \sout{$\langle C',C''\rangle$ $\widehat{S}$}
-					\item[] $\widehat{\varepsilon}$ = ... | s (un signal initialisé)
-					\item[] $\widehat{C}$  = ... | [ $\langle C',C''\rangle$ $\widehat{C}$ | $present_{s}$ $\widehat{C}$ ] changé en $\langle s,C',C''\rangle$ $\widehat{C}$ | $\langle s,\widehat{C'}\rangle$ $\widehat{C}$ 
+					\item[] $\widehat{S}$  = ... 
+					\begin{itemize}
+						\item[|] \sout{$\langle C',C''\rangle$ $\widehat{S}$}
+					\end{itemize}
+					\item[] $\widehat{\varepsilon}$ = ... 
+					\begin{itemize}
+						\item[|] s (un signal initialisé)
+					\end{itemize}
+					\item[] $\widehat{C}$  = ... 
+					\begin{itemize}
+						\item[|] [ $\langle C',C''\rangle$ $\widehat{C}$ 
+						\item[|] $present_{s}$ $\widehat{C}$ ] changé en $\langle s,C',C''\rangle$ $\widehat{C}$
+						\item[|] $\langle s,\widehat{C'}\rangle$ $\widehat{C}$ 
+					\end{itemize}
 					\item[] $\widehat{W}$  = ...
 					\item[] $\widehat{ST}$ = ...
 					\item[] $\widehat{SI}$ = ...

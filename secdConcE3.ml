@@ -745,6 +745,7 @@ module SECDMachine =
                                                     else if(first_get my_thread values) 
                                                             then  match values with 
                                                                       (value,pointers)::t1  ->   (Stack_const value,append [(id,append [(value,pointers)] (aux3 t1),end_list)] t) 
+                                                                      
                                                                     | []                    ->   raise EndIt
                                                             else let (res,new_values,end_it)   =   aux2 values in 
                                                                                                         if end_it 
@@ -760,7 +761,7 @@ module SECDMachine =
 
         | SSI(signal1,threads)::t  ->   if (signal1 = signal) 
                                             then let (res,new_threads)  =   aux1 threads                    in (res,(append [SSI(signal1,new_threads)]       t))  
-                                            else let (res,new_ssi)      =   get t id signal my_thread       in (res,(append [SSI(signal1,threads)    ] new_ssi)) 
+                                            else let (res,new_ssi)      =   get t id signal my_thread       in (res,(append [SSI(signal1,    threads)] new_ssi)) 
 
 
 
@@ -854,10 +855,6 @@ module SECDMachine =
              on mets la première chaîne de contrôle dans l'état courant*)
         | MachineSECD(id,Stack_error error::s,e,Catch(c1,(abs,c2))::c,tl,si,d,h,ip)            
           ->    machineSECD (MachineSECD( id , s , e , (append c1 c) , tl , si , d , SaveHandler(error,(id,s,e,(append [Pair(abs,c2)] c),tl,si,d,h,ip)) , ip ))
-
-
-
-                                    
         
 
           (* On a un signal dans la chaîne de contrôle, on le mets dans la pile *)
@@ -870,6 +867,7 @@ module SECDMachine =
                   try   let (c1,c2) = spawn c in machineSECD (MachineSECD( id , s , e , c2 , (append w [Thread(ip,s,e,c1,d)],st) , si , d , h , (ip+1) ))
                   with  EndSpawnNotFound  ->     machineSECD (MachineSECD( id , Stack_throw 11::s , e , c , (w,st) , si , d , h , ip ))
                 end
+
 
           (* On a put dans la chaîne de contrôle, on prend la constante en tête dans la pile et on la mets dans le signal *)
         | MachineSECD(id,Stack_signal signal::Stack_const b::s,e,Put::c,tl,(cs,ssi),d,h,ip)           
@@ -894,7 +892,6 @@ module SECDMachine =
                         | EndIt                 ->   machineSECD (MachineSECD( id , Stack_throw 17::s , e , c , tl , (cs,ssi) , d , h , ip ))
                 end
                                           
-
 
           (* On a un signal s in t dans la chaîne de contrôle, on remplace la chaîne de contrôle (que l'on stock dans le dépôt) par t et on sauvegarde dans le dépôt le reste plus le signal *)
         | MachineSECD(id,Stack_signal signal::s,e,InitSignal::c,tl,(cs,ssi),d,h,ip)                   
@@ -952,10 +949,6 @@ module SECDMachine =
 
                     | _    ->    machineSECD (MachineSECD( id , s , e , [] , (end_of_the_moment_thread ([],st)) , (end_of_the_moment_signals si) , Vide_D , h , ip ))
                 end
-
-
-          (* On a Ap dans la chaîne de contrôle et on a un élément, on enlève Ap *)  
-        | MachineSECD(id,v::s,e,Ap::c,tl,si,d,h,ip)                               ->    machineSECD (MachineSECD( id , v::s , e , c , tl , si , d , h , ip ))
 
 
           (* On a Ap dans la chaîne de contrôle, on enlève Ap *)  
