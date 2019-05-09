@@ -515,15 +515,13 @@ module SECDMachine =
         | EnvClos(var,(control_string,env))::t  ->   if (equal x var) then  Closure(control_string,env) else substitution x t
 
         | EnvVar(var,control_string)::t         ->   if (equal x var) 
-                                                      then 
-                                                        begin
-                                                          match control_string with
-                                                              [Constant b]  ->   Stack_const b 
+                                                      then  match control_string with
+                                                                [Constant b]  ->   Stack_const b 
                                                             
-                                                            | [Error e]     ->   Stack_error e
+                                                              | [Error e]     ->   Stack_error e
 
-                                                            | _             ->   raise UnknowEnvState
-                                                        end
+                                                              | _             ->   raise UnknowEnvState
+                
                                                       else substitution x t
 
 
@@ -560,7 +558,6 @@ module SECDMachine =
       if(in_environment env varToRep) 
         then env 
         else  match stack_element with
-
                   Stack_const b                 ->   (EnvVar(varToRep,[Constant b]))::env
 
                 | Stack_error error             ->   (EnvVar(varToRep,[Error error]))::env
@@ -574,14 +571,14 @@ module SECDMachine =
     let rec add_init_signal current_signals id signal = 
       let rec aux1 threads =
         match threads with
-            (id1,values)::t                  ->   if (id = id1) then raise SignalAlreadyInit else append [(id1,values)] (aux1 t)
+            (id1,values)::t            ->   if (id = id1) then raise SignalAlreadyInit else append [(id1,values)] (aux1 t)
 
-          | []                                    ->   [(id,[])]
+          | []                         ->   [(id,[])]
       in
       match current_signals with
-          CS(signal1,threads,emit)::t           ->   if (signal = signal1) then (append [CS(signal,(aux1 threads),emit)] t) else (append [CS(signal1,threads,emit)] (add_init_signal t id signal))
+          CS(signal1,threads,emit)::t  ->   if (signal = signal1) then (append [CS(signal,(aux1 threads),emit)] t) else (append [CS(signal1,threads,emit)] (add_init_signal t id signal))
         
-        | []                                    ->   [CS(signal,[(id,[])],false)]
+        | []                           ->   [CS(signal,[(id,[])],false)]
         
 
     (* Récupère la chaîne de contrôle du nouveau thread et la chaîne amputée de cette partie *)
@@ -605,7 +602,7 @@ module SECDMachine =
           | _                                                                    ->   raise UnknowStuckState
       in
       match thread_list with
-        (wait,stuck)                                                             ->   ((aux stuck),[]) 
+        (_,stuck)                                                                ->   ((aux stuck),[]) 
 
 
     (* Remet à zero les signaux en vidant la liste des valeurs et en mettant l'émission à faux *)
@@ -614,7 +611,7 @@ module SECDMachine =
         match thread_list with
             []                            ->   []
 
-          | (thread,_)::t            ->   (thread,[])::(aux t)
+          | (thread,_)::t                 ->   (thread,[])::(aux t)
       in
       match current_signals with
           []                              ->   []
@@ -628,7 +625,7 @@ module SECDMachine =
         match thread_list with
             []                             ->   []
 
-          | (thread,values)::t           ->   (thread,(map (fun x -> (x,[])) values),[])::(aux t)
+          | (thread,values)::t             ->   (thread,(map (fun x -> (x,[])) values),[])::(aux t)
       in
       match current_signals with
           []                               ->   []
@@ -744,7 +741,7 @@ module SECDMachine =
                                                     then raise EndIt
                                                     else if(first_get my_thread values) 
                                                             then  match values with 
-                                                                      (value,pointers)::t1  ->   (Stack_const value,append [(id,append [(value,pointers)] (aux3 t1),end_list)] t) 
+                                                                      (value,pointers)::t1  ->   (Stack_const value,append [(id,append [(value,pointers)] (aux3 t1),end_list)] t)
                                                                       
                                                                     | []                    ->   raise EndIt
                                                             else let (res,new_values,end_it)   =   aux2 values in 
@@ -780,7 +777,7 @@ module SECDMachine =
 
           (* On a une variable dans la chaîne de contrôle, on place sa substitution (stockée dans l'environnement) dans la pile *)
         | MachineSECD(id,s,e,Variable x::c,tl,si,d,h,ip)                          
-          ->    begin 
+          ->    begin
                   try   machineSECD (MachineSECD( id , (substitution x e)::s , e , c , tl , si , d , h , ip )) 
                   with  NoSubPossible  -> machineSECD (MachineSECD( id , Stack_throw 10::s , e , c , tl , si , d , h , ip ))
                 end
