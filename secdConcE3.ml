@@ -764,7 +764,11 @@ module SECDMachine =
 
 
 
-        
+
+                                            
+
+
+
     (**** Machine SECD ****)
 
     (* Applique les règles de la machine SECD en affichant les étapes *)
@@ -826,14 +830,19 @@ module SECDMachine =
         | MachineSECD(id,v::s,e,[],tl,si,Save(s1,e1,c,d),h,ip)                    ->    machineSECD (MachineSECD( id , v::s1 , e1 , c , tl , si , d , h , ip ))
 
 
-          (* On a une variable dans la chaîne de contrôle, on place sa substitution (stockée dans l'environnement) dans la pile *)
+          (* On a une erreur dans la chaîne de contrôle, on la place dans la pile *)
         | MachineSECD(id,s,e,Error error::c,tl,si,d,h,ip)                         ->    machineSECD (MachineSECD( id , Stack_error error::s , e , c , tl , si , d , h , ip )) 
+
+
+          (* On a throw dans la chaîne de contrôle, on le place dans la pile *)
+        | MachineSECD(id,Stack_error error::s,e,Throw::c,tl,si,d,h,ip)            ->    machineSECD (MachineSECD( id , Stack_throw error::s , e , c , tl , si , d , h , ip )) 
 
 
           (* On a une erreur levé dans la pile donc qu'importe ce que l'on a dans la chaîne de contrôle on propage (car la seule possibilité de traitement a déjà été fait) *)
         | MachineSECD(id,Stack_throw error::s,e,_::c,tl,si,d,h,ip)                ->    machineSECD (MachineSECD( id , Stack_throw error::s , e , c , tl , si , d , h , ip )) 
 
-
+        
+          (* On a une erreur levé dans la pile et la chaîne de contrôle est vide, on regarde dans le handler *)
         | MachineSECD(id,Stack_throw er::s,e,[],tl,si,d,h,ip)                  
           ->    begin
                   match h with

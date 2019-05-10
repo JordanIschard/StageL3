@@ -785,6 +785,11 @@
 			    	\\$\langle I,S,E,erreur_{e}$ $C,TL,SI,D,H,IP\rangle
 			    	\longrightarrow_{secdv4} \langle I,erreur_{e}$ $S,E,C,TL,SI,D,H,IP\rangle$
 			    	\item[]
+			    
+			    	\item[] \textbf{Lever erreur :} On a un throw, on le déplace en tête de la pile.
+			    	\\$\langle I,S,E,throw$ $C,TL,SI,D,H,IP\rangle
+			    	\longrightarrow_{secdv4} \langle I,throw$ $S,E,C,TL,SI,D,H,IP\rangle$
+			    	\item[]
 			    	
 			    	\item[] \textbf{Opération sur erreur :} On a l'opérateur qui traite cette erreur donc on mets le résultat de 
 			    	\\la fonction $\delta$ dans la pile.
@@ -835,20 +840,20 @@
 			    	
 			    	\item[] \textbf{Ajouter dans un signal :} On ajoute une constante dans une liste de valeurs d'un signal via la fonction $\rho$
 			    	\\$\langle I,s$ $b$ $S,E,put$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle \longrightarrow_{secdv4} \langle I,S,E,C,TL,\langle CS',SSI\rangle,D,H,IP\rangle$ \\
-			    	avec $CS' = \rho(CS,b,s,I)$
+			    	avec $CS' = \rho(CS,b,s,I)$ et $s$ initialisé
 			    	\item[]
 			    	
 			    	\item[] \textbf{Prendre une valeur partagée (possible) :} On prends dans la liste de valeurs d'un signal partagé lié \\
 			    	à un identifant une constante via la fonction $\gamma$ .
 			    	\\$\langle I,s$ $b$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
 			    	\\\longrightarrow_{secdv4} \langle I,\emptyset,E'[X \leftarrow V],C',TL,\langle CS,SSI'\rangle,\langle S,E,C,D\rangle,H,IP\rangle$\\
-			    	avec $ \gamma(SSI,s,I,b) = \langle V,SSI'\rangle$ si il reste une valeur à prendre
+			    	avec $ \gamma(SSI,s,I,b) = \langle V,SSI'\rangle$ si il reste une valeur à prendre et $s$ patagé
 			    	\item[]
 			    	
 			    	\item[] \textbf{Prendre une valeur partagée (impossible) :} On prends dans la liste de valeurs d'un signal partagé lié à un identifant une constante via la fonction $\gamma$ mais on a déjà tout pris donc on lève une erreur.
 			    	\\ $\langle I,s$ $b$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
 			    	\\\longrightarrow_{secdv4} \langle I,throw$ $erreur_{e}$ $S,E,C,TL,\langle CS,SSI'\rangle,D,H,IP\rangle$\\
-			    	avec $ \gamma(SSI,s,I,b) = throw$ $erreur_{e}$ si il reste aucune valeur à prendre
+			    	avec $ \gamma(SSI,s,I,b) = throw$ $erreur_{e}$ si il reste aucune valeur à prendre et $s$ partagé
 			    	\item[]
 			    	
 			    	\item[] \textbf{Initialisation signal :} On initialise le signal via la fonction $\iota$.
