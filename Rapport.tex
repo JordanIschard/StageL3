@@ -262,7 +262,8 @@
 		Il a été demandé aussi de mettre un nom explicite pour chaque règles ainsi que des commentaires explicatifs. 
 		\smallbreak
 		Ces modifications ont été faite le lundi après-midi et mardi. Un mail a été envoyé pour avoir l'approbation des nouvelles règles avant de commencer à faire la preuve du déterminisme. Quelques améliorations ont été faites le jeudi et une relance par mail a été faite.
-		
+		\medbreak
+		Après une entre-vue avec Mme Bousdira, j'ai débuté la preuve par induction le vendredi, grâce celle-ci j'ai pu me rendre compte du manque de la règle \textbf{Lever erreur} que j'ai rajouté . Cependant ma première preuve me parait sommaire donc j'attends la vérifcation de mes professeurs la semaine prochaine. 
 		
 		\subsubsection{Semaine du 13 au 17}
 		
@@ -324,8 +325,9 @@
 				\bigbreak
 				
 				Une \textbf{condition suffisante} pour q'un \textbf{processus r\'{e}cursif soit r\'{e}actif} est qu'il ait \textbf{toujours} au moins \textbf{un instant logique entre l'instanciation du processus et l'appel r\'{e}cursif}.
+				\bigbreak
 				
-				
+				Le reste de l'article rentre beaucoup plus dans les détails avec l'analyse syntaxique qui prends en compte la réactivité du langage.
 		
 			\newpage
 			
@@ -632,7 +634,8 @@
 			La machine ayant beaucoup évoluée depuis le début du travail, je vais redéfinir chaque élément de la machine pour pouvoir mieux comprendre les nouvelles règles.
 			\bigbreak
 			
-			Une suite de fonctions ont été écrite pour simplifier la lecture des règles. Les voici :
+			\textbf{\textit{Une suite de fonctions ont été écrite pour simplifier la lecture des règles. Les voici :}}
+			\smallbreak
 			\begin{itemize}
 				\item[] $\rho(l,v,s,i) =$ la fonction qui pour une liste des signaux l, une valeur v, un signal s et un identifiant du thread courant donnés, renvoie la liste l' avec v ajouté à la liste des valeurs du signal s pour le thread i.
 				\\\textbf{Exemple :} $\rho(\{...,\langle s,\{...,\langle id,valeur\rangle,...\},emit\rangle,...\},v,s,id) = \{...,\langle s,\{...,\langle id,valeur$ $v\rangle,...\},emit\rangle,...\}$
@@ -659,9 +662,17 @@
 				\\\textbf{Exemple :}
 				\\ $\varepsilon(\{...,\langle s,\{...\},faux\rangle,...\},s) = \{...,\langle s,\{...\},vraie\rangle,...\}$
 				\item[] 
+				\item[] $\alpha(\langle CS,SSI\rangle) =$ la fonction qui pour la liste des signaux courant et la liste des signaux partagées données, renvoie la liste des signaux courant vidées de ses listes de valeurs et le booléen représentant l'émission mis à nulle ainsi que la liste des signaux partagées remplacer par les listes de valeurs de la liste des signaux courants qui sont émit.
+				\\\textbf{Exemple :}
+				\\ $\alpha(\langle CS,SSI\rangle) =$
+				\\ $SSI$ vidé
+				\\ $\forall$ $x$ $\in CS$ tels que $\langle s,\{...,\langle id,\{...,b,...\}\rangle,...\},true\rangle$, on ajoute $x$ dans $SSI$
+				\\ $\forall$ $x$ $\in CS$ tels que $\langle s,\{...,\langle id,\{...,b,...\}\rangle,...\},emit\rangle$ on le remplace par $\langle s,\{...,\langle id,\{\}\rangle,...\},faux\rangle$ 
+				\item[] 
 			\end{itemize}
 			\newpage
-			Soit $\langle I,S,E,C,TL,SI,D,H,IP\rangle$ avec :
+			
+			\textbf{\textit{Soit $\langle I,S,E,C,TL,SI,D,H,IP\rangle$ avec :}}
 			
 			\begin{itemize}
 				\item[] $V = b$	
@@ -738,40 +749,46 @@
 		
 			\newpage
 			
-			Les éléments étant expliqués, voici les nouvelles règles de la machine :
-			\medbreak
+			\textbf{\textit{Les éléments étant expliqués, voici les nouvelles règles de la machine :}}
+			\smallbreak
 			\begin{enumerate}
 				\item[] \textbf{Partie de base de la machine SECD} 
 				\item[]
 				\begin{itemize}
 					\item[] \textbf{Constante :} On a une constante, on la déplace dans la pile.
-					\\$\langle I,S,E,b$ $C,TL,SI,D,H,IP\rangle 
+					\smallbreak
+					$\langle I,S,E,b$ $C,TL,SI,D,H,IP\rangle 
 					\longrightarrow_{secdv4} \langle I,b$ $S,E,C,TL,SI,D,H,IP\rangle$
 					\item[]
 					
 					\item[] \textbf{Substitution :} On a une abstraction, on créer une fermeture avec celle-ci et l'environnement courant et on la place dans la pile.
-					\\$\langle I,S,E,X$ $C,TL,SI,D,H,IP\rangle
+					\smallbreak
+					$\langle I,S,E,X$ $C,TL,SI,D,H,IP\rangle
 					\longrightarrow_{secdv4} \langle I,V$ $S,E,C,TL,SI,D,H,IP\rangle$\\ avec E(X) = V
 					\item[]
 					
 					\item[] \textbf{Opération :} On a un opérateur et le nombre de constante nécessaire dans la pile, \\via la fonction $\delta$ on retourne le résultat dans la pile.
-					\\ $\langle I,b_{n},...,b_{1}$ $S,E,prim_{o^{n}}$ $C,TL,SI,D,H,IP\rangle
+					\smallbreak
+					 $\langle I,b_{n},...,b_{1}$ $S,E,prim_{o^{n}}$ $C,TL,SI,D,H,IP\rangle
 					\longrightarrow_{secdv4} \langle I,V$ $S,E,C,TL,SI,D,H,IP\rangle$
 					\\avec $\delta(o^{n}$ $b_{1}...b_{n}) = V$
 					\item[]
 					
 					\item[]  \textbf{Abstraction :} On a une abstraction, on créer une fermeture comportant l'abstraction et l'environnement courant et on mets la fermeture dans la pile.
-					\\$\langle I,S,E,\langle X,C'\rangle$ $C,TL,SI,D,H,IP\rangle
+					\smallbreak
+					$\langle I,S,E,\langle X,C'\rangle$ $C,TL,SI,D,H,IP\rangle
 					\longrightarrow_{secdv4} \langle I,\langle\langle X,C'\rangle,E\rangle$ $S,E,C,TL,SI,D,H,IP\rangle$
 					\item[]
 					
 					\item[]  \textbf{Application :} On a une application, donc on sauvegarde dans le dépôt, on ajoute une substitution et on remplace la chaîne de contrôle et l'environnement par ceux présent dans la fermeture.
-					\\$\langle I,V$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,ap$ $C,TL,SI,D,H,IP\rangle
+					\smallbreak
+					$\langle I,V$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,ap$ $C,TL,SI,D,H,IP\rangle
 					\longrightarrow_{secdv4} \langle I,\emptyset,E'[X \leftarrow V],C',TL,SI,\langle S,E,C,D\rangle,H,IP\rangle$
 					\item[] 
 					
 					\item[] \textbf{Récupération de sauvegarde :}  On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
-					\\  $\langle I,V$ $S,E,\epsilon,TL,SI,\langle S',E',C,D\rangle,H,IP\rangle
+					\smallbreak  
+					$\langle I,V$ $S,E,\epsilon,TL,SI,\langle S',E',C,D\rangle,H,IP\rangle
 					\longrightarrow_{secdv4} \langle I,V$ $S',E',C,TL,SI,D,H,IP\rangle$
 				\end{itemize}
 				\item[]
@@ -782,41 +799,47 @@
 			    \item[]
 			    \begin{itemize}
 			    	\item[] \textbf{Erreur :} On a une erreur, on la déplace en tête de la pile.
-			    	\\$\langle I,S,E,erreur_{e}$ $C,TL,SI,D,H,IP\rangle
+			    	\smallbreak
+			    	$\langle I,S,E,erreur_{e}$ $C,TL,SI,D,H,IP\rangle
 			    	\longrightarrow_{secdv4} \langle I,erreur_{e}$ $S,E,C,TL,SI,D,H,IP\rangle$
 			    	\item[]
 			    
 			    	\item[] \textbf{Lever erreur :} On a un throw, on le déplace en tête de la pile.
-			    	\\$\langle I,S,E,throw$ $C,TL,SI,D,H,IP\rangle
+			    	\smallbreak
+			    	$\langle I,S,E,throw$ $C,TL,SI,D,H,IP\rangle
 			    	\longrightarrow_{secdv4} \langle I,throw$ $S,E,C,TL,SI,D,H,IP\rangle$
 			    	\item[]
 			    	
 			    	\item[] \textbf{Opération sur erreur :} On a l'opérateur qui traite cette erreur donc on mets le résultat de 
 			    	\\la fonction $\delta$ dans la pile.
-			    	\\$\langle I,throw$ $erreur_{e}$ $S,E,prim_{o^{1_{e}}}$ $C,TL,SI,D,H,IP\rangle
+			    	\smallbreak
+			    	$\langle I,throw$ $erreur_{e}$ $S,E,prim_{o^{1_{e}}}$ $C,TL,SI,D,H,IP\rangle
 			    	\longrightarrow_{secdv4} \langle I,V$ $S,E,C,TL,SI,D,H,IP\rangle$
 			    	\\ avec $\delta(o^{1_{e}}$ $erreur_{e}) = V$
 			    	\item[]
 			    	
 			    	\item[] \textbf{Propagation :} On a un un élément excepté l'opérateur qui traite cette erreur donc on propage l'erreur.
-			    	\\ $\langle I,throw$ $erreur_{e}$ $S,E,M$ $C,TL,SI,D,H,IP\rangle
+			    	\smallbreak
+			    	$\langle I,throw$ $erreur_{e}$ $S,E,M$ $C,TL,SI,D,H,IP\rangle
 			    	\longrightarrow_{secdv4} \langle I,throw$ $erreur_{e}$ $S,E,C,TL,SI,D,H,IP\rangle$ 
 			    	\\avec $M = $ un élément de $C$ $\backslash$ $prim_{o^{1_{e}}}$
 			    	\item[]
 			    	
-			    	\item[] \textbf{Traitée erreur via gestionnaire d'erreur :} On a plus rien mais on a une erreur levé dans la pile du coup 
-			    	\\ on regarde si le gestionnaire d'erreur gère celle-ci ; oui du coup prend la sauvegarde.
-			    	\\ $\langle I,throw$ $erreur_{e}$ $S,E,\epsilon,TL,SI,D,\langle e,\langle I',S',E',\langle X,C'' \rangle C',TL',SI',D',H,IP'\rangle\rangle,IP\rangle \\\longrightarrow_{secdv4} \langle I',\emptyset,E'[X \leftarrow erreur_{e}],C'',TL',SI',\langle S',E',C',D'\rangle,H,IP'\rangle$
+			    	\item[] \textbf{Traitée erreur via gestionnaire d'erreur :} On a plus rien mais on a une erreur levé dans la pile du coup on regarde si le gestionnaire d'erreur gère celle-ci ; oui du coup prend la sauvegarde.
+			    	\smallbreak 
+			    	$\langle I,throw$ $erreur_{e}$ $S,E,\epsilon,TL,SI,D,\langle e,\langle I',S',E',\langle X,C'' \rangle C',TL',SI',D',H,IP'\rangle\rangle,IP\rangle \\\longrightarrow_{secdv4} \langle I',\emptyset,E'[X \leftarrow erreur_{e}],C'',TL',SI',\langle S',E',C',D'\rangle,H,IP'\rangle$
 			    	\item[]
 			    	
 			    	\item[]  \textbf{Traitement erreur récursif :} On a plus rien mais on a une erreur levé dans la pile du coup on regarde 
 			    	\\si le gestionnaire d'erreur gère celle-ci mais non du coup on regarde pour le gestionnaire sauvegardé.
-			    	\\ $\langle I,throw$ $erreur_{e}$ $S,E,\epsilon,TL,SI,D,\langle e',\langle I',S',E',\langle X,C'' \rangle C',TL',SI',D',H,IP'\rangle\rangle,IP\rangle \\\longrightarrow_{secdv4}\langle I,throw$ $erreur_{e}$ $S,E,\epsilon,TL,SI,D,H,IP\rangle$
+			    	\smallbreak 
+			    	$\langle I,throw$ $erreur_{e}$ $S,E,\epsilon,TL,SI,D,\langle e',\langle I',S',E',\langle X,C'' \rangle C',TL',SI',D',H,IP'\rangle\rangle,IP\rangle \\\longrightarrow_{secdv4}\langle I,throw$ $erreur_{e}$ $S,E,\epsilon,TL,SI,D,H,IP\rangle$
 			    	\item[]
 			    	\newpage
 			    	
 			    	\item[]  \textbf{Création d'un gestionnaire d'erreur :} On a un try...catch donc on test avec la chaîne de contrôle du try et on sauvegarde catch dans le gestionnaire d'erreur.
-			    	\\ $\langle I,erreur_{e}$ $S,E,\langle C',\langle X,C''\rangle\rangle$ $C,TL,SI,D,H,IP\rangle 
+			    	\smallbreak 
+			    	$\langle I,erreur_{e}$ $S,E,\langle C',\langle X,C''\rangle\rangle$ $C,TL,SI,D,H,IP\rangle 
 			    	\\\longrightarrow_{secdv4} \langle I,S,E,C'$ $C,TL,SI,D,\langle e,\langle I,erreur_{e}$ $S,E,\langle X,C'' \rangle$ $C,TL,SI,D,H,IP\rangle\rangle,IP\rangle$
 			    \end{itemize}
 			    
@@ -829,41 +852,47 @@
 			    \item[]
 			    \begin{itemize}
 			    	\item[]  \textbf{Création thread :} On veut créer un nouveau thread.
-			    	\\ $\langle I,S,E,bspawn$ $C'$ $espawn$ $C,\langle W,ST\rangle,SI,D,H,IP\rangle 
+			    	\smallbreak $\langle I,S,E,bspawn$ $C'$ $espawn$ $C,\langle W,ST\rangle,SI,D,H,IP\rangle 
 			    	\\\longrightarrow_{secdv4} \langle I,S,E,C,\langle W$ $\langle IP,S,E,C',D\rangle,ST\rangle,SI,D,H,IP+1\rangle$
 			    	\item[]
 			    	
 			    	\item[]  \textbf{Signal :} On a un signal, on le déplace dans la pile.
-			    	\\ $\langle I,S,E,signal$ $C,TL,SI,D,H,IP\rangle
+			    	\smallbreak 
+			    	$\langle I,S,E,signal$ $C,TL,SI,D,H,IP\rangle
 			    	\longrightarrow_{secdv4} \langle I,signal$ $S,E,C,TL,SI,D,H,IP\rangle$
 			    	\item[]
 			    	
 			    	\item[] \textbf{Ajouter dans un signal :} On ajoute une constante dans une liste de valeurs d'un signal via la fonction $\rho$
-			    	\\$\langle I,s$ $b$ $S,E,put$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle \longrightarrow_{secdv4} \langle I,S,E,C,TL,\langle CS',SSI\rangle,D,H,IP\rangle$ \\
+			    	\smallbreak
+			    	$\langle I,s$ $b$ $S,E,put$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle \longrightarrow_{secdv4} \langle I,S,E,C,TL,\langle CS',SSI\rangle,D,H,IP\rangle$ \\
 			    	avec $CS' = \rho(CS,b,s,I)$ et $s$ initialisé
 			    	\item[]
 			    	
 			    	\item[] \textbf{Prendre une valeur partagée (possible) :} On prends dans la liste de valeurs d'un signal partagé lié \\
 			    	à un identifant une constante via la fonction $\gamma$ .
-			    	\\$\langle I,s$ $b$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
+			    	\smallbreak
+			    	$\langle I,s$ $b$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
 			    	\\\longrightarrow_{secdv4} \langle I,\emptyset,E'[X \leftarrow V],C',TL,\langle CS,SSI'\rangle,\langle S,E,C,D\rangle,H,IP\rangle$\\
 			    	avec $ \gamma(SSI,s,I,b) = \langle V,SSI'\rangle$ si il reste une valeur à prendre et $s$ patagé
 			    	\item[]
 			    	
 			    	\item[] \textbf{Prendre une valeur partagée (impossible) :} On prends dans la liste de valeurs d'un signal partagé lié à un identifant une constante via la fonction $\gamma$ mais on a déjà tout pris donc on lève une erreur.
-			    	\\ $\langle I,s$ $b$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
+			    	\smallbreak 
+			    	$\langle I,s$ $b$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
 			    	\\\longrightarrow_{secdv4} \langle I,throw$ $erreur_{e}$ $S,E,C,TL,\langle CS,SSI'\rangle,D,H,IP\rangle$\\
 			    	avec $ \gamma(SSI,s,I,b) = throw$ $erreur_{e}$ si il reste aucune valeur à prendre et $s$ partagé
 			    	\item[]
 			    	
 			    	\item[] \textbf{Initialisation signal :} On initialise le signal via la fonction $\iota$.
-			    	\\ $\langle I,s$ $S,E,init$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
+			    	\smallbreak 
+			    	$\langle I,s$ $S,E,init$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
 			    	\longrightarrow_{secdv4} \langle I,S,E,C,TL,\langle CS',SSI\rangle,D,H,IP\rangle$\\
 			    	avec $\iota(CS,s) = CS'$
 			    	\item[]	
 			    	
 			    	\item[] \textbf{Conditionnelle signal :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il est émit donc on prends le 1er choix.
-			    	\\ $\langle I,s$ $S,E,\langle C',C''\rangle$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
+			    	\smallbreak
+			    	$\langle I,s$ $S,E,\langle C',C''\rangle$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
 			    	\longrightarrow_{secdv4} \langle I,S,E,C'$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle$ \\
 			    	avec $\beta(CS,s) = vraie$
 			    	\item[]
@@ -871,19 +900,22 @@
 			    	
 			    	\item[] \textbf{ Thread bloqué remplacé :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il n'est pas émit et il y a un thread dans la file d'attente
 			    	donc on mets ce thread dans la liste de threads bloqués et on prends le thread en tête de la file.
-			    	\\$\langle I,s$ $S,E,\langle C',C''\rangle$ $C,\langle\langle I',S',E',C''',D'\rangle W,ST\rangle,\langle CS,SSI\rangle,D,H,IP\rangle 
+			    	\smallbreak
+			    	$\langle I,s$ $S,E,\langle C',C''\rangle$ $C,\langle\langle I',S',E',C''',D'\rangle W,ST\rangle,\langle CS,SSI\rangle,D,H,IP\rangle 
 			    	\\\longrightarrow_{secdv4} \langle I',S',E',C''',\langle W,ST\langle s,\langle I,s$ $S,E,\langle C',C''\rangle$ $C,D\rangle\rangle\rangle,\langle CS,SSI\rangle,D',H,IP\rangle$ \\
 			    	avec $\beta(CS,s) = faux$
 			    	\item[]	
 			    	
 			    	\item[] \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il n'est pas émit donc on mets ce thread dans la liste de threads bloqués.
-			    	\\ $\langle I,s$ $S,E,\langle C',C''\rangle$ $C,\langle \emptyset,ST\rangle,\langle CS,SSI\rangle,D,H,IP\rangle 
+			    	\smallbreak 
+			    	$\langle I,s$ $S,E,\langle C',C''\rangle$ $C,\langle \emptyset,ST\rangle,\langle CS,SSI\rangle,D,H,IP\rangle 
 			    	\\\longrightarrow_{secdv4} \langle IP,\emptyset,\epsilon,\emptyset,\langle W,ST\langle s,\langle I,s$ $S,E,\langle C',C''\rangle$ $C,D\rangle\rangle\rangle,\langle CS,SSI\rangle,\emptyset,H,IP+1\rangle$ \\
 			    	avec $\beta(CS,s) = faux$
 			    	\item[]	
-			    	
+			    	\newpage
 			    	\item[] \textbf{Émission :} On émet un signal donc on mets dans la file d'attente tous les threads attendant le signal.
-			    	\\ $\langle I,s$ $S,E,emit$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
+			    	\smallbreak
+			    	$\langle I,s$ $S,E,emit$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
 			    	\longrightarrow_{secdv4} \langle I,Unit$ $S,E,C,TL',\langle CS',SSI\rangle,D,H,IP\rangle$\\
 			    	avec $\varepsilon(CS,s) = CS'$ et TL' = $\langle W',ST'\rangle$ et TL = $\langle W,ST\rangle$ :
 			    	\begin{itemize}
@@ -894,19 +926,17 @@
 			    	
 			    	\item[] \textbf{Récupération dans la file d'attente :} On a plus rien à traité et on a aucune sauvegarde, du coup 
 			    	\\on change le thread courant par le thread en tête de la file d'attente.
-			    	\\$\langle I,V$ $S,E,\epsilon,\langle\langle I',S',E',C,D\rangle W,ST\rangle,SI,\emptyset,H,IP\rangle 
+			    	\smallbreak
+			    	$\langle I,V$ $S,E,\epsilon,\langle\langle I',S',E',C,D\rangle W,ST\rangle,SI,\emptyset,H,IP\rangle 
 			    	\longrightarrow_{secdv4} \langle I',V$ $S',E',C,\langle W,ST\rangle,SI,D,H,IP\rangle$
 			    	\item[]
 			    	
 			    	\item[] \textbf{Fin d'instant logique :} On a plus rien à traiter, on a aucune sauvegarde et on a plus rien dans la file d'attente, c'est la fin d'un instant logique.
-			    	\\$\langle I,V$ $S,E,\epsilon,\langle\emptyset,ST\rangle,SI,\emptyset,H,IP\rangle 
+			    	\smallbreak
+			    	$\langle I,V$ $S,E,\epsilon,\langle\emptyset,ST\rangle,SI,\emptyset,H,IP\rangle 
 			    	\longrightarrow_{secdv4} \langle I,V$ $S,E,\epsilon,\langle W,\emptyset\rangle,SI',\emptyset,H,IP\rangle$\\
 			    	avec W = ST avec tous ces éléments qui prennent en compte l'absence de l'émission du signal attendu
-			    	\\ SI' = $\langle CS',SSI'\rangle$ et SI = $\langle CS,SSI\rangle$
-			    	\begin{itemize}
-			    		\item[] CS' = CS avec les listes de valeurs remise à zéro ainsi que le booléen représentant l'émission est mis à faux
-			    		\item[] SSI' = SSI avec tous les signaux émit à l'instant qui vient de finir et leurs listes de valeurs associé
-			    	\end{itemize}
+			    	\\et  $\alpha(SI)$ = $SI'$ 
 			    	\item[]
 			    	
 		    	\end{itemize}
@@ -914,16 +944,19 @@
 			   	\item[]
 			   	\begin{itemize}
 			   		\item[] \textbf{Application neutre :} On a une application sur rien, cela revient juste à rien faire.
-			     	\\ $\langle I,S,E,ap$ $C,TL,SI,D,H,IP\rangle
+			     	\smallbreak 
+			     	$\langle I,S,E,ap$ $C,TL,SI,D,H,IP\rangle
 			   		\longrightarrow_{secdv4} \langle I,S,E,C,TL,SI,D,H,IP\rangle$
 			   	\end{itemize}
 			    
 				\item[]
 			\end{enumerate}
-		
 			\bigbreak
 			\bigbreak
-			la machine SECD version 4 peut s'arrêter dans 3 états différents:
+			
+			
+			\textbf{\textit{la machine SECD version 4 peut s'arrêter dans 3 états différents:}}
+			\smallbreak
 			\begin{itemize}
 				\item[] on a une \textbf{constante b} tels que $\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv4},\langle\emptyset,\emptyset\rangle,\langle\emptyset,\emptyset\rangle,\emptyset,\emptyset,\emptyset,1\rangle \\
 				\twoheadrightarrow_{secdv4} \langle I,b$ $S,E,\epsilon,\langle\emptyset,\emptyset\rangle,SI,\emptyset,H,IP\rangle$;
@@ -1131,10 +1164,18 @@
 			
 			\subsection{Les différentes versions faite pour rendre la machine SECD concurrente}
 				\subsubsection{1ère version des règles de la machine SECD Concurrente}\label{SECDConc1}
-					Soit $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ avec :
+					\smallbreak
+					Cette version ajoute les prémisse de la concurrence dans la machine SECD avec la possibilité de créér des threads le present et l'émission mais sans l'initialisation de la machine se qui la rend inutilisable. Ce point est rectifié dans la version 2.
+					\bigbreak
+					
+					\textbf{\textit{Soit}} $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ \textbf{\textit{avec :}}
 					
 					\begin{itemize}
-						\item[] $\widehat{S}$ = ... | $\langle C',C''\rangle$ $\widehat{S}$ | Remp $\widehat{S}$
+						\item[] $\widehat{S}$ = ... 
+						\begin{itemize}
+							\item[|] $\langle C',C''\rangle$ $\widehat{S}$
+							\item[|] Remp $\widehat{S}$
+						\end{itemize}
 						\item[] $\widehat{\varepsilon}$ = ... 
 						\item[] $\widehat{C}$ = ... 
 						\begin{itemize}
@@ -1145,43 +1186,70 @@
 							\item[|] $emit_{s}$ $\widehat{C}$ 
 						\end{itemize}
 						\item[] $\widehat{W}$ = $\{\widehat{D},...\}$
-						\item[] $\widehat{ST}$ = $\{\langle s,\widehat{D}\rangle,...\}$
+						\item[] $\widehat{ST}$ = $\{...,\langle s,\widehat{D}\rangle,...\}$
 						\item[] $\widehat{SI}$ = $\{ s,...\}$
 						\item[] $\widehat{D}$ = ...
 					\end{itemize}
 					\bigbreak
+					\bigbreak
 					
 					
-					Les nouvelles règles sont les suivantes :
+					\textbf{\textit{Les nouvelles règles sont les suivantes :}}
 					\smallbreak
 					\begin{enumerate}
 					\item $\langle\widehat{S},\widehat{\varepsilon},b$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle b$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
-					\item $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
-					\item $\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
+					\item[]
+					\item $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ 
+					\\où $\widehat{V} = \varepsilon(X)$
+					\item[]
+					\item $\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ 
+					\\où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
+					\item[]
 					\item $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+					\item[]
 					\item $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\widehat{W},\widehat{ST},\widehat{SI},\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
+					\item[]
 					\item $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+					\item[]
 					\item $\langle\widehat{V}$ Remp $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
-					\item $\langle$ Remp $\widehat{V}\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
-					\item $\langle$ Remp $\widehat{V}\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+					\item[]
+					\item $\langle$Remp $\widehat{V}$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+					\item[]
+					\item $\langle$Remp $\widehat{V}$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+					\item[]
 					\item $\langle\widehat{S},\widehat{\varepsilon},bspawn$ $\widehat{C'}$ $espawn$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle$ Remp $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W}\langle\widehat{S},\widehat{E},\widehat{C'},\widehat{D}\rangle,\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+					\item[]
 					\item $\langle\widehat{S},\widehat{\varepsilon},\langle C',C''\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\langle C',C''\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+					\item[]
 					\item $\langle\langle C',C''\rangle $ $\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\widehat{W},\widehat{ST},s$ $\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\widehat{S},\widehat{\varepsilon},C'\widehat{C},\widehat{W},\widehat{ST},s$ $\widehat{SI},\widehat{D}\rangle$
-					\item $\langle\langle C',C''\rangle $ $\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{D'}\rangle$ $\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{W},\widehat{ST}\langle s,\langle\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\widehat{D}\rangle\rangle,\widehat{SI},\widehat{D'}\rangle$ avec s $\notin \widehat{SI}$ 
-					\item $\langle\langle C',C''\rangle $ $\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\emptyset,\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\emptyset,\emptyset,\emptyset,\emptyset,\widehat{ST}\langle s,\langle\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\widehat{D}\rangle\rangle,\emptyset,\emptyset\rangle$ avec s $\notin \widehat{SI}$ 
+					\item[]
+					\item $\langle\langle C',C''\rangle $ $\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{D'}\rangle$ $\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{W},\widehat{ST}\langle s,\langle\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\widehat{D}\rangle\rangle,\widehat{SI},\widehat{D'}\rangle$ \\avec s $\notin \widehat{SI}$ 
+					\item[]
+					\item $\langle\langle C',C''\rangle $ $\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\emptyset,\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\emptyset,\emptyset,\emptyset,\emptyset,\widehat{ST}\langle s,\langle\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\widehat{D}\rangle\rangle,\emptyset,\emptyset\rangle$ 
+					\\avec s $\notin \widehat{SI}$ 
+					\item[]
 					\item $\langle\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D'}\rangle$ $\widehat{W},\widehat{ST},\widehat{SI},\emptyset\rangle \longmapsto_{secdv1} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D'}\rangle$
-					\item  $\langle\widehat{S},\widehat{\varepsilon},\emptyset,\emptyset,\widehat{ST},\widehat{SI},\emptyset\rangle \longmapsto_{secdv1} \langle\widehat{S},\widehat{\varepsilon},\emptyset,\widehat{W},\emptyset,\emptyset,\emptyset\rangle$ avec $\widehat{W}$ = tout les éléments de $\widehat{ST}$ qui prennent leurs 2nd choix 
-					\item $\langle\widehat{S},\widehat{\varepsilon},emit_{s}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W'},\widehat{ST'},\widehat{SI},\widehat{D}\rangle$\\ avec $\widehat{W'}$ = $\widehat{W}$ $\cup$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s et\\
-					avec $\widehat{ST'}$ = $\widehat{ST}$ $\setminus$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s
+					\item[]
+					\item  $\langle\widehat{S},\widehat{\varepsilon},\emptyset,\emptyset,\widehat{ST},\widehat{SI},\emptyset\rangle \longmapsto_{secdv1} \langle\widehat{S},\widehat{\varepsilon},\emptyset,\widehat{W},\emptyset,\emptyset,\emptyset\rangle$ 
+					\\avec $\widehat{W}$ = tout les éléments de $\widehat{ST}$ qui prennent leurs 2nd choix 
+					\item[]
+					\item $\langle\widehat{S},\widehat{\varepsilon},emit_{s}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle \widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W'},\widehat{ST'},\widehat{SI},\widehat{D}\rangle$ 
+					\\avec $\widehat{W'}$ = $\widehat{W}$ $\cup$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s et
+					\\avec $\widehat{ST'}$ = $\widehat{ST}$ $\setminus$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s
 				\end{enumerate}
+				\bigbreak
 				\bigbreak
 				
 				
-				la machine SECD version 1 peut s'arrêter dans 3 états différents:
+				\textbf{\textit{la machine SECD version 1 peut s'arrêter dans 4 états différents:}}
+				\smallbreak
 				\begin{itemize}
 					\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv1} \langle b,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon\rangle$;
+					\item[]
 					\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv1} \langle\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon'}\rangle,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon\rangle$;
+					\item[]
 					\item[]$\longrightarrow$ on a un \textbf{remplacement} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv1} \langle Remp,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon\rangle$;
+					\item[]
 					\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
 				\end{itemize}
 				\newpage
@@ -1189,7 +1257,11 @@
 				
 				
 				\subsubsection{2ème version des règles de la machine SECD Concurrente}\label{SECDConc2}
-				Soit $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ avec :
+				\smallbreak
+				Cette version ajoute l'initialisation du signal promis dans la version 1 tout en modifiant un peu les éléments contenus dans la chaîne de contrôle.
+				\bigbreak
+				
+				\textbf{\textit{Soit}} $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ \textbf{\textit{avec :}}
 				
 				\begin{itemize}
 					\item[] $\widehat{S}$  = ... 
@@ -1202,8 +1274,7 @@
 					\end{itemize}
 					\item[] $\widehat{C}$  = ... 
 					\begin{itemize}
-						\item[|] [ $\langle C',C''\rangle$ $\widehat{C}$ 
-						\item[|] $present_{s}$ $\widehat{C}$ ] changé en $\langle s,C',C''\rangle$ $\widehat{C}$
+						\item[|] [ $\langle C',C''\rangle$ $\widehat{C}$ $present_{s}$ $\widehat{C}$ ] changé en $\langle s,C',C''\rangle$ $\widehat{C}$
 						\item[|] $\langle s,\widehat{C'}\rangle$ $\widehat{C}$ 
 					\end{itemize}
 					\item[] $\widehat{W}$  = ...
@@ -1212,83 +1283,143 @@
 					\item[] $\widehat{D}$  = ...
 				\end{itemize}
 				\bigbreak
+				\bigbreak
 				
-				
-				Les nouvelles règles sont les suivantes :
+				\textbf{\textit{Les nouvelles règles sont les suivantes :}}
 				\smallbreak
 				\begin{enumerate}
 					\item \sout{$\langle\widehat{S},\widehat{\varepsilon},\langle C',C''\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\langle C',C''\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$}
+					\item[]
 					\item \sout{$\langle\langle C',C''\rangle $ $\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\widehat{W},\widehat{ST},s$ $\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\widehat{S},\widehat{\varepsilon},C'\widehat{C},\widehat{W},\widehat{ST},s$ $\widehat{SI},\widehat{D}\rangle$}
+					\item[]
 					\item \sout{$\langle\langle C',C''\rangle $ $\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{D'}\rangle$ $\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{W},\widehat{ST}\langle s,\langle\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\widehat{D}\rangle\rangle,\widehat{SI},\widehat{D'}\rangle$ avec s $\notin \widehat{SI}$ }
-					\item \sout{$\langle\langle C',C''\rangle $ $\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\emptyset,\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\emptyset,\emptyset,\emptyset,\emptyset,\widehat{ST}\langle s,\langle\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\widehat{D}\rangle\rangle,\emptyset,\emptyset\rangle$ avec s $\notin \widehat{SI}$}
-					\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv2} \langle\widehat{S},\widehat{\varepsilon},C'$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ si s $\in \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
-					\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\langle\widehat{S'},\widehat{\varepsilon'},C''',\widehat{D'}\rangle\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv2} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{W},\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\widehat{D'}\rangle$ si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
-					\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\emptyset,\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv2} \langle\epsilon,\emptyset,\emptyset,\emptyset,\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\emptyset\rangle$ si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+					\item[]
+					\item \sout{$\langle\langle C',C''\rangle $ $\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\emptyset,\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv1} \langle\emptyset,\emptyset,\emptyset,\emptyset,\widehat{ST}\langle s,\langle\widehat{S},\widehat{\varepsilon},present_{s}$ $\widehat{C},\widehat{D}\rangle\rangle,\emptyset,\emptyset\rangle$ 
+					\\avec s $\notin \widehat{SI}$}
+					\item[]
+					\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv2} \langle\widehat{S},\widehat{\varepsilon},C'$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ 
+					\\si s $\in \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+					\item[]
+					\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\langle\widehat{S'},\widehat{\varepsilon'},C''',\widehat{D'}\rangle\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv2} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{W},\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\widehat{D'}\rangle$ 
+					\\si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+					\item[]
+					\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\emptyset,\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv2} \langle\epsilon,\emptyset,\emptyset,\emptyset,\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\emptyset\rangle$ 
+					\\si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+					\item[]
 					\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C'\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle \longmapsto_{secdv2} \langle\epsilon,\widehat{\varepsilon}[init \leftarrow s],C',\widehat{W},\widehat{ST},\widehat{SI},\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
 				\end{enumerate}
 				\bigbreak
+				\bigbreak
 				
-				
-				la machine SECD version 2 peut s'arrêter dans 4 états différents:
+				\textbf{\textit{la machine SECD version 2 peut s'arrêter dans 4 états différents:}}
+				\smallbreak
 				\begin{itemize}
 					\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv2},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv2} \langle b,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon\rangle$;
+					\item[] 
 					\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv2},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv2} \langle\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon'}\rangle,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon\rangle$;
+					\item[] 
 					\item[]$\longrightarrow$ on a un \textbf{remplacement} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv2},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv2} \langle Remp,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon\rangle$;
+					\item[]
 					\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
 				\end{itemize}
 				\newpage
 				
 				\subsubsection{3ème version des règles de la machine SECD Concurrente}\label{SECDConc3}
-					Soit $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ avec :
+					\smallbreak
+					Cette version ajoute le contrôle des erreurs sans propagation via l'ajout d'un gestionnaire d'erreur dans la machine.
+					\bigbreak
+					
+					\textbf{\textit{Soit}} $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ \textbf{\textit{avec :}}
 				
 				\begin{itemize}
 					\item[] $\widehat{S}$ = ... 
 					\item[] $\widehat{\varepsilon}$ = ... 
-					\item[] $\widehat{C}$ = ... |  $throw_{e} $ $\widehat{C}$ | $\langle e,\langle\widehat{C'},\langle X,\widehat{C''}\rangle\rangle\rangle$ $\widehat{C}$ 
+					\item[] $\widehat{C}$ = ...
+					\begin{itemize}
+						\item[|] $throw_{e} $ $\widehat{C}$
+						\item[|] $\langle e,\langle\widehat{C'},\langle X,\widehat{C''}\rangle\rangle\rangle$ $\widehat{C}$ 
+					\end{itemize}
 					\item[] $\widehat{W}$ = ...
 					\item[] $\widehat{ST}$ = ...
 					\item[] $\widehat{SI}$ = ...
 					\item[] $\widehat{D}$ = ...
-					\item[] $\widehat{H}$ = $\epsilon$ | $\langle e,\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle\rangle$ 
-					\item[] $\widehat{V}$ = ... | $erreur_{e}$
+					\item[] $\widehat{H}$ = $\epsilon$ 
+					\begin{itemize}
+						\item[|] $\langle e,\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle\rangle$ 
+					\end{itemize}
+					\item[] $\widehat{V}$ = ... 
+					\begin{itemize}
+						\item[|] $erreur_{e}$
+					\end{itemize}
 				\end{itemize}
 				\bigbreak
+				\bigbreak
 				
-				Les nouvelles règles sont les suivantes :
+				\textbf{\textit{Les nouvelles règles sont les suivantes :}}
 				\smallbreak
 				\begin{enumerate}
 					\item $\langle\widehat{S},\widehat{\varepsilon},b$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle b$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
-					\item $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ où $\widehat{V} = \varepsilon(X)$
-					\item $\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
+					\item[]
+					\item $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\\où $\widehat{V} = \varepsilon(X)$
+					\item[]
+					\item $\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ 
+					\\où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
+					\item[]
 					\item $\langle\widehat{S},\widehat{\varepsilon},throw_{e}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle erreur_{e}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item[]
 					\item $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item[]
 					\item $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\widehat{W},\widehat{ST},\widehat{SI},\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle,\widehat{H}\rangle$
+					\item[]
 					\item $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle,\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item[]
 					\item $\langle\widehat{V}$ Remp $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item[]
 					\item $\langle$ Remp $\widehat{V}\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item[]
 					\item $\langle$ Remp $\widehat{V}\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item[]
 					\item $\langle\widehat{S},\widehat{\varepsilon},bspawn$ $\widehat{C'}$ $espawn$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle$ Remp $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W}\langle\widehat{S},\widehat{E},\widehat{C'},\widehat{D}\rangle,\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
-			    	\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\widehat{S},\widehat{\varepsilon},C'$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ si s $\in \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+					\item[]
+			    	\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\widehat{S},\widehat{\varepsilon},C'$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ 
+			    	\\si s $\in \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+			    	\item[]
 			    	\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\langle\widehat{S'},\widehat{\varepsilon'},C''',\widehat{D'}\rangle\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{W},\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\widehat{D'},\widehat{H}\rangle$ si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
-			    	\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\emptyset,\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\epsilon,\emptyset,\emptyset,\emptyset,\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\emptyset,\widehat{H}\rangle$ si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+			    	\item[]
+			    	\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\emptyset,\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\epsilon,\emptyset,\emptyset,\emptyset,\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\emptyset,\widehat{H}\rangle$\\si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+			    	\item[]
 				    \item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C'\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\epsilon,\widehat{\varepsilon}[init \leftarrow s],C',\widehat{W},\widehat{ST},\widehat{SI},\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle,\widehat{H}\rangle$
+				    \item[]
 					\item $\langle\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D'}\rangle$ $\widehat{W},\widehat{ST},\widehat{SI},\emptyset,\widehat{H}\rangle \longmapsto_{secdv3} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D'},\widehat{H}\rangle$
+					\item[]
 					\item  $\langle\widehat{S},\widehat{\varepsilon},\emptyset,\emptyset,\widehat{ST},\widehat{SI},\emptyset,\widehat{H}\rangle \longmapsto_{secdv3} \langle\widehat{S},\widehat{\varepsilon},\emptyset,\widehat{W},\emptyset,\emptyset,\emptyset,\widehat{H}\rangle$\\ avec $\widehat{W}$ = tout les éléments de $\widehat{ST}$ qui prennent leurs 2nd choix 
+					\item[]
 					\item $\langle\widehat{S},\widehat{\varepsilon},emit_{s}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W'},\widehat{ST'},\widehat{SI},\widehat{D},\widehat{H}\rangle$\\ avec $\widehat{W'}$ = $\widehat{W}$ $\cup$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s et\\
 					avec $\widehat{ST'}$ = $\widehat{ST}$ $\setminus$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s
+					\item[]
 					\item $\langle\widehat{S},\widehat{\varepsilon},\langle e,\langle\widehat{C'},\langle X,\widehat{C''}\rangle\rangle\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\widehat{S},\widehat{\varepsilon},\widehat{C'}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\langle e,\langle\widehat{S},\widehat{\varepsilon},\langle X,\widehat{C''}\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle\rangle\rangle$
-					\item $\langle\widehat{S},\widehat{\varepsilon},throw_{e}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\langle e,\langle\widehat{S'},\widehat{\varepsilon'},\langle X,\widehat{C''}\rangle$ $\widehat{C'},\widehat{W'},\widehat{ST'},\widehat{SI'},\widehat{D'},\widehat{H}\rangle\rangle\rangle \longmapsto_{secdv3}$\\$ \langle\widehat{S'},\widehat{\varepsilon'},\langle X,\widehat{C''}\rangle$ $throw_{e}$ $\widehat{C},\widehat{W'},\widehat{ST'},\widehat{SI'},\widehat{D'},\widehat{H}\rangle$
-					\item $\langle\widehat{S},\widehat{\varepsilon},throw_{e}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\langle e',\langle\widehat{S'},\widehat{\varepsilon'},\langle X,\widehat{C''}\rangle$ $\widehat{C'},\widehat{W'},\widehat{ST'},\widehat{SI'},\widehat{D'},\widehat{H}\rangle\rangle\rangle \longmapsto_{secdv3}$\\on regarde dans $\widehat{H}$ récursivement si il y a un gestionnaire pour l'erreur e
+					\item[]
+					\item $\langle\widehat{S},\widehat{\varepsilon},throw_{e}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\langle e,\langle\widehat{S'},\widehat{\varepsilon'},\langle X,\widehat{C''}\rangle$ $\widehat{C'},\widehat{W'},\widehat{ST'},\widehat{SI'},\widehat{D'},\widehat{H}\rangle\rangle\rangle 
+					\\\longmapsto_{secdv3} \langle\widehat{S'},\widehat{\varepsilon'},\langle X,\widehat{C''}\rangle$ $throw_{e}$ $\widehat{C},\widehat{W'},\widehat{ST'},\widehat{SI'},\widehat{D'},\widehat{H}\rangle$
+					\item[]
+					\item $\langle\widehat{S},\widehat{\varepsilon},throw_{e}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\langle e',\langle\widehat{S'},\widehat{\varepsilon'},\langle X,\widehat{C''}\rangle$ $\widehat{C'},\widehat{W'},\widehat{ST'},\widehat{SI'},\widehat{D'},\widehat{H}\rangle\rangle\rangle 
+					\\\longmapsto_{secdv3}$ on regarde dans $\widehat{H}$ récursivement si il y a un gestionnaire pour l'erreur e
+					\item[]
 					\item $\langle\widehat{S},\widehat{\varepsilon},throw_{e}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\emptyset\rangle \longmapsto_{secdv3} \langle\widehat{S},\widehat{\varepsilon},throw_{e},\emptyset,\emptyset,\emptyset,\emptyset,\emptyset\rangle$  
 				\end{enumerate}
 				\bigbreak
+				\bigbreak
 				
-				
-				la machine SECD version 3 peut s'arrêter dans 4 états différents:
+				\textbf{\textit{la machine SECD version 3 peut s'arrêter dans 4 états différents:}}
+				\smallbreak
 				\begin{itemize}
 					\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv3},\emptyset,\emptyset,\emptyset,\epsilon,\emptyset\rangle \twoheadrightarrow_{secdv3} \langle b,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon,\widehat{H}\rangle$;
+					\item[]
 					\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv3},\emptyset,\emptyset,\emptyset,\epsilon,\emptyset\rangle \twoheadrightarrow_{secdv3} \langle\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon'}\rangle,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon,\widehat{H}\rangle$;
+					\item[]
 					\item[]$\longrightarrow$ on a un \textbf{remplacement} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv3},\emptyset,\emptyset,\emptyset,\epsilon,\emptyset\rangle \twoheadrightarrow_{secdv3} \langle Remp,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon,\widehat{H}\rangle$;
+					\item[]
 					\item[]$\longrightarrow$ on a une \textbf{erreur e} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv3},\emptyset,\emptyset,\emptyset,\epsilon,\emptyset\rangle \twoheadrightarrow_{secdv3} \langle erreur_{e},\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon,\widehat{H}\rangle$;
 				\end{itemize}
 		\newpage
