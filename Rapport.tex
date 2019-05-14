@@ -10,6 +10,7 @@
 \usepackage{hyperref}
 \usepackage{textcomp}
 \usepackage{ulem}
+\usepackage{multicol}
 
 \begin{document}
 		
@@ -31,116 +32,212 @@
 
 		
 		
+		Le Laboratoire d'Informatique Fondamentale d'Orléans (LIFO) est un laboratoire de l'Université d'Orléans et de l'INSA Centre-Val de Loire. 
+		\smallbreak
+		Les recherches menées au LIFO concernent la science informatique et les STIC. Elles vont de l'algorithmique au traitement des langues naturelles, de l'apprentissage au parallélisme massif, de la vérification et la certification à la sécurité des systèmes, du Big Data aux systèmes embarqués. Le laboratoire est structuré en cinq équipes :
+		\begin{enumerate}
+			\item[-] Contraintes et Apprentissage (CA)
+		    \item[-] Graphes, Algorithmes et Modèles de Calcul (GAMoC)
+		    \item[-] Langages, Modèles et Vérification (LMV)
+		    \item[-] PaMDA                                                   %%% il n'y a que l'acronyme 
+			\item[-]  Sécurité des Données et des Systèmes (SDS)
+		\end{enumerate}
+		\medbreak
 		
-	
-	
+		Afin d'offrir une autre approche du laboratoire et de promouvoir la coopération entre équipes, les thématiques transversales suivantes ont été définies :
+		\begin{enumerate}
+			\item[-] Masse de données et calcul haute performance
+			\item[-] Modélisation et algorithmique
+			\item[-] Sécurité et sûreté
+		\end{enumerate}
+		\medbreak
+		
+		J'ai eu l'occasion de travailler une partie de l'équipe LMV, dans l'optique d'un stage rémunéré de 3 mois; voici une la description de l'équipe LMV.
+		\medbreak
+		
+		L'objectif de l'équipe LMV est de contribuer à l'amélioration de la compréhension des problèmes de sureté et de sécurité des systèmes  informatiques. Des logiques «ordres partiels» aux langages de programmation usuels, les membres de l'équipes travaillent sur ces questions à différents niveaux d'abstraction et selon différents points de vue tout en cherchant à comprendre les relations fondamentales entre ces différentes approches. L'équipe est structurée autour de deux axes : la correction de programmes et la vérification de systèmes.
+		\begin{enumerate}
+			\item[-] Le premier axe s'intéresse au développement de techniques liées aussi bien à la vérification de propriétés spécifiques qu'à la satisfaction de propriété fonctionnelle quelconques. Dans les deux cas les propriétés peuvent être assurées par construction ou a posteriori (vérification déductive).
+			\item[-] Le second axe repose d'une part sur l'étude de techniques à base de systèmes de réécriture comme par exemple les problèmes d'accessibilités dans les systèmes de réécriture et d'autre part sur l'étude des logiques dites «ordres partiels» et leur utilisation dans le cadre du développement d'outils de vérification efficaces.
+		\end{enumerate}
+		\bigbreak
+		
+		Le stage a pour intitulé \textit{Programmation réactive synchrone, implantation d’une machine virtuelle}. Il se place dans la thématique \textit{Sémantique des systèmes concurrents}. L’objectif de ce stage est de réaliser l’implantation d’une machine virtuelle (type JVM) destinée à exécuter un langage réactif synchrone purement fonctionnel encadré par deux maîtres de conférence : Mme Bousdira et Mr Dabrowski.
+		\smallbreak
+		Pour cela une recherche préliminaire sur des machines existantes sera faite en premier lieu pour ce mettre à niveau. Ensuite une recherche sur la programmation réactive servira à comprendre les enjeux du sujet et à cerner les différentes contraintes que la réactivité apporte. Les recherches étant faite on pourra s'atteler à la création de notre propre machine concurrente. Pour finir, on pourra conclure par un résumer le travail abattu, des choix qui pourrait être améliorés, des voies qui n'ont pas été choisie et de ce qu'il reste à faire.
 	\newpage
-	\section{Recherche préliminaire}
-		\subsection{Les  $\lambda$-calculs}
 		
-			\subsubsection{Les règles de $\beta$-réduction}
-			\begin{itemize}
-				\item X$_{1}$[X$_{1}$ $\leftarrow$ M] = M
-				\item X$_{2}$[X$_{1}$ $\leftarrow$ M] = X$_{2}$ 
-				\\où X$_{1}$$\neq$X$_{2}$
-				\item ($\lambda$X$_{1}$.M$_{1}$)[X$_{1}$ $\leftarrow$ M$_{2}$] =  ($\lambda$X$_{1}$.M$_{1}$)
-				\item ($\lambda$X$_{1}$.M$_{1}$)[X$_{2}$ $\leftarrow$ M$_{2}$] = ($\lambda$X$_{3}$.M$_{1}$[X$_{1}$ $\leftarrow$ X$_{3}$][X$_{2}$ $\leftarrow$ M$_{2}$]) 
-				\\où X$_{1}$$\neq$X$_{2}$, X$_{3}$$\notin$ FV(M$_{2}$) 
-				et X$_{3}$$\notin$ FV(M$_{1}$)$\backslash${X$_{1}$} 
-				\item (M$_{1}$ M$_{2}$)[X $\leftarrow$ M$_{3}$] = 
-				(M$_{1}$[X $\leftarrow$ M$_{3}$] M$_{2}$[X $\leftarrow$ M$_{3}$])
-			\end{itemize}
-			
-			\subsubsection{Les règles de réduction générale}
-			\begin{itemize}
-				\item ($\lambda$X$_{1}$.M) $\alpha$ ($\lambda$X$_{1}$.M[X$_{1}$ $\leftarrow$ X$_{2}$])
-				où X$_{2}$$\notin$  FV(M)
-				\item (($\lambda$X$_{1}$.M$_{1}$)M$_{2}$) $\beta$ M$_{1}$[X $\leftarrow$ M$_{2}$]
-				\item ($\lambda$X.(M X)) $\eta$ M 
-				où X$\notin$  FV(M)
-			\end{itemize}
-			
-			\textit{La réduction générale \textbf{n} = $\alpha \cup \beta \cup \eta$}.
-			
-			\subsubsection{Les règles de priorité}
-			\begin{itemize}
-				\item Application associative à gauche : M1 M2 M3 = ((M1 M2)M3)
-				\item Application prioritaire par rapport au abstraction : $\lambda$X.M1 M2 =  $\lambda$X.(M1 M2)
-				\item Les abstractions consécutives peuvent être regroupé : $\lambda$XYZ.M = ($\lambda$X.($\lambda$Y.($\lambda$Z.M)))
-			\end{itemize}
-			
 		
-			\subsubsection{Comment savoir si on a une forme normal ?}
+	
+	\section{Programmation réactive}
+	 
+	 Ayant un niveau de 3ème année de licence informatique, beaucoup de lacune par rapport au travail demandé, il m'a fallu me mettre à niveau. Pour cela, trois articles ont été étudié : 
+	 \begin{enumerate}
+	 	\item[-] \hyperref[ReactiveML]{[1]} expliquant le fonctionnement du ReactiveML un langage de programmation réactif
+	 	\item[-] \hyperref[ZINC]{[2]} développant toute la réflexion que l'on doit avoir pour créer un langage de programmation
+	 	\item[-] \hyperref[Calculi]{[3]} expliquant le fonctionnement des machines avec les $\lambda$-calculs
+	 \end{enumerate}
+ 	 Pour mieux structurer ma démarche, je vais diviser mes recherches en deux sous parties. La première sera lié à mes recherches "préliminaires" qui ne sont pas lié directement à la programmation réactive. Elle regroupera l'article \hyperref[ZINC]{[2]} et \hyperref[Calculi]{[3]}. La second sera dédié à l'article \hyperref[ReactiveML]{[1]} qui est lui complètement axé sur le programmation réactive. 
+	 
+		\subsection{Recherches préliminaires}
 			
-			Une expression est une forme normale si on ne peut pas r\'{e}duire l'expression via une $\beta$ ou $\eta$ r\'{e}dution.
+			\subsubsection{Comment créer un langage de programmation ?}
+	
+			\subsubsection{Les  $\lambda$-calculs}
+			
+				\paragraph{Les bases :}
+				Le $\lambda$-calcul est un système formel inventé par Alonzo Church dans les années 1930, qui fonde les concepts de fonction et d'application. On y manipule des expressions appelées $\lambda$-expressions, où la lettre grecque $\lambda$ est utilisée pour lier une variable. Il y a trois termes qui composent les $\lambda$-expressions :
+				\begin{enumerate}
+					\item les variables : \textit{x, y...} sont des $\lambda$-termes 
+					\item les applications : \textit{u v} est un $\lambda$-terme si \textit{u} et \textit{v} sont des $\lambda$-termes , on peut voir l'application comme ceci : si \textit{u} est une fonction et \textit{v} un argument, alors \textit{u v} est le résultat de l'application à \textit{v} de la fonction \textit{u}; 
+					\item les abstractions : $\lambda$ \textit{x.v} est un $\lambda$-terme si \textit{x} est une variable et \textit{v} un $\lambda$-terme, on peut voir l'abstraction comme ceci : $\lambda$ \textit{x.v} peut être interprétée comme la fonction qui, à \textit{x}, associe \textit{v}, où \textit{v} contient en général des occurrences de \textit{x}.
+				\end{enumerate}
+				\bigbreak
+				
+				
+				\paragraph{La réduction :}Maintenant que nous connaisons les termes qui composent les $\lambda$-expressions, il faut savoir comment les faire interagir entre eux. Les $\lambda$-calculs fonctionnent par réductions des termes grâce à l'application. Il existe trois règles de \textbf{réduction générale :}
+				\begin{itemize}
+					\item[-] $(\lambda X_{1}.M)~\alpha~(\lambda X_{1}.M[X_{1} \leftarrow X_{2}])$
+					où $X_{2}~\notin~FV(M)$ : elle sert à renommer les variables
+					\item[-] $((\lambda X_{1}.M_{1})M_{2})~\beta~M_{1}[X \leftarrow M_{2}]$ : elle substitue une variable par un $\lambda$-terme
+    				\item[-] $(\lambda X.(M~X))~\eta~M$ 
+					où $X~\notin~FV(M)$ : elle représente le cas si on a $g$ une fonction qui à $x$ associe  $f(x)$  avec f une fonction alors autant utiliser directement la fonction f.
+				\end{itemize}
+				\textit{La réduction générale \textbf{n} = $\alpha \cup \beta \cup \eta$}.
+				\bigbreak
+				
+				
+				La $\beta$-réduction est plus complexe et à lui-même ses propres règles :
+				\begin{itemize}
+					\item $X_{1}[X_{1} \leftarrow M]~= M$
+					\item $X_{2}[X_{1} \leftarrow M]~= X_{2}$ où $X_{1}\neq X_{2}$
+					\item $(\lambda X_{1}.M_{1})[X_{1} \leftarrow M_{2}]~= (\lambda X_{1}.M_{1})$
+					\item $(\lambda X_{1}.M_{1})[X_{2} \leftarrow M_{2}]~= (\lambda X_{3}.M_{1}[X_{1} \leftarrow X_{3}][X_{2} \leftarrow M_{2}])$ 
+					\\où $X_{1} \neq X_{2}$, $X_{3} \notin FV(M_{2})$ et $X_{3} \notin FV(M_{1})\backslash{X_{1}}$ 
+					\item $(M_{1}~M_{2})[X \leftarrow M_{3}]~=(M_{1}[X \leftarrow M_{3}]~M_{2}[X \leftarrow M_{3}])$
+				\end{itemize}
+				\bigbreak
+			
+			
+				\paragraph{Simplification :}Afin d'allèger l'écriture en enlevement des parenthèses, il y a des règles de prioritées qui sont les suivantes :
+				\begin{itemize}
+					\item Application associative à gauche : $M1~M2~M3~= ((M1~M2)M3)$
+					\item Application prioritaire par rapport au abstraction : $\lambda X.M1~M2~= \lambda X.(M1~M2)$
+					\item Les abstractions consécutives peuvent être regroupé : $\lambda XYZ.M~= (\lambda X.(\lambda Y.(\lambda Z.M)))$
+				\end{itemize}
+				\medbreak
+				
+				\begin{multicols}{2}{
+					\begin{itemize}
+						\item[] Version écriture lourde
+						\item[] $((\lambda x.((\lambda z.z)~x))~\underline{(\lambda x.x)})$
+						\item[$\rightarrow_{n}^{\alpha}$] $(\underline{(\lambda x.((\lambda z.z)~x))}~(\lambda y.y))$
+						\item[$\rightarrow_{n}^{\eta}$] $\underline{((\lambda z.z)~(\lambda y.y))}$
+						\item[$\rightarrow_{n}^{\beta}$] $(\lambda y.y)$
+					\end{itemize}
+				
+					\begin{itemize}
+						\item[] Version écriture légère
+						\item[] $\lambda x.(\lambda z.z)~x)~\underline{\lambda x.x}$
+						\item[$\rightarrow_{n}^{\alpha}$] $\underline{\lambda x.(\lambda z.z)~x)}~\lambda y.y$
+						\item[$\rightarrow_{n}^{\eta}$] $\underline{(\lambda z.z)~\lambda y.y}$
+						\item[$\rightarrow_{n}^{\beta}$] $\lambda y.y$
+					\end{itemize}
+				}
+				\end{multicols}
+				\bigbreak
+				
+				
+			\paragraph{Forme normale}
+			
+			\textit{Une expression est une forme normale si on ne peut pas réduire l'expression via une $\beta$ ou $\eta$ rédution.}
 			\medbreak
 			
-			\textbf{Th\'{e}or\`{e}me de la forme normale} :
-			Si on peut r\'{e}duire L tels que L =$_{n}$ M et L =$_{n}$ N et que N et M sont en forme normal alors M = N à n renommage pr\`{e}s.
+			\textbf{Théorème de la forme normale :}
+			Si on peut réduire $L$ tels que $L =_{n}~M$ et $L =_{n}~N$ et que $N$ et $M$ sont en forme normale alors $M = N$ à n renommage près.
 			\medbreak	
 			
-			\textbf{Th\'{e}or\`{e}me de Church-Rosser ( pour =$_{n}$ )}:
-			Si on a M =n N, alors il existe un L' tels que M $\twoheadrightarrow n_{n}$ L' et N $\twoheadrightarrow n_{n}$ L'.
+			\textbf{Théorème de Church-Rosser ( pour $=_{n}$ ) :}
+			Si on a $M =_{n} N$, alors il existe un $L'$ tels que $M \twoheadrightarrow n_{n}~L'$ et $N \twoheadrightarrow n_{n}~L'$.
 			\medbreak
 			
-			Certaines lambda calcul expression n'a pas de forme normal comme: (($\lambda$x.x x) ($\lambda$x.x x). 
-			\newline
-			D'autres en ont une mais on peut rentrer dans une boucle infini de r\'{e}duction si on choisi la mauvaise r\'{e}duction.
-			\medbreak
-			Le probl\`{e}me est quand on \'{e}value un argument de la fonction qui n'est jamais utilis\'{e}. Pour palier \`{a} ça, on utilise la strat\'{e}gie d'appliquer toujours les $\beta$ et $\eta$ réduction le plus \`{a} gauche. Ces règles sont les suivantes:
+			Certaines lambda calcul expression n'a pas de forme normal comme: $((\lambda x.x x)~(\lambda x.x x)$. 
+			D'autres en ont une mais on peut rentrer dans une boucle infini de réduction si on choisi la mauvaise réduction.
 			\medbreak
 			
+			Le problème est quand on évalue un argument de la fonction qui n'est jamais utilisé. Pour palier à ça, on utilise la stratégie d'appliquer toujours les $\beta$ et $\eta$ réductions le plus à gauche. Ces règles sont les suivantes:
 			\begin{itemize}
-				\item M $\longrightarrow_{\bar{n}}$ N if M $\beta$ N
-				\item M $\longrightarrow_{\bar{n}}$ N if M $\eta$ N
-				\item ($\lambda$X.M) $\longrightarrow_{\bar{n}}$ ($\lambda$X.N)
-				\item (M N) $\longrightarrow_{\bar{n}}$ (M' N) if M $\longrightarrow_{\bar{n}}$ M'
-				\\ et $\forall$L, (M N) $\beta$ L impossible et (M N) $\eta$ L impossible
-				\item (M N) $\longrightarrow_{\bar{n}}$ (M N') if N $\longrightarrow_{\bar{n}}$ N'
-				\\ et M est une forme normale
-				\\ et  $\forall$L, (M N) $\beta$ L impossible et (M N) $\eta$ L impossible
+				\item[-] $M \longrightarrow_{\bar{n}}~N$ si $M~\beta~N$
+				\item[-] $M \longrightarrow_{\bar{n}}~N$ si $M~\eta~N$
+				\item[-] $(\lambda X.M) \longrightarrow_{\bar{n}}~(\lambda X.N)$
+				\item[-] $(M~N) \longrightarrow_{\bar{n}}~(M'~N)$ si $M \longrightarrow_{\bar{n}}~M'$
+				\\ et $\forall~L$, $(M~N)~\beta~L$ impossible et $(M~N)~\eta~L$ impossible
+				\item[-] $(M~N) \longrightarrow_{\bar{n}}~(M~N')$ si $N \longrightarrow_{\bar{n}}~N'$
+				\\ et $M$ est une forme normale
+				\\ et  $\forall~L$, $(M~N)~\beta~L$ impossible et $(M~N)~\eta~L$ impossible
 			\end{itemize}
+			\smallbreak
+			Cette solution est sûr mais reste peut utilisé car elle est assez lente. 
+			\medbreak
 			
-			Cette solution est s\^{u}r mais reste peut utilis\'{e} car elle est assez lente. 
-			\newpage
+			La preuve de la compréhension des $\lambda$-calculs a été faite à travers de l'implantation de celle-ci en OCaml. Cependant cette implantation reste simplifiée et une version plus complète sera présenté après. 
+			
 		\subsection{ISWIM}	
 			
+			ISWIM est un langage impératif à noyau fonctionnel ; en fait c'est une syntaxe lisible du $\lambda$-calcul à laquelle sont ajoutés des variables mutables et des définitions. Grâce au $\lambda$-calcul, ISWIM comporte des fonctions d'ordre supérieur et une portée lexicale des variables. Le but est de décrire des concepts en fonction d'autres concepts. Ce langage à fortement influencé les autres langages qui l'ont suivi, principalement dans la programmation focntionnelle.
+			\medbreak
+			 
 			ISWIM à une grammaire étendue de la grammaire des $\lambda$-calcul.
 			\smallbreak
-			M,N,L,K =
+			$M,N,L,K =$
 			\begin{itemize}
-				\item[|] X (les variables)
-				\item[|] ($\lambda$X.M)
-				\item[|] (M M)
-				\item[|] b (les constantes b )
-				\item[|] (o$^{n}$ M ... M) avec o$^{n}$ les fonctions primitives
+				\item[ ] les termes des $\lambda$-calculs :
+				\item[|] $X$ 
+				\item[|] $(\lambda X.M)$
+				\item[|] $(M~N)$
+				\item[ ] les nouveaux termes :
+				\item[|] $b$ : une constante
+				\item[|] $(o^{n}~M~...~N)$ avec $o^{n}$ les fonctions primitives
 			\end{itemize}
 			\medbreak
 			
-			V,U,W =
+			On definit une valeur tels que :
+			\smallbreak
+			$V,U,W =$
 			\begin{itemize}
-				\item[|] b
-				\item[|] X
+				\item[|] $b$
+				\item[|] $X$
 				\item[|] $(\lambda X.M)$
 			\end{itemize}
+			\bigbreak
 			
 			
-			Une application n'est jamais une valeur alors qu'une abstraction est toujours une valeur.
-			\medbreak
-			Les règles de $\beta$-réductions sont les mêmes que celle pour les $\lambda$-calcul avec 2 ajouts:
+			Les règles de $\beta$-réductions sont les mêmes que celle pour les $\lambda$-calcul avec 2 ajouts qui sont les suivants :
 			\begin{itemize}
-				\item b[X $\longleftarrow$ M] = b
-				\item (o$^{n}$ M$_{1}$ ... M$_{n}$)[X $\longleftarrow$ M] = (o$^{n}$ M$_{1}$[X $\longleftarrow$ M] ... M$_{n}$[X $\longleftarrow$ M])
+				\item $b[X \longleftarrow M] = b$
+				\item $(o^{n}~M_{1}~...~M_{n})[X \longleftarrow M] = (o^{n}~M_{1}[X \longleftarrow M]~...~M_{n}[X \longleftarrow M])$
 			\end{itemize}
+			\bigbreak
 			
-			La réduction est la même quand lambda calcul mais on vérifie juste que la réduction est faite avec une valeur. (($\lambda$X.M) V) $\beta_{v}$ M[X $\longleftarrow$ V]. Cette restriction permet une sorte d'ordre dans les calculs.
+			
+			La $\beta$-réduction est la même quand $\lambda$-calcul mais à la condition que la réduction soit faite avec une valeur $V$. 
+			\begin{itemize}
+				\item[-] $((\lambda X.M)~V)~\beta_{v}~M[X \longleftarrow V]$
+			\end{itemize} 
 			\smallbreak
-			$\eta$ et $\alpha$ réduction ne sont plus vue comme tel.L'$\eta$-réduction n'est pas utilisé et l'$\alpha$-réduction sera utilisé que pour chercher une équivalence entre deux termes.
+			Cette restriction permet une sorte d'ordre dans les calculs.
 			\medbreak
-			Cependant on ajoute une $\delta$-réduction en plus qui va s'occuper de gérer les réductions avec opérations.
-			\newpage
 			
-			\subsection{Les différentes machines traitées}\label{Machine}
+			Cependant l'$\eta$ et l'$\alpha$ réduction ne sont plus vue comme tel. En effet l'$\eta$-réduction n'est pas utilisé car plus très utile et contraignante à programmer.L'$\alpha$-réduction sera utilisé pour rechercher une équivalence entre deux termes, on le renommera d'ailleurs l'équivalence en $\alpha$-équivalence.
+			\medbreak
+			
+			Une réduction a été rajouté pour gérer les opérateurs : c'est la $\delta$-réduction. Ce qui nous donne une nouvelle \textbf{n}-réduction tels que \textbf{n}-réduction = $\beta_{v} \cup \delta$
+			\bigbreak
+			
+			Un exemple d'implantation a été codé en Ocaml.
+			
+		\subsection{Les différentes machines traitées}\label{Machine}
+			
 			\subsubsection{CC Machine}
 			
 			CC vient des termes \textbf{Control string} et \textbf{Context} qui représente respectivement:
@@ -406,13 +503,13 @@
 		\textbf{\textit{Une suite de fonctions ont été écrite pour simplifier la lecture des règles. Les voici :}}
 		\smallbreak
 		\begin{itemize}
-			\item[] $\iota(SI) =$ une fonction qui prends l'identifiant du dernier signal créer l'incrémente pour en créer un nouveau et retourner l'identifiant du signal créée avec la liste mise à jour.
+			\item[] $\iota(SI)$ une fonction qui prends l'identifiant du dernier signal créer l'incrémente pour en créer un nouveau et retourner l'identifiant du signal créée avec la liste mise à jour.
 			\\ \textbf{Exemple :} $\iota(\{...,\langle s,\langle emit,CS,SSI\rangle\rangle\}) =$ $(s' ,\{...,\langle s,\langle emit,CS,SSI\rangle\rangle,\langle s',\langle false,\{\},\{\}\rangle\rangle\})$ avec $s' = s+1$
 			\item[] 
 			\item[] $SI(s)$ une fonction qui retourne le 2nd élément du couple correspondant à s.
 			\\\textbf{Exemple :} $SI(s) =$ $\langle emit,CS,SSI,TL\rangle$
 			\item[]  
-			\item[] $\tau(SI)$ = une fonction qui prends tous les éléments bloqués et les retourne en prenant en compte que le signal n'est pas émit, mets les liste de valeurs courantes en liste partagés si il est émit 
+			\item[] $\tau(SI)$ une fonction qui prends tous les éléments bloqués et les retourne en prenant en compte que le signal n'est pas émit, mets les liste de valeurs courantes en liste partagés si il est émit 
 			\\ \textbf{Exemple :} $\tau(TL,SI) =$ $\forall$ $si \in SI$ : 
 			\begin{itemize}
 				\item[] - $\langle true,CS,SSI,\{\}\rangle$ $\rightarrow$ $\langle false,\{\},CS,\{\}\rangle$
@@ -421,6 +518,11 @@
 			\end{itemize}
 			\item[]
 			\item[] $[(s,i) \leftarrow b]$ est une fonction qui mets dans la liste de valeurs ,de s pour le thread i, b et mets à vrai le booléen $emit$.
+			\item[] 
+			\item[] $SSI(s,i)$ une fonction qui retourne le triplet lié à un signal et un thread dans les signaux partagés.
+			\\ \textbf{Exemple :} $SSI(s,i) = \langle i,CI,IL\rangle$
+			\item[] 
+			\item[] $CI(i)$ une fonction qui retourne la constante et décale l'itérateur
 		\end{itemize}
 		\newpage
 		
@@ -509,37 +611,43 @@
 				\item[] \textbf{Constante :} On a une constante, on la déplace dans la pile.
 				\smallbreak
 				$\langle S,E,n$ $C,D\rangle 
-				\longrightarrow_{secdv5} \langle n$ $S,E,C,D\rangle$ avec $n = b$ ou $signal$
+				\longrightarrow_{secdv5} 
+				\langle n$ $S,E,C,D\rangle$ avec $n = b$ ou $signal$
 				\item[]
 				
 				\item[] \textbf{Substitution :} On a une abstraction, on créer une fermeture avec celle-ci et l'environnement courant et on la place dans la pile.
 				\smallbreak
 				$\langle S,E,X$ $C,D\rangle
-				\longrightarrow_{secdv5} \langle V$ $S,E,C,D\rangle$ avec E(X) = V
+				\longrightarrow_{secdv5} 
+				\langle V$ $S,E,C,D\rangle$ avec E(X) = V
 				\item[]
 				
 				\item[] \textbf{Opération :} On a un opérateur et le nombre de constante nécessaire dans la pile, \\via la fonction $\delta$ on retourne le résultat dans la pile.
 				\smallbreak
 				$\langle b_{n},...,b_{1}$ $S,E,prim_{o^{n}}$ $C,D\rangle
-				\longrightarrow_{secdv5} \langle V$ $S,E,C,D\rangle$ avec $\delta(o^{n}$ $b_{1}...b_{n}) = V$
+				\longrightarrow_{secdv5} 
+				\langle V$ $S,E,C,D\rangle$ avec $\delta(o^{n}$ $b_{1}...b_{n}) = V$
 				\item[]
 				
 				\item[]  \textbf{Abstraction :} On a une abstraction, on créer une fermeture comportant l'abstraction et l'environnement courant et on mets la fermeture dans la pile.
 				\smallbreak
 				$\langle S,E,\langle X,C'\rangle$ $C,D\rangle
-				\longrightarrow_{secdv5} \langle \langle\langle X,C'\rangle,E\rangle$ $S,E,C,D\rangle$
+				\longrightarrow_{secdv5} 
+				\langle \langle\langle X,C'\rangle,E\rangle$ $S,E,C,D\rangle$
 				\item[]
 				
 				\item[]  \textbf{Application :} On a une application, donc on sauvegarde dans le dépôt, on ajoute une substitution et on remplace la chaîne de contrôle et l'environnement par ceux présent dans la fermeture.
 				\smallbreak
 				$\langle V$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,ap$ $C,D\rangle
-				\longrightarrow_{secdv5} \langle \emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle$
+				\longrightarrow_{secdv5} 
+				\langle \emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle$
 				\item[] 
 				
 				\item[] \textbf{Récupération de sauvegarde :}  On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
 				\smallbreak  
 				$\langle V$ $S,E,\epsilon,\langle S',E',C,D\rangle\rangle
-				\longrightarrow_{secdv5} \langle V$ $S',E',C,D\rangle$
+				\longrightarrow_{secdv5} 
+				\langle V$ $S',E',C,D\rangle$
 			\end{itemize}
 			\item[]
 			
@@ -549,71 +657,84 @@
 			\item[]
 			\begin{itemize}
 				\item[]  \textbf{Création thread :} On veut créer un nouveau thread.
-				\smallbreak $\langle\langle I,\langle\langle X,C'\rangle, E\rangle$ $S,E,spawn$ $C,D\rangle,TL,SI,IP\rangle 
-				\longrightarrow_{secdv4} \langle\langle I,S,E,C,D\rangle,TL$ $\langle IP,S,E,C',D\rangle,SI,IP+1\rangle$
+				\smallbreak 
+				$\langle\langle I,\langle\langle X,C'\rangle, E\rangle$ $S,E,spawn$ $C,D\rangle,TL,SI,IP\rangle 
+				\longrightarrow_{secdv5} 
+				\langle\langle I,S,E,C,D\rangle,TL$ $\langle IP,S,E,C',D\rangle,SI,IP+1\rangle$
 				\item[]
 				
 				\item[] \textbf{Ajouter dans un signal :} On ajoute une constante dans une liste de valeurs d'un signal et mets à vraie le booléen $emit$
 				\smallbreak
 				$\langle\langle I,s$ $b$ $S,E,put$ $C,D\rangle,TL,SI\rangle
-				\longrightarrow_{secdv4} \langle\langle I,S,E,C,D\rangle,TL,SI$ $[(s,I) \leftarrow b]\rangle$ 
+				\longrightarrow_{secdv5} 
+				\langle\langle I,S,E,C,D\rangle,TL,SI$ $[(s,I) \leftarrow b]\rangle$ 
 				\item[]
 				
-				\item[] à faire \textbf{Prendre une valeur partagée (possible) :} On prends dans la liste de valeurs d'un signal partagé lié \\
-				à un identifant une constante via la fonction $\gamma$ .
+				\item[] à faire \textbf{Prendre une valeur partagée (possible) :} On prends dans la liste de valeurs d'un signal partagé lié à un thread et on décale l'itérateur.
 				\smallbreak
-				$\langle I,s$ $b$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
-				\\\longrightarrow_{secdv4} \langle I,\emptyset,E'[X \leftarrow V],C',TL,\langle CS,SSI'\rangle,\langle S,E,C,D\rangle,H,IP\rangle$\\
-				avec $ \gamma(SSI,s,I,b) = \langle V,SSI'\rangle$ si il reste une valeur à prendre et $s$ partagé
+				$\langle\langle I,s$ $b$ $n$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,D\rangle,TL,SI\rangle 
+				\longrightarrow_{secdv5} 
+				\langle\langle I,\emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle,TL,SI\rangle$
+				\\ si $SSI(s,b) = \langle b,CI,IL\rangle$ avec $I \notin IL$ alors $CI(I) = V$
 				\item[]
 				
 				\item[] à faire \textbf{Prendre une valeur partagée (impossible) :} On prends dans la liste de valeurs d'un signal partagé lié à un identifant une constante via la fonction $\gamma$ mais on a déjà tout pris donc on lève une erreur.
 				\smallbreak 
 				$\langle I,s$ $b$ $n$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
-				\\\longrightarrow_{secdv4} \langle I,n$ $S,E,C,TL,\langle CS,SSI'\rangle,D,H,IP\rangle$\\
-				avec $ \gamma(SSI,s,I,b) = n$ si il reste aucune valeur à prendre et $s$ partagé
+				\\\longrightarrow_{secdv5} 
+				\langle I,n$ $S,E,C,TL,\langle CS,SSI'\rangle,D,H,IP\rangle$
+				\\avec $ \gamma(SSI,s,I,b) = n$ si il reste aucune valeur à prendre et $s$ partagé
 				\item[]
 				
 				\item[] \textbf{Initialisation signal :} On initialise le signal via la fonction $\iota$.
 				\smallbreak 
 				$\langle\langle I,S,E,init$ $C,D\rangle,TL,SI\rangle 
-				\longrightarrow_{secdv4} \langle\langle I,signal$ $S,E,C,D\rangle,TL,SI'\rangle$
+				\longrightarrow_{secdv4}
+				\langle\langle I,signal$ $S,E,C,D\rangle,TL,SI'\rangle$
 				avec $\iota(SI) = (signal,SI')$
 				\item[]	
 				
 				\item[] \textbf{Présence du signal :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il est émit donc on prends le 1er choix.
 				\smallbreak
 				$\langle\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle,TL,SI\rangle 
-				\longrightarrow_{secdv5} \langle\langle I,S,E,C'$ $C,D\rangle,TL,SI\rangle$ \\
-				avec $SI(s) = \langle vraie,CS,SSI,TL\rangle$
+				\longrightarrow_{secdv5} 
+				\langle\langle I,S,E,C'$ $C,D\rangle,TL,SI\rangle$ 
+				\\avec $SI(s) = \langle vraie,CS,SSI,TL\rangle$
 				\item[]
 				
 				
-				\item[] à faire \textbf{ Thread bloqué remplacé :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il n'est pas émit et il y a un thread dans la file d'attente
+				\item[] à vérifier\textbf{ Thread bloqué remplacé :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il n'est pas émit et il y a un thread dans la file d'attente
 				donc on mets ce thread dans la liste de threads bloqués et on prends le thread en tête de la file.
 				\smallbreak
 				$\langle\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle,\langle I',S',E',C''',D'\rangle$ $TL,SI\rangle 
-				\\\longrightarrow_{secdv5} \langle\langle I',S',E',C''',D'\rangle,TL,SI[s \leftarrow \langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle]\rangle$ \\avec $SI(s) = \langle faux,CS,SSI,TL\rangle$
+				\\\longrightarrow_{secdv5} 
+				\langle\langle I',S',E',C''',D'\rangle,TL,SI'\rangle$ 
+				\\avec $SI(s) = \langle faux,CS,SSI,TL'\rangle$
+				\\et $SI'(s) = \langle faux,CS,SSI,TL'$ $\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle\rangle$
 				\item[]	
 				
-				\item[] à faire \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il n'est pas émit donc on mets ce thread dans la liste de threads bloqués.
+				\item[] à vérifier \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il n'est pas émit donc on mets ce thread dans la liste de threads bloqués.
 				\smallbreak 
-				$\langle I,s$ $S,E,\langle C',C''\rangle$ $C,\langle \emptyset,ST\rangle,\langle CS,SSI\rangle,D,H,IP\rangle 
-				\\\longrightarrow_{secdv4} \langle IP,\emptyset,\epsilon,\emptyset,\langle W,ST\langle s,\langle I,s$ $S,E,\langle C',C''\rangle$ $C,D\rangle\rangle\rangle,\langle CS,SSI\rangle,\emptyset,H,IP+1\rangle$ \\
-				avec $\beta(CS,s) = faux$
+				$\langle\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,C,D\rangle,\emptyset,SI,IP\rangle 
+				\longrightarrow_{secdv5} 
+				\langle\langle IP,\emptyset,\epsilon,\emptyset,\emptyset\rangle,\emptyset,SI',IP+1\rangle$
+				\\avec $SI(s) = \langle faux,CS,SSI,TL'\rangle$
+				\\et $SI'(s) = \langle faux,CS,SSI,TL'$ $\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle\rangle$
 				\item[]
 				
 				\item[] \textbf{Récupération dans la file d'attente :} On a plus rien à traité et on a aucune sauvegarde, du coup 
 				\\on change le thread courant par le thread en tête de la file d'attente.
 				\smallbreak
 				$\langle\langle I,V$ $S,E,\epsilon,\emptyset\rangle,\langle I',S',E',C,D\rangle$ $TL,SI\rangle 
-				\longrightarrow_{secdv4} \langle\langle I',V$ $S',E',C,D\rangle,TL,SI\rangle$
+				\longrightarrow_{secdv5} 
+				\langle\langle I',V$ $S',E',C,D\rangle,TL,SI\rangle$
 				\item[]
 				
 				\item[] \textbf{Fin d'instant logique :} On a plus rien à traiter, on a aucune sauvegarde et on a plus rien dans la file d'attente, c'est la fin d'un instant logique.
 				\smallbreak
 				$\langle\langle I,V$ $S,E,\epsilon,\emptyset \rangle ,\emptyset,SI\rangle 
-				\longrightarrow_{secdv4} \langle\langle I,V$ $S,E,\epsilon,\emptyset\rangle,TL,SI'\rangle$
+				\longrightarrow_{secdv5} 
+				\langle\langle I,V$ $S,E,\epsilon,\emptyset\rangle,TL,SI'\rangle$
 				\\avec  $\tau(SI)$ = ($SI',TL$) si il n'y a plus de thread bloqué
 				\item[]
 				
@@ -624,7 +745,8 @@
 				\item[] \textbf{Application neutre :} On a une application sur rien, cela revient juste à rien faire.
 				\smallbreak 
 				$\langle S,E,ap$ $C,D\rangle
-				\longrightarrow_{secdv5} \langle S,E,C,D\rangle$
+				\longrightarrow_{secdv5} 
+				\langle S,E,C,D\rangle$
 			\end{itemize}
 			
 			\item[]
@@ -636,12 +758,15 @@
 		\textbf{\textit{la machine SECD version 4 peut s'arrêter dans 3 états différents:}}
 		\smallbreak
 		\begin{itemize}
-			\item[] on a une \textbf{constante b} tels que $\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv5},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
-			\twoheadrightarrow_{secdv5} \langle\langle I,b$ $S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
+			\item[] on a une \textbf{constante b} tels que 
+			$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv5},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
+			\twoheadrightarrow_{secdv5} 
+			\langle\langle I,b$ $S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
 			\item[] 
 			\item[] on a une \textbf{abstraction function} tels que
 			$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv5},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
-			\twoheadrightarrow_{secdv5} \langle\langle I,\langle\langle X,C\rangle,E\rangle$ $S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
+			\twoheadrightarrow_{secdv5} 
+			\langle\langle I,\langle\langle X,C\rangle,E\rangle$ $S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
 			\item[] 
 			\item[] on a une \textbf{erreur} 
 		\end{itemize}
