@@ -24,12 +24,13 @@
 	\tableofcontents
 	\newpage
 	
-	\section{Remerciement}
-		Avant tout développement sur mon sujet de stage, j'aimerai remercié mes 2 professeurs qui m'ont encadrés pour m'avoir permis de faire ce stage de recherche et de m'avoir aidé tout le long de celui-ci. J'ai beaucoup appris grâce à eux. Je remercie donc Madame Bousdira et Monsieur Dabrowski pour tout.
-	\bigbreak
+	
 	
 	\section{Introduction}
 
+		\paragraph{Remerciement}
+		Avant tout développement sur mon sujet de stage, j'aimerai remercié mes 2 professeurs qui m'ont encadrés pour m'avoir permis de faire ce stage de recherche et de m'avoir aidé tout le long de celui-ci. J'ai beaucoup appris grâce à eux. Je remercie donc Madame Bousdira et Monsieur Dabrowski pour tout.
+		\bigbreak
 		
 		
 		Le Laboratoire d'Informatique Fondamentale d'Orléans (LIFO) est un laboratoire de l'Université d'Orléans et de l'INSA Centre-Val de Loire. 
@@ -627,7 +628,7 @@
 					\paragraph{Comment savoir si un signal est présent ?}
 					\textit{Un signal est présent si il est émit.}
 					\smallbreak
-					C'est ici que la notion de temps logique va nous être utile. Via l'initialisation d'un signal on sait que l'on a un booléen pour savoir si un signal est émit donc le cas est émit est simple mais si il ne l'est pas ? 
+					C'est ici que la notion de temps logique va nous être utile. Via l'initialisation d'un signal on sait que l'on a un booléen pour savoir si un signal est émit donc le cas émit est simple mais si il ne l'est pas ? 
 					\smallbreak
 					\textit{Un signal est absent si il n'est pas émit durant l'instant logique.}
 					\smallbreak
@@ -648,12 +649,47 @@
 					\end{enumerate}
 					\medbreak
 					
-					Maintenant que l'on sait différencier les threads, 
+					Maintenant que l'on sait différencier les threads, on peut tester la présence d'un signal. La commande en elle-même a eu deux versions :
+					\begin{enumerate}
+						\item $\langle s,C',C''\rangle$ avec $s$ un signal et $C'$ et $c''$ deux expressions. Si vous avez bien suivi jusque là, vous aurez remarqué que les premières versions ont toujours le même problème récurrent : c'est une structure complexe que l'on veut mettre dans une machine qui traite que des éléments basiques et des commandes. Cette forme est donc utilisable mais n'est pas dans la logique de la machine de base.
+						\item $s~\langle\langle X,C'\rangle~\langle\langle X,C''\rangle~present$ avec $s$ un signal. Cette version parait plus compliqué, je m'en vais donc vous l'expliquez. On a le signal s jusque là rien de bien étonnant. Après on a deux abstractions, elles vont nous servir de protection pour nos deux possibilités de notre présence car elle empêche à la machine d'essayer de l'évaluer. Pour finir il y a le mot $present$ qui sert de commande pour comprendre que l'on veut faire un test.
+					\end{enumerate} 
+					\bigbreak
+					
+					
+					\paragraph{Récapitulatif :} Si on reprends le tout, pour faire notre teste de présence nous avons définit :
+					\begin{itemize}
+						\item[] - la forme de la commande : $s~\langle\langle X,C'\rangle~\langle\langle X,C''\rangle~present$ avec $s$ un signal
+						\item[] - la présence d'un signal : \textit{un signal est présent si il est émit dans l'instant courant}
+						\item[] - l'absence d'un signal : \textit{un signal est absent si il n'est pas émit durant tout l'instant courant}
+						\item[] - la fin de l'instant courant : \textit{l'instant courant est fini quand plus aucun thread ne peut plus effectuer d'instruction}
+						\item[] - une structure contenant les threads bloqués : $SI = \langle s , \langle emit , ST \rangle\rangle$ avec $s$ un signal, $emit$ le booléen représentant l'émission et $ST$ une liste de threads qui attendent $s$
+					\end{itemize}
+					\bigbreak
+					\bigbreak
+					
+					
+					
 					
 				\subsubsection{Émettre un signal}
-				\newpage
+					
+					Cette commande est sûrement la plus simple à mettre en place car tout a été fait en amont via les trois commandes précédente. La forme de la commande $emit$ n'a pas beaucoup bouger, les voici :
+					\begin{enumerate}
+						\item $emit_{s}$ Une forme inspiré de $prim_{o^{n}}$ mais la grosse erreur c'est quand mettant un signal $s$ en indice du $emit$ on à l'impression qu'il y a un $emit$ par signal $s$ or l'émission est indépendant du signal.
+						\item $s~emit$ avec $s$ un signal. Celle-ci est clair et fonctionne bien. 
+					\end{enumerate}
+					\medbreak
+					
+					Le faite d'émettre va impliqué deux chose sur notre machine :
+					\begin{enumerate}
+						\item Notre booléen présent dans le signal sera mis à vraie
+						\item Tous les threads présent dans le tuple du signal sera mis dans la file d'attenteS 
+					\end{enumerate} 
+				\bigbreak
+				\bigbreak
 				
 				
+					
 					
 				\subsubsection{Les règles de notre machine}
 				
@@ -741,75 +777,77 @@
 							\\$\forall$ $st \in ST$ : $\langle I,\langle\langle X',C''\rangle, E\rangle$ $\langle\langle X,C'\rangle, E\rangle$ $s$ $S,E,present$ $C,D\rangle$ $\rightarrow$ $ \langle I,S,E,C''$ $C,D\rangle$ et on l'ajoute à TL
 						\end{itemize}
 					\end{itemize}
-					\newpage
+					\bigbreak
+					\bigbreak
+					
 					
 					
 					
 					\textbf{\textit{Les éléments étant expliqués, voici les nouvelles règles de la machine :}}
 					\smallbreak
 					\begin{enumerate}
-						\item[] \textbf{Partie de base de la machine SECD} 
+						\item[] \textbf{Partie de base de la machine SECD :} Nous avons rajouter des règles mais la machine doit pouvoir traiter les mêmes informations que la machine de base donc on reprends directement les règles de la machine SECD. 
 						\item[]
 						\begin{itemize}
 							\item[] \textbf{Constante :} On a une constante, on la déplace dans la pile.
 							\smallbreak
 							$\langle S,E,n$ $C,D\rangle 
-							\longrightarrow_{secdv5} 
+							\longrightarrow_{TTLS} 
 							\langle n$ $S,E,C,D\rangle$ avec $n = b$ ou $signal$
 							\item[]
 							
 							\item[] \textbf{Substitution :} On a une abstraction, on créer une fermeture avec celle-ci et l'environnement courant et on la place dans la pile.
 							\smallbreak
 							$\langle S,E,X$ $C,D\rangle
-							\longrightarrow_{secdv5} 
+							\longrightarrow_{TTLS} 
 							\langle V$ $S,E,C,D\rangle$ avec E(X) = V
 							\item[]
 							
 							\item[] \textbf{Opération :} On a un opérateur et le nombre de constante nécessaire dans la pile, \\via la fonction $\delta$ on retourne le résultat dans la pile.
 							\smallbreak
 							$\langle b_{n},...,b_{1}$ $S,E,prim_{o^{n}}$ $C,D\rangle
-							\longrightarrow_{secdv5} 
+							\longrightarrow_{TTLS} 
 							\langle V$ $S,E,C,D\rangle$ avec $\delta(o^{n}$ $b_{1}...b_{n}) = V$
 							\item[]
 							
 							\item[]  \textbf{Abstraction :} On a une abstraction, on créer une fermeture comportant l'abstraction et l'environnement courant et on mets la fermeture dans la pile.
 							\smallbreak
 							$\langle S,E,\langle X,C'\rangle$ $C,D\rangle
-							\longrightarrow_{secdv5} 
+							\longrightarrow_{TTLS} 
 							\langle \langle\langle X,C'\rangle,E\rangle$ $S,E,C,D\rangle$
 							\item[]
 							
 							\item[]  \textbf{Application :} On a une application, donc on sauvegarde dans le dépôt, on ajoute une substitution et on remplace la chaîne de contrôle et l'environnement par ceux présent dans la fermeture.
 							\smallbreak
 							$\langle V$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,ap$ $C,D\rangle
-							\longrightarrow_{secdv5} 
+							\longrightarrow_{TTLS} 
 							\langle \emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle$
 							\item[] 
 							
 							\item[] \textbf{Récupération de sauvegarde :}  On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
 							\smallbreak  
 							$\langle V$ $S,E,\epsilon,\langle S',E',C,D\rangle\rangle
-							\longrightarrow_{secdv5} 
+							\longrightarrow_{TTLS} 
 							\langle V$ $S',E',C,D\rangle$
 						\end{itemize}
 						\item[]
 						
 						
 						
-						\item[] \textbf{Partie pour la concurrence} 
+						\item[] \textbf{Partie pour la concurrence :} Voici les règles rajoutées dans le but de gérer les threads et les signaux et donc de rendre la machine réactive. 
 						\item[]
 						\begin{itemize}
 							\item[]  \textbf{Création thread :} On veut créer un nouveau thread.
 							\smallbreak 
 							$\langle\langle\langle\langle X,C'\rangle, E\rangle$ $S,E,spawn$ $C,D\rangle,TL,SI\rangle 
-							\longrightarrow_{secdv5} 
+							\longrightarrow_{TTLS} 
 							\langle\langle S,E,C,D\rangle,TL$ $\langle S,E,C',D\rangle,SI\rangle$
 							\item[]
 							
 							\item[] \textbf{Initialisation signal :} On initialise le signal via la fonction $\iota$.
 							\smallbreak 
 							$\langle\langle S,E,init$ $C,D\rangle,TL,SI\rangle 
-							\longrightarrow_{secdv4}
+							\longrightarrow_{TTLS}
 							\langle\langle signal$ $S,E,C,D\rangle,TL,SI'\rangle$
 							avec $\iota(SI) = (signal,SI')$
 							\item[]	
@@ -817,7 +855,7 @@
 							\item[] \textbf{Présence du signal :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il est émit donc on prends le 1er choix.
 							\smallbreak
 							$\langle\langle \langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle,TL,SI\rangle 
-							\longrightarrow_{secdv5} 
+							\longrightarrow_{TTLS} 
 							\langle\langle S,E,C'$ $C,D\rangle,TL,SI\rangle$ 
 							\\avec $SI(s) = \langle vraie,TL\rangle$
 							\item[]
@@ -827,7 +865,7 @@
 							donc on mets ce thread dans la liste de threads bloqués et on prends le thread en tête de la file.
 							\smallbreak
 							$\langle\langle \langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle,\langle S',E',C''',D'\rangle$ $TL,SI\rangle 
-							\\\longrightarrow_{secdv5} 
+							\\\longrightarrow_{TTLS} 
 							\langle\langle S',E',C''',D'\rangle,TL,SI'\rangle$ 
 							\\avec $SI(s) = \langle faux,TL'\rangle$
 							et $SI'(s) = \langle faux,TL'$ $\langle \langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle\rangle$
@@ -836,7 +874,7 @@
 							\item[] à vérifier \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal, il n'est pas émit donc on mets ce thread dans la liste de threads bloqués.
 							\smallbreak 
 							$\langle\langle \langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,C,D\rangle,\emptyset,SI\rangle 
-							\longrightarrow_{secdv5} 
+							\longrightarrow_{TTLS} 
 							\langle\langle \emptyset,\epsilon,\emptyset,\emptyset\rangle,\emptyset,SI'\rangle$
 							\\avec $SI(s) = \langle faux,TL'\rangle$
 							et $SI'(s) = \langle faux,TL'$ $\langle\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle\rangle$
@@ -846,32 +884,32 @@
 							\\on change le thread courant par le thread en tête de la file d'attente.
 							\smallbreak
 							$\langle\langle V$ $S,E,\epsilon,\emptyset\rangle,\langle S',E',C,D\rangle$ $TL,SI\rangle 
-							\longrightarrow_{secdv5} 
+							\longrightarrow_{TTLS} 
 							\langle\langle V$ $S',E',C,D\rangle,TL,SI\rangle$
 							\item[]
 							
 							\item[] \textbf{Fin d'instant logique :} On a plus rien à traiter, on a aucune sauvegarde et on a plus rien dans la file d'attente, c'est la fin d'un instant logique.
 							\smallbreak
 							$\langle\langle V$ $S,E,\epsilon,\emptyset \rangle ,\emptyset,SI\rangle 
-							\longrightarrow_{secdv5} 
+							\longrightarrow_{TTLS} 
 							\langle\langle V$ $S,E,\epsilon,\emptyset\rangle,TL,SI'\rangle$
 							\\si $\forall~si \in SI : si = \langle emit,\{\}\rangle$ alors $\tau(SI)$ = ($SI',TL$) 
 							\item[]
 							
 						\end{itemize}
-						\item[] \textbf{Partie commune} 
+						\item[] \textbf{Partie commune :} Quand on rajoute des règles le plus gros risque est de créer des conflit avec les anciennes règles. Les plus gros problèmes sont avec l'application et la récupération de sauvegarde car $spawn$ et $emit$ ne retournent rien dans la pile donc il faut pouvoir continuer de faire fonctionner la machine avec ces deux cas. 
 						\item[]
 						\begin{itemize}
 							\item[] \textbf{Application neutre :} On a une application sur rien, cela revient juste à rien faire.
 							\smallbreak 
 							$\langle S,E,ap$ $C,D\rangle
-							\longrightarrow_{secdv5} 
+							\longrightarrow_{TTLS} 
 							\langle S,E,C,D\rangle$
 							\item[]
 							\item[] \textbf{Récupération de sauvegarde avec pile vide :}  On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
 							\smallbreak  
 							$\langle \emptyset,E,\epsilon,\langle S',E',C,D\rangle\rangle
-							\longrightarrow_{secdv5} 
+							\longrightarrow_{TTLS} 
 							\langle S',E',C,D\rangle$
 						\end{itemize}
 						
@@ -885,13 +923,13 @@
 					\smallbreak
 					\begin{itemize}
 						\item[] - on a une \textbf{constante b} tels que 
-						$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv5},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
-						\twoheadrightarrow_{secdv5} 
+						$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTLS},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
+						\twoheadrightarrow_{TTLS} 
 						\langle\langle I,b$ $S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
 						\item[] 
 						\item[] - on a une \textbf{abstraction function} tels que
-						$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv5},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
-						\twoheadrightarrow_{secdv5} 
+						$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTLS},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
+						\twoheadrightarrow_{TTLS} 
 						\langle\langle I,\langle\langle X,C\rangle,E\rangle$ $S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
 						\item[] 
 						\item[] - on a une \textbf{erreur} 
