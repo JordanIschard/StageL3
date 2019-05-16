@@ -1,7 +1,7 @@
 open String ;;
 open Printf ;;
 open List ;;
-open LangISWIMConc2E.ISWIM ;;
+open LangISWIMConcE2.ISWIM ;;
 
 
 module SECDMachine =
