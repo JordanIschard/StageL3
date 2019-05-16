@@ -299,7 +299,8 @@
 				\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
 			\end{itemize}
 			\hyperref[SCC]{Un exemple de la machine SCC est fait dans les Annexes.}
-			\bigbreak
+			\newpage
+			
 			
 			
 			\subsubsection{CK Machine}
@@ -398,7 +399,7 @@
 			Dans les langages tels que Java, Pascal ou encore C la façon de faire de la machine SECD est plus naturel. Par contre  dans les langages $\lambda$-calculs, Scheme ou encore ML c'est la façon de faire de la machine CEK qui est la plus naturel.
 			\medbreak
 			
-			La machine SECD est composé d'une pile ($\widehat{S}$), d'un environnement ($\widehat{\varepsilon}$), d'une chaîne de contrôle ($\widehat{C}$) et d'une sauvegarde ($\widehat{D}$). Les différentes définitions de ces élément sont les suivantes :
+			La machine SECD est composé d'une pile ($\widehat{S}$), d'un environnement ($\widehat{\varepsilon}$), d'une chaîne de contrôle ($\widehat{C}$) et d'un dépôt ($\widehat{D}$). Les différentes définitions de ces élément sont les suivantes :
 			\smallbreak
 			\begin{itemize}
 				\item[] $\widehat{S}$ = $\epsilon$ | $\widehat{V}$ $\widehat{S}$ 
@@ -498,8 +499,7 @@
 			\newpage
 			
 			
-		
-					\newpage
+			
 		\section{Langage fonctionnel réactif}\label{SECDConc4}
 			
 			Le but est de réutilisé la une des machines étudié et de la rendre réactive. Les 1ère machines sont trop simple pour être utilisé ce qui nous reste la machine CEK et la machine SECD. Cependant il nous reste une contrainte qui va réussir à nous départager. En effet, il nous faut une machine qui fait un appel par valeur, c'est-à-dire que les paramètres seront évalués avant la fonction. La machine SECD remplit ce critère donc c'est celle que nous utiliserons comme base.
@@ -510,10 +510,116 @@
 			
 			
 			\subsection{Les bases de la réactivité de la machine}
-			
 				
-			
-			
+				Avant tout développement sur l'implantation il faut pouvoir bien cerner le principe de la réactivité. Le but est de créer un "dialogue" entre plusieurs partie de la machine. 
+				\medbreak
+				
+				En arrondissant les angles, on peut voir ça comme une discussion. Je m'explique, la discussion c'est notre machine, on a une personne que l'on va nommer Monsieur X qui représente notre programme principale. On peut dire qu'il initie la discussion. Monsieur X va introduire des personnes dans la discussion, ces personnes sont nos parties de programme indépendant. Monsieur X va commencer a parler puis laissera la parole quand il aura finit de parler ou ne sera pas quoi retorquer et ainsi de suite. Pendant qu'une personne parle il peut donner une information qui va être utilisé par un autre et dinc qui va se remettre dans la discussion. Ces informations seront représenter par des signaux. Quand tout le monde a finit de parler c'est la fin de la discussion ce qui représente la fin de la machine.
+				\medbreak
+				
+				Un point qu'il faut bien comprendre ces que l'absence d'une information (d'un signal) est aussi important que ça présence. Un exemple bête, si vous demandez à quelqu'un si il dort une réponse donne une information aussi importante qu'une absence de réponse.
+				\medbreak
+				
+				Un autre point délicat est la fin d'un instant logique. Pour savoir si on te répond ou pas, tu attends un instant et tu en déduis que l'on ne te répondra pas. Pour la machine c'est pareil. L'instant courant c'est lorsque tout le monde discute, quand plus personne parle c'est la fin de l'instant courant. On passe à l'instant suivant et ceux qui attendait une information spécifique vont sortir un autre argument et la discussion recommence jusqu'à ce que plus personne n'est d'argument
+				\medbreak
+				
+				Le principe étant expliqué, nous pouvons rentrer dans les détails. L'idée est d'avoir plusieurs machine SECD qui se parle donc il faut créer une structure plus large qui peut les stocker. On part cependant d'une seule chaîne de contrôle donc il faut pouvoir créer ces "mini-machines". Ces "mini-machines" sont ce que l'ont va appeler des \textbf{threads}.
+				\bigbreak
+				
+				
+				\subsubsection{Un Thread}
+					
+					\paragraph{Qu'est-ce qu'un thread}
+					Un thread est l'équivalent d'un processus, il a sa propre pile d'éxécution mais peut récupèrer des informations sur une mémoire partagée. En simplifiant si on fait un lien avec la machine SECD ont peut dire que chaque thread à est une machine SECD et et toute ces machines SECD vont communiquer entre-elle.
+					
+					\paragraph{Quelle forme doit avoir un thread ?} 
+					Un thread est ,comme dit plus haut, une machine SECD en soit donc elle va prendre cette forme c'est-à-dire que l'on va avoir $T~=~\langle S,E,C,D\rangle$. Pour l'instant c'est tout ce qui nous ait nécessaire dans le thread.
+					
+					\paragraph{Comment les stocker ?}
+					C'est bien beau de créer des threads mais il faut pouvoir les stocker. Pour cela, on va se demander si l'on veut un ordre ou pas dans notre stockage. Il faut noter un point important pour faire une machine fonctionnel il vaut mieux avoir une machine déterministe.
+					\medbreak
+					
+					\textit{Machine déterministe :} Une machine est déterministe si pour une entrée donnée on a une seule sortie possible et un unique "chemin" possible dans la machine, c'est-à-dire une unique suite de transitions possibles.
+					\medbreak
+					
+					Pour éviter de la rendre non déterministe, on va opter pour une file d'attente $TL$ tels que $\forall~tl \in Tl~:~tl = T$.
+					\bigbreak
+					
+				\subsubsection{Un Signal} 
+				
+					\paragraph{Qu'est-ce qu'un signal}
+					Un signal est une information que l'on transmet entre chaque thread. Pour les bases tous ce qui va nous intéresser c'est la présence ou l'absence d'un signal. C'est grâce à sa que les threads vont pouvoir agir en conséquence d'un autre. 
+					
+					\paragraph{Quelle forme doit avoir un thread ?} 
+					Dans un premier temps un signal sera seulement deux informations : 
+					\begin{enumerate}
+						\item Est-il initialisé ?
+						\item Est-il émit ?
+					\end{enumerate}
+					La façon de répondre dépends de comment il est initialisé. Cette partie est dévéloppé dans la partie \textbf{L'initialisation d'un signal}.
+					
+					\paragraph{Comment les stocker ?}
+					Comme pour les threads on doit se poser la question sur la structure que l'on veut mais aussi de si l'on veut un ordre ou non. Plusieurs possibilités ont été exploré et sont directement lié ,là aussi, à la façon dont on les initialise. Mais dans tout les cas on va devoir créer une liste qui va stocker au moins le faite qu'il est émit, il faudra donc forcément un élément que l'on va nommer $SI$ qui sera un liste prévue pour stocker les signaux. La structure est développé dans la partie \textbf{L'initialisation d'un signal}.
+					\medbreak 
+					
+				\subsubsection{Le Spawn} 
+				
+					\paragraph{Comment créer un thread ?}
+					Pour créer ce que l'on va appeler \textbf{des threads} on va devoir prendre dans la chaîne de contrôle une partie de celle-ci. Pour cela on va avoir besoin de la commande $Spawn$ qui va nous servir à délimiter la partie à prendre. Deux versions de cette commande existe, la 1ère peut-être retrouvé dans la plupart des versions de la machine et la 2nd a été proposé par un de mes encadrants et est présente dans la dernière version.
+					\smallbreak
+					\begin{enumerate}
+						\item $bspawn~C~espawn$ : la machine prends $Spawn C$ et le convertit en deux délimiteurs qui servent à entourer la partie de la chaîne de contrôle que l'on veut prendre. Le gros défaut de cette version bien qu'utilisable c'est que l'on crée une structure que doit reconnaître la machine alors que la machine SECD elle attends soit des éléments simple soit une commande
+						\item $\langle X,C\rangle~spawn$ : ici la machine convertit le $Spawn C$ en une abstraction et une commande $spawn$. L'abstraction permet d'encapsuler la partie de la chaîne de contrôle sans que la machine essaie de l'évaluer. La commande $spawn$ ,est là juste une commande donc plus logique dans le fonctionnement de la machine, permet de comprendre que la fermeture présent dans la pile est ce que l'on veut pour créer notre thread. 
+					\end{enumerate}
+					\medbreak
+					
+					
+					
+				\subsubsection{L'initialisation d'un signal}
+					
+					\paragraph{Comment créer un signal ?}
+					Pour créer un signal, on va devoir utiliser une commande $Signal s in t$ avec $s$ un signal et $t$ une expression. Cette commande a été modifié dans les dernières versions donc je vais les montrer.
+					\smallbreak
+					\begin{enumerate}
+						\item $Signal~s~in~t$ : l'identifiant du signal est donné et va être initialisé seulement pour l'expression t. Cette version est la plus complexe car il faut garder énormément d'information. En effet, il faut que l'on garde le fait que le signal a été initialisé pour ce thread mais aussi pour une partie précise de la chaîne de contrôle. Pour ça deux versions sont possibles :
+						\begin{enumerate}
+							\item On utilise le principe de la sauvegarde. Simplement expliqué quand la machine SECD applique une valeur sur une abstraction elle fait une sauvegarde d'elle-même pour mettre en pause le travail sur la partie principale et se mettre à travailler sur une partie secondaire. Si on reprends le même principe on peut stocker l'initialisation du signal dans l'environnement après avoir sauvegarder. L'élément $SI$ nommé plus haut se donc de la forme $SI~=~\{s,...\}$ tels que $s$ représente un signal émit.
+							\medbreak
+							
+							\textbf{Exemple :} Si on prends $\langle s,C'\rangle$ la version convertit de $Signal~s~in~t$ on a : 
+							\\$\langle S,E,\langle s,C'\rangle C,D,SI\rangle \longrightarrow \langle \emptyset,\emptyset~[init \leftarrow s],C',\langle S,E,C,D\rangle,SI\rangle$  
+							\medbreak
+							
+							Le problème de cette version c'est qu'il provoque un stockage double des signaux dans deux parties différentes de la machine à cause des commandes à venir.
+							
+							\item On utilise la sauvegarde mais d'une façon différentes. En effet on va faire une sauvegarde comme pour la 1ère version cependant on va pas mettre l'initialisation dans l'environnement mais directement la où l'on voudra stocker plus tard via un booléen. On va créer une variante de la sauvegarde de la machine SECD de la forme $\langle s,\langle S,E,C,D\rangle\rangle$. Ce qui va nous permettre de savoir quand est-ce que le signal est initialisé et quand est-ce que l'on doit mettre à faux l'initialisation. La structure $SI$ ici prend une autre forme, on a $SI~=~\{\langle s,init,emit\rangle\}$ tels que $s$ est un signal $init$ un booléen représentant l'initialisation et $emit$ un booléen représentant l'émission du signal.
+							\medbreak
+							
+							\textbf{Exemple :} Si on prends $\langle s,C'\rangle$ la version convertit de $Signal~s~in~t$ on a : 
+							\\$\langle S,E,\langle s,C'\rangle C,D,SI\rangle \longrightarrow \langle \emptyset,\emptyset,C',\langle s,\langle S,E,C,D\rangle\rangle,SI~\langle s,true,false\rangle \rangle$ 
+							\medbreak
+							
+							Cette version est assez efficace mais reste lourde dans la machine niveau stockage et la façon dont cette commande est convertit créer le même problème que pour la 1ère version du $Spawn$, on est pas censé avoir de structure à traiter dans la machine.
+						\end{enumerate}
+					
+						\item $Init~s$ : l'identifiant du signal est donné et va être initialisé pour toute les éléments de la machine. Cette version va drastiquement simplifier le fonctionnement car plus besoin de le limiter à une partie de la chaîne de contrôle ni à un thread en particulier. Simplement, on va le mettre dans le stockage des signaux; ce faite sera nécessaire et suffisant pour savoir qu'il est initialisé. La structure de $SI$ va donc être de la forme $\langle s,emit\rangle$ tels que $s$ un signal et $emit$ un booléen représentant l'émission du signal.
+						\medbreak
+						
+						\textbf{Exemple :} Si on prends $s~Init$ la version convertit de $Signal~s~in~t$ on a : 
+						\\$\langle s~S,E,Init~C,D,SI\rangle \longrightarrow \langle S,E,C,D,SI~\langle s,false\rangle \rangle$ 
+						\medbreak
+						
+						\item $Init$ : l'identifiant du signal sera retourné par la machine, l'utilisateur ne lui donne plus l'identifiant. On créera l'identifiant en incrémentant le dernier signal de un. Le reste est identique au fonctionnement du $Init~s$. Cette possibilité aura la même structure pour $SI$ que la précédente à l'exception que l'on va rajouté un ordre car il faudra créer des identifiants donc on va toujours mettre en fin de la liste afin de pouvoir créer facilement un nouvelle identifiant.
+						\medbreak
+						
+						\textbf{Exemple :} Si on prends $Init$ la version convertit de $Signal~s~in~t$ on a : 
+						\\$\langle S,E,Init~C,D,\emptyset\rangle \longrightarrow \langle 0~S,E,C,D,SI~\langle 0,false\rangle \rangle$ 
+						\\ou
+						\\$\langle S,E,Init~C,D,SI~\langle s,emit\rangle\rangle \longrightarrow \langle (s+1)~S,E,C,D,SI~\langle s,emit\rangle~\langle (s+1),false\rangle \rangle$ 
+						\medbreak
+					\end{enumerate}
+					\bigbreak
+					
 			
 			
 			
@@ -562,7 +668,7 @@
 			
 			
 			 
-			
+			\newpage
 			La machine ayant beaucoup évoluée depuis le début du travail, je vais redéfinir chaque élément de la machine pour pouvoir mieux comprendre les nouvelles règles.
 		\bigbreak
 		
@@ -744,7 +850,7 @@
 				\\ si pour $SI(s) = \langle emit,CS,SSI\rangle$ on a $SSI(b) = \langle CI,IL\rangle$ avec $I \notin IL$ alors $\gamma(SSI(b)) = V$
 				\item[]
 				
-				\item[] à vérifier \textbf{Prendre une valeur partagée (impossible) :} On prends dans la liste de valeurs d'un signal partagé lié à un identifant une constante via la fonction $\gamma$ mais si on a déjà tout pris on retourne la valeur par défaut
+				\item[] à vérifier \textbf{Prendre une valeur partagée (impossible) :} On prends dans la liste de valeurs d'un signal partagé lié à un identifant une constante mais si on a déjà tout pris on retourne la valeur par défaut
 				\smallbreak 
 				$\langle\langle I,s$ $b$ $n$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,D\rangle TL,SI,IP\rangle 
 				\longrightarrow_{secdv5} 
@@ -769,7 +875,7 @@
 				\item[]
 				
 				
-				\item[] à vérifier\textbf{ Thread bloqué remplacé :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il n'est pas émit et il y a un thread dans la file d'attente
+				\item[] à vérifier\textbf{ Thread bloqué remplacé :} On teste la présence d'un signal, il n'est pas émit et il y a un thread dans la file d'attente
 				donc on mets ce thread dans la liste de threads bloqués et on prends le thread en tête de la file.
 				\smallbreak
 				$\langle\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle,\langle I',S',E',C''',D'\rangle$ $TL,SI\rangle 
@@ -779,7 +885,7 @@
 				\\et $SI'(s) = \langle faux,CS,SSI,TL'$ $\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle\rangle$
 				\item[]	
 				
-				\item[] à vérifier \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il n'est pas émit donc on mets ce thread dans la liste de threads bloqués.
+				\item[] à vérifier \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal, il n'est pas émit donc on mets ce thread dans la liste de threads bloqués.
 				\smallbreak 
 				$\langle\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,C,D\rangle,\emptyset,SI,IP\rangle 
 				\longrightarrow_{secdv5} 
@@ -801,7 +907,7 @@
 				$\langle\langle I,V$ $S,E,\epsilon,\emptyset \rangle ,\emptyset,SI\rangle 
 				\longrightarrow_{secdv5} 
 				\langle\langle I,V$ $S,E,\epsilon,\emptyset\rangle,TL,SI'\rangle$
-				\\avec  $\tau(SI)$ = ($SI',TL$) si il n'y a plus de thread bloqué
+				\\si $\forall~si \in SI : si = \langle emit,CS,SSI,\{\}\rangle$ alors $\tau(SI)$ = ($SI',TL$) 
 				\item[]
 				
 			\end{itemize}
@@ -813,6 +919,12 @@
 				$\langle S,E,ap$ $C,D\rangle
 				\longrightarrow_{secdv5} 
 				\langle S,E,C,D\rangle$
+				\item[]
+				\item[] \textbf{Récupération de sauvegarde avec pile vide :}  On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
+				\smallbreak  
+				$\langle \emptyset,E,\epsilon,\langle S',E',C,D\rangle\rangle
+				\longrightarrow_{secdv5} 
+				\langle S',E',C,D\rangle$
 			\end{itemize}
 			
 			\item[]
