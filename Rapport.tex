@@ -66,19 +66,19 @@
 		Le stage a pour intitulé \textit{Programmation réactive synchrone, implantation d’une machine virtuelle}. Il se place dans la thématique \textit{Sémantique des systèmes concurrents}. L’objectif de ce stage est de réaliser l’implantation d’une machine virtuelle (type JVM) destinée à exécuter un langage réactif synchrone purement fonctionnel encadré par deux maîtres de conférence : Mme Bousdira et Mr Dabrowski.
 		\smallbreak
 		Pour cela une recherche préliminaire sur des machines existantes sera faite en premier lieu pour ce mettre à niveau. Ensuite une recherche sur la programmation réactive servira à comprendre les enjeux du sujet et à cerner les différentes contraintes que la réactivité apporte. Les recherches étant faite on pourra s'atteler à la création de notre propre machine concurrente. Pour finir, on pourra conclure par un résumer le travail abattu, des choix qui pourrait être améliorés, des voies qui n'ont pas été choisie et de ce qu'il reste à faire.
-	\newpage
+		\newpage
 		
 		
 	
 	\section{Programmation réactive}
 	 
-	 Ayant un niveau de 3ème année de licence informatique, beaucoup de lacune par rapport au travail demandé, il m'a fallu me mettre à niveau. Pour cela, trois articles ont été étudié : 
-	 \begin{enumerate}
-	 	\item[-] \hyperref[ReactiveML]{[1]} expliquant le fonctionnement du ReactiveML un langage de programmation réactif
-	 	\item[-] \hyperref[ZINC]{[2]} développant toute la réflexion que l'on doit avoir pour créer un langage de programmation
-	 	\item[-] \hyperref[Calculi]{[3]} expliquant le fonctionnement des machines avec les $\lambda$-calculs
-	 \end{enumerate}
- 	 Pour mieux structurer ma démarche, je vais diviser mes recherches en deux sous parties. La première sera lié à mes recherches "préliminaires" qui ne sont pas lié directement à la programmation réactive. Elle regroupera l'article \hyperref[ZINC]{[2]} et \hyperref[Calculi]{[3]}. La second sera dédié à l'article \hyperref[ReactiveML]{[1]} qui est lui complètement axé sur le programmation réactive. 
+	 	Ayant un niveau de 3ème année de licence informatique, beaucoup de lacune par rapport au travail demandé, il m'a fallu me mettre à niveau. Pour cela, trois articles ont été étudié : 
+	 	\begin{enumerate}
+	 		\item[-] \hyperref[ReactiveML]{[1]} expliquant le fonctionnement du ReactiveML un langage de programmation réactif
+	 		\item[-] \hyperref[ZINC]{[2]} développant toute la réflexion que l'on doit avoir pour créer un langage de programmation
+		 	\item[-] \hyperref[Calculi]{[3]} expliquant le fonctionnement des machines avec les $\lambda$-calculs
+		 \end{enumerate}
+ 		 Pour mieux structurer ma démarche, je vais diviser mes recherches en deux sous parties. La première sera lié à mes recherches "préliminaires" qui ne sont pas lié directement à la programmation réactive. Elle regroupera l'article \hyperref[ZINC]{[2]} et \hyperref[Calculi]{[3]}. La second sera dédié à l'article \hyperref[ReactiveML]{[1]} qui est lui complètement axé sur le programmation réactive. 
 	 
 		\subsection{Recherches préliminaires}
 			
@@ -149,804 +149,803 @@
 				\bigbreak
 				
 				
-			\paragraph{Forme normale}
+				\paragraph{Forme normale}
 			
-			\textit{Une expression est une forme normale si on ne peut pas réduire l'expression via une $\beta$ ou $\eta$ rédution.}
-			\medbreak
+				\textit{Une expression est une forme normale si on ne peut pas réduire l'expression via une $\beta$ ou $\eta$ rédution.}
+				\medbreak
 			
-			\textbf{Théorème de la forme normale :}
-			Si on peut réduire $L$ tels que $L =_{n}~M$ et $L =_{n}~N$ et que $N$ et $M$ sont en forme normale alors $M = N$ à n renommage près.
-			\medbreak	
+				\textbf{Théorème de la forme normale :}
+				Si on peut réduire $L$ tels que $L =_{n}~M$ et $L =_{n}~N$ et que $N$ et $M$ sont en forme normale alors $M = N$ à n renommage près.
+				\medbreak	
 			
-			\textbf{Théorème de Church-Rosser ( pour $=_{n}$ ) :}
-			Si on a $M =_{n} N$, alors il existe un $L'$ tels que $M \twoheadrightarrow n_{n}~L'$ et $N \twoheadrightarrow n_{n}~L'$.
-			\medbreak
+				\textbf{Théorème de Church-Rosser ( pour $=_{n}$ ) :}
+				Si on a $M =_{n} N$, alors il existe un $L'$ tels que $M \twoheadrightarrow n_{n}~L'$ et $N \twoheadrightarrow n_{n}~L'$.
+				\medbreak
 			
-			Certaines lambda calcul expression n'a pas de forme normal comme: $((\lambda x.x x)~(\lambda x.x x)$. 
-			D'autres en ont une mais on peut rentrer dans une boucle infini de réduction si on choisi la mauvaise réduction.
-			\medbreak
+				Certaines lambda calcul expression n'a pas de forme normal comme: $((\lambda x.x x)~(\lambda x.x x)$. 
+				D'autres en ont une mais on peut rentrer dans une boucle infini de réduction si on choisi la mauvaise réduction.
+				\medbreak
 			
-			Le problème est quand on évalue un argument de la fonction qui n'est jamais utilisé. Pour palier à ça, on utilise la stratégie d'appliquer toujours les $\beta$ et $\eta$ réductions le plus à gauche. Ces règles sont les suivantes:
-			\begin{itemize}
-				\item[-] $M \longrightarrow_{\bar{n}}~N$ si $M~\beta~N$
-				\item[-] $M \longrightarrow_{\bar{n}}~N$ si $M~\eta~N$
-				\item[-] $(\lambda X.M) \longrightarrow_{\bar{n}}~(\lambda X.N)$
-				\item[-] $(M~N) \longrightarrow_{\bar{n}}~(M'~N)$ si $M \longrightarrow_{\bar{n}}~M'$
-				\\ et $\forall~L$, $(M~N)~\beta~L$ impossible et $(M~N)~\eta~L$ impossible
-				\item[-] $(M~N) \longrightarrow_{\bar{n}}~(M~N')$ si $N \longrightarrow_{\bar{n}}~N'$
-				\\ et $M$ est une forme normale
-				\\ et  $\forall~L$, $(M~N)~\beta~L$ impossible et $(M~N)~\eta~L$ impossible
-			\end{itemize}
-			\smallbreak
-			Cette solution est sûr mais reste peut utilisé car elle est assez lente. 
-			\medbreak
+				Le problème est quand on évalue un argument de la fonction qui n'est jamais utilisé. Pour palier à ça, on utilise la stratégie d'appliquer toujours les $\beta$ et $\eta$ réductions le plus à gauche. Ces règles sont les suivantes:
+				\begin{itemize}
+					\item[-] $M \longrightarrow_{\bar{n}}~N$ si $M~\beta~N$
+					\item[-] $M \longrightarrow_{\bar{n}}~N$ si $M~\eta~N$
+					\item[-] $(\lambda X.M) \longrightarrow_{\bar{n}}~(\lambda X.N)$
+					\item[-] $(M~N) \longrightarrow_{\bar{n}}~(M'~N)$ si $M \longrightarrow_{\bar{n}}~M'$
+					\\ et $\forall~L$, $(M~N)~\beta~L$ impossible et $(M~N)~\eta~L$ impossible
+					\item[-] $(M~N) \longrightarrow_{\bar{n}}~(M~N')$ si $N \longrightarrow_{\bar{n}}~N'$
+					\\ et $M$ est une forme normale
+					\\ et  $\forall~L$, $(M~N)~\beta~L$ impossible et $(M~N)~\eta~L$ impossible
+				\end{itemize}
+				\smallbreak
+				Cette solution est sûr mais reste peut utilisé car elle est assez lente. 
+				\medbreak
 			
-			La preuve de la compréhension des $\lambda$-calculs a été faite à travers de l'implantation de celle-ci en OCaml. Cependant cette implantation reste simplifiée et une version plus complète sera présenté après. 
+				La preuve de la compréhension des $\lambda$-calculs a été faite à travers de l'implantation de celle-ci en OCaml. Cependant cette implantation reste simplifiée et une version plus complète sera présenté après. 
 			
 			\subsubsection{ISWIM}	
 			
-			ISWIM est un langage impératif à noyau fonctionnel ; en fait c'est une syntaxe lisible du $\lambda$-calcul à laquelle sont ajoutés des variables mutables et des définitions. Grâce au $\lambda$-calcul, ISWIM comporte des fonctions d'ordre supérieur et une portée lexicale des variables. Le but est de décrire des concepts en fonction d'autres concepts. Ce langage à fortement influencé les autres langages qui l'ont suivi, principalement dans la programmation focntionnelle.
-			\medbreak
+				ISWIM est un langage impératif à noyau fonctionnel ; en fait c'est une syntaxe lisible du $\lambda$-calcul à laquelle sont ajoutés des variables mutables et des définitions. Grâce au $\lambda$-calcul, ISWIM comporte des fonctions d'ordre supérieur et une portée lexicale des variables. Le but est de décrire des concepts en fonction d'autres concepts. Ce langage à fortement influencé les autres langages qui l'ont suivi, principalement dans la programmation focntionnelle.
+				\medbreak
 			 
-			ISWIM à une grammaire étendue de la grammaire des $\lambda$-calcul.
-			\smallbreak
-			$M,N,L,K =$
-			\begin{itemize}
-				\item[ ] les termes des $\lambda$-calculs :
-				\item[|] $X$ 
-				\item[|] $(\lambda X.M)$
-				\item[|] $(M~N)$
-				\item[ ] les nouveaux termes :
-				\item[|] $b$ : une constante
-				\item[|] $(o^{n}~M~...~N)$ avec $o^{n}$ les fonctions primitives
-			\end{itemize}
-			\medbreak
+				ISWIM à une grammaire étendue de la grammaire des $\lambda$-calcul.
+				\smallbreak
+				$M,N,L,K =$
+				\begin{itemize}
+					\item[ ] les termes des $\lambda$-calculs :
+					\item[|] $X$ 
+					\item[|] $(\lambda X.M)$
+					\item[|] $(M~N)$
+					\item[ ] les nouveaux termes :
+					\item[|] $b$ : une constante
+					\item[|] $(o^{n}~M~...~N)$ avec $o^{n}$ les fonctions primitives
+				\end{itemize}
+				\medbreak
+				
+				On definit une valeur tels que :
+				\smallbreak
+				$V,U,W =$
+				\begin{itemize}
+					\item[|] $b$
+					\item[|] $X$
+					\item[|] $(\lambda X.M)$
+				\end{itemize}
+				\bigbreak
+				
+				
+				Les règles de $\beta$-réductions sont les mêmes que celle pour les $\lambda$-calcul avec 2 ajouts qui sont les suivants :
+				\begin{itemize}
+					\item $b[X \longleftarrow M] = b$
+					\item $(o^{n}~M_{1}~...~M_{n})[X \longleftarrow M] = (o^{n}~M_{1}[X \longleftarrow M]~...~M_{n}[X \longleftarrow M])$
+				\end{itemize}
+				\bigbreak
 			
-			On definit une valeur tels que :
-			\smallbreak
-			$V,U,W =$
-			\begin{itemize}
-				\item[|] $b$
-				\item[|] $X$
-				\item[|] $(\lambda X.M)$
-			\end{itemize}
-			\bigbreak
 			
-			
-			Les règles de $\beta$-réductions sont les mêmes que celle pour les $\lambda$-calcul avec 2 ajouts qui sont les suivants :
-			\begin{itemize}
-				\item $b[X \longleftarrow M] = b$
-				\item $(o^{n}~M_{1}~...~M_{n})[X \longleftarrow M] = (o^{n}~M_{1}[X \longleftarrow M]~...~M_{n}[X \longleftarrow M])$
-			\end{itemize}
-			\bigbreak
-			
-			
-			La $\beta$-réduction est la même quand $\lambda$-calcul mais à la condition que la réduction soit faite avec une valeur $V$. 
-			\begin{itemize}
-				\item[-] $((\lambda X.M)~V)~\beta_{v}~M[X \longleftarrow V]$
-			\end{itemize} 
-			\smallbreak
-			Cette restriction permet une sorte d'ordre dans les calculs.
-			\medbreak
-			
-			Cependant l'$\eta$ et l'$\alpha$ réduction ne sont plus vue comme tel. En effet l'$\eta$-réduction n'est pas utilisé car plus très utile et contraignante à programmer.L'$\alpha$-réduction sera utilisé pour rechercher une équivalence entre deux termes, on le renommera d'ailleurs l'équivalence en $\alpha$-équivalence.
-			\medbreak
-			
-			Une réduction a été rajouté pour gérer les opérateurs : c'est la $\delta$-réduction. Ce qui nous donne une nouvelle \textbf{n}-réduction tels que \textbf{n}-réduction = $\beta_{v} \cup \delta$
-			\bigbreak
-			
-			Un exemple d'implantation a été codé en Ocaml.
+				La $\beta$-réduction est la même quand $\lambda$-calcul mais à la condition que la réduction soit faite avec une valeur $V$. 
+				\begin{itemize}
+					\item[-] $((\lambda X.M)~V)~\beta_{v}~M[X \longleftarrow V]$
+				\end{itemize} 
+				\smallbreak
+				Cette restriction permet une sorte d'ordre dans les calculs.
+				\medbreak
+				
+				Cependant l'$\eta$ et l'$\alpha$ réduction ne sont plus vue comme tel. En effet l'$\eta$-réduction n'est pas utilisé car plus très utile et contraignante à programmer.L'$\alpha$-réduction sera utilisé pour rechercher une équivalence entre deux termes, on le renommera d'ailleurs l'équivalence en $\alpha$-équivalence.
+				\medbreak
+				
+				Une réduction a été rajouté pour gérer les opérateurs : c'est la $\delta$-réduction. Ce qui nous donne une nouvelle \textbf{n}-réduction tels que \textbf{n}-réduction = $\beta_{v} \cup \delta$
+				\bigbreak
+				
+				Un exemple d'implantation a été codé en Ocaml.
 			
 			\subsubsection{CC Machine}
 			
-			CC vient des termes \textbf{Control string} et \textbf{Context} qui représente respectivement:
-			\begin{itemize}
-				\item la partie du $\lambda$-calcul que l'on traite
-				\item la partie du $\lambda$-calcul que l'on met en attente 
-			\end{itemize}
-			Elle utilise le language ISWIM.
-			\bigbreak
-			
-			
-			Les règles définit pour cette machine sont les suivantes :
-			\begin{enumerate}
-				\item $\langle(M~N),E\rangle \longmapsto_{cc} \langle M,E[([]~N)]\rangle~si M \notin V$
-				\item $\langle(V_{1}~N),E\rangle \longmapsto_{cc}  \langle M,E[(V_{1}~[])]\rangle~si M \notin V$
-				\item $\langle(o^{n}~V_{1}...V_{i}~M~N~...),E\rangle \longmapsto_{cc}  
-				\langle M,E[(o^{n}~V_{1}...V_{i}~[]~N~...)]\rangle~ si M \notin V$
-				\item $\langle((\lambda X.M)~V),E\rangle \longmapsto_{cc} \langle M[X\longleftarrow V],E\rangle$
-				\item $\langle(o^{n}~b_{1}...b_{n}),E\rangle \longmapsto_{cc}  \langle V,E\rangle$ avec $V = \delta(o^{n},b_{1}...b_{n})$ 
-				\item $\langle V,E[(U~[])]\rangle \longmapsto_{cc} \langle(U~V),E\rangle$ 
-				\item $\langle V,E[[]~N)]\rangle \longmapsto_{cc} \langle(V~N),E\rangle$ 
-				\item $\langle V,E[(o^{n}~V_{1}...V_{i}~[]~N~...)]\rangle \longmapsto_{cc} \langle(o^{n}~V_{1}...V_{i}~V~N ~...),E\rangle$ 
-			\end{enumerate}
-			\bigbreak
-			
-			
-			La machine peut s'arrêter dans 3 états différents:
-			\begin{itemize}
-				\item[]$\longrightarrow$ on a une \textbf{constante} tels que $\langle M,[]\rangle \twoheadrightarrow_{cc} \langle b,[]\rangle$;
-				\item[]$\longrightarrow$ on a une \textbf{fonction} tels que $\langle M,[]\rangle \twoheadrightarrow_{cc} \langle\lambda X.N,[]\rangle$;
-				\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
-			\end{itemize}
-			\smallbreak
-			\hyperref[CC]{Un exemple de fonctionnement de la machine CC est fait dans les Annexes.}
-			\bigbreak
-			
+				CC vient des termes \textbf{Control string} et \textbf{Context} qui représente respectivement:
+				\begin{itemize}
+					\item la partie du $\lambda$-calcul que l'on traite
+					\item la partie du $\lambda$-calcul que l'on met en attente 
+				\end{itemize}
+				Elle utilise le language ISWIM.
+				\bigbreak
+				
+				
+				Les règles définit pour cette machine sont les suivantes :
+				\begin{enumerate}
+					\item $\langle(M~N),E\rangle \longmapsto_{cc} \langle M,E[([]~N)]\rangle~si M \notin V$
+					\item $\langle(V_{1}~N),E\rangle \longmapsto_{cc}  \langle M,E[(V_{1}~[])]\rangle~si M \notin V$
+					\item $\langle(o^{n}~V_{1}...V_{i}~M~N~...),E\rangle \longmapsto_{cc}  
+					\langle M,E[(o^{n}~V_{1}...V_{i}~[]~N~...)]\rangle~ si M \notin V$
+					\item $\langle((\lambda X.M)~V),E\rangle \longmapsto_{cc} \langle M[X\longleftarrow V],E\rangle$
+					\item $\langle(o^{n}~b_{1}...b_{n}),E\rangle \longmapsto_{cc}  \langle V,E\rangle$ avec $V = \delta(o^{n},b_{1}...b_{n})$ 
+					\item $\langle V,E[(U~[])]\rangle \longmapsto_{cc} \langle(U~V),E\rangle$ 
+					\item $\langle V,E[[]~N)]\rangle \longmapsto_{cc} \langle(V~N),E\rangle$ 
+					\item $\langle V,E[(o^{n}~V_{1}...V_{i}~[]~N~...)]\rangle \longmapsto_{cc} \langle(o^{n}~V_{1}...V_{i}~V~N ~...),E\rangle$ 
+				\end{enumerate}
+				\bigbreak
+				
+				
+				La machine peut s'arrêter dans 3 états différents:
+				\begin{itemize}
+					\item[]$\longrightarrow$ on a une \textbf{constante} tels que $\langle M,[]\rangle \twoheadrightarrow_{cc} \langle b,[]\rangle$;
+					\item[]$\longrightarrow$ on a une \textbf{fonction} tels que $\langle M,[]\rangle \twoheadrightarrow_{cc} \langle\lambda X.N,[]\rangle$;
+					\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
+				\end{itemize}
+				\smallbreak
+				\hyperref[CC]{Un exemple de fonctionnement de la machine CC est fait dans les Annexes.}
+				\bigbreak
+				
 			
 			\subsubsection{SCC Machine}
 		
-			Le SCC est une simplification de règle du CC. En effet, le CC exploite uniquement les informations de la chaîne de contrôle (\textbf{Control string}). Du coup on combine certaines règles en exploitant les information du contexte (\textbf{Context}).
-			\bigbreak
+				Le SCC est une simplification de règle du CC. En effet, le CC exploite uniquement les informations de la chaîne de contrôle (\textbf{Control string}). Du coup on combine certaines règles en exploitant les information du contexte (\textbf{Context}).
+				\bigbreak
+				
+				
+				Les règles qui définisse la machine SCC sont les suivantes :
+				
+				\begin{enumerate}
+					\item $\langle(M$ $N),E\rangle \longmapsto_{scc} \langle M,E[([]$ $N)]\rangle$
+					\item $\langle(o^{n}$ $M$ $N...),E\rangle \longmapsto_{scc} \langle M,E[(o^{n}$ $[]$ $N...)]\rangle$
+					\item $\langle V,E[((\lambda X.M)$ $[])]\rangle \longmapsto_{scc} \langle M[X\leftarrow V],E\rangle$
+					\item $\langle V,E[[]$ $N)]\rangle \longmapsto_{scc} \langle N,E[(V$ $[])]\rangle$
+					\item $\langle b,E[(o^{n},b_{1},...b_{i},[])]\rangle \longmapsto_{scc} \langle V,E\rangle$ avec $\delta (o^{n},b_{1},...b_{i},b)=V$ 
+					\item $\langle V,E[(o^{n},V_{1},...V_{i},[],N$ $L)]\rangle \longmapsto_{scc} \langle N,E[(o^{n},V_{1},...V_{i},V,[],L)]\rangle$
+				\end{enumerate}
+				\bigbreak
+				
 			
-			
-			Les règles qui définisse la machine SCC sont les suivantes :
-			
-			\begin{enumerate}
-				\item $\langle(M$ $N),E\rangle \longmapsto_{scc} \langle M,E[([]$ $N)]\rangle$
-				\item $\langle(o^{n}$ $M$ $N...),E\rangle \longmapsto_{scc} \langle M,E[(o^{n}$ $[]$ $N...)]\rangle$
-				\item $\langle V,E[((\lambda X.M)$ $[])]\rangle \longmapsto_{scc} \langle M[X\leftarrow V],E\rangle$
-				\item $\langle V,E[[]$ $N)]\rangle \longmapsto_{scc} \langle N,E[(V$ $[])]\rangle$
-				\item $\langle b,E[(o^{n},b_{1},...b_{i},[])]\rangle \longmapsto_{scc} \langle V,E\rangle$ avec $\delta (o^{n},b_{1},...b_{i},b)=V$ 
-				\item $\langle V,E[(o^{n},V_{1},...V_{i},[],N$ $L)]\rangle \longmapsto_{scc} \langle N,E[(o^{n},V_{1},...V_{i},V,[],L)]\rangle$
-			\end{enumerate}
-			\bigbreak
-			
-			
-			De même que pour la machine CC,la machine SCC peut s'arrêter dans 3 états différents:
-			\begin{itemize}
-				\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle M,[]\rangle \twoheadrightarrow_{scc} \langle b,[]\rangle$;
-				\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle M,[]\rangle \twoheadrightarrow_{scc} \langle\lambda X.N,[]\rangle$;
-				\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
-			\end{itemize}
-			\hyperref[SCC]{Un exemple de la machine SCC est fait dans les Annexes.}
-			\newpage
+				De même que pour la machine CC,la machine SCC peut s'arrêter dans 3 états différents:
+				\begin{itemize}
+					\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle M,[]\rangle \twoheadrightarrow_{scc} \langle b,[]\rangle$;
+					\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle M,[]\rangle \twoheadrightarrow_{scc} \langle\lambda X.N,[]\rangle$;
+					\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
+				\end{itemize}
+				\hyperref[SCC]{Un exemple de la machine SCC est fait dans les Annexes.}
+				\newpage
 			
 			
 			
 			\subsubsection{CK Machine}
 			
-			Les machines CC et SCC fonctionnent en allant chercher le plus à l'intérieur, c'est-à-dire que si l'on a une application on va en créer une intermédiaire dans le context avec un trou et traité la partie gauche de cette application etc jusqu'à arriver à un état traitable pour pouvoir "reconstruire", en reprenant l'application intermédiaire. C'est le style \textbf{ LIFO (Last In, First Out)}. Ce qui fait que les étapes de transition dépendent directement de la forme du 1ère élément et non de la structure générale.
-			\smallbreak
-			Pour palier à ce problème, la machine CK ajoute un nouvelle élément le \textbf{registre de contexte d'évaluation}, nommé $\kappa$, qui garde la partie "le plus à l'intérieur" accessible facilement.
-			\smallbreak
-			
-			$\kappa$ = mt
-			\begin{itemize}
-				\item[|] $\langle fun,V,\kappa \rangle$
-				\item[|] $\langle arg,N,\kappa \rangle$
-				\item[|] $\langle opd,\langle V,...,V,o^{n}\rangle,\langle N,... \rangle,\kappa \rangle$
-			\end{itemize}
-			
-			Cette structure est nommé \textbf{la continuation}.
-			\medbreak
-			
-			Les règles qui définisse la machine CK sont les suivantes :
-			\begin{enumerate}
-				\item $\langle(M$ $N),\kappa\rangle \longmapsto_{ck} \langle M,\langle arg,N,\kappa\rangle\rangle$
-				\item $\langle(o^{n}$ $M$ $N...),\kappa\rangle \longmapsto_{ck} \langle M,\langle opd,\langle o^{n}\rangle,\langle N,...\rangle,\kappa\rangle\rangle$
-				\item $\langle V,\langle fun,(\lambda X.M),\kappa \rangle \rangle \longmapsto_{ck} \langle M[X \leftarrow V],\kappa\rangle$
-				\item $\langle V,\langle arg,N,\kappa \rangle \rangle \longmapsto_{ck} \langle N,\langle fun,V,\kappa \rangle \rangle$
-				\item $\langle b,\langle opd,\langle b_{i},...b_{1},o^{n}\rangle,\langle\rangle,\kappa\rangle\rangle \longmapsto_{ck} \langle V,\kappa\rangle$ avec $\delta(o^{n},b_{1},...b_{i},b) = V$
-				\item $\langle V,\langle opd,\langle V',...o^{n}\rangle,\langle N,L,...\rangle,\kappa\rangle\rangle \longmapsto_{ck} \langle N,\langle opd,\langle V,V',...o^{n}\rangle,\langle L,...\rangle,\kappa\rangle\rangle$
-			\end{enumerate}
-			\bigbreak
-			
-			
-			la machine CK peut s'arrêter dans 3 états différents:
-			\begin{itemize}
-				\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle M,mt\rangle \twoheadrightarrow_{ck} \langle b,mt\rangle$;
-				\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle M,mt\rangle \twoheadrightarrow_{ck} \langle\lambda X.N,mt\rangle$;
-				\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
-			\end{itemize}
-			
-			\hyperref[CK]{Un exemple de la machine CK est fait dans les Annexes.}
-			\bigbreak
+				Les machines CC et SCC fonctionnent en allant chercher le plus à l'intérieur, c'est-à-dire que si l'on a une application on va en créer une intermédiaire dans le context avec un trou et traité la partie gauche de cette application etc jusqu'à arriver à un état traitable pour pouvoir "reconstruire", en reprenant l'application intermédiaire. C'est le style \textbf{ LIFO (Last In, First Out)}. Ce qui fait que les étapes de transition dépendent directement de la forme du 1ère élément et non de la structure générale.
+				\smallbreak
+				Pour palier à ce problème, la machine CK ajoute un nouvelle élément le \textbf{registre de contexte d'évaluation}, nommé $\kappa$, qui garde la partie "le plus à l'intérieur" accessible facilement.
+				\smallbreak
+				
+				$\kappa$ = mt
+				\begin{itemize}
+					\item[|] $\langle fun,V,\kappa \rangle$
+					\item[|] $\langle arg,N,\kappa \rangle$
+					\item[|] $\langle opd,\langle V,...,V,o^{n}\rangle,\langle N,... \rangle,\kappa \rangle$
+				\end{itemize}
+				
+				Cette structure est nommé \textbf{la continuation}.
+				\medbreak
+				
+				Les règles qui définisse la machine CK sont les suivantes :
+				\begin{enumerate}
+					\item $\langle(M$ $N),\kappa\rangle \longmapsto_{ck} \langle M,\langle arg,N,\kappa\rangle\rangle$
+					\item $\langle(o^{n}$ $M$ $N...),\kappa\rangle \longmapsto_{ck} \langle M,\langle opd,\langle o^{n}\rangle,\langle N,...\rangle,\kappa\rangle\rangle$
+					\item $\langle V,\langle fun,(\lambda X.M),\kappa \rangle \rangle \longmapsto_{ck} \langle M[X \leftarrow V],\kappa\rangle$
+					\item $\langle V,\langle arg,N,\kappa \rangle \rangle \longmapsto_{ck} \langle N,\langle fun,V,\kappa \rangle \rangle$
+					\item $\langle b,\langle opd,\langle b_{i},...b_{1},o^{n}\rangle,\langle\rangle,\kappa\rangle\rangle \longmapsto_{ck} \langle V,\kappa\rangle$ avec $\delta(o^{n},b_{1},...b_{i},b) = V$
+					\item $\langle V,\langle opd,\langle V',...o^{n}\rangle,\langle N,L,...\rangle,\kappa\rangle\rangle \longmapsto_{ck} \langle N,\langle opd,\langle V,V',...o^{n}\rangle,\langle L,...\rangle,\kappa\rangle\rangle$
+				\end{enumerate}
+				\bigbreak
+				
+				
+				la machine CK peut s'arrêter dans 3 états différents:
+				\begin{itemize}
+					\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle M,mt\rangle \twoheadrightarrow_{ck} \langle b,mt\rangle$;
+					\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle M,mt\rangle \twoheadrightarrow_{ck} \langle\lambda X.N,mt\rangle$;
+					\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
+				\end{itemize}
+				
+				\hyperref[CK]{Un exemple de la machine CK est fait dans les Annexes.}
+				\bigbreak
 			
 			
 			\subsubsection{CEK Machine}
 		
-			Pour toutes les machines vues pour l'instant la $\beta$-réduction était appliquée immédiatement. Cela coûte cher surtout quand l'expression devient grande. De plus, si notre substitution n'est pas une variable elle est traité avant d'être appliqué.
-			\smallbreak
-			Il est plus intéressant d'appliquer les substitutions quand on en a vraiment la necessitée. Pour cela, la machine CEK ajoute les clauses et un environnement $\varepsilon$ qui va stocker les substitutions à faire.
-			\medbreak
-			
-			On a alors:
-			\begin{itemize}
-				\item[] $\varepsilon$ = une fonction $\{\langle X,c\rangle,...\}$    c = $\{\langle M,\varepsilon\rangle$ $|$ $FV(M)\subset dom(\varepsilon)\}$    v = $\{\langle V,\varepsilon\rangle$ $|$ $\langle V,\varepsilon\rangle \in c\}$
-				\item[] $\varepsilon[X \leftarrow c]$ = $\{\langle X,c\rangle\}$ $\cup$ $\{\langle Y,c'\rangle$ $|$ $\langle Y,c'\rangle \in \varepsilon$ et $ Y \neq X\}$
-			\end{itemize}
-			\medbreak
-			
-			$\kappa$ est renommé $\overline{\kappa}$ et est définit par :
-			\smallbreak
-			$\overline{\kappa}$ = mt
-			\begin{itemize}
-				\item[|] $\langle fun,v,\overline{\kappa} \rangle$
-				\item[|] $\langle arg,c,\overline{\kappa} \rangle$
-				\item[|] $\langle opd,\langle v,...,v,o^{n}\rangle,\langle c,... \rangle,\overline{\kappa} \rangle$
-			\end{itemize}
-			\bigbreak
-			
-			
-			Les règles qui définisse la machine CEK sont les suivantes :
-			\begin{enumerate}
-				\item $\langle\langle(M$ $N),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle arg,\langle N,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$
-				\item $\langle\langle(o^{n}$ $M$ $N...),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle opd,\langle o^{n}\rangle,\langle \langle N,\varepsilon\rangle,...\rangle,\overline{\kappa}\rangle\rangle$
-				\item $\langle\langle V,\varepsilon\rangle,\langle fun,\langle (\lambda X1.M),\varepsilon'\rangle,\overline{\kappa} \rangle \rangle \longmapsto_{cek} \langle \langle M,\varepsilon'[X1 \leftarrow \langle V,\varepsilon\rangle]\rangle,\overline{\kappa}\rangle$ si $V \notin X$
-				\item  $\langle \langle V,\varepsilon\rangle,\langle arg,\langle N,\varepsilon'\rangle,\kappa\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle fun,\langle V,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
-				\item $\langle  \langle b,\varepsilon\rangle,\langle opd,\langle \langle b_{i},\varepsilon_{i}\rangle,...\langle b_{1},\varepsilon_{1}\rangle ,o^{n}\rangle,\langle\rangle,\overline{\kappa}\rangle\rangle \longmapsto_{cek} \langle \langle V,\emptyset\rangle,\overline{\kappa}\rangle$ avec $\delta(o^{n},b_{1},...b_{i},b) = V$
-				\item $\langle \langle V,\varepsilon\rangle,\langle opd,\langle v',...o^{n}\rangle,\langle  \langle N,\varepsilon'\rangle,c,...\rangle,\overline{\kappa}\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle opd,\langle  \langle V,\varepsilon\rangle,v',...o^{n}\rangle,\langle c,...\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$	
-				\item $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
-			\end{enumerate}
-			\bigbreak
-			
-			
-			la machine CEK peut s'arrêter dans 3 états différents:
-			\begin{itemize}
-				\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \langle M,\emptyset\rangle,mt\rangle \twoheadrightarrow_{cek} \langle\langle b,\varepsilon\rangle,mt\rangle$;
-				\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \langle M,\emptyset\rangle,mt\rangle \twoheadrightarrow_{cek} \langle\langle \lambda X.N,\varepsilon\rangle,mt\rangle$;
-				\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
-			\end{itemize}
-			\hyperref[CEK]{Un exemple de la machine CEK est fait dans les Annexes.}
-			\bigbreak
-			
+				Pour toutes les machines vues pour l'instant la $\beta$-réduction était appliquée immédiatement. Cela coûte cher surtout quand l'expression devient grande. De plus, si notre substitution n'est pas une variable elle est traité avant d'être appliqué.
+				\smallbreak
+				Il est plus intéressant d'appliquer les substitutions quand on en a vraiment la necessitée. Pour cela, la machine CEK ajoute les clauses et un environnement $\varepsilon$ qui va stocker les substitutions à faire.
+				\medbreak
+				
+				On a alors:
+				\begin{itemize}
+					\item[] $\varepsilon$ = une fonction $\{\langle X,c\rangle,...\}$    c = $\{\langle M,\varepsilon\rangle$ $|$ $FV(M)\subset dom(\varepsilon)\}$    v = $\{\langle V,\varepsilon\rangle$ $|$ $\langle V,\varepsilon\rangle \in c\}$
+					\item[] $\varepsilon[X \leftarrow c]$ = $\{\langle X,c\rangle\}$ $\cup$ $\{\langle Y,c'\rangle$ $|$ $\langle Y,c'\rangle \in \varepsilon$ et $ Y \neq X\}$
+				\end{itemize}
+				\medbreak
+				
+				$\kappa$ est renommé $\overline{\kappa}$ et est définit par :
+				\smallbreak
+				$\overline{\kappa}$ = mt
+				\begin{itemize}
+					\item[|] $\langle fun,v,\overline{\kappa} \rangle$
+					\item[|] $\langle arg,c,\overline{\kappa} \rangle$
+					\item[|] $\langle opd,\langle v,...,v,o^{n}\rangle,\langle c,... \rangle,\overline{\kappa} \rangle$
+				\end{itemize}
+				\bigbreak
+				
+				
+				Les règles qui définisse la machine CEK sont les suivantes :
+				\begin{enumerate}
+					\item $\langle\langle(M$ $N),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle arg,\langle N,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$
+					\item $\langle\langle(o^{n}$ $M$ $N...),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle opd,\langle o^{n}\rangle,\langle \langle N,\varepsilon\rangle,...\rangle,\overline{\kappa}\rangle\rangle$
+					\item $\langle\langle V,\varepsilon\rangle,\langle fun,\langle (\lambda X1.M),\varepsilon'\rangle,\overline{\kappa} \rangle \rangle \longmapsto_{cek} \langle \langle M,\varepsilon'[X1 \leftarrow \langle V,\varepsilon\rangle]\rangle,\overline{\kappa}\rangle$ si $V \notin X$
+					\item  $\langle \langle V,\varepsilon\rangle,\langle arg,\langle N,\varepsilon'\rangle,\kappa\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle fun,\langle V,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
+					\item $\langle  \langle b,\varepsilon\rangle,\langle opd,\langle \langle b_{i},\varepsilon_{i}\rangle,...\langle b_{1},\varepsilon_{1}\rangle ,o^{n}\rangle,\langle\rangle,\overline{\kappa}\rangle\rangle \longmapsto_{cek} \langle \langle V,\emptyset\rangle,\overline{\kappa}\rangle$ avec $\delta(o^{n},b_{1},...b_{i},b) = V$
+					\item $\langle \langle V,\varepsilon\rangle,\langle opd,\langle v',...o^{n}\rangle,\langle  \langle N,\varepsilon'\rangle,c,...\rangle,\overline{\kappa}\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle opd,\langle  \langle V,\varepsilon\rangle,v',...o^{n}\rangle,\langle c,...\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$	
+					\item $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
+				\end{enumerate}
+				\bigbreak
+				
+				
+				la machine CEK peut s'arrêter dans 3 états différents:
+				\begin{itemize}
+					\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \langle M,\emptyset\rangle,mt\rangle \twoheadrightarrow_{cek} \langle\langle b,\varepsilon\rangle,mt\rangle$;
+					\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \langle M,\emptyset\rangle,mt\rangle \twoheadrightarrow_{cek} \langle\langle \lambda X.N,\varepsilon\rangle,mt\rangle$;
+					\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
+				\end{itemize}
+				\hyperref[CEK]{Un exemple de la machine CEK est fait dans les Annexes.}
+				\bigbreak
+				
 			
 			\subsubsection{SECD Machine}
 			
-			La différence entre la machine CEK et SECD est la façon dont le contexte est sauvegarder pendant que les sous-expressions sont évaluées.\\
-			En effet, dans la machine SECD le contexte est créer par un appel de fonction, quand toute est stocké dans $\widehat{D}$ pour laisser un espace de travail. Par contre pour la machine CEK, le contexte est créé quant on évalue une application ou un argument indépendamment de la complexité de celui-ci.
-			\smallbreak 
-			Dans les langages tels que Java, Pascal ou encore C la façon de faire de la machine SECD est plus naturel. Par contre  dans les langages $\lambda$-calculs, Scheme ou encore ML c'est la façon de faire de la machine CEK qui est la plus naturel.
-			\medbreak
+				La différence entre la machine CEK et SECD est la façon dont le contexte est sauvegarder pendant que les sous-expressions sont évaluées.\\
+				En effet, dans la machine SECD le contexte est créer par un appel de fonction, quand toute est stocké dans $\widehat{D}$ pour laisser un espace de travail. Par contre pour la machine CEK, le contexte est créé quant on évalue une application ou un argument indépendamment de la complexité de celui-ci.
+				\smallbreak 
+				Dans les langages tels que Java, Pascal ou encore C la façon de faire de la machine SECD est plus naturel. Par contre  dans les langages $\lambda$-calculs, Scheme ou encore ML c'est la façon de faire de la machine CEK qui est la plus naturel.
+				\medbreak
+				
+				La machine SECD est composé d'une pile ($\widehat{S}$), d'un environnement ($\widehat{\varepsilon}$), d'une chaîne de contrôle ($\widehat{C}$) et d'un dépôt ($\widehat{D}$). Les différentes définitions de ces élément sont les suivantes :
+				\smallbreak
+				\begin{itemize}
+					\item[] $\widehat{S}$ = $\epsilon$ | $\widehat{V}$ $\widehat{S}$ 
+					\item[] $\widehat{\varepsilon}$ = une fonction $\{\langle X,\widehat{V}\rangle,...\}$
+					\item[] $\widehat{C}$ = $\epsilon$ | b $\widehat{C}$ | X $\widehat{C}$ | ap $\widehat{C}$ | $prim_{o^{n}}$ $\widehat{C}$ | $\langle X,\widehat{C}\rangle$ $\widehat{C}$
+					\item[] $\widehat{D}$ = $\epsilon$ | $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+					\item[] $\widehat{V}$ = b | $\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon}\rangle$
+					\item[] $\textlbrackdbl b\textrbrackdbl _{secd}$ = b
+					\item[] $\textlbrackdbl X\textrbrackdbl _{secd}$ = X
+					\item[] $\textlbrackdbl (M_{1}$ $M_{2})\textrbrackdbl _{secd}$ = $\textlbrackdbl M_{1}\textrbrackdbl _{secd}$ $\textlbrackdbl M_{2}\textrbrackdbl _{secd}$ ap
+					\item[] $\textlbrackdbl (o^{n}$ $M_{1}...M_{n})\textrbrackdbl _{secd}$ = $\textlbrackdbl M_{1}\textrbrackdbl _{secd}$ $...$ $\textlbrackdbl M_{n}\textrbrackdbl _{secd}$ $prim_{o^{n}}$
+					\item[]  $\textlbrackdbl(\lambda X.M)\textrbrackdbl _{secd}$ =  $\langle X,\textlbrackdbl M\textrbrackdbl _{secd}\rangle$
+				\end{itemize}
+				\bigbreak
+				
 			
-			La machine SECD est composé d'une pile ($\widehat{S}$), d'un environnement ($\widehat{\varepsilon}$), d'une chaîne de contrôle ($\widehat{C}$) et d'un dépôt ($\widehat{D}$). Les différentes définitions de ces élément sont les suivantes :
-			\smallbreak
-			\begin{itemize}
-				\item[] $\widehat{S}$ = $\epsilon$ | $\widehat{V}$ $\widehat{S}$ 
-				\item[] $\widehat{\varepsilon}$ = une fonction $\{\langle X,\widehat{V}\rangle,...\}$
-				\item[] $\widehat{C}$ = $\epsilon$ | b $\widehat{C}$ | X $\widehat{C}$ | ap $\widehat{C}$ | $prim_{o^{n}}$ $\widehat{C}$ | $\langle X,\widehat{C}\rangle$ $\widehat{C}$
-				\item[] $\widehat{D}$ = $\epsilon$ | $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
-				\item[] $\widehat{V}$ = b | $\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon}\rangle$
-				\item[] $\textlbrackdbl b\textrbrackdbl _{secd}$ = b
-				\item[] $\textlbrackdbl X\textrbrackdbl _{secd}$ = X
-				\item[] $\textlbrackdbl (M_{1}$ $M_{2})\textrbrackdbl _{secd}$ = $\textlbrackdbl M_{1}\textrbrackdbl _{secd}$ $\textlbrackdbl M_{2}\textrbrackdbl _{secd}$ ap
-				\item[] $\textlbrackdbl (o^{n}$ $M_{1}...M_{n})\textrbrackdbl _{secd}$ = $\textlbrackdbl M_{1}\textrbrackdbl _{secd}$ $...$ $\textlbrackdbl M_{n}\textrbrackdbl _{secd}$ $prim_{o^{n}}$
-				\item[]  $\textlbrackdbl(\lambda X.M)\textrbrackdbl _{secd}$ =  $\langle X,\textlbrackdbl M\textrbrackdbl _{secd}\rangle$
-			\end{itemize}
-			\bigbreak
-			
-			
-			Les règles qui définisse la machine SECD sont les suivantes :
-			\begin{enumerate}
-				\item $\langle\widehat{S},\widehat{\varepsilon},b$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle b$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
-				\item $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
-				\item $\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
-				\item $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
-				\item $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
-				\item $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle$
-			\end{enumerate}
-			\bigbreak
-			
-			
-			la machine SECD peut s'arrêter dans 3 états différents:
-			\begin{itemize}
-				\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secd},\epsilon\rangle \twoheadrightarrow_{secd} \langle b,\widehat{\varepsilon},\epsilon,\epsilon\rangle$;
-				\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secd},\epsilon\rangle \twoheadrightarrow_{secd} \langle\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon'}\rangle,\widehat{\varepsilon},\epsilon,\epsilon\rangle$;
-				\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
-			\end{itemize}
-			\hyperref[SECD]{Un exemple de la machine SECD est fait dans les Annexes.}
-			\bigbreak
-			
+				Les règles qui définisse la machine SECD sont les suivantes :
+				\begin{enumerate}
+					\item $\langle\widehat{S},\widehat{\varepsilon},b$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle b$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+					\item $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
+					\item $\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
+					\item $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+					\item $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
+					\item $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle$
+				\end{enumerate}
+				\bigbreak
+				
+				
+				la machine SECD peut s'arrêter dans 3 états différents:
+				\begin{itemize}
+					\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secd},\epsilon\rangle \twoheadrightarrow_{secd} \langle b,\widehat{\varepsilon},\epsilon,\epsilon\rangle$;
+					\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secd},\epsilon\rangle \twoheadrightarrow_{secd} \langle\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon'}\rangle,\widehat{\varepsilon},\epsilon,\epsilon\rangle$;
+					\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
+				\end{itemize}
+				\hyperref[SECD]{Un exemple de la machine SECD est fait dans les Annexes.}
+				\bigbreak
+				
 
 		\subsection{Le cas du Réactive ML}
-				Modèle de programmation $\longrightarrow$ concurrence coopérative 
-				\smallbreak
-				L'analyse est découpé en 2 sous analyse :
-				\begin{itemize}
-					\item \textbf{statique} : système de type et d'effet
-					\item \textbf{réactive} : détecter les erreurs de concurrence
-				\end{itemize}
-				\bigbreak
+			Modèle de programmation $\longrightarrow$ concurrence coopérative 
+			\smallbreak
+			L'analyse est découpé en 2 sous analyse :
+			\begin{itemize}
+				\item \textbf{statique} : système de type et d'effet
+				\item \textbf{réactive} : détecter les erreurs de concurrence
+			\end{itemize}
+			\bigbreak
 			
 			
-				Ordonnancement coopératif$\ast$ $\longrightarrow$ \textit{\small{chaque processus va r\'{e}guli\`{e}rement "laisser la main aux autres"}}
-				\smallbreak
-				Ordonnancement pr\'{e}emptif $\longrightarrow$ \textit{\small{le syst\`{e}me va "donner un temps de parole" \`{a} chacun}}
-				\medbreak
+			Ordonnancement coopératif$\ast$ $\longrightarrow$ \textit{\small{chaque processus va r\'{e}guli\`{e}rement "laisser la main aux autres"}}
+			\smallbreak
+			Ordonnancement pr\'{e}emptif $\longrightarrow$ \textit{\small{le syst\`{e}me va "donner un temps de parole" \`{a} chacun}}
+			\medbreak
 				
-				Points fort :
-				\begin{itemize}
-					\item \textit{\small{impl\'{e}mentation s\'{e}quentielle efficace}}
-					\item \textit{\small{pas de probl\`{e}me de parall\'{e}lisme}}
-				\end{itemize}
-				\medbreak
+			Points fort :
+			\begin{itemize}
+				\item \textit{\small{impl\'{e}mentation s\'{e}quentielle efficace}}
+				\item \textit{\small{pas de probl\`{e}me de parall\'{e}lisme}}
+			\end{itemize}
+			\medbreak
 				
-				Points faible : 
-				\begin{itemize}
-					\item \textit{\small{responsabilit\'{e} de la r\'{e}activit\'{e} au dev}}
-				\end{itemize}
-				\medbreak
+			Points faible : 
+			\begin{itemize}
+				\item \textit{\small{responsabilit\'{e} de la r\'{e}activit\'{e} au dev}}
+			\end{itemize}
+			\medbreak
 				
-				Le mod\`{e}le r\'{e}actif synchrone d\'{e}finit une notion de temps logique qui est une succession d'instant.
-				\smallbreak
-				\textbf{
-					Un programme est r\'{e}actif is son ex\'{e}cution fait progresser les instants logique.
-				}
-				\medbreak
+			Le mod\`{e}le r\'{e}actif synchrone d\'{e}finit une notion de temps logique qui est une succession d'instant.
+			\smallbreak
+			\textbf{Un programme est r\'{e}actif is son ex\'{e}cution fait progresser les instants logique.}
+			\medbreak
 				
-				\textbf{Exemple}
-				\medbreak
+			\textbf{Exemple}
+			\medbreak
 				
-				\begin{enumerate}
-				 	\item let process clock timer s =
-				 	\item $\quad$ let time = ref(Unix.gettimeofday()) in
-				 	\item $\quad$ loop
-				 	\item $\quad$ $\quad$ let time' = Unix.gettimeofday() in
-				 	\item $\quad$ $\quad$ if time' -. !time >= timer
-				 	\item $\quad$ $\quad$ then(emit s(); time := time')
-				 	\item $\quad$ end 
-				\end{enumerate}
-				\medbreak
+			\begin{enumerate}
+			 	\item let process clock timer s =
+			 	\item $\quad$ let time = ref(Unix.gettimeofday()) in
+			 	\item $\quad$ loop
+			 	\item $\quad$ $\quad$ let time' = Unix.gettimeofday() in
+			 	\item $\quad$ $\quad$ if time' -. !time >= timer
+			 	\item $\quad$ $\quad$ then(emit s(); time := time')
+			 	\item $\quad$ end 
+		 	\end{enumerate}
+			\medbreak
 				
-				Le probl\`{e}me ici est que le contenu de la boucle peut s'effectuer instantann\'{e}ment or il faut attendre un instant logique pour. Du coup, on doit ajouter une \textbf{pause entre la ligne 6 et 7}.
-				\bigbreak
+			Le probl\`{e}me ici est que le contenu de la boucle peut s'effectuer instantann\'{e}ment or il faut attendre un instant logique pour. Du coup, on doit ajouter une \textbf{pause entre la ligne 6 et 7}.
+			\bigbreak
 				
-				Une \textbf{condition suffisante} pour q'un \textbf{processus r\'{e}cursif soit r\'{e}actif} est qu'il ait \textbf{toujours} au moins \textbf{un instant logique entre l'instanciation du processus et l'appel r\'{e}cursif}.
-				\bigbreak
+			Une \textbf{condition suffisante} pour q'un \textbf{processus r\'{e}cursif soit r\'{e}actif} est qu'il ait \textbf{toujours} au moins \textbf{un instant logique entre l'instanciation du processus et l'appel r\'{e}cursif}.
+			\bigbreak
 				
-				Le reste de l'article rentre beaucoup plus dans les détails avec l'analyse syntaxique qui prends en compte la réactivité du langage.
+			Le reste de l'article rentre beaucoup plus dans les détails avec l'analyse syntaxique qui prends en compte la réactivité du langage.
 		
 			\newpage
 			
 			
 			
-		\section{Langage fonctionnel réactif}\label{SECDConc4}
+	\section{Langage fonctionnel réactif}\label{SECDConc4}
 			
-			Le but est de réutilisé la une des machines étudié et de la rendre réactive. Les 1ère machines sont trop simple pour être utilisé ce qui nous reste la machine CEK et la machine SECD. Cependant il nous reste une contrainte qui va réussir à nous départager. En effet, il nous faut une machine qui fait un appel par valeur, c'est-à-dire que les paramètres seront évalués avant la fonction. La machine SECD remplit ce critère donc c'est celle que nous utiliserons comme base.
+		Le but est de réutilisé la une des machines étudié et de la rendre réactive. Les 1ère machines sont trop simple pour être utilisé ce qui nous reste la machine CEK et la machine SECD. Cependant il nous reste une contrainte qui va réussir à nous départager. En effet, il nous faut une machine qui fait un appel par valeur, c'est-à-dire que les paramètres seront évalués avant la fonction. La machine SECD remplit ce critère donc c'est celle que nous utiliserons comme base.
+		\medbreak
+			
+		Mes encadrants m'ont donné des ajouts à faire par petites parties afin de structurer mon avancer. Je vais donc redonner les ajouts pour chaque partie ainsi que l'explication de leurs implantations.
+		\bigbreak
+			
+			
+		\subsection{Les bases de la réactivité de la machine}
+				
+			Avant tout développement sur l'implantation il faut pouvoir bien cerner le principe de la réactivité. Le but est de créer un "dialogue" entre plusieurs partie de la machine. 
 			\medbreak
-			
-			Mes encadrants m'ont donné des ajouts à faire par petites parties afin de structurer mon avancer. Je vais donc redonner les ajouts pour chaque partie ainsi que l'explication de leurs implantations.
+				
+			En arrondissant les angles, on peut voir ça comme une discussion. Je m'explique, la discussion c'est notre machine, on a une personne que l'on va nommer Monsieur X qui représente notre programme principale. On peut dire qu'il initie la discussion. Monsieur X va introduire des personnes dans la discussion, ces personnes sont nos parties de programme indépendant. Monsieur X va commencer a parler puis laissera la parole quand il aura finit de parler ou ne sera pas quoi retorquer et ainsi de suite. Pendant qu'une personne parle il peut donner une information qui va être utilisé par un autre et dinc qui va se remettre dans la discussion. Ces informations seront représenter par des signaux. Quand tout le monde a finit de parler c'est la fin de la discussion ce qui représente la fin de la machine.
+			\medbreak
+				
+			Un point qu'il faut bien comprendre ces que l'absence d'une information (d'un signal) est aussi important que ça présence. Un exemple bête, si vous demandez à quelqu'un si il dort une réponse donne une information aussi importante qu'une absence de réponse.
+			\medbreak
+				
+			Un autre point délicat est la fin d'un instant logique. Pour savoir si on te répond ou pas, tu attends un instant et tu en déduis que l'on ne te répondra pas. Pour la machine c'est pareil. L'instant courant c'est lorsque tout le monde discute, quand plus personne parle c'est la fin de l'instant courant. On passe à l'instant suivant et ceux qui attendait une information spécifique vont sortir un autre argument et la discussion recommence jusqu'à ce que plus personne n'est d'argument
+			\medbreak
+				
+			Le principe étant expliqué, nous pouvons rentrer dans les détails. L'idée est d'avoir plusieurs machine SECD qui se parle donc il faut créer une structure plus large qui peut les stocker. On part cependant d'une seule chaîne de contrôle donc il faut pouvoir créer ces "mini-machines". Ces "mini-machines" sont ce que l'ont va appeler des \textbf{threads}.
 			\bigbreak
-			
-			
-			\subsection{Les bases de la réactivité de la machine}
 				
-				Avant tout développement sur l'implantation il faut pouvoir bien cerner le principe de la réactivité. Le but est de créer un "dialogue" entre plusieurs partie de la machine. 
+				
+			\subsubsection{Un Thread}
+					
+				\paragraph{Qu'est-ce qu'un thread}
+				Un thread est l'équivalent d'un processus, il a sa propre pile d'éxécution mais peut récupèrer des informations sur une mémoire partagée. En simplifiant si on fait un lien avec la machine SECD ont peut dire que chaque thread à est une machine SECD et et toute ces machines SECD vont communiquer entre-elle.
+					
+				\paragraph{Quelle forme doit avoir un thread ?} 
+				Un thread est ,comme dit plus haut, une machine SECD en soit donc elle va prendre cette forme c'est-à-dire que l'on va avoir $T~=~\langle S,E,C,D\rangle$. Pour l'instant c'est tout ce qui nous ait nécessaire dans le thread.
+					
+				\paragraph{Comment les stocker ?}
+				C'est bien beau de créer des threads mais il faut pouvoir les stocker. Pour cela, on va se demander si l'on veut un ordre ou pas dans notre stockage. Il faut noter un point important pour faire une machine fonctionnel il vaut mieux avoir une machine déterministe.
 				\medbreak
-				
-				En arrondissant les angles, on peut voir ça comme une discussion. Je m'explique, la discussion c'est notre machine, on a une personne que l'on va nommer Monsieur X qui représente notre programme principale. On peut dire qu'il initie la discussion. Monsieur X va introduire des personnes dans la discussion, ces personnes sont nos parties de programme indépendant. Monsieur X va commencer a parler puis laissera la parole quand il aura finit de parler ou ne sera pas quoi retorquer et ainsi de suite. Pendant qu'une personne parle il peut donner une information qui va être utilisé par un autre et dinc qui va se remettre dans la discussion. Ces informations seront représenter par des signaux. Quand tout le monde a finit de parler c'est la fin de la discussion ce qui représente la fin de la machine.
+					
+				\textit{Machine déterministe :} Une machine est déterministe si pour une entrée donnée on a une seule sortie possible et un unique "chemin" possible dans la machine, c'est-à-dire une unique suite de transitions possibles.
 				\medbreak
-				
-				Un point qu'il faut bien comprendre ces que l'absence d'une information (d'un signal) est aussi important que ça présence. Un exemple bête, si vous demandez à quelqu'un si il dort une réponse donne une information aussi importante qu'une absence de réponse.
-				\medbreak
-				
-				Un autre point délicat est la fin d'un instant logique. Pour savoir si on te répond ou pas, tu attends un instant et tu en déduis que l'on ne te répondra pas. Pour la machine c'est pareil. L'instant courant c'est lorsque tout le monde discute, quand plus personne parle c'est la fin de l'instant courant. On passe à l'instant suivant et ceux qui attendait une information spécifique vont sortir un autre argument et la discussion recommence jusqu'à ce que plus personne n'est d'argument
-				\medbreak
-				
-				Le principe étant expliqué, nous pouvons rentrer dans les détails. L'idée est d'avoir plusieurs machine SECD qui se parle donc il faut créer une structure plus large qui peut les stocker. On part cependant d'une seule chaîne de contrôle donc il faut pouvoir créer ces "mini-machines". Ces "mini-machines" sont ce que l'ont va appeler des \textbf{threads}.
+					
+				Pour éviter de la rendre non déterministe, on va opter pour une file d'attente $TL$ tels que $\forall~tl \in Tl~:~tl = T$.
 				\bigbreak
+					
+			\subsubsection{Un Signal} 
 				
-				
-				\subsubsection{Un Thread}
+				\paragraph{Qu'est-ce qu'un signal ?}
+				Un signal est une information que l'on transmet entre chaque thread. Pour les bases tous ce qui va nous intéresser c'est la présence ou l'absence d'un signal. C'est grâce à sa que les threads vont pouvoir agir en conséquence d'un autre. 
 					
-					\paragraph{Qu'est-ce qu'un thread}
-					Un thread est l'équivalent d'un processus, il a sa propre pile d'éxécution mais peut récupèrer des informations sur une mémoire partagée. En simplifiant si on fait un lien avec la machine SECD ont peut dire que chaque thread à est une machine SECD et et toute ces machines SECD vont communiquer entre-elle.
+				\paragraph{Quelle forme doit avoir un thread ?} 
+				Dans un premier temps un signal sera seulement deux informations : 
+				\begin{enumerate}
+					\item Est-il initialisé ?
+					\item Est-il émit ?
+				\end{enumerate}
+				La façon de répondre dépends de comment il est initialisé. Cette partie est dévéloppé dans la partie \textbf{L'initialisation d'un signal}.
 					
-					\paragraph{Quelle forme doit avoir un thread ?} 
-					Un thread est ,comme dit plus haut, une machine SECD en soit donc elle va prendre cette forme c'est-à-dire que l'on va avoir $T~=~\langle S,E,C,D\rangle$. Pour l'instant c'est tout ce qui nous ait nécessaire dans le thread.
-					
-					\paragraph{Comment les stocker ?}
-					C'est bien beau de créer des threads mais il faut pouvoir les stocker. Pour cela, on va se demander si l'on veut un ordre ou pas dans notre stockage. Il faut noter un point important pour faire une machine fonctionnel il vaut mieux avoir une machine déterministe.
-					\medbreak
-					
-					\textit{Machine déterministe :} Une machine est déterministe si pour une entrée donnée on a une seule sortie possible et un unique "chemin" possible dans la machine, c'est-à-dire une unique suite de transitions possibles.
-					\medbreak
-					
-					Pour éviter de la rendre non déterministe, on va opter pour une file d'attente $TL$ tels que $\forall~tl \in Tl~:~tl = T$.
-					\bigbreak
-					
-				\subsubsection{Un Signal} 
-				
-					\paragraph{Qu'est-ce qu'un signal ?}
-					Un signal est une information que l'on transmet entre chaque thread. Pour les bases tous ce qui va nous intéresser c'est la présence ou l'absence d'un signal. C'est grâce à sa que les threads vont pouvoir agir en conséquence d'un autre. 
-					
-					\paragraph{Quelle forme doit avoir un thread ?} 
-					Dans un premier temps un signal sera seulement deux informations : 
-					\begin{enumerate}
-						\item Est-il initialisé ?
-						\item Est-il émit ?
-					\end{enumerate}
-					La façon de répondre dépends de comment il est initialisé. Cette partie est dévéloppé dans la partie \textbf{L'initialisation d'un signal}.
-					
-					\paragraph{Comment les stocker ?}
-					Comme pour les threads on doit se poser la question sur la structure que l'on veut mais aussi de si l'on veut un ordre ou non. Plusieurs possibilités ont été exploré et sont directement lié ,là aussi, à la façon dont on les initialise. Mais dans tout les cas on va devoir créer une liste qui va stocker au moins le faite qu'il est émit, il faudra donc forcément un élément que l'on va nommer $SI$ qui sera un liste prévue pour stocker les signaux. La structure est développé dans la partie \textbf{L'initialisation d'un signal}.
-					\bigbreak 
+				\paragraph{Comment les stocker ?}
+				Comme pour les threads on doit se poser la question sur la structure que l'on veut mais aussi de si l'on veut un ordre ou non. Plusieurs possibilités ont été exploré et sont directement lié ,là aussi, à la façon dont on les initialise. Mais dans tout les cas on va devoir créer une liste qui va stocker au moins le faite qu'il est émit, il faudra donc forcément un élément que l'on va nommer $SI$ qui sera un liste prévue pour stocker les signaux. La structure est développé dans la partie \textbf{L'initialisation d'un signal}.
+				\bigbreak 
 			
 					
-				\subsubsection{Le Spawn} 
+			\subsubsection{Le Spawn} 
 				
-					\paragraph{Comment créer un thread ?}
-					Pour créer ce que l'on va appeler \textbf{des threads} on va devoir prendre dans la chaîne de contrôle une partie de celle-ci. Pour cela on va avoir besoin de la commande $Spawn$ qui va nous servir à délimiter la partie à prendre. Deux versions de cette commande existe, la 1ère peut-être retrouvé dans la plupart des versions de la machine et la 2nd a été proposé par un de mes encadrants et est présente dans la dernière version.
-					\smallbreak
+				\paragraph{Comment créer un thread ?}
+				Pour créer ce que l'on va appeler \textbf{des threads} on va devoir prendre dans la chaîne de contrôle une partie de celle-ci. Pour cela on va avoir besoin de la commande $Spawn$ qui va nous servir à délimiter la partie à prendre. Deux versions de cette commande existe, la 1ère peut-être retrouvé dans la plupart des versions de la machine et la 2nd a été proposé par un de mes encadrants et est présente dans la dernière version.
+				\smallbreak
+				\begin{enumerate}
+					\item $bspawn~C~espawn$ : la machine prends $Spawn C$ et le convertit en deux délimiteurs qui servent à entourer la partie de la chaîne de contrôle que l'on veut prendre. Le gros défaut de cette version bien qu'utilisable c'est que l'on crée une structure que doit reconnaître la machine alors que la machine SECD elle attends soit des éléments simple soit une commande
+					\item $\langle X,C\rangle~spawn$ : ici la machine convertit le $Spawn C$ en une abstraction et une commande $spawn$. L'abstraction permet d'encapsuler la partie de la chaîne de contrôle sans que la machine essaie de l'évaluer. La commande $spawn$ ,est là juste une commande donc plus logique dans le fonctionnement de la machine, permet de comprendre que la fermeture présent dans la pile est ce que l'on veut pour créer notre thread. 
+				\end{enumerate}
+				\medbreak
+					
+					
+					
+			\subsubsection{L'initialisation d'un signal}
+				
+				\paragraph{Comment créer un signal ?}
+				Pour créer un signal, on va devoir utiliser une commande $Signal s in t$ avec $s$ un signal et $t$ une expression. Cette commande a été modifié dans les dernières versions donc je vais les montrer.
+				\smallbreak
+				\begin{enumerate}
+					\item $Signal~s~in~t$ : l'identifiant du signal est donné et va être initialisé seulement pour l'expression t. Cette version est la plus complexe car il faut garder énormément d'information. En effet, il faut que l'on garde le fait que le signal a été initialisé pour ce thread mais aussi pour une partie précise de la chaîne de contrôle. Pour ça deux versions sont possibles :
 					\begin{enumerate}
-						\item $bspawn~C~espawn$ : la machine prends $Spawn C$ et le convertit en deux délimiteurs qui servent à entourer la partie de la chaîne de contrôle que l'on veut prendre. Le gros défaut de cette version bien qu'utilisable c'est que l'on crée une structure que doit reconnaître la machine alors que la machine SECD elle attends soit des éléments simple soit une commande
-						\item $\langle X,C\rangle~spawn$ : ici la machine convertit le $Spawn C$ en une abstraction et une commande $spawn$. L'abstraction permet d'encapsuler la partie de la chaîne de contrôle sans que la machine essaie de l'évaluer. La commande $spawn$ ,est là juste une commande donc plus logique dans le fonctionnement de la machine, permet de comprendre que la fermeture présent dans la pile est ce que l'on veut pour créer notre thread. 
+						\item On utilise le principe de la sauvegarde. Simplement expliqué quand la machine SECD applique une valeur sur une abstraction elle fait une sauvegarde d'elle-même pour mettre en pause le travail sur la partie principale et se mettre à travailler sur une partie secondaire. Si on reprends le même principe on peut stocker l'initialisation du signal dans l'environnement après avoir sauvegarder. L'élément $SI$ nommé plus haut se donc de la forme $SI~=~\{s,...\}$ tels que $s$ représente un signal émit.
+						\medbreak
+							
+						\textbf{Exemple :} Si on prends $\langle s,C'\rangle$ la version convertit de $Signal~s~in~t$ on a : 
+						\\$\langle S,E,\langle s,C'\rangle C,D,SI\rangle \longrightarrow \langle \emptyset,\emptyset~[init \leftarrow s],C',\langle S,E,C,D\rangle,SI\rangle$  
+						\medbreak
+							
+						Le problème de cette version c'est qu'il provoque un stockage double des signaux dans deux parties différentes de la machine à cause des commandes à venir.
+							
+						\item On utilise la sauvegarde mais d'une façon différentes. En effet on va faire une sauvegarde comme pour la 1ère version cependant on va pas mettre l'initialisation dans l'environnement mais directement la où l'on voudra stocker plus tard via un booléen. On va créer une variante de la sauvegarde de la machine SECD de la forme $\langle s,\langle S,E,C,D\rangle\rangle$. Ce qui va nous permettre de savoir quand est-ce que le signal est initialisé et quand est-ce que l'on doit mettre à faux l'initialisation. La structure $SI$ ici prend une autre forme, on a $SI~=~\{\langle s,init,emit\rangle\}$ tels que $s$ est un signal $init$ un booléen représentant l'initialisation et $emit$ un booléen représentant l'émission du signal.
+						\medbreak
+							
+						\textbf{Exemple :} Si on prends $\langle s,C'\rangle$ la version convertit de $Signal~s~in~t$ on a : 
+						\\$\langle S,E,\langle s,C'\rangle C,D,SI\rangle \longrightarrow \langle \emptyset,\emptyset,C',\langle s,\langle S,E,C,D\rangle\rangle,SI~\langle s,true,false\rangle \rangle$ 
+						\medbreak
+							
+						Cette version est assez efficace mais reste lourde dans la machine niveau stockage et la façon dont cette commande est convertit créer le même problème que pour la 1ère version du $Spawn$, on est pas censé avoir de structure à traiter dans la machine.
 					\end{enumerate}
+					
+					\item $Init~s$ : l'identifiant du signal est donné et va être initialisé pour toute les éléments de la machine. Cette version va drastiquement simplifier le fonctionnement car plus besoin de le limiter à une partie de la chaîne de contrôle ni à un thread en particulier. Simplement, on va le mettre dans le stockage des signaux; ce faite sera nécessaire et suffisant pour savoir qu'il est initialisé. La structure de $SI$ va donc être de la forme $\langle s,emit\rangle$ tels que $s$ un signal et $emit$ un booléen représentant l'émission du signal.
 					\medbreak
-					
-					
-					
-				\subsubsection{L'initialisation d'un signal}
-					
-					\paragraph{Comment créer un signal ?}
-					Pour créer un signal, on va devoir utiliser une commande $Signal s in t$ avec $s$ un signal et $t$ une expression. Cette commande a été modifié dans les dernières versions donc je vais les montrer.
-					\smallbreak
-					\begin{enumerate}
-						\item $Signal~s~in~t$ : l'identifiant du signal est donné et va être initialisé seulement pour l'expression t. Cette version est la plus complexe car il faut garder énormément d'information. En effet, il faut que l'on garde le fait que le signal a été initialisé pour ce thread mais aussi pour une partie précise de la chaîne de contrôle. Pour ça deux versions sont possibles :
-						\begin{enumerate}
-							\item On utilise le principe de la sauvegarde. Simplement expliqué quand la machine SECD applique une valeur sur une abstraction elle fait une sauvegarde d'elle-même pour mettre en pause le travail sur la partie principale et se mettre à travailler sur une partie secondaire. Si on reprends le même principe on peut stocker l'initialisation du signal dans l'environnement après avoir sauvegarder. L'élément $SI$ nommé plus haut se donc de la forme $SI~=~\{s,...\}$ tels que $s$ représente un signal émit.
-							\medbreak
-							
-							\textbf{Exemple :} Si on prends $\langle s,C'\rangle$ la version convertit de $Signal~s~in~t$ on a : 
-							\\$\langle S,E,\langle s,C'\rangle C,D,SI\rangle \longrightarrow \langle \emptyset,\emptyset~[init \leftarrow s],C',\langle S,E,C,D\rangle,SI\rangle$  
-							\medbreak
-							
-							Le problème de cette version c'est qu'il provoque un stockage double des signaux dans deux parties différentes de la machine à cause des commandes à venir.
-							
-							\item On utilise la sauvegarde mais d'une façon différentes. En effet on va faire une sauvegarde comme pour la 1ère version cependant on va pas mettre l'initialisation dans l'environnement mais directement la où l'on voudra stocker plus tard via un booléen. On va créer une variante de la sauvegarde de la machine SECD de la forme $\langle s,\langle S,E,C,D\rangle\rangle$. Ce qui va nous permettre de savoir quand est-ce que le signal est initialisé et quand est-ce que l'on doit mettre à faux l'initialisation. La structure $SI$ ici prend une autre forme, on a $SI~=~\{\langle s,init,emit\rangle\}$ tels que $s$ est un signal $init$ un booléen représentant l'initialisation et $emit$ un booléen représentant l'émission du signal.
-							\medbreak
-							
-							\textbf{Exemple :} Si on prends $\langle s,C'\rangle$ la version convertit de $Signal~s~in~t$ on a : 
-							\\$\langle S,E,\langle s,C'\rangle C,D,SI\rangle \longrightarrow \langle \emptyset,\emptyset,C',\langle s,\langle S,E,C,D\rangle\rangle,SI~\langle s,true,false\rangle \rangle$ 
-							\medbreak
-							
-							Cette version est assez efficace mais reste lourde dans la machine niveau stockage et la façon dont cette commande est convertit créer le même problème que pour la 1ère version du $Spawn$, on est pas censé avoir de structure à traiter dans la machine.
-						\end{enumerate}
-					
-						\item $Init~s$ : l'identifiant du signal est donné et va être initialisé pour toute les éléments de la machine. Cette version va drastiquement simplifier le fonctionnement car plus besoin de le limiter à une partie de la chaîne de contrôle ni à un thread en particulier. Simplement, on va le mettre dans le stockage des signaux; ce faite sera nécessaire et suffisant pour savoir qu'il est initialisé. La structure de $SI$ va donc être de la forme $\langle s,emit\rangle$ tels que $s$ un signal et $emit$ un booléen représentant l'émission du signal.
-						\medbreak
 						
-						\textbf{Exemple :} Si on prends $s~Init$ la version convertit de $Signal~s~in~t$ on a : 
-						\\$\langle s~S,E,Init~C,D,SI\rangle \longrightarrow \langle S,E,C,D,SI~\langle s,false\rangle \rangle$ 
-						\medbreak
+					\textbf{Exemple :} Si on prends $s~Init$ la version convertit de $Signal~s~in~t$ on a : 
+					\\$\langle s~S,E,Init~C,D,SI\rangle \longrightarrow \langle S,E,C,D,SI~\langle s,false\rangle \rangle$ 
+					\medbreak
 						
-						\item $Init$ : l'identifiant du signal sera retourné par la machine, l'utilisateur ne lui donne plus l'identifiant. On créera l'identifiant en incrémentant le dernier signal de un. Le reste est identique au fonctionnement du $Init~s$. Cette possibilité aura la même structure pour $SI$ que la précédente à l'exception que l'on va rajouté un ordre car il faudra créer des identifiants donc on va toujours mettre en fin de la liste afin de pouvoir créer facilement un nouvelle identifiant.
-						\medbreak
+					\item $Init$ : l'identifiant du signal sera retourné par la machine, l'utilisateur ne lui donne plus l'identifiant. On créera l'identifiant en incrémentant le dernier signal de un. Le reste est identique au fonctionnement du $Init~s$. Cette possibilité aura la même structure pour $SI$ que la précédente à l'exception que l'on va rajouté un ordre car il faudra créer des identifiants donc on va toujours mettre en fin de la liste afin de pouvoir créer facilement un nouvelle identifiant.
+					\medbreak
 						
-						\textbf{Exemple :} Si on prends $Init$ la version convertit de $Signal~s~in~t$ on a : 
-						\\$\langle S,E,Init~C,D,\emptyset\rangle \longrightarrow \langle 0~S,E,C,D,SI~\langle 0,false\rangle \rangle$ 
-						\\ou
-						\\$\langle S,E,Init~C,D,SI~\langle s,emit\rangle\rangle \longrightarrow \langle (s+1)~S,E,C,D,SI~\langle s,emit\rangle~\langle (s+1),false\rangle \rangle$ 
-						\medbreak
-					\end{enumerate}
-					\bigbreak
+					\textbf{Exemple :} Si on prends $Init$ la version convertit de $Signal~s~in~t$ on a : 
+					\\$\langle S,E,Init~C,D,\emptyset\rangle \longrightarrow \langle 0~S,E,C,D,SI~\langle 0,false\rangle \rangle$ 
+					\\ou
+					\\$\langle S,E,Init~C,D,SI~\langle s,emit\rangle\rangle \longrightarrow \langle (s+1)~S,E,C,D,SI~\langle s,emit\rangle~\langle (s+1),false\rangle \rangle$ 
+					\medbreak
+				\end{enumerate}
+				\bigbreak
 					
 				
-				\subsubsection{La présence d'un signal}
+			\subsubsection{La présence d'un signal}
 				
-					\paragraph{Comment savoir si un signal est présent ?}
-					\textit{Un signal est présent si il est émit.}
-					\smallbreak
-					C'est ici que la notion de temps logique va nous être utile. Via l'initialisation d'un signal on sait que l'on a un booléen pour savoir si un signal est émit donc le cas émit est simple mais si il ne l'est pas ? 
-					\smallbreak
-					\textit{Un signal est absent si il n'est pas émit durant l'instant logique.}
-					\smallbreak
-					On a besoin de déterminer quand est-ce que l'instant logique est finit. Les différents threads vont s'éxécuter à la chaîne donc la fin d'un instant serait quand plus aucun thread ne s'éxécute. Cependant certains vont tomber dans ce cas ou il devront attendre la présence ou l'absence d'un signal donc la fin d'un instant logique serait quand plus aucun thread \textbf{ne peut} s'éxécuter. 
-					\medbreak
+				\paragraph{Comment savoir si un signal est présent ?}
+				\textit{Un signal est présent si il est émit.}
+				\smallbreak
+				C'est ici que la notion de temps logique va nous être utile. Via l'initialisation d'un signal on sait que l'on a un booléen pour savoir si un signal est émit donc le cas émit est simple mais si il ne l'est pas ? 
+				\smallbreak
+				\textit{Un signal est absent si il n'est pas émit durant l'instant logique.}
+				\smallbreak
+				On a besoin de déterminer quand est-ce que l'instant logique est finit. Les différents threads vont s'éxécuter à la chaîne donc la fin d'un instant serait quand plus aucun thread ne s'éxécute. Cependant certains vont tomber dans ce cas ou il devront attendre la présence ou l'absence d'un signal donc la fin d'un instant logique serait quand plus aucun thread \textbf{ne peut} s'éxécuter. 
+				\medbreak
 					
-					Dans notre machine on va devoir différencier les threads qui attendent leur tour et ceux qui attendent l'émission d'un signal. Deux possibilités ont été étudié :
-					\begin{enumerate}
-						\item On scinde la file d'attente de thread en deux avec d'un côté les threads en attente de leur tour et de l'autre ceux en attente d'un signal. On aurai $TL =\langle W,ST\rangle$ tels que :
-						\begin{itemize}
-							\item[] - $W$ les threads qui attendent leur tour tels que $\forall w \in W~:~w = T$ 
-							\item[] - $ST$ les threads qui attendent un signal tels que $\forall st \in ST~:~st = \langle s,T\rangle$ avec $s$ un signal
-						\end{itemize}
-						\medbreak
-						
-						Le problème de cette possibilité c'est que l'on doit préciser pour chaque élément de $ST$ quelle signal il attend. La deuxième possibilité résout se problème.
-						\item On ne touche pas $TL$ mais tous les threads bloqués vont être mis avec le signal directement. Ce qui veut dire que $SI$ va être modifié tels que $SI = \langle s , \langle emit , ST \rangle\rangle$ avec $s$ un signal, $emit$ le booléen représentant l'émission et $ST$ une liste de threads qui attendent $s$.
-					\end{enumerate}
-					\medbreak
-					
-					Maintenant que l'on sait différencier les threads, on peut tester la présence d'un signal. La commande en elle-même a eu deux versions :
-					\begin{enumerate}
-						\item $\langle s,C',C''\rangle$ avec $s$ un signal et $C'$ et $c''$ deux expressions. Si vous avez bien suivi jusque là, vous aurez remarqué que les premières versions ont toujours le même problème récurrent : c'est une structure complexe que l'on veut mettre dans une machine qui traite que des éléments basiques et des commandes. Cette forme est donc utilisable mais n'est pas dans la logique de la machine de base.
-						\item $s~\langle\langle X,C'\rangle~\langle\langle X,C''\rangle~present$ avec $s$ un signal. Cette version parait plus compliqué, je m'en vais donc vous l'expliquez. On a le signal s jusque là rien de bien étonnant. Après on a deux abstractions, elles vont nous servir de protection pour nos deux possibilités de notre présence car elle empêche à la machine d'essayer de l'évaluer. Pour finir il y a le mot $present$ qui sert de commande pour comprendre que l'on veut faire un test.
-					\end{enumerate} 
-					\bigbreak
-					
-					
-					\paragraph{Récapitulatif :} Si on reprends le tout, pour faire notre teste de présence nous avons définit :
+				Dans notre machine on va devoir différencier les threads qui attendent leur tour et ceux qui attendent l'émission d'un signal. Deux possibilités ont été étudié :
+				\begin{enumerate}
+					\item On scinde la file d'attente de thread en deux avec d'un côté les threads en attente de leur tour et 
+					de l'autre ceux en attente d'un signal. On aurai $TL =\langle W,ST\rangle$ tels que :
 					\begin{itemize}
-						\item[] - la forme de la commande : $s~\langle\langle X,C'\rangle~\langle\langle X,C''\rangle~present$ avec $s$ un signal
-						\item[] - la présence d'un signal : \textit{un signal est présent si il est émit dans l'instant courant}
-						\item[] - l'absence d'un signal : \textit{un signal est absent si il n'est pas émit durant tout l'instant courant}
-						\item[] - la fin de l'instant courant : \textit{l'instant courant est fini quand plus aucun thread ne peut plus effectuer d'instruction}
-						\item[] - une structure contenant les threads bloqués : $SI = \langle s , \langle emit , ST \rangle\rangle$ avec $s$ un signal, $emit$ le booléen représentant l'émission et $ST$ une liste de threads qui attendent $s$
+						\item[] - $W$ les threads qui attendent leur tour tels que $\forall w \in W~:~w = T$ 
+						\item[] - $ST$ les threads qui attendent un signal tels que $\forall st \in ST~:~st = \langle s,T\rangle$ avec $s$ un signal
 					\end{itemize}
-					\bigbreak
-					\bigbreak
-					
-					
-					
-					
-				\subsubsection{Émettre un signal}
-					
-					Cette commande est sûrement la plus simple à mettre en place car tout a été fait en amont via les trois commandes précédente. La forme de la commande $emit$ n'a pas beaucoup bouger, les voici :
-					\begin{enumerate}
-						\item $emit_{s}$ Une forme inspiré de $prim_{o^{n}}$ mais la grosse erreur c'est quand mettant un signal $s$ en indice du $emit$ on à l'impression qu'il y a un $emit$ par signal $s$ or l'émission est indépendant du signal.
-						\item $s~emit$ avec $s$ un signal. Celle-ci est clair et fonctionne bien. 
-					\end{enumerate}
 					\medbreak
+						
+					Le problème de cette possibilité c'est que l'on doit préciser pour chaque élément de $ST$ quelle signal il attend. La deuxième possibilité résout se problème.
+					\item On ne touche pas $TL$ mais tous les threads bloqués vont être mis avec le signal directement. Ce qui veut dire que $SI$ va être modifié tels que $SI = \langle s , \langle emit , ST \rangle\rangle$ avec $s$ un signal, $emit$ le booléen représentant l'émission et $ST$ une liste de threads qui attendent $s$.
+				\end{enumerate}
+				\medbreak
 					
-					Le faite d'émettre va impliqué deux chose sur notre machine :
-					\begin{enumerate}
-						\item Notre booléen présent dans le signal sera mis à vraie
-						\item Tous les threads présent dans le tuple du signal sera mis dans la file d'attenteS 
-					\end{enumerate} 
+				Maintenant que l'on sait différencier les threads, on peut tester la présence d'un signal. La commande en elle-même a eu deux versions :
+				\begin{enumerate}
+					\item $\langle s,C',C''\rangle$ avec $s$ un signal et $C'$ et $c''$ deux expressions. Si vous avez bien suivi jusque là, vous aurez remarqué que les premières versions ont toujours le même problème récurrent : c'est une structure complexe que l'on veut mettre dans une machine qui traite que des éléments basiques et des commandes. Cette forme est donc utilisable mais n'est pas dans la logique de la machine de base.
+					\item $s~\langle\langle X,C'\rangle~\langle\langle X,C''\rangle~present$ avec $s$ un signal. Cette version parait plus compliqué, je m'en vais donc vous l'expliquez. On a le signal s jusque là rien de bien étonnant. Après on a deux abstractions, elles vont nous servir de protection pour nos deux possibilités de notre présence car elle empêche à la machine d'essayer de l'évaluer. Pour finir il y a le mot $present$ qui sert de commande pour comprendre que l'on veut faire un test.
+				\end{enumerate} 
+				\bigbreak
+					
+					
+				\paragraph{Récapitulatif :} Si on reprends le tout, pour faire notre teste de présence nous avons définit :
+				\begin{itemize}
+					\item[] - la forme de la commande : $s~\langle\langle X,C'\rangle~\langle\langle X,C''\rangle~present$ avec $s$ un signal
+					\item[] - la présence d'un signal : \textit{un signal est présent si il est émit dans l'instant courant}
+					\item[] - l'absence d'un signal : \textit{un signal est absent si il n'est pas émit durant tout l'instant courant}
+					\item[] - la fin de l'instant courant : \textit{l'instant courant est fini quand plus aucun thread ne peut plus effectuer d'instruction}
+					\item[] - une structure contenant les threads bloqués : $SI = \langle s , \langle emit , ST \rangle\rangle$ avec $s$ un signal, $emit$ le booléen représentant l'émission et $ST$ une liste de threads qui attendent $s$
+				\end{itemize}
+				\bigbreak
+				\bigbreak
+					
+					
+					
+					
+			\subsubsection{Émettre un signal}
+					
+				Cette commande est sûrement la plus simple à mettre en place car tout a été fait en amont via les trois commandes précédente. La forme de la commande $emit$ n'a pas beaucoup bouger, les voici :
+				\begin{enumerate}
+					\item $emit_{s}$ Une forme inspiré de $prim_{o^{n}}$ mais la grosse erreur c'est quand mettant un signal $s$ en indice du $emit$ on à l'impression qu'il y a un $emit$ par signal $s$ or l'émission est indépendant du signal.
+					\item $s~emit$ avec $s$ un signal. Celle-ci est clair et fonctionne bien. 
+				\end{enumerate}
+				\medbreak
+					
+				Le faite d'émettre va impliqué deux chose sur notre machine :
+				\begin{enumerate}					
+					\item Notre booléen présent dans le signal sera mis à vraie
+					\item Tous les threads présent dans le tuple du signal sera mis dans la file d'attenteS 
+				\end{enumerate} 
 				\bigbreak
 				\bigbreak
 				
 				
 					
 					
-				\subsubsection{Les règles de notre machine}
+			\subsubsection{Les règles de notre machine}
 				
-					Maintenant que l'on a définit les nouvelles commandes et ce qu'elles ont besoin pour fonctionner il est temps de voir à quoi ressemble notre machine avec ces ajouts.
-					\bigbreak
+				Maintenant que l'on a définit les nouvelles commandes et ce qu'elles ont besoin pour fonctionner il est temps de voir à quoi ressemble notre machine avec ces ajouts.
+				\bigbreak
 					
 					
-					\textbf{\textit{Soit $\langle T,TL,SI\rangle$ avec :}}
+				\textbf{\textit{Soit $\langle T,TL,SI\rangle$ avec :}}
 					
+				\begin{itemize}
+					\item[] $TL =$ \textbf{une file de thread tels que :} $\forall$ $tl \in TL$ $|$ $tl = T$ avec :
 					\begin{itemize}
-						\item[] $TL =$ \textbf{une file de thread tels que :} $\forall$ $tl \in TL$ $|$ $tl = T$ avec :
+						\item[] $T =$ $\langle S,E,C,D\rangle$ \textbf{le thread courant avec :}
 						\begin{itemize}
-							\item[] $T =$ $\langle S,E,C,D\rangle$ \textbf{le thread courant avec :}
+							\item[] $V = b$	
 							\begin{itemize}
-								\item[] $V = b$	
-								\begin{itemize}
-									\item[|] $\langle\langle X,C' \rangle E\rangle$
-									\item[|] $signal$
-								\end{itemize}
-								\item[] $S =  \emptyset$ 
-								\begin{itemize}
-									\item[|] $V$ $S$
-								\end{itemize}
-								\item[] $E = \{...,\langle X,V\rangle,...\}$
-								\item[] $C = \epsilon$
-								\begin{itemize}
-									\item[|] $b~C$~~~~~~~~~~~~~~~~~~~~~~~~~~    (une constante)
-									\item[|] $X~C$~~~~~~~~~~~~~~~~~~~~~~~~~~(une variable)
-									\item[|] $signal~C$~~~~~~~~~~~~~~~~~~~~(un signal)
-									\item[|] $\langle X,C'\rangle~C$~~~~~~~~~~~~~~~~~~~(une abstraction)
-									\item[|] $ap~C$~~~~~~~~~~~~~~~~~~~~~~~~~(une application)
-									\item[|] $prim_{o^{n}}~C$~~~~~~~~~~~~~~~~~~~(un opérateur)
-									\item[|] $spawn~C$~~~~~~~~~~~~~~~~~~~(créateur d'un nouveau thread)
-									\item[|] $present~C$~~~~~~~~~~~~~~~~~~(teste la présence d'un signal)
-									\item[|] $init~C$~~~~~~~~~~~~~~~~~~~~~~~(initialise un signal )
-									\item[|] $emit~C$
-								\end{itemize}
-								\item[] D = $\emptyset$
-								\begin{itemize}
-									\item[|] $\langle S,E,C,D\rangle$~~~~~~~~~~~~~~~~(une sauvegarde liée à une abstraction)
-								\end{itemize}
-							\end{itemize}	
-						\end{itemize}
-						
-						\item[]
-						\item[] \textbf{$SI =$ une liste de signaux tels que :} $\forall$ $si \in SI$ $|$ $si =$ $\langle signal,\langle emit,ST\rangle\rangle$ avec :
-						\begin{itemize}
-							\item[] - \textbf{un booléen représentant l'émission du signal :} $emit$
-							\item[] - \textbf{la liste des threads bloqués par ce signal :} $ST$ avec $\forall st \in ST~:~st = T$
-						\end{itemize}
+								\item[|] $\langle\langle X,C' \rangle E\rangle$
+								\item[|] $signal$
+							\end{itemize}
+							\item[] $S =  \emptyset$ 
+							\begin{itemize}
+								\item[|] $V$ $S$
+							\end{itemize}
+							\item[] $E = \{...,\langle X,V\rangle,...\}$
+							\item[] $C = \epsilon$								
+							\begin{itemize}
+								\item[|] $b~C$~~~~~~~~~~~~~~~~~~~~~~~~~~    (une constante)
+								\item[|] $X~C$~~~~~~~~~~~~~~~~~~~~~~~~~~(une variable)
+								\item[|] $signal~C$~~~~~~~~~~~~~~~~~~~~(un signal)
+								\item[|] $\langle X,C'\rangle~C$~~~~~~~~~~~~~~~~~~~(une abstraction)
+								\item[|] $ap~C$~~~~~~~~~~~~~~~~~~~~~~~~~(une application)
+								\item[|] $prim_{o^{n}}~C$~~~~~~~~~~~~~~~~~~~(un opérateur)
+								\item[|] $spawn~C$~~~~~~~~~~~~~~~~~~~(créateur d'un nouveau thread)
+								\item[|] $present~C$~~~~~~~~~~~~~~~~~~(teste la présence d'un signal)
+								\item[|] $init~C$~~~~~~~~~~~~~~~~~~~~~~~(initialise un signal )
+								\item[|] $emit~C$
+							\end{itemize}
+							\item[] D = $\emptyset$
+							\begin{itemize}
+								\item[|] $\langle S,E,C,D\rangle$~~~~~~~~~~~~~~~~(une sauvegarde liée à une abstraction)
+							\end{itemize}
+						\end{itemize}	
 					\end{itemize}
-					\bigbreak
-					\bigbreak
-					
-			
-			
-			
-					\textbf{On va définir une règle pour simplifier les règles futurs :} 
+					\item[]
+					\item[] \textbf{$SI =$ une liste de signaux tels que :} $\forall$ $si \in SI$ $|$ $si =$ $\langle signal,\langle emit,ST\rangle\rangle$ avec :
 					\begin{itemize}
-						\item[] Dans tous les cas :
-						\item[] \begin{center}
-							$\dfrac{T \rightarrow T'}{\langle T,TL,SI\rangle \rightarrow \langle T',TL,SI\rangle}$
-						\end{center}
+						\item[] - \textbf{un booléen représentant l'émission du signal :} $emit$
+						\item[] - \textbf{la liste des threads bloqués par ce signal :} $ST$ avec $\forall st \in ST~:~st = T$
 					\end{itemize}
-					\bigbreak
-					\bigbreak
+				\end{itemize}
+				\bigbreak
+				\bigbreak
+					
+			
+			
+			
+				\textbf{On va définir une règle pour simplifier les règles futurs :} 
+				\begin{itemize}
+					\item[] Dans tous les cas :
+					\item[] \begin{center}
+						$\dfrac{T \rightarrow T'}{\langle T,TL,SI\rangle \rightarrow \langle T',TL,SI\rangle}$
+					\end{center}
+				\end{itemize}
+				\bigbreak
+				\bigbreak
 					
 					
 					
 					
-					\textbf{\textit{Une suite de fonctions ont été écrite pour simplifier la lecture des règles. Les voici :}}
-					\smallbreak
+				\textbf{\textit{Une suite de fonctions ont été écrite pour simplifier la lecture des règles. Les voici :}}
+				\smallbreak
+				\begin{itemize}
+					\item[] $\iota(SI)$ une fonction qui prends l'identifiant du dernier signal créer l'incrémente pour en créer un nouveau et retourner l'identifiant du signal créée avec la liste mise à jour.
+					\\ \textbf{Exemple :} $\iota(\{...,\langle s,\langle emit,CS,SSI\rangle\rangle\}) =$ $(s' ,\{...,\langle s,\langle emit,CS,SSI\rangle\rangle,\langle s',\langle false,\{\},\{\}\rangle\rangle\})$ avec $s' = s+1$
+					\item[] 
+					\item[] $SI(s)$ une fonction qui retourne le 2nd élément du couple correspondant à s.
+					\\\textbf{Exemple :} $SI(s) =$ $\langle emit,CS,SSI,TL\rangle$
+					\item[]  
+					\item[] $\tau(SI)$ une fonction qui prends tous les éléments bloqués et les retourne en prenant en compte que le signal n'est pas émit, mets les liste de valeurs courantes en liste partagés si il est émit 
+					\\ \textbf{Exemple :} $\tau(TL,SI) =$ $\forall$ $si \in SI$ : 
 					\begin{itemize}
-						\item[] $\iota(SI)$ une fonction qui prends l'identifiant du dernier signal créer l'incrémente pour en créer un nouveau et retourner l'identifiant du signal créée avec la liste mise à jour.
-						\\ \textbf{Exemple :} $\iota(\{...,\langle s,\langle emit,CS,SSI\rangle\rangle\}) =$ $(s' ,\{...,\langle s,\langle emit,CS,SSI\rangle\rangle,\langle s',\langle false,\{\},\{\}\rangle\rangle\})$ avec $s' = s+1$
-						\item[] 
-						\item[] $SI(s)$ une fonction qui retourne le 2nd élément du couple correspondant à s.
-						\\\textbf{Exemple :} $SI(s) =$ $\langle emit,CS,SSI,TL\rangle$
-						\item[]  
-						\item[] $\tau(SI)$ une fonction qui prends tous les éléments bloqués et les retourne en prenant en compte que le signal n'est pas émit, mets les liste de valeurs courantes en liste partagés si il est émit 
-						\\ \textbf{Exemple :} $\tau(TL,SI) =$ $\forall$ $si \in SI$ : 
-						\begin{itemize}
-							\item[] - $\langle true,CS,SSI,\{\}\rangle$ $\rightarrow$ $\langle false,\{\},CS,\{\}\rangle$
-							\item[] - $\langle false,CS,SSI,ST\rangle$ $\rightarrow$ $\langle false,\{\},\{\},\{\}\rangle$ et 
-							\\$\forall$ $st \in ST$ : $\langle I,\langle\langle X',C''\rangle, E\rangle$ $\langle\langle X,C'\rangle, E\rangle$ $s$ $S,E,present$ $C,D\rangle$ $\rightarrow$ $ \langle I,S,E,C''$ $C,D\rangle$ et on l'ajoute à TL
-						\end{itemize}
+						\item[] - $\langle true,CS,SSI,\{\}\rangle$ $\rightarrow$ $\langle false,\{\},CS,\{\}\rangle$
+						\item[] - $\langle false,CS,SSI,ST\rangle$ $\rightarrow$ $\langle false,\{\},\{\},\{\}\rangle$ et 
+						\\$\forall$ $st \in ST$ : $\langle I,\langle\langle X',C''\rangle, E\rangle$ $\langle\langle X,C'\rangle, E\rangle$ $s$ $S,E,present$ $C,D\rangle$ $\rightarrow$ $ \langle I,S,E,C''$ $C,D\rangle$ et on l'ajoute à TL
 					\end{itemize}
-					\bigbreak
-					\bigbreak
+				\end{itemize}
+				\bigbreak
+				\bigbreak
 					
 					
 					
 					
-					\textbf{\textit{Les éléments étant expliqués, voici les nouvelles règles de la machine :}}
-					\smallbreak
-					\begin{enumerate}
-						\item[] \textbf{Partie de base de la machine SECD :} Nous avons rajouter des règles mais la machine doit pouvoir traiter les mêmes informations que la machine de base donc on reprends directement les règles de la machine SECD. 
-						\item[]
-						\begin{itemize}
-							\item[] \textbf{Constante :} On a une constante, on la déplace dans la pile.
-							\smallbreak
-							$\langle S,E,n$ $C,D\rangle 
-							\longrightarrow_{TTLS} 
-							\langle n$ $S,E,C,D\rangle$ avec $n = b$ ou $signal$
-							\item[]
-							
-							\item[] \textbf{Substitution :} On a une abstraction, on créer une fermeture avec celle-ci et l'environnement courant et on la place dans la pile.
-							\smallbreak
-							$\langle S,E,X$ $C,D\rangle
-							\longrightarrow_{TTLS} 
-							\langle V$ $S,E,C,D\rangle$ avec E(X) = V
-							\item[]
-							
-							\item[] \textbf{Opération :} On a un opérateur et le nombre de constante nécessaire dans la pile, \\via la fonction $\delta$ on retourne le résultat dans la pile.
-							\smallbreak
-							$\langle b_{n},...,b_{1}$ $S,E,prim_{o^{n}}$ $C,D\rangle
-							\longrightarrow_{TTLS} 
-							\langle V$ $S,E,C,D\rangle$ avec $\delta(o^{n}$ $b_{1}...b_{n}) = V$
-							\item[]
-							
-							\item[]  \textbf{Abstraction :} On a une abstraction, on créer une fermeture comportant l'abstraction et l'environnement courant et on mets la fermeture dans la pile.
-							\smallbreak
-							$\langle S,E,\langle X,C'\rangle$ $C,D\rangle
-							\longrightarrow_{TTLS} 
-							\langle \langle\langle X,C'\rangle,E\rangle$ $S,E,C,D\rangle$
-							\item[]
-							
-							\item[]  \textbf{Application :} On a une application, donc on sauvegarde dans le dépôt, on ajoute une substitution et on remplace la chaîne de contrôle et l'environnement par ceux présent dans la fermeture.
-							\smallbreak
-							$\langle V$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,ap$ $C,D\rangle
-							\longrightarrow_{TTLS} 
-							\langle \emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle$
-							\item[] 
-							
-							\item[] \textbf{Récupération de sauvegarde :}  On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
-							\smallbreak  
-							$\langle V$ $S,E,\epsilon,\langle S',E',C,D\rangle\rangle
-							\longrightarrow_{TTLS} 
-							\langle V$ $S',E',C,D\rangle$
-						\end{itemize}
-						\item[]
-						
-						
-						
-						\item[] \textbf{Partie pour la concurrence :} Voici les règles rajoutées dans le but de gérer les threads et les signaux et donc de rendre la machine réactive. 
-						\item[]
-						\begin{itemize}
-							\item[]  \textbf{Création thread :} On veut créer un nouveau thread.
-							\smallbreak 
-							$\langle\langle\langle\langle X,C'\rangle, E\rangle$ $S,E,spawn$ $C,D\rangle,TL,SI\rangle 
-							\longrightarrow_{TTLS} 
-							\langle\langle S,E,C,D\rangle,TL$ $\langle S,E,C',D\rangle,SI\rangle$
-							\item[]
-							
-							\item[] \textbf{Initialisation signal :} On initialise le signal via la fonction $\iota$.
-							\smallbreak 
-							$\langle\langle S,E,init$ $C,D\rangle,TL,SI\rangle 
-							\longrightarrow_{TTLS}
-							\langle\langle signal$ $S,E,C,D\rangle,TL,SI'\rangle$
-							avec $\iota(SI) = (signal,SI')$
-							\item[]	
-							
-							\item[] \textbf{Présence du signal :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il est émit donc on prends le 1er choix.
-							\smallbreak
-							$\langle\langle \langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle,TL,SI\rangle 
-							\longrightarrow_{TTLS} 
-							\langle\langle S,E,C'$ $C,D\rangle,TL,SI\rangle$ 
-							\\avec $SI(s) = \langle vraie,TL\rangle$
-							\item[]
-							
-							
-							\item[] à vérifier\textbf{ Thread bloqué remplacé :} On teste la présence d'un signal, il n'est pas émit et il y a un thread dans la file d'attente
-							donc on mets ce thread dans la liste de threads bloqués et on prends le thread en tête de la file.
-							\smallbreak
-							$\langle\langle \langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle,\langle S',E',C''',D'\rangle$ $TL,SI\rangle 
-							\\\longrightarrow_{TTLS} 
-							\langle\langle S',E',C''',D'\rangle,TL,SI'\rangle$ 
-							\\avec $SI(s) = \langle faux,TL'\rangle$
-							et $SI'(s) = \langle faux,TL'$ $\langle \langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle\rangle$
-							\item[]	
-							
-							\item[] à vérifier \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal, il n'est pas émit donc on mets ce thread dans la liste de threads bloqués.
-							\smallbreak 
-							$\langle\langle \langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,C,D\rangle,\emptyset,SI\rangle 
-							\longrightarrow_{TTLS} 
-							\langle\langle \emptyset,\epsilon,\emptyset,\emptyset\rangle,\emptyset,SI'\rangle$
-							\\avec $SI(s) = \langle faux,TL'\rangle$
-							et $SI'(s) = \langle faux,TL'$ $\langle\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle\rangle$
-							\item[]
-							
-							\item[] \textbf{Récupération dans la file d'attente :} On a plus rien à traité et on a aucune sauvegarde, du coup 
-							\\on change le thread courant par le thread en tête de la file d'attente.
-							\smallbreak
-							$\langle\langle V$ $S,E,\epsilon,\emptyset\rangle,\langle S',E',C,D\rangle$ $TL,SI\rangle 
-							\longrightarrow_{TTLS} 
-							\langle\langle V$ $S',E',C,D\rangle,TL,SI\rangle$
-							\item[]
-							
-							\item[] \textbf{Fin d'instant logique :} On a plus rien à traiter, on a aucune sauvegarde et on a plus rien dans la file d'attente, c'est la fin d'un instant logique.
-							\smallbreak
-							$\langle\langle V$ $S,E,\epsilon,\emptyset \rangle ,\emptyset,SI\rangle 
-							\longrightarrow_{TTLS} 
-							\langle\langle V$ $S,E,\epsilon,\emptyset\rangle,TL,SI'\rangle$
-							\\si $\forall~si \in SI : si = \langle emit,\{\}\rangle$ alors $\tau(SI)$ = ($SI',TL$) 
-							\item[]
-							
-						\end{itemize}
-						\item[] \textbf{Partie commune :} Quand on rajoute des règles le plus gros risque est de créer des conflit avec les anciennes règles. Les plus gros problèmes sont avec l'application et la récupération de sauvegarde car $spawn$ et $emit$ ne retournent rien dans la pile donc il faut pouvoir continuer de faire fonctionner la machine avec ces deux cas. 
-						\item[]
-						\begin{itemize}
-							\item[] \textbf{Application neutre :} On a une application sur rien, cela revient juste à rien faire.
-							\smallbreak 
-							$\langle S,E,ap$ $C,D\rangle
-							\longrightarrow_{TTLS} 
-							\langle S,E,C,D\rangle$
-							\item[]
-							\item[] \textbf{Récupération de sauvegarde avec pile vide :}  On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
-							\smallbreak  
-							$\langle \emptyset,E,\epsilon,\langle S',E',C,D\rangle\rangle
-							\longrightarrow_{TTLS} 
-							\langle S',E',C,D\rangle$
-						\end{itemize}
-						
-						\item[]
-					\end{enumerate}
-					\bigbreak
-					\bigbreak
-					
-					
-					\textbf{\textit{la machine peut s'arrêter dans 3 états différents:}}
-					\smallbreak
+				\textbf{\textit{Les éléments étant expliqués, voici les nouvelles règles de la machine :}}
+				\smallbreak
+				\begin{enumerate}
+					\item[] \textbf{Partie de base de la machine SECD :} Nous avons rajouter des règles mais la machine doit pouvoir traiter les mêmes informations que la machine de base donc on reprends directement les règles de la machine SECD. 
+					\item[]
 					\begin{itemize}
-						\item[] - on a une \textbf{constante b} tels que 
-						$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTLS},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
-						\twoheadrightarrow_{TTLS} 
-						\langle\langle I,b$ $S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
+						\item[] \textbf{Constante :} On a une constante, on la déplace dans la pile.
+						\smallbreak
+						$\langle S,E,n$ $C,D\rangle 
+						\longrightarrow_{TTS} 
+						\langle n$ $S,E,C,D\rangle$ avec $n = b$ ou $signal$
+						\item[]
+							
+						\item[] \textbf{Substitution :} On a une abstraction, on créer une fermeture avec celle-ci et l'environnement courant et on la place dans la pile.
+						\smallbreak
+						$\langle S,E,X$ $C,D\rangle
+						\longrightarrow_{TTS} 
+						\langle V$ $S,E,C,D\rangle$ avec E(X) = V
+						\item[]
+							
+						\item[] \textbf{Opération :} On a un opérateur et le nombre de constante nécessaire dans la pile, \\via la fonction $\delta$ on retourne le résultat dans la pile.
+						\smallbreak
+						$\langle b_{n},...,b_{1}$ $S,E,prim_{o^{n}}$ $C,D\rangle
+						\longrightarrow_{TTS} 
+						\langle V$ $S,E,C,D\rangle$ avec $\delta(o^{n}$ $b_{1}...b_{n}) = V$
+						\item[]
+							
+						\item[]  \textbf{Abstraction :} On a une abstraction, on créer une fermeture comportant l'abstraction et l'environnement courant et on mets la fermeture dans la pile.
+						\smallbreak
+						$\langle S,E,\langle X,C'\rangle$ $C,D\rangle
+						\longrightarrow_{TTS} 
+						\langle \langle\langle X,C'\rangle,E\rangle$ $S,E,C,D\rangle$
+						\item[]
+							
+						\item[]  \textbf{Application :} On a une application, donc on sauvegarde dans le dépôt, on ajoute une substitution et on remplace la chaîne de contrôle et l'environnement par ceux présent dans la fermeture.
+						\smallbreak
+						$\langle V$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,ap$ $C,D\rangle
+						\longrightarrow_{TTS} 
+						\langle \emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle$
 						\item[] 
-						\item[] - on a une \textbf{abstraction function} tels que
-						$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTLS},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
-						\twoheadrightarrow_{TTLS} 
-						\langle\langle I,\langle\langle X,C\rangle,E\rangle$ $S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
-						\item[] 
-						\item[] - on a une \textbf{erreur} 
+							
+						\item[] \textbf{Récupération de sauvegarde :}  On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
+						\smallbreak  
+						$\langle V$ $S,E,\epsilon,\langle S',E',C,D\rangle\rangle
+						\longrightarrow_{TTS} 
+						\langle V$ $S',E',C,D\rangle$
 					\end{itemize}
-					\bigbreak
-					\bigbreak
+					\item[]
+						
+						
+						
+					\item[] \textbf{Partie pour la concurrence :} Voici les règles rajoutées dans le but de gérer les threads et les signaux et donc de rendre la machine réactive. 
+					\item[]
+					\begin{itemize}
+						\item[]  \textbf{Création thread :} On veut créer un nouveau thread.
+						\smallbreak 
+						$\langle\langle\langle\langle X,C'\rangle, E\rangle$ $S,E,spawn$ $C,D\rangle,TL,SI\rangle 
+						\longrightarrow_{TTS} 
+						\langle\langle S,E,C,D\rangle,TL$ $\langle S,E,C',D\rangle,SI\rangle$
+						\item[]
+							
+						\item[] \textbf{Initialisation signal :} On initialise le signal via la fonction $\iota$.
+						\smallbreak 
+						$\langle\langle S,E,init$ $C,D\rangle,TL,SI\rangle 
+						\longrightarrow_{TTS}
+						\langle\langle signal$ $S,E,C,D\rangle,TL,SI'\rangle$
+						avec $\iota(SI) = (signal,SI')$
+						\item[]	
+						
+						\item[] \textbf{Présence du signal :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il est émit donc on prends le 1er choix.
+						\smallbreak
+						$\langle\langle \langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle,TL,SI\rangle 
+						\longrightarrow_{TTS} 
+						\langle\langle S,E,C'$ $C,D\rangle,TL,SI\rangle$ 
+						\\avec $SI(s) = \langle vraie,TL\rangle$
+						\item[]
+							
+							
+						\item[] à vérifier\textbf{ Thread bloqué remplacé :} On teste la présence d'un signal, il n'est pas émit et il y a un thread dans la file d'attente
+						donc on mets ce thread dans la liste de threads bloqués et on prends le thread en tête de la file.
+						\smallbreak
+						$\langle\langle \langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle,\langle S',E',C''',D'\rangle$ $TL,SI\rangle 
+						\\\longrightarrow_{TTS} 
+						\langle\langle S',E',C''',D'\rangle,TL,SI'\rangle$ 
+						\\avec $SI(s) = \langle faux,TL'\rangle$
+						et $SI'(s) = \langle faux,TL'$ $\langle \langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle\rangle$
+						\item[]	
+							
+						\item[] à vérifier \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal, il n'est pas émit donc on mets ce thread dans la liste de threads bloqués.
+						\smallbreak 
+						$\langle\langle \langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,C,D\rangle,\emptyset,SI\rangle 
+						\longrightarrow_{TTS} 
+						\langle\langle \emptyset,\epsilon,\emptyset,\emptyset\rangle,\emptyset,SI'\rangle$
+						\\avec $SI(s) = \langle faux,TL'\rangle$
+						et $SI'(s) = \langle faux,TL'$ $\langle\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle\rangle$
+						\item[]
+							
+						\item[] \textbf{Récupération dans la file d'attente :} On a plus rien à traité et on a aucune sauvegarde, du coup 
+						\\on change le thread courant par le thread en tête de la file d'attente.
+						\smallbreak
+						$\langle\langle V$ $S,E,\epsilon,\emptyset\rangle,\langle S',E',C,D\rangle$ $TL,SI\rangle 
+						\longrightarrow_{TTS} 
+						\langle\langle V$ $S',E',C,D\rangle,TL,SI\rangle$
+						\item[]
+							
+						\item[] \textbf{Fin d'instant logique :} On a plus rien à traiter, on a aucune sauvegarde et on a plus rien dans la file d'attente, c'est la fin d'un instant logique.
+						\smallbreak
+						$\langle\langle V$ $S,E,\epsilon,\emptyset \rangle ,\emptyset,SI\rangle 
+						\longrightarrow_{TTS} 
+						\langle\langle V$ $S,E,\epsilon,\emptyset\rangle,TL,SI'\rangle$
+						\\si $\forall~si \in SI : si = \langle emit,\{\}\rangle$ alors $\tau(SI)$ = ($SI',TL$) 
+						\item[]
+							
+					\end{itemize}
+					\item[] \textbf{Partie commune :} Quand on rajoute des règles le plus gros risque est de créer des conflit avec les anciennes règles. Les plus gros problèmes sont avec l'application et la récupération de sauvegarde car $spawn$ et $emit$ ne retournent rien dans la pile donc il faut pouvoir continuer de faire fonctionner la machine avec ces deux cas. 
+					\item[]
+					\begin{itemize}
+						\item[] \textbf{Application neutre :} On a une application sur rien, cela revient juste à rien faire.
+						\smallbreak 
+						$\langle S,E,ap$ $C,D\rangle
+						\longrightarrow_{TTS} 
+						\langle S,E,C,D\rangle$
+						\item[]
+						
+				        \item[] \textbf{Récupération de sauvegarde avec pile vide :}  On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
+						\smallbreak  
+						$\langle \emptyset,E,\epsilon,\langle S',E',C,D\rangle\rangle
+						\longrightarrow_{TTS} 
+						\langle S',E',C,D\rangle$
+					\end{itemize}
+				\end{enumerate}
+				\bigbreak
+				\bigbreak
 					
 					
-					
-					
-					Cette version des règles est la plus optimale car on a pris le meilleurs de chaque possibilités mais il faut savoir que des règles intermédiaire ont été créé, implanté et testé en OCaml.En effet je vais vous présenter 2 version mais 3 versions des règles existent et 4 machines ont été implantées. On peut retrouvé  ces règles en Annexe si cela vous intéresse.
-					\newpage
-					
+				\textbf{\textit{la machine peut s'arrêter dans 3 états différents:}}
+				\smallbreak
+				\begin{itemize}
+					\item[] - on a une \textbf{constante b} tels que 
+					$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTL},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
+					\twoheadrightarrow_{TTL} 
+					\langle\langle I,b$ $S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
+					\item[] 
+				    
+				    \item[] - on a une \textbf{abstraction function} tels que
+					$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTL},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
+					\twoheadrightarrow_{TTL} 
+					\langle\langle I,\langle\langle X,C\rangle,E\rangle$ $S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
+					\item[] 
 			
-			\subsection{Le partage des valeurs dans la machine}
+					\item[] - on a une \textbf{erreur} 
+				\end{itemize}
+				\bigbreak
+				\bigbreak
+					
+					
+					
+					
+				Cette version des règles est la plus optimale car on a pris le meilleurs de chaque possibilités mais il faut savoir que des règles intermédiaire ont été créé, implanté et testé en OCaml.En effet je vais vous présenter 2 version mais 3 versions des règles existent et 4 machines ont été implantées. On peut retrouvé  ces règles en Annexe si cela vous intéresse.
+				\newpage
+					
+					
+		\subsection{Le partage des valeurs dans la machine}
 			
-			
+				
 			
 			
 			
@@ -1267,350 +1266,368 @@
 			\item[] on a une \textbf{erreur} 
 		\end{itemize}
 		\newpage
-		\section{Conclusion}
+	
+	
+	
+	\section{Conclusion}
 		
 		\newpage
 		
-		\section{Annexes}
-			\subsection{Les Exemples des machines étudiées}
-				\subsubsection{Exemple de fonctionnement de la machine CC}\label{CC}
+		
+		
+	\section{Annexes}
+		
+		\subsection{Les Exemples des machines étudiées}
+	
+			\subsubsection{Exemple de fonctionnement de la machine CC}\label{CC}
 			
-					Voici un exemple de fonctionnement de la machine CC:
+				Voici un exemple de fonctionnement de la machine CC:
 					
-					\begin{itemize}
-						\item[] CC machine : $\langle(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner),[]\rangle$
-						\item[] > $\langle(M$ $N),E\rangle \longmapsto_{cc} \langle M,E[([]$ $N)]\rangle$ $si M \notin V$
-						\item[] CC machine : $\langle((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y)),[([]$ $\ulcorner 1\urcorner)]\rangle$
-						\item[] > $\langle((\lambda X.M) V),E\rangle \longmapsto_{cc} \langle M[X\longleftarrow V],E\rangle$
-						\item[] CC machine : $\langle(\lambda x.f$ $x)[f \leftarrow \lambda y.(+$ $y$ $y)],[([]$ $\ulcorner 1\urcorner)]\rangle$
-						\item[] CC machine : $\langle(\lambda x.(\lambda y.(+$ $y$ $y))$ $x),[([]$ $\ulcorner 1\urcorner)]\rangle$
-						\item[] > $\langle V,E[[]$ $N)]\rangle \longmapsto_{cc} \langle(V$ $N),E\rangle$ 
-						\item[] CC machine : $\langle((\lambda x.(\lambda y.(+$ $y$ $y))$ $x)$ $\ulcorner 1\urcorner),[]\rangle$
-						\item[] > $\langle((\lambda X.M) V),E\rangle \longmapsto_{cc} \langle M[X\longleftarrow V],E\rangle$
-						\item[] CC machine : $\langle((\lambda y.(+$ $y$ $y))$ $x)[x \leftarrow \ulcorner 1\urcorner],[]\rangle$
-						\item[] CC machine : $\langle((\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner),[]\rangle$
-						\item[] > $\langle((\lambda X.M) V),E\rangle \longmapsto_{cc} \langle M[X\longleftarrow V],E\rangle$
-						\item[] CC machine : $\langle(+$ $y$ $y)[y \leftarrow \ulcorner 1\urcorner],[]\rangle$
-						\item[] CC machine : $\langle(+$ $\ulcorner 1\urcorner$ $\ulcorner 1\urcorner),[]\rangle$
-						\item[] > $\langle(o^{n}$ $b_{1}...b_{n}),E\rangle \longmapsto_{cc}  \langle V,E\rangle$ avec $V = \delta(o^{n},b_{1}...b_{n})$
-						\item[] CC machine : $\langle\ulcorner 2\urcorner,[]\rangle$
-					\end{itemize}
+				\begin{itemize}
+					\item[] CC machine : $\langle(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner),[]\rangle$
+					\item[] > $\langle(M$ $N),E\rangle \longmapsto_{cc} \langle M,E[([]$ $N)]\rangle$ $si M \notin V$
+					\item[] CC machine : $\langle((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y)),[([]$ $\ulcorner 1\urcorner)]\rangle$
+					\item[] > $\langle((\lambda X.M) V),E\rangle \longmapsto_{cc} \langle M[X\longleftarrow V],E\rangle$
+					\item[] CC machine : $\langle(\lambda x.f$ $x)[f \leftarrow \lambda y.(+$ $y$ $y)],[([]$ $\ulcorner 1\urcorner)]\rangle$
+					\item[] CC machine : $\langle(\lambda x.(\lambda y.(+$ $y$ $y))$ $x),[([]$ $\ulcorner 1\urcorner)]\rangle$
+					\item[] > $\langle V,E[[]$ $N)]\rangle \longmapsto_{cc} \langle(V$ $N),E\rangle$ 
+					\item[] CC machine : $\langle((\lambda x.(\lambda y.(+$ $y$ $y))$ $x)$ $\ulcorner 1\urcorner),[]\rangle$
+					\item[] > $\langle((\lambda X.M) V),E\rangle \longmapsto_{cc} \langle M[X\longleftarrow V],E\rangle$
+					\item[] CC machine : $\langle((\lambda y.(+$ $y$ $y))$ $x)[x \leftarrow \ulcorner 1\urcorner],[]\rangle$
+					\item[] CC machine : $\langle((\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner),[]\rangle$
+					\item[] > $\langle((\lambda X.M) V),E\rangle \longmapsto_{cc} \langle M[X\longleftarrow V],E\rangle$
+					\item[] CC machine : $\langle(+$ $y$ $y)[y \leftarrow \ulcorner 1\urcorner],[]\rangle$
+					\item[] CC machine : $\langle(+$ $\ulcorner 1\urcorner$ $\ulcorner 1\urcorner),[]\rangle$
+					\item[] > $\langle(o^{n}$ $b_{1}...b_{n}),E\rangle \longmapsto_{cc}  \langle V,E\rangle$ avec $V = \delta(o^{n},b_{1}...b_{n})$
+					\item[] CC machine : $\langle\ulcorner 2\urcorner,[]\rangle$
+				\end{itemize}
 				
-				\subsubsection{Exemple de fonctionnement de la machine SCC}\label{SCC}
+			\subsubsection{Exemple de fonctionnement de la machine SCC}\label{SCC}
 				
-					Voici un exemple de fonctionnement de la machine SCC :
+				Voici un exemple de fonctionnement de la machine SCC :
 					
-					\begin{itemize}
-						\item[] SCC machine : $\langle(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner),[]\rangle$
-						\item[] > $\langle(M$ $N),E\rangle \longmapsto_{scc} \langle M,E[([]$ $N)]\rangle$
-						\item[] SCC machine : $\langle((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y)),[([]$ $\ulcorner 1\urcorner)]\rangle$
-						\item[] > $\langle(M$ $N),E\rangle \longmapsto_{scc} \langle M,E[([]$ $N)]\rangle$
-						\item[] SCC machine : $\langle(\lambda f.\lambda x.f$ $x),[([]$ $\ulcorner 1\urcorner),([]$ $(\lambda y.(+$ $y$ $y)))]\rangle$
-						\item[] >  $\langle V,E[[]$ $N)]\rangle \longmapsto_{scc} \langle N,E[(V$ $[])]\rangle$
-						\item[] SCC machine : $\langle(\lambda y.(+$ $y$ $y)),[([]$ $\ulcorner 1\urcorner),((\lambda f.\lambda x.f$ $x)$ $[])]\rangle$
-						\item[] > $\langle V,E[((\lambda X.M)$ $[])]\rangle \longmapsto_{scc} \langle M[X\leftarrow V],E\rangle$
-						\item[] SCC machine : $\langle(\lambda x.f$ $x)[f\leftarrow(\lambda y.(+$ $y$ $y))],[([]$ $\ulcorner 1\urcorner)]\rangle$
-						\item[] SCC machine : $\langle(\lambda x.(\lambda y.(+$ $y$ $y))$ $x),[([]$ $\ulcorner 1\urcorner)]\rangle$
-						\item[] >  $\langle V,E[[]$ $N)]\rangle \longmapsto_{scc} \langle N,E[(V$ $[])]\rangle$
-						\item[] SCC machine : $\langle\ulcorner 1\urcorner,[((\lambda x.(\lambda y.(+$ $y$ $y))$ $x)$ $[])]\rangle$
-						\item[] > $\langle V,E[((\lambda X.M)$ $[])]\rangle \longmapsto_{scc} \langle M[X\leftarrow V],E\rangle$
-						\item[] SCC machine : $\langle((\lambda y.(+$ $y$ $y))$ $x)[x \leftarrow\ulcorner 1\urcorner],[]\rangle$
-						\item[] SCC machine : $\langle((\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner,[]\rangle$
-						\item[] > $\langle(M$ $N),E\rangle \longmapsto_{scc} \langle M,E[([]$ $N)]\rangle$
-						\item[] SCC machine : $\langle(\lambda y.(+$ $y$ $y)),[([]$ $\ulcorner 1\urcorner)]\rangle$
-						\item[] >  $\langle V,E[[]$ $N)]\rangle \longmapsto_{scc} \langle N,E[(V$ $[])]\rangle$
-						\item[] SCC machine : $\langle\ulcorner 1\urcorner,[(\lambda y.(+$ $y$ $y))$ $[])]\rangle$
-						\item[] > $\langle V,E[((\lambda X.M)$ $[])]\rangle \longmapsto_{scc} \langle M[X\leftarrow V],E\rangle$
-						\item[] SCC machine : $\langle(+$ $y$ $y)[y \leftarrow \ulcorner 1\urcorner],[]\rangle$	
-						\item[] SCC machine : $\langle(+$ $\ulcorner 1\urcorner$ $\ulcorner 1\urcorner),[]\rangle$	
-						\item[] > $\langle(o^{n}$ $M$ $N...),E\rangle \longmapsto_{scc} \langle M,E[(o^{n}$ $[]$ $N...)]\rangle$
-						\item[] SCC machine : $\langle\ulcorner 1\urcorner,(+$ $[]$ $\ulcorner 1\urcorner)\rangle$	
-						\item[] > $\langle V,E[(o^{n},V_{1},...V_{i},[],N$ $L)]\rangle \longmapsto_{scc} \langle N,E[(o^{n},V_{1},...V_{i},V,[],L)]\rangle$
-						\item[] SCC machine : $\langle\ulcorner 1\urcorner,(+$ $\ulcorner 1\urcorner$ $[])\rangle$	
-						\item[] $\langle b,E[(o^{n},b_{1},...b_{i},[])]\rangle \longmapsto_{scc} \langle V,E\rangle$ avec $\delta (o^{n},b_{1},...b_{i},b)=V$ 
-						\item[] SCC machine : $\langle\ulcorner 2\urcorner,[]\rangle$	
-					\end{itemize}
+				\begin{itemize}
+					\item[] SCC machine : $\langle(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner),[]\rangle$
+					\item[] > $\langle(M$ $N),E\rangle \longmapsto_{scc} \langle M,E[([]$ $N)]\rangle$
+					\item[] SCC machine : $\langle((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y)),[([]$ $\ulcorner 1\urcorner)]\rangle$
+					\item[] > $\langle(M$ $N),E\rangle \longmapsto_{scc} \langle M,E[([]$ $N)]\rangle$
+					\item[] SCC machine : $\langle(\lambda f.\lambda x.f$ $x),[([]$ $\ulcorner 1\urcorner),([]$ $(\lambda y.(+$ $y$ $y)))]\rangle$
+					\item[] >  $\langle V,E[[]$ $N)]\rangle \longmapsto_{scc} \langle N,E[(V$ $[])]\rangle$
+					\item[] SCC machine : $\langle(\lambda y.(+$ $y$ $y)),[([]$ $\ulcorner 1\urcorner),((\lambda f.\lambda x.f$ $x)$ $[])]\rangle$
+					\item[] > $\langle V,E[((\lambda X.M)$ $[])]\rangle \longmapsto_{scc} \langle M[X\leftarrow V],E\rangle$
+					\item[] SCC machine : $\langle(\lambda x.f$ $x)[f\leftarrow(\lambda y.(+$ $y$ $y))],[([]$ $\ulcorner 1\urcorner)]\rangle$
+					\item[] SCC machine : $\langle(\lambda x.(\lambda y.(+$ $y$ $y))$ $x),[([]$ $\ulcorner 1\urcorner)]\rangle$
+					\item[] >  $\langle V,E[[]$ $N)]\rangle \longmapsto_{scc} \langle N,E[(V$ $[])]\rangle$
+					\item[] SCC machine : $\langle\ulcorner 1\urcorner,[((\lambda x.(\lambda y.(+$ $y$ $y))$ $x)$ $[])]\rangle$
+					\item[] > $\langle V,E[((\lambda X.M)$ $[])]\rangle \longmapsto_{scc} \langle M[X\leftarrow V],E\rangle$
+					\item[] SCC machine : $\langle((\lambda y.(+$ $y$ $y))$ $x)[x \leftarrow\ulcorner 1\urcorner],[]\rangle$
+					\item[] SCC machine : $\langle((\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner,[]\rangle$
+					\item[] > $\langle(M$ $N),E\rangle \longmapsto_{scc} \langle M,E[([]$ $N)]\rangle$
+					\item[] SCC machine : $\langle(\lambda y.(+$ $y$ $y)),[([]$ $\ulcorner 1\urcorner)]\rangle$
+					\item[] >  $\langle V,E[[]$ $N)]\rangle \longmapsto_{scc} \langle N,E[(V$ $[])]\rangle$
+					\item[] SCC machine : $\langle\ulcorner 1\urcorner,[(\lambda y.(+$ $y$ $y))$ $[])]\rangle$
+					\item[] > $\langle V,E[((\lambda X.M)$ $[])]\rangle \longmapsto_{scc} \langle M[X\leftarrow V],E\rangle$
+					\item[] SCC machine : $\langle(+$ $y$ $y)[y \leftarrow \ulcorner 1\urcorner],[]\rangle$	
+					\item[] SCC machine : $\langle(+$ $\ulcorner 1\urcorner$ $\ulcorner 1\urcorner),[]\rangle$	
+					\item[] > $\langle(o^{n}$ $M$ $N...),E\rangle \longmapsto_{scc} \langle M,E[(o^{n}$ $[]$ $N...)]\rangle$
+					\item[] SCC machine : $\langle\ulcorner 1\urcorner,(+$ $[]$ $\ulcorner 1\urcorner)\rangle$	
+					\item[] > $\langle V,E[(o^{n},V_{1},...V_{i},[],N$ $L)]\rangle \longmapsto_{scc} \langle N,E[(o^{n},V_{1},...V_{i},V,[],L)]\rangle$
+					\item[] SCC machine : $\langle\ulcorner 1\urcorner,(+$ $\ulcorner 1\urcorner$ $[])\rangle$	
+					\item[] $\langle b,E[(o^{n},b_{1},...b_{i},[])]\rangle \longmapsto_{scc} \langle V,E\rangle$ avec $\delta (o^{n},b_{1},...b_{i},b)=V$ 
+					\item[] SCC machine : $\langle\ulcorner 2\urcorner,[]\rangle$	
+				\end{itemize}
 				\newpage
-				\subsubsection{Exemple de fonctionnement de la machine CK}\label{CK}
-				
-					Voici un exemple de fonctionnement de la machine CK :
-					
-					\begin{itemize}
-						\item[] CK machine : $\langle(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner),mt\rangle$
-						\item[] > $\langle(M$ $N),\kappa\rangle \longmapsto_{ck} \langle M,\langle arg,N,\kappa\rangle\rangle$
-						\item[] CK machine : $\langle((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y)),\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle$
-						\item[] > $\langle(M$ $N),\kappa\rangle \longmapsto_{ck} \langle M,\langle arg,N,\kappa\rangle\rangle$
-						\item[] CK machine : $\langle(\lambda f.\lambda x.f$ $x),\langle arg,(\lambda y.(+$ $y$ $y)),\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle\rangle$	
-						\item[] > $\langle V,\langle arg,N,\kappa \rangle \rangle \longmapsto_{ck} \langle N,\langle fun,V,\kappa \rangle \rangle$
-						\item[] CK machine : $\langle(\lambda y.(+$ $y$ $y)),\langle fun,(\lambda f.\lambda x.f$ $x),\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle\rangle$	
-						\item[] > $\langle V,\langle fun,(\lambda X.M),\kappa \rangle \rangle \longmapsto_{ck} \langle M[X \leftarrow V],\kappa\rangle$
-						\item[] CK machine : $\langle(\lambda x.f$ $x)[f\leftarrow(\lambda y.(+$ $y$ $y))],\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle$	
-						\item[] CK machine : $\langle(\lambda x.(\lambda y.(+$ $y$ $y))$ $x),\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle$	
-						\item[] > $\langle V,\langle arg,N,\kappa \rangle \rangle \longmapsto_{ck} \langle N,\langle fun,V,\kappa \rangle \rangle$
-						\item[] CK machine : $\langle\ulcorner 1\urcorner,\langle fun,(\lambda x.(\lambda y.(+$ $y$ $y))$ $x),mt\rangle\rangle$
-						\item[] > $\langle V,\langle fun,(\lambda X.M),\kappa \rangle \rangle \longmapsto_{ck} \langle M[X \leftarrow V],\kappa\rangle$		
-						\item[] CK machine : $\langle((\lambda y.(+$ $y$ $y))$ $x)[x \leftarrow \ulcorner 1\urcorner ],mt\rangle$
-						\item[] CK machine : $\langle((\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner),mt\rangle$
-						\item[] > $\langle(M$ $N),\kappa\rangle \longmapsto_{ck} \langle M,\langle arg,N,\kappa\rangle\rangle$
-						\item[] CK machine : $\langle(\lambda y.(+$ $y$ $y)),\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle$	
-						\item[] > $\langle V,\langle arg,N,\kappa \rangle \rangle \longmapsto_{ck} \langle N,\langle fun,V,\kappa \rangle \rangle$
-						\item[] CK machine : $\langle\ulcorner 1\urcorner,\langle fun,(\lambda y.(+$ $y$ $y)),mt\rangle\rangle$	
-						\item[] > $\langle V,\langle fun,(\lambda X.M),\kappa \rangle \rangle \longmapsto_{ck} \langle M[X \leftarrow V],\kappa\rangle$	
-						\item[] CK machine : $\langle(+$ $y$ $y)[y \leftarrow\ulcorner 1\urcorner],mt\rangle$
-						\item[] CK machine : $\langle(+$ $\ulcorner 1\urcorner$ $\ulcorner 1\urcorner),mt\rangle$
-						\item[] > $\langle(o^{n}$ $M$ $N...),\kappa\rangle \longmapsto_{ck} \langle M,\langle opd,\langle o^{n}\rangle,\langle N,...\rangle,\kappa\rangle\rangle$
-						\item[] CK machine : $\langle\ulcorner 1\urcorner,\langle opd,\langle + \rangle,\langle\ulcorner 1\urcorner\rangle,mt\rangle\rangle$
-						\item[] > $\langle V,\langle opd,\langle V',...o^{n}\rangle,\langle N,L,...\rangle,\kappa\rangle\rangle \longmapsto_{ck} \langle N,\langle opd,\langle V,V',...o^{n}\rangle,\langle L,...\rangle,\kappa\rangle\rangle$
-						\item[] CK machine : $\langle\ulcorner 1\urcorner,\langle opd,\langle\ulcorner 1\urcorner,+ \rangle,\langle\rangle,mt\rangle\rangle$
-						\item[] > $\langle b,\langle opd,\langle b_{i},...b_{1},o^{n}\rangle,\langle\rangle,\kappa\rangle\rangle \longmapsto_{ck} \langle V,\kappa\rangle$ avec $\delta(o^{n},b_{1},...b_{i},b) = V$
-						\item[] CK machine : $\langle\ulcorner 2\urcorner,mt\rangle$
-					\end{itemize}
-				\newpage
-				
-				\subsubsection{Exemple de fonctionnement de la machine CEK}\label{CEK}
-					
-					Voici un exemple de fonctionnement de la machine CEK :
-					
-					\begin{itemize}
-						\item[] CEK machine : $\langle\langle(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner)\emptyset\rangle,mt\rangle$
-						\item[] > $\langle\langle(M$ $N),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle arg,\langle N,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$
-						\item[] CEK machine : $\langle\langle((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))\emptyset\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle$
-						\item[] > $\langle\langle(M$ $N),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle arg,\langle N,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$
-						\item[] CEK machine : $\langle\langle(\lambda f.\lambda x.f$ $x),\emptyset\rangle,\langle arg,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle\rangle$
-						\item[] >  $\langle \langle V,\varepsilon\rangle,\langle arg,\langle N,\varepsilon'\rangle,\kappa\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle fun,\langle V,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
-						\item[] CEK machine : $\langle\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,\langle fun,\langle(\lambda f.\lambda x.f$ $x),\emptyset\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle\rangle$
-						\item[] > $\langle\langle V,\varepsilon\rangle,\langle fun,\langle (\lambda X1.M),\varepsilon'\rangle,\overline{\kappa} \rangle \rangle \longmapsto_{cek} \langle \langle M,\varepsilon'[X1 \leftarrow \langle V,\varepsilon\rangle]\rangle,\overline{\kappa}\rangle$ si $V \notin X$
-						\item[] CEK machine : $\langle\langle(\lambda x.f$ $x),\emptyset[f \leftarrow \langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle]\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle$
-						\item[] CEK machine : $\langle\langle(\lambda x.f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle\}\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle$
-						\item[] >  $\langle \langle V,\varepsilon\rangle,\langle arg,\langle N,\varepsilon'\rangle,\kappa\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle fun,\langle V,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
-						\item[] CEK machine : $\langle\langle\ulcorner 1\urcorner,\emptyset\rangle,\langle fun,\langle(\lambda x.f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle\}\rangle,mt\rangle\rangle$
-						\item[] > $\langle\langle V,\varepsilon\rangle,\langle fun,\langle (\lambda X1.M),\varepsilon'\rangle,\overline{\kappa} \rangle \rangle \longmapsto_{cek} \langle \langle M,\varepsilon'[X1 \leftarrow \langle V,\varepsilon\rangle]\rangle,\overline{\kappa}\rangle$ si $V \notin X$
-						\item[] CEK machine : $\langle\langle(f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle\}[x \leftarrow \langle\ulcorner 1\urcorner,\emptyset\rangle]\rangle,mt\rangle$
-						\item[] CEK machine : $\langle\langle(f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,mt\rangle$
-						\item[] > $\langle\langle(M$ $N),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle arg,\langle N,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$
-						\item[] CEK machine : $\langle\langle f,\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,\langle arg,\langle x,\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,mt\rangle\rangle$
-						\item[] > $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
-						\item[] CEK machine : $\langle\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,\langle arg,\langle x,\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,mt\rangle\rangle$
-						\item[] > $\langle \langle V,\varepsilon\rangle,\langle arg,\langle N,\varepsilon'\rangle,\kappa\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle fun,\langle V,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
-						\item[] CEK machine : $\langle\langle x,\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,\langle fun,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,mt\rangle\rangle$	
-						\item[] > $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
-						\item[] CEK machine : $\langle \langle\ulcorner 1\urcorner,\emptyset\rangle,\langle fun,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,mt\rangle\rangle$	
-						\item[] > $\langle\langle V,\varepsilon\rangle,\langle fun,\langle (\lambda X1.M),\varepsilon'\rangle,\overline{\kappa} \rangle \rangle \longmapsto_{cek} \langle \langle M,\varepsilon'[X1 \leftarrow \langle V,\varepsilon\rangle]\rangle,\overline{\kappa}\rangle$ si $V \notin X$
-						\item[] CEK machine : $\langle\langle(+$ $y$ $y),\emptyset[y \leftarrow\langle\ulcorner 1\urcorner,\emptyset\rangle]\rangle ,mt\rangle$
-						\item[] CEK machine : $\langle\langle(+$ $y$ $y),\{\langle y,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle ,mt\rangle$
-						\item[] > $\langle\langle(o^{n}$ $M$ $N...),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle opd,\langle o^{n}\rangle,\langle \langle N,\varepsilon\rangle,...\rangle,\overline{\kappa}\rangle\rangle$
-						\item[] CEK machine : $\langle\langle y,\{\langle y,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle ,\langle opd,\langle+\rangle,\langle\langle y,\{\langle y,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle\rangle,mt\rangle\rangle$
-						\item[] > $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
-						\item[] CEK machine : $\langle\langle\ulcorner 1\urcorner,\emptyset\rangle,\langle opd,\langle+\rangle,\langle\langle y,\{\langle y,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle\rangle,mt\rangle\rangle$
-						\item[] > $\langle \langle V,\varepsilon\rangle,\langle opd,\langle v',...o^{n}\rangle,\langle  \langle N,\varepsilon'\rangle,c,...\rangle,\overline{\kappa}\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle opd,\langle  \langle V,\varepsilon\rangle,v',...o^{n}\rangle,\langle c,...\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
-						\item[] CEK machine : $\langle\langle y,\{\langle y,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,\langle opd,\langle\ulcorner 1\urcorner$ $+\rangle,\langle\rangle,mt\rangle\rangle$
-						\item[] > $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
-						\item[] CEK machine : $\langle\langle\ulcorner 1\urcorner,\emptyset\rangle,\langle opd,\langle\ulcorner 1\urcorner$ $+\rangle,\langle\rangle,mt\rangle\rangle$
-						\item[] > $\langle  \langle b,\varepsilon\rangle,\langle opd,\langle \langle b_{i},\varepsilon_{i}\rangle,...\langle b_{1},\varepsilon_{1}\rangle ,o^{n}\rangle,\langle\rangle,\overline{\kappa}\rangle\rangle \longmapsto_{cek} \langle \langle V,\emptyset\rangle,\overline{\kappa}\rangle$ avec $\delta(o^{n},b_{1},...b_{i},b) = V$
-						\item[] CEK machine : $\langle\langle\ulcorner 2\urcorner,\emptyset\rangle,mt\rangle$
-					\end{itemize}
-				\newpage
-				
-				\subsubsection{Exemple de fonctionnement de la machine SECD}\label{SECD}
-				
-					Voici un exemple de fonctionnement de la machine SECD :	
-					
-					\begin{itemize}
-						\item[] Conversion : $\textlbrackdbl(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner)\textrbrackdbl_{secd}$
-						\item[] Conversion : $\textlbrackdbl((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))\textrbrackdbl_{secd}$ $\textlbrackdbl\ulcorner 1\urcorner\textrbrackdbl_{secd}$ $ap$
-						\item[] Conversion : $\textlbrackdbl(\lambda f.\lambda x.f$ $x)\textrbrackdbl_{secd}$ $\textlbrackdbl\lambda y.(+$ $y$ $y)\textrbrackdbl_{secd}$ $ap$ $\ulcorner 1\urcorner$ $ap$
-						\item[] Conversion : $\langle f,\textlbrackdbl\lambda x.(f$ $x)\textrbrackdbl_{secd}\rangle$ $\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap$
-						\item[] Conversion : $\langle f,\langle x,\textlbrackdbl f$ $x\textrbrackdbl_{secd}\rangle\rangle$ $\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap$
-						\item[] Conversion : $\langle f,\langle x,f$ $x$ $ap\rangle\rangle$ $\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap$
-						\item[] SECD Machine : $\langle\epsilon,\emptyset,\langle f,\langle x,f$ $x$ $ap\rangle\rangle$ $\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap,\epsilon\rangle$ 
-						\item[] > $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
-						\item[] SECD Machine : $\langle\langle\langle f,\langle x,f$ $x$ $ap\rangle\rangle,\emptyset\rangle,\emptyset,\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap,\epsilon\rangle$ 
-						\item[] > $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
-						\item[] SECD Machine : $\langle\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle$ $\langle\langle f,\langle x,f$ $x$ $ap\rangle\rangle,\emptyset\rangle,\emptyset,ap$ $\ulcorner 1\urcorner$ $ap,\epsilon\rangle$
-						\item[] > $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
-						\item[] SECD Machine : $\langle\epsilon,\emptyset[f \leftarrow \langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle],\langle x,f$ $x$ $ap\rangle,\langle\epsilon,\emptyset,\ulcorner 1\urcorner$ $ap,\epsilon\rangle\rangle$
-						\item[] SECD Machine : $\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle\},\langle x,f$ $x$ $ap\rangle,\langle\epsilon,\emptyset,\ulcorner 1\urcorner$ $ap,\epsilon\rangle\rangle$
-						\item[] >  $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
-						\item[] SECD Machine : $\langle\langle\langle x,f$ $x$ $ap\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle\}\rangle,\{f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\},\emptyset,\langle\epsilon,\emptyset,\ulcorner 1\urcorner$ $ap,\epsilon\rangle\rangle$
-						\item[] > $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle$
-						\item[] SECD Machine : $\langle\langle\langle x,f$ $x$ $ap\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle\}\rangle,\emptyset,\ulcorner 1\urcorner$ $ap,\epsilon\rangle$
-						\item[] >  $\langle\widehat{S},\widehat{\varepsilon},b$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle b$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
-						\item[] SECD Machine :  $\langle\ulcorner 1\urcorner$ $\langle\langle x,f$ $x$ $ap\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle\}\rangle,\emptyset,ap,\epsilon\rangle$
-						\item[] >  $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
-						\item[] SECD Machine : $\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle\}[x \leftarrow \ulcorner 1\urcorner],f$ $x$ $ap,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
-						\item[] SECD Machine : $\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\},f$ $x$ $ap,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
-						\item[] > $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
-						\item[] SECD Machine : $\langle\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\},x$ $ap,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
-						\item[] > $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
-						\item[] SECD Machine : $\langle\ulcorner 1\urcorner$ $\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\},ap,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
-						\item[] >  $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
-						\item[] SECD Machine :	$\langle\epsilon,\emptyset[y \leftarrow \ulcorner 1\urcorner],y$ $y$ $prim_{+},\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
-						\item[] SECD Machine : $\langle\epsilon,\{\langle y,\ulcorner 1\urcorner\rangle\},y$ $y$ $prim_{+},\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
-						\item[] > $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
-						\item[] SECD Machine : $\langle\ulcorner 1\urcorner,\{\langle y,\ulcorner 1\urcorner\rangle\},y$ $prim_{+},\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
-						\item[] > $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
-						\item[] SECD Machine : $\langle\ulcorner 1\urcorner$ $\ulcorner 1\urcorner,\{\langle y,\ulcorner 1\urcorner\rangle\},prim_{+},\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
-						\item[] > $\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
-						\item[] SECD Machine : $\langle\ulcorner 2\urcorner,\{\langle y,\ulcorner 1\urcorner\rangle\},\emptyset,\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
-						\item[] > $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle$
-						\item[] SECD Machine : $\langle\ulcorner 2\urcorner,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
-						\item[] > $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle$
-						\item[] SECD Machine : $\langle\ulcorner 2\urcorner,\emptyset,\epsilon,\epsilon\rangle$
-					\end{itemize}
-					\newpage
 			
-			\subsection{Les différentes versions faite pour rendre la machine SECD concurrente}
-				\subsubsection{1ère version des règles de la machine SECD Concurrente}\label{SECDConc1}
-					\smallbreak
-					Cette version ajoute les prémisse de la concurrence dans la machine SECD avec la possibilité de créér des threads d'initialiser des signaux,les émettre où encore de tester la présence d'un signal. Cette version est un condensé de 2 versions.
-					\bigbreak
+			
+			
+			\subsubsection{Exemple de fonctionnement de la machine CK}\label{CK}
+				
+				Voici un exemple de fonctionnement de la machine CK :
 					
-					\textbf{\textit{Soit}} $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$ \textbf{\textit{avec :}}
+				\begin{itemize}
+					\item[] CK machine : $\langle(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner),mt\rangle$
+					\item[] > $\langle(M$ $N),\kappa\rangle \longmapsto_{ck} \langle M,\langle arg,N,\kappa\rangle\rangle$
+					\item[] CK machine : $\langle((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y)),\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle$
+					\item[] > $\langle(M$ $N),\kappa\rangle \longmapsto_{ck} \langle M,\langle arg,N,\kappa\rangle\rangle$
+					\item[] CK machine : $\langle(\lambda f.\lambda x.f$ $x),\langle arg,(\lambda y.(+$ $y$ $y)),\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle\rangle$	
+					\item[] > $\langle V,\langle arg,N,\kappa \rangle \rangle \longmapsto_{ck} \langle N,\langle fun,V,\kappa \rangle \rangle$
+					\item[] CK machine : $\langle(\lambda y.(+$ $y$ $y)),\langle fun,(\lambda f.\lambda x.f$ $x),\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle\rangle$	
+					\item[] > $\langle V,\langle fun,(\lambda X.M),\kappa \rangle \rangle \longmapsto_{ck} \langle M[X \leftarrow V],\kappa\rangle$
+					\item[] CK machine : $\langle(\lambda x.f$ $x)[f\leftarrow(\lambda y.(+$ $y$ $y))],\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle$	
+					\item[] CK machine : $\langle(\lambda x.(\lambda y.(+$ $y$ $y))$ $x),\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle$	
+					\item[] > $\langle V,\langle arg,N,\kappa \rangle \rangle \longmapsto_{ck} \langle N,\langle fun,V,\kappa \rangle \rangle$
+					\item[] CK machine : $\langle\ulcorner 1\urcorner,\langle fun,(\lambda x.(\lambda y.(+$ $y$ $y))$ $x),mt\rangle\rangle$
+					\item[] > $\langle V,\langle fun,(\lambda X.M),\kappa \rangle \rangle \longmapsto_{ck} \langle M[X \leftarrow V],\kappa\rangle$		
+					\item[] CK machine : $\langle((\lambda y.(+$ $y$ $y))$ $x)[x \leftarrow \ulcorner 1\urcorner ],mt\rangle$
+					\item[] CK machine : $\langle((\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner),mt\rangle$
+					\item[] > $\langle(M$ $N),\kappa\rangle \longmapsto_{ck} \langle M,\langle arg,N,\kappa\rangle\rangle$
+					\item[] CK machine : $\langle(\lambda y.(+$ $y$ $y)),\langle arg,\ulcorner 1\urcorner,mt\rangle\rangle$	
+					\item[] > $\langle V,\langle arg,N,\kappa \rangle \rangle \longmapsto_{ck} \langle N,\langle fun,V,\kappa \rangle \rangle$
+					\item[] CK machine : $\langle\ulcorner 1\urcorner,\langle fun,(\lambda y.(+$ $y$ $y)),mt\rangle\rangle$	
+					\item[] > $\langle V,\langle fun,(\lambda X.M),\kappa \rangle \rangle \longmapsto_{ck} \langle M[X \leftarrow V],\kappa\rangle$	
+					\item[] CK machine : $\langle(+$ $y$ $y)[y \leftarrow\ulcorner 1\urcorner],mt\rangle$
+					\item[] CK machine : $\langle(+$ $\ulcorner 1\urcorner$ $\ulcorner 1\urcorner),mt\rangle$
+					\item[] > $\langle(o^{n}$ $M$ $N...),\kappa\rangle \longmapsto_{ck} \langle M,\langle opd,\langle o^{n}\rangle,\langle N,...\rangle,\kappa\rangle\rangle$
+					\item[] CK machine : $\langle\ulcorner 1\urcorner,\langle opd,\langle + \rangle,\langle\ulcorner 1\urcorner\rangle,mt\rangle\rangle$
+					\item[] > $\langle V,\langle opd,\langle V',...o^{n}\rangle,\langle N,L,...\rangle,\kappa\rangle\rangle \longmapsto_{ck} \langle N,\langle opd,\langle V,V',...o^{n}\rangle,\langle L,...\rangle,\kappa\rangle\rangle$
+					\item[] CK machine : $\langle\ulcorner 1\urcorner,\langle opd,\langle\ulcorner 1\urcorner,+ \rangle,\langle\rangle,mt\rangle\rangle$
+					\item[] > $\langle b,\langle opd,\langle b_{i},...b_{1},o^{n}\rangle,\langle\rangle,\kappa\rangle\rangle \longmapsto_{ck} \langle V,\kappa\rangle$ avec $\delta(o^{n},b_{1},...b_{i},b) = V$
+					\item[] CK machine : $\langle\ulcorner 2\urcorner,mt\rangle$
+				\end{itemize}
+				\newpage
+			
+			
+				
+			\subsubsection{Exemple de fonctionnement de la machine CEK}\label{CEK}
+					
+				Voici un exemple de fonctionnement de la machine CEK :
+					
+				\begin{itemize}
+					\item[] CEK machine : $\langle\langle(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner)\emptyset\rangle,mt\rangle$
+					\item[] > $\langle\langle(M$ $N),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle arg,\langle N,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$
+					\item[] CEK machine : $\langle\langle((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))\emptyset\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle$
+					\item[] > $\langle\langle(M$ $N),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle arg,\langle N,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$
+					\item[] CEK machine : $\langle\langle(\lambda f.\lambda x.f$ $x),\emptyset\rangle,\langle arg,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle\rangle$
+					\item[] >  $\langle \langle V,\varepsilon\rangle,\langle arg,\langle N,\varepsilon'\rangle,\kappa\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle fun,\langle V,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
+					\item[] CEK machine : $\langle\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,\langle fun,\langle(\lambda f.\lambda x.f$ $x),\emptyset\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle\rangle$
+					\item[] > $\langle\langle V,\varepsilon\rangle,\langle fun,\langle (\lambda X1.M),\varepsilon'\rangle,\overline{\kappa} \rangle \rangle \longmapsto_{cek} \langle \langle M,\varepsilon'[X1 \leftarrow \langle V,\varepsilon\rangle]\rangle,\overline{\kappa}\rangle$ si $V \notin X$
+					\item[] CEK machine : $\langle\langle(\lambda x.f$ $x),\emptyset[f \leftarrow \langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle]\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle$
+					\item[] CEK machine : $\langle\langle(\lambda x.f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle\}\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle$
+					\item[] >  $\langle \langle V,\varepsilon\rangle,\langle arg,\langle N,\varepsilon'\rangle,\kappa\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle fun,\langle V,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
+					\item[] CEK machine : $\langle\langle\ulcorner 1\urcorner,\emptyset\rangle,\langle fun,\langle(\lambda x.f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle\}\rangle,mt\rangle\rangle$
+					\item[] > $\langle\langle V,\varepsilon\rangle,\langle fun,\langle (\lambda X1.M),\varepsilon'\rangle,\overline{\kappa} \rangle \rangle \longmapsto_{cek} \langle \langle M,\varepsilon'[X1 \leftarrow \langle V,\varepsilon\rangle]\rangle,\overline{\kappa}\rangle$ si $V \notin X$
+					\item[] CEK machine : $\langle\langle(f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle\}[x \leftarrow \langle\ulcorner 1\urcorner,\emptyset\rangle]\rangle,mt\rangle$
+					\item[] CEK machine : $\langle\langle(f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,mt\rangle$
+					\item[] > $\langle\langle(M$ $N),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle arg,\langle N,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$
+					\item[] CEK machine : $\langle\langle f,\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,\langle arg,\langle x,\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,mt\rangle\rangle$
+					\item[] > $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
+					\item[] CEK machine : $\langle\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,\langle arg,\langle x,\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,mt\rangle\rangle$
+					\item[] > $\langle \langle V,\varepsilon\rangle,\langle arg,\langle N,\varepsilon'\rangle,\kappa\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle fun,\langle V,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
+					\item[] CEK machine : $\langle\langle x,\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,\langle fun,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,mt\rangle\rangle$	
+					\item[] > $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
+					\item[] CEK machine : $\langle \langle\ulcorner 1\urcorner,\emptyset\rangle,\langle fun,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,mt\rangle\rangle$	
+					\item[] > $\langle\langle V,\varepsilon\rangle,\langle fun,\langle (\lambda X1.M),\varepsilon'\rangle,\overline{\kappa} \rangle \rangle \longmapsto_{cek} \langle \langle M,\varepsilon'[X1 \leftarrow \langle V,\varepsilon\rangle]\rangle,\overline{\kappa}\rangle$ si $V \notin X$
+					\item[] CEK machine : $\langle\langle(+$ $y$ $y),\emptyset[y \leftarrow\langle\ulcorner 1\urcorner,\emptyset\rangle]\rangle ,mt\rangle$
+					\item[] CEK machine : $\langle\langle(+$ $y$ $y),\{\langle y,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle ,mt\rangle$
+					\item[] > $\langle\langle(o^{n}$ $M$ $N...),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle opd,\langle o^{n}\rangle,\langle \langle N,\varepsilon\rangle,...\rangle,\overline{\kappa}\rangle\rangle$
+					\item[] CEK machine : $\langle\langle y,\{\langle y,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle ,\langle opd,\langle+\rangle,\langle\langle y,\{\langle y,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle\rangle,mt\rangle\rangle$
+					\item[] > $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
+					\item[] CEK machine : $\langle\langle\ulcorner 1\urcorner,\emptyset\rangle,\langle opd,\langle+\rangle,\langle\langle y,\{\langle y,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle\rangle,mt\rangle\rangle$
+					\item[] > $\langle \langle V,\varepsilon\rangle,\langle opd,\langle v',...o^{n}\rangle,\langle  \langle N,\varepsilon'\rangle,c,...\rangle,\overline{\kappa}\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle opd,\langle  \langle V,\varepsilon\rangle,v',...o^{n}\rangle,\langle c,...\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
+					\item[] CEK machine : $\langle\langle y,\{\langle y,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,\langle opd,\langle\ulcorner 1\urcorner$ $+\rangle,\langle\rangle,mt\rangle\rangle$
+					\item[] > $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
+					\item[] CEK machine : $\langle\langle\ulcorner 1\urcorner,\emptyset\rangle,\langle opd,\langle\ulcorner 1\urcorner$ $+\rangle,\langle\rangle,mt\rangle\rangle$
+					\item[] > $\langle  \langle b,\varepsilon\rangle,\langle opd,\langle \langle b_{i},\varepsilon_{i}\rangle,...\langle b_{1},\varepsilon_{1}\rangle ,o^{n}\rangle,\langle\rangle,\overline{\kappa}\rangle\rangle \longmapsto_{cek} \langle \langle V,\emptyset\rangle,\overline{\kappa}\rangle$ avec $\delta(o^{n},b_{1},...b_{i},b) = V$
+					\item[] CEK machine : $\langle\langle\ulcorner 2\urcorner,\emptyset\rangle,mt\rangle$
+				\end{itemize}
+				\newpage
+			
+			
+				
+			\subsubsection{Exemple de fonctionnement de la machine SECD}\label{SECD}
+				
+				Voici un exemple de fonctionnement de la machine SECD :	
+					
+				\begin{itemize}
+					\item[] Conversion : $\textlbrackdbl(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner)\textrbrackdbl_{secd}$
+					\item[] Conversion : $\textlbrackdbl((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))\textrbrackdbl_{secd}$ $\textlbrackdbl\ulcorner 1\urcorner\textrbrackdbl_{secd}$ $ap$
+					\item[] Conversion : $\textlbrackdbl(\lambda f.\lambda x.f$ $x)\textrbrackdbl_{secd}$ $\textlbrackdbl\lambda y.(+$ $y$ $y)\textrbrackdbl_{secd}$ $ap$ $\ulcorner 1\urcorner$ $ap$
+					\item[] Conversion : $\langle f,\textlbrackdbl\lambda x.(f$ $x)\textrbrackdbl_{secd}\rangle$ $\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap$
+					\item[] Conversion : $\langle f,\langle x,\textlbrackdbl f$ $x\textrbrackdbl_{secd}\rangle\rangle$ $\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap$
+					\item[] Conversion : $\langle f,\langle x,f$ $x$ $ap\rangle\rangle$ $\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap$
+					\item[] SECD Machine : $\langle\epsilon,\emptyset,\langle f,\langle x,f$ $x$ $ap\rangle\rangle$ $\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap,\epsilon\rangle$ 
+					\item[] > $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+					\item[] SECD Machine : $\langle\langle\langle f,\langle x,f$ $x$ $ap\rangle\rangle,\emptyset\rangle,\emptyset,\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap,\epsilon\rangle$ 
+					\item[] > $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+					\item[] SECD Machine : $\langle\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle$ $\langle\langle f,\langle x,f$ $x$ $ap\rangle\rangle,\emptyset\rangle,\emptyset,ap$ $\ulcorner 1\urcorner$ $ap,\epsilon\rangle$
+					\item[] > $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
+					\item[] SECD Machine : $\langle\epsilon,\emptyset[f \leftarrow \langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle],\langle x,f$ $x$ $ap\rangle,\langle\epsilon,\emptyset,\ulcorner 1\urcorner$ $ap,\epsilon\rangle\rangle$
+					\item[] SECD Machine : $\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle\},\langle x,f$ $x$ $ap\rangle,\langle\epsilon,\emptyset,\ulcorner 1\urcorner$ $ap,\epsilon\rangle\rangle$
+					\item[] >  $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+					\item[] SECD Machine : $\langle\langle\langle x,f$ $x$ $ap\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle\}\rangle,\{f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\},\emptyset,\langle\epsilon,\emptyset,\ulcorner 1\urcorner$ $ap,\epsilon\rangle\rangle$
+					\item[] > $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle$
+					\item[] SECD Machine : $\langle\langle\langle x,f$ $x$ $ap\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle\}\rangle,\emptyset,\ulcorner 1\urcorner$ $ap,\epsilon\rangle$
+					\item[] >  $\langle\widehat{S},\widehat{\varepsilon},b$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle b$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+					\item[] SECD Machine :  $\langle\ulcorner 1\urcorner$ $\langle\langle x,f$ $x$ $ap\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle\}\rangle,\emptyset,ap,\epsilon\rangle$
+					\item[] >  $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
+					\item[] SECD Machine : $\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle\}[x \leftarrow \ulcorner 1\urcorner],f$ $x$ $ap,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
+					\item[] SECD Machine : $\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\},f$ $x$ $ap,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
+					\item[] > $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
+					\item[] SECD Machine : $\langle\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\},x$ $ap,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
+					\item[] > $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
+					\item[] SECD Machine : $\langle\ulcorner 1\urcorner$ $\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\},ap,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
+					\item[] >  $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
+					\item[] SECD Machine :	$\langle\epsilon,\emptyset[y \leftarrow \ulcorner 1\urcorner],y$ $y$ $prim_{+},\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
+					\item[] SECD Machine : $\langle\epsilon,\{\langle y,\ulcorner 1\urcorner\rangle\},y$ $y$ $prim_{+},\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
+					\item[] > $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
+					\item[] SECD Machine : $\langle\ulcorner 1\urcorner,\{\langle y,\ulcorner 1\urcorner\rangle\},y$ $prim_{+},\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
+					\item[] > $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
+					\item[] SECD Machine : $\langle\ulcorner 1\urcorner$ $\ulcorner 1\urcorner,\{\langle y,\ulcorner 1\urcorner\rangle\},prim_{+},\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
+					\item[] > $\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
+					\item[] SECD Machine : $\langle\ulcorner 2\urcorner,\{\langle y,\ulcorner 1\urcorner\rangle\},\emptyset,\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
+					\item[] > $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle$
+					\item[] SECD Machine : $\langle\ulcorner 2\urcorner,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
+					\item[] > $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D}\rangle$
+					\item[] SECD Machine : $\langle\ulcorner 2\urcorner,\emptyset,\epsilon,\epsilon\rangle$
+				\end{itemize}
+				\newpage
+		
+		
+			
+		\subsection{Les différentes versions faite pour rendre la machine SECD concurrente}
+		
+			\subsubsection{1ère version des règles de la machine SECD Concurrente}\label{SECDConc1}
+				\smallbreak
+				Cette version ajoute les prémisse de la concurrence dans la machine SECD avec la possibilité de créér des threads d'initialiser des signaux,les émettre où encore de tester la présence d'un signal. Cette version est un condensé de 2 versions.
+				\bigbreak
+					
+				\textbf{\textit{Soit}} $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$ \textbf{\textit{avec :}}
 					
 					
+				\begin{itemize}
+					\item[] $\widehat{S}$ = $\epsilon$ 
 					\begin{itemize}
-						\item[] $\widehat{S}$ = $\epsilon$ 
-						\begin{itemize}
-							\item[|] $\widehat{V}$ $\widehat{S}$ 
-							\item[|] $\langle C',C''\rangle$ $\widehat{S}$
-							\item[|] Remp $\widehat{S}$
-						\end{itemize}
-						\item[] $\widehat{\varepsilon}$ = une fonction $\{\langle X,\widehat{V}\rangle,...\}$
-						\item[] $\widehat{C}$ = $\epsilon$ 
-						\begin{itemize}
-							\item[|] b $\widehat{C}$
-							\item[|] X $\widehat{C}$
-							\item[|] ap $\widehat{C}$
-							\item[|] $prim_{o^{n}}$ $\widehat{C}$  
-							\item[|] $\langle X,\widehat{C}\rangle$ $\widehat{C}$
-							\item[|] bspawn $\widehat{C}$ 
-							\item[|] espawn $\widehat{C}$
-							\item[|] $\langle s,C',C''\rangle$ $\widehat{C}$
-							\item[|] $\langle s,\widehat{C'}\rangle$ $\widehat{C}$ 
-							\item[|] $emit_{s}$ $\widehat{C}$ 
-						\end{itemize}
-						\item[] $\widehat{D}$ =  $\epsilon$
-						\begin{itemize}
-							\item[|] $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ 
-						\end{itemize}
-						\item[] $\widehat{W}$ = $\{\widehat{D},...\}$
-						\item[] $\widehat{ST}$ = $\{...,\langle s,\widehat{D}\rangle,...\}$
-						\item[] $\widehat{SI}$ = $\{ s,...\}$
+						\item[|] $\widehat{V}$ $\widehat{S}$ 
+						\item[|] $\langle C',C''\rangle$ $\widehat{S}$
+						\item[|] Remp $\widehat{S}$
 					\end{itemize}
-					\bigbreak
-					\bigbreak
-					
-					
-					\textbf{\textit{Les nouvelles règles sont les suivantes :}}
-					\smallbreak
+					\item[] $\widehat{\varepsilon}$ = une fonction $\{\langle X,\widehat{V}\rangle,...\}$
+					\item[] $\widehat{C}$ = $\epsilon$ 
 					\begin{itemize}
-						\item[] \textbf{Partie de base de la machine SECD}
-						\begin{itemize}
-							\item[] \textbf{Constante :} On a une constante, on la déplace dans la pile. 
-							\smallbreak
-							$\langle\widehat{S},\widehat{\varepsilon},b$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-							\longmapsto_{secdv1} 
-							\langle b$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$
-							\item[]
-							\item[] \textbf{Substitution :} On a une variable, on prends la substitution dans l'environnement et on la mets dans la pile.  
-							\smallbreak $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-							\longmapsto_{secdv1} 
-							\langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$ 
-							où $\widehat{V} = \varepsilon(X)$
-							\item[]
-							\item[] \textbf{Opération :} On a un opérateur et le nombre de constante nécessaire dans la pile, via la fonction $\delta$ et in retourne le résultat dans la pile. 
-							\smallbreak
-							$\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-							\longmapsto_{secdv1} 
-							\langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$ 
-							où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
-							\item[]
-							\item[] \textbf{Abstraction :} On a une abstraction, on crée une fermeture comportant l'abstraction et l'environnement courant et on mets la fermeture dans la pile
-							\smallbreak
-							$\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-							\longmapsto_{secdv1} 
-							\langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$
-							\item[]
-							\item[] \textbf{Application :} On a une application, donc on dauvegarde dans le dépôt, on ajoute une substitution et on remplace la chaîne de contrôle et l'environnement par ceux présent dans la fermeture.
-							\smallbreak
-							$\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-							\longmapsto_{secdv1} 
-							\langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle,\widehat{W},\widehat{ST},\widehat{SI}\rangle$
-							\item[]
-							\item[] \textbf{Récupération de sauvegarde :} On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
-							\smallbreak
-							$\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle,\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-							\longmapsto_{secdv1} 
-							\langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$
-							\item[]
-						\end{itemize}
-						\item[] \textbf{Partie pour la concurrence}
-						\begin{itemize}
-							\item[] \textbf{Création thread :} On veut créer un nouveau thread
-							\smallbreak
-							$\langle\widehat{S},\widehat{\varepsilon},bspawn$ $\widehat{C'}$ $espawn$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-							\longmapsto_{secdv1} 
-							\langle$ Remp $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W}\langle\widehat{S},\widehat{E},\widehat{C'},\widehat{D}\rangle,\widehat{ST},\widehat{SI}\rangle$
-							\item[]
-							\item[] \textbf{Récupération dans la file d'attente :} On a plus rien à traiter et on a aucune sauvegarde, du coup on change de thread courant par le thread en tête de la file d'attente.
-							\smallbreak $\langle\widehat{S},\widehat{\varepsilon},\emptyset,\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C},\widehat{D}\rangle$ $\widehat{W},\widehat{ST},\widehat{SI}\rangle \longmapsto_{secdv1} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$
-							\item[]
-							\item[] \textbf{Fin d'instant logique :} On a plus rien à traiter et on a plus rien dans la file d'attente. C'est la fin de l'instant logique
-							\smallbreak  $\langle\widehat{S},\widehat{\varepsilon},\emptyset,\emptyset,\emptyset,\widehat{ST},\widehat{SI}\rangle 
-							\longmapsto_{secdv1} \langle\widehat{S},\widehat{\varepsilon},\emptyset,\emptyset,\widehat{W},\emptyset,\emptyset,\emptyset\rangle$ 
-							\\avec $\widehat{W}$ = tout les éléments de $\widehat{ST}$ qui prennent leurs 2nd choix 
-							\item[]
-							\item[] \textbf{\'{E}mettre :} on émet un signal 
-							\smallbreak
-							$\langle\widehat{S},\widehat{\varepsilon},emit_{s}$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-							\longmapsto_{secdv1} 
-							\langle \widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W'},\widehat{ST'},\widehat{SI}\rangle$ 
-							\\avec $\widehat{W'}$ = $\widehat{W}$ $\cup$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s et
-							\\avec $\widehat{ST'}$ = $\widehat{ST}$ $\setminus$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s
-							\item[]
-							\item[] \textbf{Présence d'un signal :} On teste la présence d'un signal et il l'est donc on prends la 1ère option. 
-							\smallbreak
-							$\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle 
-							\longmapsto_{secdv1} 
-							\langle\widehat{S},\widehat{\varepsilon},C'$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ 
-							\\si s $\in \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
-							\item[]
-							\item[] \textbf{Thread bloqué remplacé :} On teste la présence d'un signal et il ne l'est pas donc on le remplace par le thread en tête de la file d'attente.
-							\smallbreak 
-							$\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\langle\widehat{S'},\widehat{\varepsilon'},C''',\widehat{D'}\rangle\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle 
-							\longmapsto_{secdv1} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{W},\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\widehat{D'}\rangle$ 
-							\\si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
-							\item[]
-							\item[] \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal et il ne l'est pas et la file est vide mest juste le thread courant dans la liste de threads bloqués.
-							\smallbreak
-							$\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\emptyset,\widehat{ST},\widehat{SI},\widehat{D}\rangle 
-							\longmapsto_{secdv1} 
-							\langle\epsilon,\emptyset,\emptyset,\emptyset,\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\emptyset\rangle$ 
-							\\si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
-							\item[]
-							\item[] \textbf{Initialisation signal :} On initialise le signal 
-							\smallbreak 
-							$\langle\widehat{S},\widehat{\varepsilon},\langle s, C'\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle 
-							\longmapsto_{secdv1} 
-							\langle\epsilon,\widehat{\varepsilon}[init \leftarrow s],C',\widehat{W},\widehat{ST},\widehat{SI},\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
-							\item[] 
-						\end{itemize}
-						\item[] \textbf{Partie commune}
-						\begin{itemize}
-							\item[] \textbf{Application neutre droite :} on a une application avec un neutre dans la pile donc on l'enlève
-							\smallbreak
-							$\langle\widehat{V}$ Remp $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle 
-							\longmapsto_{secdv1} 
-							\langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
-							\item[]
-							\item[] \textbf{Application neutre gauche :} on a une application avec un neutre dans la pile donc on l'enlève
-							\smallbreak
-							$\langle$Remp $\widehat{V}$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle 
-							\longmapsto_{secdv1} 
-							\langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
-							\item[]
-						\end{itemize}
+						\item[|] b $\widehat{C}$
+						\item[|] X $\widehat{C}$
+						\item[|] ap $\widehat{C}$
+						\item[|] $prim_{o^{n}}$ $\widehat{C}$  
+						\item[|] $\langle X,\widehat{C}\rangle$ $\widehat{C}$
+						\item[|] bspawn $\widehat{C}$ 
+						\item[|] espawn $\widehat{C}$
+						\item[|] $\langle s,C',C''\rangle$ $\widehat{C}$
+						\item[|] $\langle s,\widehat{C'}\rangle$ $\widehat{C}$ 
+						\item[|] $emit_{s}$ $\widehat{C}$ 
 					\end{itemize}
+					\item[] $\widehat{D}$ =  $\epsilon$
+					\begin{itemize}
+						\item[|] $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ 
+					\end{itemize}
+					\item[] $\widehat{W}$ = $\{\widehat{D},...\}$
+					\item[] $\widehat{ST}$ = $\{...,\langle s,\widehat{D}\rangle,...\}$
+					\item[] $\widehat{SI}$ = $\{ s,...\}$
+				\end{itemize}
+				\bigbreak
+				\bigbreak
+					
+					
+				\textbf{\textit{Les nouvelles règles sont les suivantes :}}
+				\smallbreak
+				\begin{itemize}
+					\item[] \textbf{Partie de base de la machine SECD}
+					\begin{itemize}
+						\item[] \textbf{Constante :} On a une constante, on la déplace dans la pile. 
+						\smallbreak
+						$\langle\widehat{S},\widehat{\varepsilon},b$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
+						\longmapsto_{secdv1} 
+						\langle b$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$
+						\item[]
+						\item[] \textbf{Substitution :} On a une variable, on prends la substitution dans l'environnement et on la mets dans la pile.  
+						\smallbreak 
+						$\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
+						\longmapsto_{secdv1} 
+						\langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$ 
+						où $\widehat{V} = \varepsilon(X)$
+						\item[]
+						\item[] \textbf{Opération :} On a un opérateur et le nombre de constante nécessaire dans la pile, via la fonction $\delta$ et in retourne le résultat dans la pile. 
+						\smallbreak
+						$\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
+						\longmapsto_{secdv1} 
+						\langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$ 
+						où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
+						\item[]
+						\item[] \textbf{Abstraction :} On a une abstraction, on crée une fermeture comportant l'abstraction et l'environnement courant et on mets la fermeture dans la pile
+						\smallbreak
+						$\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
+						\longmapsto_{secdv1} 
+						\langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$
+						\item[]
+						\item[] \textbf{Application :} On a une application, donc on dauvegarde dans le dépôt, on ajoute une substitution et on remplace la chaîne de contrôle et l'environnement par ceux présent dans la fermeture.
+						\smallbreak
+						$\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
+						\longmapsto_{secdv1} 
+						\langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle,\widehat{W},\widehat{ST},\widehat{SI}\rangle$
+						\item[]
+						\item[] \textbf{Récupération de sauvegarde :} On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
+						\smallbreak
+						$\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle,\widehat{W},\widehat{ST},\widehat{SI}\rangle 
+						\longmapsto_{secdv1} 
+						\langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$
+						\item[]
+					\end{itemize}
+					\item[] \textbf{Partie pour la concurrence}
+					\begin{itemize}
+						\item[] \textbf{Création thread :} On veut créer un nouveau thread
+						\smallbreak
+						$\langle\widehat{S},\widehat{\varepsilon},bspawn$ $\widehat{C'}$ $espawn$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
+						\longmapsto_{secdv1} 
+						\langle$ Remp $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W}\langle\widehat{S},\widehat{E},\widehat{C'},\widehat{D}\rangle,\widehat{ST},\widehat{SI}\rangle$
+						\item[]
+						\item[] \textbf{Récupération dans la file d'attente :} On a plus rien à traiter et on a aucune sauvegarde, du coup on change de thread courant par le thread en tête de la file d'attente.
+						\smallbreak $\langle\widehat{S},\widehat{\varepsilon},\emptyset,\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C},\widehat{D}\rangle$ $\widehat{W},\widehat{ST},\widehat{SI}\rangle \longmapsto_{secdv1} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$
+						\item[]
+						\item[] \textbf{Fin d'instant logique :} On a plus rien à traiter et on a plus rien dans la file d'attente. C'est la fin de l'instant logique
+						\smallbreak  $\langle\widehat{S},\widehat{\varepsilon},\emptyset,\emptyset,\emptyset,\widehat{ST},\widehat{SI}\rangle 
+						\longmapsto_{secdv1} \langle\widehat{S},\widehat{\varepsilon},\emptyset,\emptyset,\widehat{W},\emptyset,\emptyset,\emptyset\rangle$ 
+						\\avec $\widehat{W}$ = tout les éléments de $\widehat{ST}$ qui prennent leurs 2nd choix 
+						\item[]
+						\item[] \textbf{\'{E}mettre :} on émet un signal 
+						\smallbreak
+						$\langle\widehat{S},\widehat{\varepsilon},emit_{s}$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
+						\longmapsto_{secdv1} 
+						\langle \widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W'},\widehat{ST'},\widehat{SI}\rangle$ 
+						\\avec $\widehat{W'}$ = $\widehat{W}$ $\cup$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s et
+						\\avec $\widehat{ST'}$ = $\widehat{ST}$ $\setminus$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s
+						\item[]
+						\item[] \textbf{Présence d'un signal :} On teste la présence d'un signal et il l'est donc on prends la 1ère option. 
+						\smallbreak
+						$\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle 
+						\longmapsto_{secdv1} 
+						\langle\widehat{S},\widehat{\varepsilon},C'$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ 
+						\\si s $\in \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+						\item[]
+						\item[] \textbf{Thread bloqué remplacé :} On teste la présence d'un signal et il ne l'est pas donc on le remplace par le thread en tête de la file d'attente.
+						\smallbreak 
+						$\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\langle\widehat{S'},\widehat{\varepsilon'},C''',\widehat{D'}\rangle\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle 
+						\longmapsto_{secdv1} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{W},\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\widehat{D'}\rangle$ 
+						\\si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+						\item[]
+						\item[] \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal et il ne l'est pas et la file est vide mest juste le thread courant dans la liste de threads bloqués.
+						\smallbreak
+						$\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\emptyset,\widehat{ST},\widehat{SI},\widehat{D}\rangle 
+						\longmapsto_{secdv1} 
+						\langle\epsilon,\emptyset,\emptyset,\emptyset,\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\emptyset\rangle$ 
+						\\si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+						\item[]
+						\item[] \textbf{Initialisation signal :} On initialise le signal 
+						\smallbreak 
+						$\langle\widehat{S},\widehat{\varepsilon},\langle s, C'\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle 
+						\longmapsto_{secdv1} 
+						\langle\epsilon,\widehat{\varepsilon}[init \leftarrow s],C',\widehat{W},\widehat{ST},\widehat{SI},\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
+						\item[] 
+					\end{itemize}
+					\item[] \textbf{Partie commune}
+					\begin{itemize}
+						\item[] \textbf{Application neutre droite :} on a une application avec un neutre dans la pile donc on l'enlève
+						\smallbreak
+						$\langle\widehat{V}$ Remp $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle 
+						\longmapsto_{secdv1} 
+						\langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+						\item[]
+						\item[] \textbf{Application neutre gauche :} on a une application avec un neutre dans la pile donc on l'enlève
+						\smallbreak
+						$\langle$Remp $\widehat{V}$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle 
+						\longmapsto_{secdv1} 
+						\langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+						\item[]
+					\end{itemize}
+				\end{itemize}
 				\bigbreak
 				
 				
@@ -1625,13 +1642,13 @@
 				\newpage
 				
 				
-				\subsubsection{3ème version des règles de la machine SECD Concurrente}\label{SECDConc3}
-					\smallbreak
-					Cette version ajoute le contrôle des erreurs sans propagation via l'ajout d'un gestionnaire d'erreur dans la machine.
-					\bigbreak
+			\subsubsection{3ème version des règles de la machine SECD Concurrente}\label{SECDConc3}
+				\smallbreak
+				Cette version ajoute le contrôle des erreurs sans propagation via l'ajout d'un gestionnaire d'erreur dans la machine.
+				\bigbreak
 					
-					\textbf{\textit{Soit}} $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ \textbf{\textit{avec :}}
-				
+				\textbf{\textit{Soit}} $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ \textbf{\textit{avec :}}
+			
 				\begin{itemize}
 					\item[] $\widehat{S}$ = ... 
 					\item[] $\widehat{\varepsilon}$ = ... 
@@ -1730,8 +1747,8 @@
 			\subsubsection{4ème version des règles de la machine SECD Concurrente}
 				La machine ayant beaucoup évoluée depuis le début du travail, je vais redéfinir chaque élément de la machine pour pouvoir mieux comprendre les nouvelles règles.
 				\bigbreak
-			
-			
+				
+				
 				\textbf{\textit{Une suite de fonctions ont été écrite pour simplifier la lecture des règles. Les voici :}}
 				\smallbreak
 				\begin{itemize}
@@ -1743,11 +1760,11 @@
 					\\$\gamma(\{...,\langle s,\{...,\langle id,\{...,\langle b,\{...,id',...\}\rangle,\langle n,\{...\}\rangle,...\},\{...\}\rangle,...\}\rangle,...\},s,id,id') = 
 					\\\langle b , \{...,\langle s,\{...,\langle id,\{...,\langle b,\{...\}\rangle,\langle n,\{...,id'\}\rangle,...\},\{...\}\rangle,...\}\rangle,...\} \rangle$
 					\medbreak
-					
+						
 					$\gamma(\{...,\langle s,\{...,\langle id,\{...,\langle b,\{...,id',...\}\rangle\},\{...\}\rangle,...\}\rangle,...\},s,id,id') = 
 					\\\langle b , \{...,\langle s,\{...,\langle id,\{...,\langle b,\{...\}\rangle\},\{...,id'\}\rangle,...\}\rangle,...\} \rangle$
 					\medbreak
-					
+						
 					$\gamma(\{...,\langle s,\{...,\langle id,valeurs,\{...,id',...\}\rangle,...\}\rangle,...\},s,id,id') = throw$ $erreur_{e}$
 					\item[]
 					\item[] $\iota(l,s,i) =$ la fonction qui pour une liste de signaux courant l, un signal s, renvoie une liste des signaux courant avec le signal s initialisé.
@@ -1767,13 +1784,14 @@
 					\\ $\alpha(\langle CS,SSI\rangle) =$
 					\\ $SSI$ vidé
 					\\ $\forall$ $x$ $\in CS$ tels que $\langle s,\{...,\langle id,\{...,b,...\}\rangle,...\},true\rangle$, on ajoute $x$ dans $SSI$
-					\\ $\forall$ $x$ $\in CS$ tels que $\langle s,\{...,\langle id,\{...,b,...\}\rangle,...\},emit\rangle$ on le remplace par $\langle s,\{...,\langle id,\{\}\rangle,...\},faux\rangle$ 
-					\item[] 
+					\\ $\forall$ $x$ $\in CS$ tels que $\langle s,\{...,\langle id,\{...,b,...\}\rangle,...\},emit\rangle$ on le remplace par $\langle s,\{...,\langle id,\{\}\rangle,...\},faux\rangle$  
 				\end{itemize}
 				\newpage
-				
+		
+		
+					
 				\textbf{\textit{Soit $\langle I,S,E,C,TL,SI,D,H,IP\rangle$ avec :}}
-				
+					
 				\begin{itemize}
 					\item[] $V = b$	
 					\begin{itemize}
@@ -1846,9 +1864,11 @@
 					\end{itemize} 
 					\item[] IP = un entier servant à attribuer l'identifiant à un nouveau thread 
 				\end{itemize}
-				
+					
 				\newpage
-				
+		
+		
+					
 				\textbf{\textit{Les éléments étant expliqués, voici les nouvelles règles de la machine :}}
 				\smallbreak
 				\begin{enumerate}
@@ -1860,32 +1880,32 @@
 						$\langle I,S,E,b$ $C,TL,SI,D,H,IP\rangle 
 						\longrightarrow_{secdv4} \langle I,b$ $S,E,C,TL,SI,D,H,IP\rangle$
 						\item[]
-						
+							
 						\item[] \textbf{Substitution :} On a une abstraction, on créer une fermeture avec celle-ci et l'environnement courant et on la place dans la pile.
 						\smallbreak
 						$\langle I,S,E,X$ $C,TL,SI,D,H,IP\rangle
 						\longrightarrow_{secdv4} \langle I,V$ $S,E,C,TL,SI,D,H,IP\rangle$\\ avec E(X) = V
 						\item[]
-						
+							
 						\item[] \textbf{Opération :} On a un opérateur et le nombre de constante nécessaire dans la pile, \\via la fonction $\delta$ on retourne le résultat dans la pile.
 						\smallbreak
 						$\langle I,b_{n},...,b_{1}$ $S,E,prim_{o^{n}}$ $C,TL,SI,D,H,IP\rangle
 						\longrightarrow_{secdv4} \langle I,V$ $S,E,C,TL,SI,D,H,IP\rangle$
 						\\avec $\delta(o^{n}$ $b_{1}...b_{n}) = V$
 						\item[]
-						
+							
 						\item[]  \textbf{Abstraction :} On a une abstraction, on créer une fermeture comportant l'abstraction et l'environnement courant et on mets la fermeture dans la pile.
 						\smallbreak
 						$\langle I,S,E,\langle X,C'\rangle$ $C,TL,SI,D,H,IP\rangle
 						\longrightarrow_{secdv4} \langle I,\langle\langle X,C'\rangle,E\rangle$ $S,E,C,TL,SI,D,H,IP\rangle$
 						\item[]
-						
+							
 						\item[]  \textbf{Application :} On a une application, donc on sauvegarde dans le dépôt, on ajoute une substitution et on remplace la chaîne de contrôle et l'environnement par ceux présent dans la fermeture.
 						\smallbreak
 						$\langle I,V$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,ap$ $C,TL,SI,D,H,IP\rangle
 						\longrightarrow_{secdv4} \langle I,\emptyset,E'[X \leftarrow V],C',TL,SI,\langle S,E,C,D\rangle,H,IP\rangle$
 						\item[] 
-						
+							
 						\item[] \textbf{Récupération de sauvegarde :}  On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
 						\smallbreak  
 						$\langle I,V$ $S,E,\epsilon,TL,SI,\langle S',E',C,D\rangle,H,IP\rangle
@@ -1900,13 +1920,13 @@
 						$\langle I,S,E,erreur_{e}$ $C,TL,SI,D,H,IP\rangle
 						\longrightarrow_{secdv4} \langle I,erreur_{e}$ $S,E,C,TL,SI,D,H,IP\rangle$
 						\item[]
-						
+							
 						\item[] \textbf{Lever erreur :} On a un throw, on le déplace en tête de la pile.
 						\smallbreak
 						$\langle I,S,E,throw$ $C,TL,SI,D,H,IP\rangle
 						\longrightarrow_{secdv4} \langle I,throw$ $S,E,C,TL,SI,D,H,IP\rangle$
 						\item[]
-						
+							
 						\item[] \textbf{Opération sur erreur :} On a l'opérateur qui traite cette erreur donc on mets le résultat de 
 						\\la fonction $\delta$ dans la pile.
 						\smallbreak
@@ -1914,24 +1934,27 @@
 						\longrightarrow_{secdv4} \langle I,V$ $S,E,C,TL,SI,D,H,IP\rangle$
 						\\ avec $\delta(o^{1_{e}}$ $erreur_{e}) = V$
 						\item[]
-						
+							
 						\item[] \textbf{Propagation :} On a un un élément excepté l'opérateur qui traite cette erreur donc on propage l'erreur.
 						\smallbreak
 						$\langle I,throw$ $erreur_{e}$ $S,E,M$ $C,TL,SI,D,H,IP\rangle
 						\longrightarrow_{secdv4} \langle I,throw$ $erreur_{e}$ $S,E,C,TL,SI,D,H,IP\rangle$ 
 						\\avec $M = $ un élément de $C$ $\backslash$ $prim_{o^{1_{e}}}$
 						\item[]
-						
+							
 						\item[] \textbf{Traitée erreur via gestionnaire d'erreur :} On a plus rien mais on a une erreur levé dans la pile du coup on regarde si le gestionnaire d'erreur gère celle-ci ; oui du coup prend la sauvegarde.
 						\smallbreak 
 						$\langle I,throw$ $erreur_{e}$ $S,E,\epsilon,TL,SI,D,\langle e,\langle I',S',E',\langle X,C'' \rangle C',TL',SI',D',H,IP'\rangle\rangle,IP\rangle \\\longrightarrow_{secdv4} \langle I',\emptyset,E'[X \leftarrow erreur_{e}],C'',TL',SI',\langle S',E',C',D'\rangle,H,IP'\rangle$
 						\item[]
-						
+							
 						\item[]  \textbf{Traitement erreur récursif :} On a plus rien mais on a une erreur levé dans la pile du coup on regarde 
 						\\si le gestionnaire d'erreur gère celle-ci mais non du coup on regarde pour le gestionnaire sauvegardé.
 						\smallbreak 
 						$\langle I,throw$ $erreur_{e}$ $S,E,\epsilon,TL,SI,D,\langle e',\langle I',S',E',\langle X,C'' \rangle C',TL',SI',D',H,IP'\rangle\rangle,IP\rangle \\\longrightarrow_{secdv4}\langle I,throw$ $erreur_{e}$ $S,E,\epsilon,TL,SI,D,H,IP\rangle$
 						\item[]  \newpage
+						
+						
+						
 						\item[]  \textbf{Création d'un gestionnaire d'erreur :} On a un try...catch donc on test avec la chaîne de contrôle du try et on sauvegarde catch dans le gestionnaire d'erreur.
 						\smallbreak 
 						$\langle I,erreur_{e}$ $S,E,\langle C',\langle X,C''\rangle\rangle$ $C,TL,SI,D,H,IP\rangle 
@@ -1945,19 +1968,19 @@
 						\smallbreak $\langle I,S,E,bspawn$ $C'$ $espawn$ $C,\langle W,ST\rangle,SI,D,H,IP\rangle 
 						\\\longrightarrow_{secdv4} \langle I,S,E,C,\langle W$ $\langle IP,S,E,C',D\rangle,ST\rangle,SI,D,H,IP+1\rangle$
 						\item[]
-						
-						\item[]  \textbf{Signal :} On a un signal, on le déplace dans la pile.
+							
+	   					\item[]  \textbf{Signal :} On a un signal, on le déplace dans la pile.
 						\smallbreak 
 						$\langle I,S,E,signal$ $C,TL,SI,D,H,IP\rangle
 						\longrightarrow_{secdv4} \langle I,signal$ $S,E,C,TL,SI,D,H,IP\rangle$
 						\item[]
-						
+							
 						\item[] \textbf{Ajouter dans un signal :} On ajoute une constante dans une liste de valeurs d'un signal via la fonction $\rho$
 						\smallbreak
 						$\langle I,s$ $b$ $S,E,put$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle \longrightarrow_{secdv4} \langle I,S,E,C,TL,\langle CS',SSI\rangle,D,H,IP\rangle$ \\
 						avec $CS' = \rho(CS,b,s,I)$ et $s$ initialisé
 						\item[]
-						
+							
 						\item[] \textbf{Prendre une valeur partagée (possible) :} On prends dans la liste de valeurs d'un signal partagé lié \\
 						à un identifant une constante via la fonction $\gamma$ .
 						\smallbreak
@@ -1965,29 +1988,29 @@
 						\\\longrightarrow_{secdv4} \langle I,\emptyset,E'[X \leftarrow V],C',TL,\langle CS,SSI'\rangle,\langle S,E,C,D\rangle,H,IP\rangle$\\
 						avec $ \gamma(SSI,s,I,b) = \langle V,SSI'\rangle$ si il reste une valeur à prendre et $s$ partagé
 						\item[]
-						
+							
 						\item[] \textbf{Prendre une valeur partagée (impossible) :} On prends dans la liste de valeurs d'un signal partagé lié à un identifant une constante via la fonction $\gamma$ mais on a déjà tout pris donc on lève une erreur.
 						\smallbreak 
 						$\langle I,s$ $b$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
 						\\\longrightarrow_{secdv4} \langle I,throw$ $erreur_{e}$ $S,E,C,TL,\langle CS,SSI'\rangle,D,H,IP\rangle$\\
 						avec $ \gamma(SSI,s,I,b) = throw$ $erreur_{e}$ si il reste aucune valeur à prendre et $s$ partagé
 						\item[]
-						
+							
 						\item[] \textbf{Initialisation signal :} On initialise le signal via la fonction $\iota$.
 						\smallbreak 
 						$\langle I,s$ $S,E,init$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
 						\longrightarrow_{secdv4} \langle I,S,E,C,TL,\langle CS',SSI\rangle,D,H,IP\rangle$\\
 						avec $\iota(CS,s) = CS'$
 						\item[]	
-						
+							
 						\item[] \textbf{Conditionnelle signal :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il est émit donc on prends le 1er choix.
 						\smallbreak
 						$\langle I,s$ $S,E,\langle C',C''\rangle$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
 						\longrightarrow_{secdv4} \langle I,S,E,C'$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle$ \\
 						avec $\beta(CS,s) = vraie$
 						\item[]
-						
-						
+							
+							
 						\item[] \textbf{ Thread bloqué remplacé :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il n'est pas émit et il y a un thread dans la file d'attente
 						donc on mets ce thread dans la liste de threads bloqués et on prends le thread en tête de la file.
 						\smallbreak
@@ -1995,7 +2018,7 @@
 						\\\longrightarrow_{secdv4} \langle I',S',E',C''',\langle W,ST\langle s,\langle I,s$ $S,E,\langle C',C''\rangle$ $C,D\rangle\rangle\rangle,\langle CS,SSI\rangle,D',H,IP\rangle$ \\
 						avec $\beta(CS,s) = faux$
 						\item[]	
-						
+							
 						\item[] \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il n'est pas émit donc on mets ce thread dans la liste de threads bloqués.
 						\smallbreak 
 						$\langle I,s$ $S,E,\langle C',C''\rangle$ $C,\langle \emptyset,ST\rangle,\langle CS,SSI\rangle,D,H,IP\rangle 
@@ -2003,6 +2026,9 @@
 						avec $\beta(CS,s) = faux$
 						\item[]	
 						\newpage
+						
+						
+						
 						\item[] \textbf{Émission :} On émet un signal donc on mets dans la file d'attente tous les threads attendant le signal.
 						\smallbreak
 						$\langle I,s$ $S,E,emit$ $C,TL,\langle CS,SSI\rangle,D,H,IP\rangle 
@@ -2035,13 +2061,13 @@
 						$\langle I,S,E,ap$ $C,TL,SI,D,H,IP\rangle
 						\longrightarrow_{secdv4} \langle I,S,E,C,TL,SI,D,H,IP\rangle$
 					\end{itemize}
-					
-					\item[]
 				\end{enumerate}
 				\bigbreak
 				\bigbreak
-				
-				
+					
+			
+			
+					
 				\textbf{\textit{la machine SECD version 4 peut s'arrêter dans 3 états différents:}}
 				\smallbreak
 				\begin{itemize}
@@ -2056,16 +2082,19 @@
 					$\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv4},\langle\emptyset,\emptyset\rangle,\langle\emptyset,\emptyset\rangle,\emptyset,\emptyset,\emptyset,1\rangle \\
 					\twoheadrightarrow_{secdv4} \langle I,erreur_{e}$ $S,E,\epsilon,\langle\emptyset,\emptyset\rangle,SI,\emptyset,H,IP\rangle$;
 				\end{itemize}
-		\newpage
-		\section{Bibliographie}
-			\begin{itemize}
-				\item[] [1] \textit{Réactivité des systèmes coopératifs : le cas Réactive ML} de Louis Mandrel et Cédric Pasteur\label{ReactiveML}
-				\item[] [2] \textit{The ZINC experiment: an economical implementation of the ML language} de Xavier Leroy\label{ZINC}
-				\item[] [3] \textit{Programming Languages And Lambda Calculi} de Mathias Felleisen et Matthew Flatt\label{Calculi}
-				\item[] [4] \textit{https://www.irif.fr/~carton/Enseignement/Complexite/MasterInfo/Cours/turing.html}\label{Turing}
-				\item[] [5] \textit{https://fr.wikipedia.org/wiki/Automate$\_$fini$\_$déterministe}\label{AFD}
-				\item[] [6] \textit{https://fr.wikipedia.org/wiki/Algorithme$\_$déterministe}\label{MFD}
-			\end{itemize}
+				\newpage
+			
+			
+					
+	\section{Bibliographie}
+		\begin{itemize}
+			\item[] [1] \textit{Réactivité des systèmes coopératifs : le cas Réactive ML} de Louis Mandrel et Cédric Pasteur\label{ReactiveML}
+			\item[] [2] \textit{The ZINC experiment: an economical implementation of the ML language} de Xavier Leroy\label{ZINC}
+			\item[] [3] \textit{Programming Languages And Lambda Calculi} de Mathias Felleisen et Matthew Flatt\label{Calculi}
+			\item[] [4] \textit{https://www.irif.fr/~carton/Enseignement/Complexite/MasterInfo/Cours/turing.html}\label{Turing}
+			\item[] [5] \textit{https://fr.wikipedia.org/wiki/Automate$\_$fini$\_$déterministe}\label{AFD}
+			\item[] [6] \textit{https://fr.wikipedia.org/wiki/Algorithme$\_$déterministe}\label{MFD}
+		\end{itemize}
 		
 		
 \end{document}

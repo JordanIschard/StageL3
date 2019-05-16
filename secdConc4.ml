@@ -536,7 +536,8 @@ module MachineTTSI =
 
         | _                             ->   false 
 
-    
+
+    (* Ajoute un thread dans la liste des threads bloqués d'un signal *)
     let rec add_stuck si signal st =
       let aux data =
         match data with
@@ -547,6 +548,8 @@ module MachineTTSI =
 
         | (id_s,data)::t -> if (id_s = signal) then (append [(id_s,aux data)] t) else (append [(id_s,data)] (add_stuck t signal st))
     
+
+    (* Applique le second choix sur un thread bloqué *)
     let rec other_choice tl =
       match tl with
           [] -> []
@@ -555,6 +558,8 @@ module MachineTTSI =
 
         | _ -> raise UnknowStuckState
     
+    
+    (* Applique tout les changements nécessaires pour changer d'instant logique *)
     let rec next_moment signals =
       let rec aux1 cs =
         match cs with
@@ -574,15 +579,39 @@ module MachineTTSI =
         | (si,data)::t -> let (tl,new_signals) = next_moment t in let (tl1,new_data) = aux data in (append tl tl1 , append [(si,new_data)] new_signals)
 
 
+    let compute stack env op =
+      match (stack,op) with 
+          (Stack_const b::s,Add1)                  ->   Stack_const(b+1)::s
+
+        | (Stack_const b::s,Sub1)                  ->   Stack_const(b-1)::s
+
+        | (Stack_const 0::s,IsZero)                ->   Closure([Pair("x",[Pair("y",[Variable "x"])])],env)::s
+
+        | (Stack_const b::s,IsZero)                ->   Closure([Pair("x",[Pair("y",[Variable "y"])])],env)::s
+
+        | (Stack_const b::Stack_const b1::s,Add)   ->   Stack_const(b1+b)::s
+
+        | (Stack_const b::Stack_const b1::s,Sub)   ->   Stack_const(b1-b)::s
+
+        | (Stack_const b::Stack_const b1::s,Mult)  ->   Stack_const(b1*b)::s
+
+        | (Stack_const 0::Stack_const b1::s,Div)   ->   raise DivZero
+
+        | (Stack_const b::Stack_const b1::s,Div)   ->   Stack_const(b1/b)::s
+        
+        | (Stack_const b::s,_)                     ->   raise InsufficientOperandNb
+
+        | (_,_)                                    ->   raise NotAllConstants       
 
 
 
 
 
         
-    (**** MachineTTSI SECD ****)
 
-    (* Applique les règles de la machineTTSI SECD en affichant les étapes *)
+    (**** Machine TTSI ****)
+
+    (* Applique les règles de la machine TTSI en affichant les étapes *)
     let rec machineTTSI machine =
       (afficherTTSI machine) ;
       match machine with
@@ -596,38 +625,14 @@ module MachineTTSI =
 
           (* On a prim dans la chaîne de contrôle, on prends le nombre d'élément nécessaire au bon fonctionnement de l'opérateur lié à prim dans la pile 
              et on effectue le calcul. On mets le résultat dans la pile *)
-        | MachineTTSI(Thread(id,s,e,Prim op::c,d),tl,si,ip)                             
-          ->    begin 
-                  match (s,op) with 
-                      (Stack_const b::s,Add1)                  ->   machineTTSI (MachineTTSI( Thread( id , Stack_const(b+1)::s , e , c , d ) , tl , si , ip ))
-
-                    | (Stack_const b::s,Sub1)                  ->   machineTTSI (MachineTTSI( Thread( id , Stack_const(b-1)::s , e , c , d ) , tl , si , ip ))
-
-                    | (Stack_const 0::s,IsZero)                ->   machineTTSI (MachineTTSI( Thread( id , Closure([Pair("x",[Pair("y",[Variable "x"])])],e)::s , e , c , d ) , tl , si , ip ))
-
-                    | (Stack_const b::s,IsZero)                ->   machineTTSI (MachineTTSI( Thread( id , Closure([Pair("x",[Pair("y",[Variable "y"])])],e)::s , e , c , d ) , tl , si , ip ))
-
-                    | (Stack_const b::Stack_const b1::s,Add)   ->   machineTTSI (MachineTTSI( Thread( id , Stack_const(b1+b)::s , e , c , d ) , tl , si , ip ))  
-
-                    | (Stack_const b::Stack_const b1::s,Sub)   ->   machineTTSI (MachineTTSI( Thread( id , Stack_const(b1-b)::s , e , c , d ) , tl , si , ip ))
-            
-                    | (Stack_const b::Stack_const b1::s,Mult)  ->   machineTTSI (MachineTTSI( Thread( id , Stack_const(b1*b)::s , e , c , d ) , tl , si , ip ))
-
-                    | (Stack_const 0::Stack_const b1::s,Div)   ->   raise DivZero
-
-                    | (Stack_const b::Stack_const b1::s,Div)   ->   machineTTSI (MachineTTSI( Thread( id , Stack_const(b1/b)::s , e , c , d ) , tl , si , ip ))
-                    
-                    | (Stack_const b::s,_)                     ->   raise InsufficientOperandNb
-
-                    | (_,_)                                    ->   raise NotAllConstants       
-                end
+        | MachineTTSI(Thread(id,s,e,Prim op::c,d),tl,si,ip)                       ->   machineTTSI (MachineTTSI( Thread( id , (compute s e op) , e , c , d ) , tl , si , ip ))                        
 
 
           (* On a une abstraction dans la chaîne de contrôle, on place une fermeture ,qui comporte l'abstraction et l'environnment courant, dans la pile *)
         | MachineTTSI(Thread(id,s,e,Pair(abs,c1)::c,d),tl,si,ip)                  ->    machineTTSI (MachineTTSI( Thread( id, Closure([Pair(abs,c1)],e)::s , e , c , d ) , tl , si , ip ))  
         
 
-          (* On a Ap dans la chaîne de contrôle, on sauvegarde une partie de la machineTTSI dans le dépôt, on prends l'environnement de la fermeture et on ajoute la nouvelle substitution *)
+          (* On a Ap dans la chaîne de contrôle, on sauvegarde une partie de la machine TTSI dans le dépôt, on prends l'environnement de la fermeture et on ajoute la nouvelle substitution *)
         | MachineTTSI(Thread(id,v::Closure([Pair(abs,c1)],e1)::s,e,Ap::c,d),tl,si,ip)   
           ->    machineTTSI (MachineTTSI( Thread( id , [] , (add_env e1 abs v) , c1 , Save(s,e,c,d) ) , tl , si , ip ))
 
@@ -664,15 +669,15 @@ module MachineTTSI =
 
           (* On a un present dans la chaîne de contrôle, on regarde si le signal est émit : si oui on prends la première possibilités sinon on le mets dans la liste de threads bloqués *)
         | MachineTTSI(Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_signal signal::s,e,Present::c,d),tl,si,ip)               
-            ->     if (isEmit si signal)
-                      then machineTTSI (MachineTTSI( Thread( id , s , e , (append c1 c) , d ) , tl , si , ip ))
-                      else let st = Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_signal signal::s,e,Present::c,d) in
-                          begin 
-                            match tl with
-                                [] -> machineTTSI (MachineTTSI( Thread( ip , [] , [] , [] , Empty ) , [] , (add_stuck si signal st) , ip+1 ))
+          ->    if (isEmit si signal)
+                  then machineTTSI (MachineTTSI( Thread( id , s , e , (append c1 c) , d ) , tl , si , ip ))
+                  else let st = Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_signal signal::s,e,Present::c,d) in
+                      begin 
+                        match tl with
+                            []                            ->   machineTTSI (MachineTTSI( Thread( ip , [] , [] , [] , Empty ) , [] , (add_stuck si signal st) , ip+1 ))
 
-                              | Thread(id1,s1,e1,c3,d1)::tl1  ->  machineTTSI (MachineTTSI( Thread( id1 , s1 , e1 , c3 , d1 ) , tl , (add_stuck si signal st) , ip ))
-                          end
+                          | Thread(id1,s1,e1,c3,d1)::tl1  ->   machineTTSI (MachineTTSI( Thread( id1 , s1 , e1 , c3 , d1 ) , tl1 , (add_stuck si signal st) , ip ))
+                      end
 
 
           (* On a rien dans la chaîne de contrôle et le dépôt est vide mais la liste d'attente à au moins un élément, on prends un thread dans la liste d'attente *)                         
@@ -680,7 +685,7 @@ module MachineTTSI =
 
 
           (* On a rien dans la chaîne de contrôle, le dépôt est vide et la liste d'attente aussi, 
-             c'est la fin d'un instant où la fin du fonctionnement de la machineTTSI SECD si la liste de threads bloqués est vide *)
+             c'est la fin d'un instant où la fin du fonctionnement de la machine TTSI si la liste de threads bloqués est vide *)
         | MachineTTSI(Thread(id,s,e,[],Empty),[],si,ip)                           
           ->   if (isEnd si)
                   then match s with
