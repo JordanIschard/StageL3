@@ -939,335 +939,357 @@
 					
 					
 					
-				Cette version des règles est la plus optimale car on a pris le meilleurs de chaque possibilités mais il faut savoir que des règles intermédiaire ont été créé, implanté et testé en OCaml.En effet je vais vous présenter 2 version mais 3 versions des règles existent et 4 machines ont été implantées. On peut retrouvé  ces règles en Annexe si cela vous intéresse.
+				Cette version des règles est la plus optimale car on a pris le meilleurs de chaque possibilités mais il faut savoir que des règles intermédiaires ont été créé, implanté et testé en OCaml. En effet je vais vous présenter 2 version mais 3 versions des règles existent et 4 machines ont été implantées. On peut retrouvé ces règles en Annexe si cela vous intéresse.
 				\newpage
 					
 					
 		\subsection{Le partage des valeurs dans la machine}
 			
+			Les signaux nous permettent déjà de communiquer entre les threads par présence ou absence d'un signal. On va monter d'un cran en ajoutant la possibilité de partager des valeurs avec les signaux. Cela va créer un semblant de mémoire partagée.
+			\medbreak
+			
+			\subsubsection{Les valeurs partagées}
+			
+				\paragraph{Quelles sont les contraintes pour accèder à ces valeurs ?}
+				On a déjà spécifier que l'on voulait que les valeurs soit lié à un signal précis. On va rajouter une contrainte supplémentaire ces que chaque thread aura ça propre liste de valeurs partagées. C'est-à-dire que pour accèder à une valeur il faudra connaître le signal et le thread. Cela pose un problème non traité précédement qui est de différencier chaque thread. Pour cela, on va ajouter un identifiant à $T$, c'est-à-dire que l'on aura $T~=~\langle I,S,E,C,D\rangle$ avec $I$ un entier qui va représenter l'identifiant d'un thread $T$. Un autre problème se pose par rapport à l'attribution de ces identifiants.
+				\smallbreak
+				Je m'explique, dans le cas des signaux ce n'était pas compliqué car on garde tous les signaux créer dans notre machine durant tout le processus donc on ne peut pas attribuer un identifiant qui a déjà été attribué avant. Or ici quand un thread est finit on ne le garde pas et même quand il est en cours, on peut le stocker dans deux endroits différents $TL$ et $ST$. On va utiliser un producteur d'identifiant dans notre machine. On va créer un nouvel élément $IP$ qui est un entier dans notre machine ce qui nous donne pour l'instant $\langle T,TL,SI,IP\rangle$.
+				\medbreak
 				
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			 
-			\newpage
-			La machine ayant beaucoup évoluée depuis le début du travail, je vais redéfinir chaque élément de la machine pour pouvoir mieux comprendre les nouvelles règles.
-		\bigbreak
-		
-		\textbf{\textit{Une suite de fonctions ont été écrite pour simplifier la lecture des règles. Les voici :}}
-		\smallbreak
-		\begin{itemize}
-			\item[] $\iota(SI)$ une fonction qui prends l'identifiant du dernier signal créer l'incrémente pour en créer un nouveau et retourner l'identifiant du signal créée avec la liste mise à jour.
-			\\ \textbf{Exemple :} $\iota(\{...,\langle s,\langle emit,CS,SSI\rangle\rangle\}) =$ $(s' ,\{...,\langle s,\langle emit,CS,SSI\rangle\rangle,\langle s',\langle false,\{\},\{\}\rangle\rangle\})$ avec $s' = s+1$
-			\item[] 
-			\item[] $SI(s)$ une fonction qui retourne le 2nd élément du couple correspondant à s.
-			\\\textbf{Exemple :} $SI(s) =$ $\langle emit,CS,SSI,TL\rangle$
-			\item[]  
-			\item[] $\tau(SI)$ une fonction qui prends tous les éléments bloqués et les retourne en prenant en compte que le signal n'est pas émit, mets les liste de valeurs courantes en liste partagés si il est émit 
-			\\ \textbf{Exemple :} $\tau(TL,SI) =$ $\forall$ $si \in SI$ : 
-			\begin{itemize}
-				\item[] - $\langle true,CS,SSI,\{\}\rangle$ $\rightarrow$ $\langle false,\{\},CS,\{\}\rangle$
-				\item[] - $\langle false,CS,SSI,ST\rangle$ $\rightarrow$ $\langle false,\{\},\{\},\{\}\rangle$ et 
-				\\$\forall$ $st \in ST$ : $\langle I,\langle\langle X',C''\rangle, E\rangle$ $\langle\langle X,C'\rangle, E\rangle$ $s$ $S,E,present$ $C,D\rangle$ $\rightarrow$ $ \langle I,S,E,C''$ $C,D\rangle$ et on l'ajoute à TL
-			\end{itemize}
-			\item[]
-			\item[] $SI[(s,i) \leftarrow b]$ est une fonction qui mets dans la liste de valeurs ,de s pour le thread i, b et mets à vrai le booléen $emit$.
-			\item[] 
-			\item[] $SSI(i)$ une fonction qui retourne le couple lié à un signal et un thread dans les signaux partagés.
-			\\ \textbf{Exemple :} $SSI(i) = \langle CI,IL\rangle$
-			\item[] 
-			\item[] $\gamma(\langle CI,IL\rangle)$ une fonction qui retourne la constante et décale l'itérateur 
-		\end{itemize}
-		\newpage
-		
-		\textbf{\textit{Soit $\langle T,TL,SI,IP\rangle$ avec :}}
-		
-		\begin{itemize}
-			\item[] $TL =$ \textbf{une file de thread tels que :} $\forall$ $tl \in TL$ $|$ $tl = T$ avec :
-			\begin{itemize}
-			  \item[] $T =$ $\langle I,S,E,C,D\rangle$ \textbf{le thread courant avec :}
-			  \begin{itemize}
-			  	\item[] $V = b$	
-			  	\begin{itemize}
-			  		\item[|] $\langle\langle X,C' \rangle E\rangle$
-			  		\item[|] $signal$
-			  	\end{itemize}
-			  	\item[] $I =$ un entier représentant l'identifiant du thread
-			  	\item[] $S =  \emptyset$ 
-			  	\begin{itemize}
-			  		\item[|] $V$ $S$
-			  	\end{itemize}
-			  	\item[] $E = \{...,\langle X,V\rangle,...\}$
-			  	\item[] $C = \epsilon$
-			  	\begin{itemize}
-			  		\item[|] $b$ $C$~~~~~~~~~~~~~~~~~~~~~~~~~~    (une constante)
-			  		\item[|] $X$ $C$~~~~~~~~~~~~~~~~~~~~~~~~~~(une variable)
-			  		\item[|] $signal$ $C$~~~~~~~~~~~~~~~~~~~~(un signal)
-			  		\item[|] $\langle X,C'\rangle$ $C$~~~~~~~~~~~~~~~~~~~(une abstraction)
-			  		\item[|] $ap$ $C$~~~~~~~~~~~~~~~~~~~~~~~~~(une application)
-			  		\item[|] $prim_{o^{n}}$ $C$~~~~~~~~~~~~~~~~~~~(un opérateur)
-			  		\item[|] $spawn$ $C$~~~~~~~~~~~~~~~~~~~(créateur d'un nouveau thread)
-			  		\item[|] $present$ $C$~~~~~~~~~~~~~~~~~~(le test de présence d'un signal)
-			  		\item[|] $init$ $C$~~~~~~~~~~~~~~~~~~~~~~~(initialise un signal pour une chaîne de contrôle donné)
-			  		\item[|] $put$ $C$~~~~~~~~~~~~~~~~~~~~~~~~(insère une valeur dans la liste de valeurs d'un signal)
-			  		\item[|] $get$ $C$~~~~~~~~~~~~~~~~~~~~~~~~(prends une valeurs dans la liste de valeurs d'un signal)
-			  	\end{itemize}
-			  	\item[] D = $\emptyset$
-			  	\begin{itemize}
-			  		\item[|] $\langle S,E,C,D\rangle$~~~~~~~~~~~~~~~~(une sauvegarde liée à une abstraction)
-			  	\end{itemize}
-			  \end{itemize}	
-			\end{itemize}
-			
-			\item[]
-			\item[] \textbf{$SI =$ une liste de signaux tels que :} $\forall$ $si \in SI$ $|$ $si =$ $\langle signal,\langle emit,CS,SSI,TL\rangle\rangle$ avec :
-			\begin{itemize}
-				\item[] - \textbf{un booléen représentant l'émission du signal :} $emit$
-				\item[] - \textbf{un identifiant de thread :} $I$
-				\item[] - \textbf{une liste des signaux courant tels que :} $\forall$ $cs \in CS$ $|$ $cs = \langle I,CL\rangle$ avec 
+				Pour garder la machine réactive fonctionnelle, on va devoir séparer les valeurs partagées en deux parties :
+				\begin{enumerate}
+					\item Une liste de valeurs courante : c'est là que l'on va insérer les valeurs, on ne peut pas prendre dans cette liste, on peut le voir comme une liste tampon. Cela va permettre d'éviter les problèmes type un thread veut accèder à une valeur, il n'y en a pas, il laisse sa place et le thread d'après mets une valeur. Or ils sont dans le même instant logique donc il devrait pouvoir y accèder car hypothétiquement ils fonctionnent en même temps.
+					\item Une liste de valeurs partagées : c'est là que l'on va prendre les valeurs, on ne peut pas insèrer dans cette liste.
+				\end{enumerate}
+				\smallbreak
+				Pour faire la transition entre la liste tampon et la liste de valeurs partagées on attend la fin d'un instant logique et si le signal est émit on transfère ces valeurs.
+				\medbreak
+				
+				Quand on prends une valeur on ne spécifie pas laquelle car on ne le sait pas. On va contraindre à prendre les valeurs dans l'ordre et une unique fois. Pour ça on va avoir un pointeur pour chaque thread. 
+				
+				\paragraph{Comment stocker ces valeurs ?} 
+				La liste des signaux est pour l'instant de la forme $SI~|~\forall~si \in SI~:~\langle s,\langle emit,ST \rangle\rangle$. On va se contenter d'expliqué pour cette forme car une autre forme à été faite durant le stage mais n'est pas si éloigné de celle-ci. Si vous avez envie de la voir malgré tout elle se trouve en Annexe. Comme vu plus haut il nous faut deux listes : 
+				\smallbreak
+				\begin{enumerate}
+					\item $CS$ les valeurs courantes tels que $\forall~cs \in CS~:~cs = \langle id , CL \rangle$ avec $id$ l'identifiant du thread qui insère ces valeurs dans $CL$ la liste des valeurs;
+					\item $SSI$ les valeurs partagées tels que $\forall~ssi \in SSI~:~ssi = \langle id,\langle CI,EL\rangle\rangle$ avec $id$ l'identifiant du thread qui a inséré ces valeurs à l'instant précédent. On a le couple $\langle CI,EL\rangle$ qui va nous servir à itérer. $EL$ est une liste d'identifiant qui représente la fin de l'itération dans cette liste. $CI$ est la liste des valeurs tels que $\forall~ci \in CI~:~ci = \langle b,IL\rangle$ avec $b$ une valeur et $IL$ une liste d'identifiant qui représente une position possible de l'itérateur.
+				\end{enumerate}
+				\medbreak
+				
+				$SI~|~\forall~si \in SI~:~\langle s,\langle emit,ST \rangle\rangle$ devient $SI~|~\forall~si \in SI~:~\langle s,\langle emit,CS,SSI,ST \rangle\rangle$
+				\bigbreak
+				
+				
+			\subsubsection{Accèder à une valeur}
+				
+				On veut ajouter une commande $get$ qui va nous servir à accèder à une valeur. Pour pouvoir y accèder on a besoin d'un signal et d'un identifiant. On aura donc $s~b~get$ avec $s$ un signal et $b$ un identifiant. Cependant une question se pose, comment faire si on a pris toutes les valeurs ? 
+				\smallbreak
 				\begin{itemize}
-					\item[] - \textbf{une liste de constante tels que :} $\forall$ $cl \in CL$ $|$ $cl = b$
-				\end{itemize}
+					\item[] - On pourrai lever une erreur : cela est possible si on ajoute une gestion des erreurs mais sur cette version ce n'est pas le cas. Si cela vous intéresse une version existe en Annexe avec ce principe.
+					\item[] - On demande un paramètre supplémentaire que l'on nommera $n$ qui nous servira de neutre, c'est-à-dire quand on ne pourra pas récupèrer on retournera le neutre.
+				\end{itemize} 
+				\smallbreak
+				On a donc une commande $get$ de la forme $s~i~n~get$ avec $s$ un signal , $i$ l'identifiant du thread dont l'on veut un élément de ces valeurs partagées et $n$ le neutre. 
+				\bigbreak
+				
+				
+			\subsubsection{Insérer une valeur}
 			
-				\item[] - \textbf{la liste des signaux partagés tels que :} $\forall$ $ssi \in SSI$ $|$ $ssi = \langle I,\langle CI,IL\rangle\rangle$ avec 
+				On a vu comment accèder à des valeurs mais encore faut-il pouvoir les insérer. Pour ça une commande $put$ va être nécessaire. Pour insérer, on a besoin de deux informations : le signal et l'identifiant du thread traitant le $put$. On aura juste besoin de spécifier le signal, l'autre on l'aura directement. Ce qui nous donne $s~put$ avec $s$ un signal. 
+				\smallbreak
+				Petit point à spécifier, quand on insère un élément c'est que l'on veut le partager. Sachant ça et qu'il faut émettre un signal pour pouvoir partager les valeurs. Donc on peut dire que l'on émet lorsque l'on insère une valeur. On va donc fusionner ces deux commandes. 
+				\bigbreak
+				\bigbreak
+					
+			
+			
+			
+			\subsubsection{Les règles de notre machine}
+				
+				Ces deux commandes ajoutées engrangent énormément de changement. On va redéfinir nos règles pour voir les changements que ces commandes provoque. 
+				\bigbreak
+		
+				\textbf{\textit{Une suite de fonctions ont été écrite pour simplifier la lecture des règles. Les voici :}}
+				\smallbreak
 				\begin{itemize}
-					\item[] - \textbf{une liste d'identifiant de threads :} $\forall$ $il \in IL$ $|$ $il = I$
-					\item[] - \textbf{une liste de constante avec itérateur tels que :} $\forall$ $ci \in CI$ $|$ $ci = \langle b, IL\rangle$
+					\item[] $\iota(SI)$ une fonction qui prends l'identifiant du dernier signal créer l'incrémente pour en créer un nouveau et retourner l'identifiant du signal créée avec la liste mise à jour.
+					\\ \textbf{Exemple :} $\iota(\{...,\langle s,\langle emit,CS,SSI\rangle\rangle\}) =$ $(s' ,\{...,\langle s,\langle emit,CS,SSI\rangle\rangle,\langle s',\langle false,\{\},\{\}\rangle\rangle\})$ avec $s' = s+1$
+					\item[] 
+					\item[] $SI(s)$ une fonction qui retourne le 2nd élément du couple correspondant à s.
+					\\\textbf{Exemple :} $SI(s) =$ $\langle emit,CS,SSI,TL\rangle$
+					\item[]  
+					\item[] $\tau(SI)$ une fonction qui prends tous les éléments bloqués et les retourne en prenant en compte que le signal n'est pas émit, mets les liste de valeurs courantes en liste partagés si il est émit 
+					\\ \textbf{Exemple :} $\tau(TL,SI) =$ $\forall$ $si \in SI$ : 
+					\begin{itemize}
+						\item[] - $\langle true,CS,SSI,\{\}\rangle$ $\rightarrow$ $\langle false,\{\},CS,\{\}\rangle$
+						\item[] - $\langle false,CS,SSI,ST\rangle$ $\rightarrow$ $\langle false,\{\},\{\},\{\}\rangle$ et 
+						\\$\forall$ $st \in ST$ : $\langle I,\langle\langle X',C''\rangle, E\rangle$ $\langle\langle X,C'\rangle, E\rangle$ $s$ $S,E,present$ $C,D\rangle$ $\rightarrow$ $ \langle I,S,E,C''$ $C,D\rangle$ et on l'ajoute à TL
+					\end{itemize}
+					\item[]
+					\item[] $SI[(s,i) \leftarrow b]$ est une fonction qui mets dans la liste de valeurs ,de s pour le thread i, b et mets à vrai le booléen $emit$.
+					\item[] 
+					\item[] $SSI(i)$ une fonction qui retourne le couple lié à un signal et un thread dans les signaux partagés.
+					\\ \textbf{Exemple :} $SSI(i) = \langle CI,IL\rangle$
+					\item[] 
+					\item[] $\gamma(\langle CI,IL\rangle)$ une fonction qui retourne la constante et décale l'itérateur 
 				\end{itemize}
-			\end{itemize}
-			\item[]
-			\item[] IP = un entier servant à attribuer l'identifiant à un nouveau thread 
-		\end{itemize}
-		\bigbreak
-		
-		\textbf{On va définir une règle pour simplifier les règles futurs :} 
-		\begin{itemize}
-			\item[] Dans tous les cas :
-			\item[] \begin{center}
-						$\dfrac{\langle S,E,C,D\rangle \rightarrow \langle S',E',C',D'\rangle}{\langle\langle I,S,E,C,D\rangle,TL,SI,IP\rangle \rightarrow \langle\langle I,S',E',C',D'\rangle,TL,SI,IP\rangle}$
-					\end{center}
-			\item[]
-			\item[]
-			\item[] Si la règle utilisée n'est ni \textbf{Thread bloqué non remplacé} ni \textbf{Création thread} :
-			\smallbreak 
-			\item[] \begin{center}
-						$\dfrac{\langle\langle S,E,C,D\rangle,TL,SI\rangle \rightarrow \langle\langle S',E',C',D'\rangle,TL',SI'\rangle}{\langle\langle I,S,E,C,D\rangle,TL,SI,IP\rangle \rightarrow \langle\langle I,S',E',C',D'\rangle,TL',SI',IP\rangle}$ 
-					\end{center}
-		\end{itemize}
-		\newpage
-		
-		\textbf{\textit{Les éléments étant expliqués, voici les nouvelles règles de la machine :}}
-		\smallbreak
-		\begin{enumerate}
-			\item[] \textbf{Partie de base de la machine SECD} 
-			\item[]
-			\begin{itemize}
-				\item[] \textbf{Constante :} On a une constante, on la déplace dans la pile.
+				\newpage
+				
+				\textbf{\textit{Soit $\langle T,TL,SI,IP\rangle$ avec :}}
+				
+				\begin{itemize}
+					\item[] $TL =$ \textbf{une file de thread tels que :} $\forall$ $tl \in TL$ $|$ $tl = T$ avec :
+					\begin{itemize}
+					  \item[] $T =$ $\langle I,S,E,C,D\rangle$ \textbf{le thread courant avec :}
+					  \begin{itemize}
+					  	\item[] $V = b$	
+					  	\begin{itemize}
+					  		\item[|] $\langle\langle X,C' \rangle E\rangle$
+					  		\item[|] $signal$
+					  	\end{itemize}
+					  	\item[] $I =$ un entier représentant l'identifiant du thread
+					  	\item[] $S =  \emptyset$ 
+					  	\begin{itemize}
+					  		\item[|] $V$ $S$
+					  	\end{itemize}
+					  	\item[] $E = \{...,\langle X,V\rangle,...\}$
+					  	\item[] $C = \epsilon$
+					  	\begin{itemize}
+					  		\item[|] $b$ $C$~~~~~~~~~~~~~~~~~~~~~~~~~~    (une constante)
+					  		\item[|] $X$ $C$~~~~~~~~~~~~~~~~~~~~~~~~~~(une variable)
+					  		\item[|] $signal$ $C$~~~~~~~~~~~~~~~~~~~~(un signal)
+					  		\item[|] $\langle X,C'\rangle$ $C$~~~~~~~~~~~~~~~~~~~(une abstraction)
+					  		\item[|] $ap$ $C$~~~~~~~~~~~~~~~~~~~~~~~~~(une application)
+					  		\item[|] $prim_{o^{n}}$ $C$~~~~~~~~~~~~~~~~~~~(un opérateur)
+					  		\item[|] $spawn$ $C$~~~~~~~~~~~~~~~~~~~(créateur d'un nouveau thread)
+					  		\item[|] $present$ $C$~~~~~~~~~~~~~~~~~~(le test de présence d'un signal)
+					  		\item[|] $init$ $C$~~~~~~~~~~~~~~~~~~~~~~~(initialise un signal)
+					  		\item[|] $put$ $C$~~~~~~~~~~~~~~~~~~~~~~~~(insère une valeur dans un signal)
+					  		\item[|] $get$ $C$~~~~~~~~~~~~~~~~~~~~~~~~(prends une valeurs dans un signal)
+					  	\end{itemize}
+					  	\item[] D = $\emptyset$
+					  	\begin{itemize}
+					  		\item[|] $\langle S,E,C,D\rangle$~~~~~~~~~~~~~~~~(une sauvegarde liée à une abstraction)
+					  	\end{itemize}
+					  \end{itemize}	
+					\end{itemize}
+					
+					\item[]
+					\item[] \textbf{$SI =$ une liste de signaux tels que :} $\forall$ $si \in SI$ $:$ $si =$ $\langle signal,\langle emit,CS,SSI,TL\rangle\rangle$ avec :
+					\begin{itemize}
+						\item[] - \textbf{un booléen représentant l'émission du signal :} $emit$
+						\item[] - \textbf{un identifiant de thread :} $I$
+						\item[] - \textbf{une liste des signaux courant tels que :} $\forall$ $cs \in CS$ $:$ $cs = \langle I,CL\rangle$ avec 
+						\begin{itemize}
+							\item[] - \textbf{une liste de constante tels que :} $\forall$ $cl \in CL$ $:$ $cl = b$
+						\end{itemize}
+					
+						\item[] - \textbf{la liste des signaux partagés tels que :} $\forall$ $ssi \in SSI$ $:$ $ssi = \langle I,\langle CI,EL\rangle\rangle$ avec 
+						\begin{itemize}
+							\item[] - \textbf{une liste d'identifiant de threads :} $\forall$ $il \in EL$ $:$ $il = I$
+							\item[] - \textbf{une liste de constante avec itérateur tels que :} $\forall$ $ci \in CI$ $:$ $ci = \langle b, EL\rangle$
+						\end{itemize}
+					\end{itemize}
+					\item[]
+					\item[] IP = un entier servant à attribuer l'identifiant à un nouveau thread 
+				\end{itemize}
+				\bigbreak
+				
+				\textbf{On va définir une règle pour simplifier les règles futurs :} 
+				\begin{itemize}
+					\item[] Dans tous les cas :
+					\item[] \begin{center}
+								$\dfrac{\langle S,E,C,D\rangle \rightarrow \langle S',E',C',D'\rangle}{\langle\langle I,S,E,C,D\rangle,TL,SI,IP\rangle \rightarrow \langle\langle I,S',E',C',D'\rangle,TL,SI,IP\rangle}$
+							\end{center}
+					\item[]
+					\item[]
+					\item[] Si la règle utilisée n'est ni \textbf{Thread bloqué non remplacé} ni \textbf{Création thread} :
+					\smallbreak 
+					\item[] \begin{center}
+								$\dfrac{\langle\langle S,E,C,D\rangle,TL,SI\rangle \rightarrow \langle\langle S',E',C',D'\rangle,TL',SI'\rangle}{\langle\langle I,S,E,C,D\rangle,TL,SI,IP\rangle \rightarrow \langle\langle I,S',E',C',D'\rangle,TL',SI',IP\rangle}$ 
+							\end{center}
+				\end{itemize}
+				\newpage
+				
+				\textbf{\textit{Les éléments étant expliqués, voici les nouvelles règles de la machine :}}
 				\smallbreak
-				$\langle S,E,n$ $C,D\rangle 
-				\longrightarrow_{secdv5} 
-				\langle n$ $S,E,C,D\rangle$ avec $n = b$ ou $signal$
-				\item[]
+				\begin{enumerate}
+					\item[] \textbf{Partie de base de la machine SECD :} On veut garder le fonctionnement de la machine SECD de base donc il faut garder ces règles 
+					\item[]
+					\begin{itemize}
+						\item[] \textbf{Constante :} On a une constante, on la déplace dans la pile.
+						\smallbreak
+						$\langle S,E,n$ $C,D\rangle 
+						\longrightarrow_{secdv5} 
+						\langle n$ $S,E,C,D\rangle$ avec $n = b$ ou $signal$
+						\item[]
+						
+						\item[] \textbf{Substitution :} On a une abstraction, on créer une fermeture avec celle-ci et l'environnement courant et on la place dans la pile.
+						\smallbreak
+						$\langle S,E,X$ $C,D\rangle
+						\longrightarrow_{secdv5} 
+						\langle V$ $S,E,C,D\rangle$ avec E(X) = V
+						\item[]
+						
+						\item[] \textbf{Opération :} On a un opérateur et le nombre de constante nécessaire dans la pile, \\via la fonction $\delta$ on retourne le résultat dans la pile.
+						\smallbreak
+						$\langle b_{n},...,b_{1}$ $S,E,prim_{o^{n}}$ $C,D\rangle
+						\longrightarrow_{secdv5} 
+						\langle V$ $S,E,C,D\rangle$ avec $\delta(o^{n}$ $b_{1}...b_{n}) = V$
+						\item[]
+						
+						\item[]  \textbf{Abstraction :} On a une abstraction, on créer une fermeture comportant l'abstraction et l'environnement courant et on mets la fermeture dans la pile.
+						\smallbreak
+						$\langle S,E,\langle X,C'\rangle$ $C,D\rangle
+						\longrightarrow_{secdv5} 
+						\langle \langle\langle X,C'\rangle,E\rangle$ $S,E,C,D\rangle$
+						\item[]
+						
+						\item[]  \textbf{Application :} On a une application, donc on sauvegarde dans le dépôt, on ajoute une substitution et on remplace la chaîne de contrôle et l'environnement par ceux présent dans la fermeture.
+						\smallbreak
+						$\langle V$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,ap$ $C,D\rangle
+						\longrightarrow_{secdv5} 
+						\langle \emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle$
+						\item[] 
+						
+						\item[] \textbf{Récupération de sauvegarde :}  On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
+						\smallbreak  
+						$\langle V$ $S,E,\epsilon,\langle S',E',C,D\rangle\rangle
+						\longrightarrow_{secdv5} 
+						\langle V$ $S',E',C,D\rangle$
+					\end{itemize}
+					\item[]
+					
+					
+					
+					\item[] \textbf{Partie pour la concurrence :} Cette partie rajoute la réactivité dans notre machine. 
+					\item[]
+					\begin{itemize}
+						\item[]  \textbf{Création thread :} On veut créer un nouveau thread.
+						\smallbreak 
+						$\langle\langle I,\langle\langle X,C'\rangle, E\rangle$ $S,E,spawn$ $C,D\rangle,TL,SI,IP\rangle 
+						\longrightarrow_{secdv5} 
+						\langle\langle I,S,E,C,D\rangle,TL$ $\langle IP,S,E,C',D\rangle,SI,IP+1\rangle$
+						\item[]
+						
+						\item[] \textbf{Ajouter dans un signal :} On ajoute une constante dans une liste de valeurs d'un signal et mets à vraie le booléen $emit$
+						\smallbreak
+						$\langle\langle I,s$ $b$ $S,E,put$ $C,D\rangle,TL,SI\rangle
+						\longrightarrow_{secdv5} 
+						\langle\langle I,S,E,C,D\rangle,TL,SI$ $[(s,I) \leftarrow b]\rangle$ 
+						\item[]
+						
+						\item[] à vérifier \textbf{Prendre une valeur partagée (possible) :} On prends dans la liste de valeurs d'un signal partagé lié à un thread et on décale l'itérateur.
+						\smallbreak
+						$\langle\langle I,s$ $b$ $n$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,D\rangle,TL,SI\rangle 
+						\longrightarrow_{secdv5} 
+						\langle\langle I,\emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle,TL,SI\rangle$
+						\\ si pour $SI(s) = \langle emit,CS,SSI\rangle$ on a $SSI(b) = \langle CI,IL\rangle$ avec $I \notin IL$ alors $\gamma(SSI(b)) = V$
+						\item[]
+						
+						\item[] à vérifier \textbf{Prendre une valeur partagée (impossible) :} On prends dans la liste de valeurs d'un signal partagé lié à un identifant une constante mais si on a déjà tout pris on retourne la valeur par défaut
+						\smallbreak 
+						$\langle\langle I,s$ $b$ $n$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,D\rangle TL,SI,IP\rangle 
+						\longrightarrow_{secdv5} 
+						\langle\langle I,\emptyset,E'[X \leftarrow n],C',\langle S,E,C,D\rangle\rangle,TL,SI\rangle$
+						\\ si pour $SI(s) = \langle emit,CS,SSI\rangle$ on a $SSI(b) = \langle CI,IL\rangle$ avec $I \in IL$ alors on prends n la valeur par défaut
+						\item[]
+						
+						\item[] \textbf{Initialisation signal :} On initialise le signal via la fonction $\iota$.
+						\smallbreak 
+						$\langle\langle I,S,E,init$ $C,D\rangle,TL,SI\rangle 
+						\longrightarrow_{secdv4}
+						\langle\langle I,signal$ $S,E,C,D\rangle,TL,SI'\rangle$
+						avec $\iota(SI) = (signal,SI')$
+						\item[]	
+						
+						\item[] \textbf{Présence du signal :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il est émit donc on prends le 1er choix.
+						\smallbreak
+						$\langle\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle,TL,SI\rangle 
+						\longrightarrow_{secdv5} 
+						\langle\langle I,S,E,C'$ $C,D\rangle,TL,SI\rangle$ 
+						\\avec $SI(s) = \langle vraie,CS,SSI,TL\rangle$
+						\item[]
+						
+						
+						\item[] à vérifier\textbf{ Thread bloqué remplacé :} On teste la présence d'un signal, il n'est pas émit et il y a un thread dans la file d'attente
+						donc on mets ce thread dans la liste de threads bloqués et on prends le thread en tête de la file.
+						\smallbreak
+						$\langle\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle,\langle I',S',E',C''',D'\rangle$ $TL,SI\rangle 
+						\\\longrightarrow_{secdv5} 
+						\langle\langle I',S',E',C''',D'\rangle,TL,SI'\rangle$ 
+						\\avec $SI(s) = \langle faux,CS,SSI,TL'\rangle$
+						\\et $SI'(s) = \langle faux,CS,SSI,TL'$ $\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle\rangle$
+						\item[]	
+						
+						\item[] à vérifier \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal, il n'est pas émit donc on mets ce thread dans la liste de threads bloqués.
+						\smallbreak 
+						$\langle\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,C,D\rangle,\emptyset,SI,IP\rangle 
+						\longrightarrow_{secdv5} 
+						\langle\langle IP,\emptyset,\epsilon,\emptyset,\emptyset\rangle,\emptyset,SI',IP+1\rangle$
+						\\avec $SI(s) = \langle faux,CS,SSI,TL'\rangle$
+						\\et $SI'(s) = \langle faux,CS,SSI,TL'$ $\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle\rangle$
+						\item[]
+						
+						\item[] \textbf{Récupération dans la file d'attente :} On a plus rien à traité et on a aucune sauvegarde, du coup 
+						\\on change le thread courant par le thread en tête de la file d'attente.
+						\smallbreak
+						$\langle\langle I,V$ $S,E,\epsilon,\emptyset\rangle,\langle I',S',E',C,D\rangle$ $TL,SI\rangle 
+						\longrightarrow_{secdv5} 
+						\langle\langle I',V$ $S',E',C,D\rangle,TL,SI\rangle$
+						\item[]
+						
+						\item[] \textbf{Fin d'instant logique :} On a plus rien à traiter, on a aucune sauvegarde et on a plus rien dans la file d'attente, c'est la fin d'un instant logique.
+						\smallbreak
+						$\langle\langle I,V$ $S,E,\epsilon,\emptyset \rangle ,\emptyset,SI\rangle 
+						\longrightarrow_{secdv5} 
+						\langle\langle I,V$ $S,E,\epsilon,\emptyset\rangle,TL,SI'\rangle$
+						\\si $\forall~si \in SI : si = \langle emit,CS,SSI,\{\}\rangle$ alors $\tau(SI)$ = ($SI',TL$) 
+						\item[]
+						
+					\end{itemize}
+					\item[] \textbf{Partie commune :} Quand on ajoute des règles dans une machine déjà existante, le plus délicat est de ne pas avoir de conflit dans les règles. Pour ça on définit des règles exprès pour faire la liason entre ce qui existait et ce que l'on ajoute. 
+					\item[]
+					\begin{itemize}
+						\item[] \textbf{Application neutre :} On a une application sur rien, cela revient juste à rien faire.
+						\smallbreak 
+						$\langle S,E,ap$ $C,D\rangle
+						\longrightarrow_{secdv5} 
+						\langle S,E,C,D\rangle$
+						\item[]
+						\item[] \textbf{Récupération de sauvegarde avec pile vide :}  On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
+						\smallbreak  
+						$\langle \emptyset,E,\epsilon,\langle S',E',C,D\rangle\rangle
+						\longrightarrow_{secdv5} 
+						\langle S',E',C,D\rangle$
+					\end{itemize}
+					
+					\item[]
+				\end{enumerate}
+				\bigbreak
+				\bigbreak
 				
-				\item[] \textbf{Substitution :} On a une abstraction, on créer une fermeture avec celle-ci et l'environnement courant et on la place dans la pile.
+				
+				\textbf{\textit{la machine SECD version 4 peut s'arrêter dans 3 états différents:}}
 				\smallbreak
-				$\langle S,E,X$ $C,D\rangle
-				\longrightarrow_{secdv5} 
-				\langle V$ $S,E,C,D\rangle$ avec E(X) = V
-				\item[]
-				
-				\item[] \textbf{Opération :} On a un opérateur et le nombre de constante nécessaire dans la pile, \\via la fonction $\delta$ on retourne le résultat dans la pile.
-				\smallbreak
-				$\langle b_{n},...,b_{1}$ $S,E,prim_{o^{n}}$ $C,D\rangle
-				\longrightarrow_{secdv5} 
-				\langle V$ $S,E,C,D\rangle$ avec $\delta(o^{n}$ $b_{1}...b_{n}) = V$
-				\item[]
-				
-				\item[]  \textbf{Abstraction :} On a une abstraction, on créer une fermeture comportant l'abstraction et l'environnement courant et on mets la fermeture dans la pile.
-				\smallbreak
-				$\langle S,E,\langle X,C'\rangle$ $C,D\rangle
-				\longrightarrow_{secdv5} 
-				\langle \langle\langle X,C'\rangle,E\rangle$ $S,E,C,D\rangle$
-				\item[]
-				
-				\item[]  \textbf{Application :} On a une application, donc on sauvegarde dans le dépôt, on ajoute une substitution et on remplace la chaîne de contrôle et l'environnement par ceux présent dans la fermeture.
-				\smallbreak
-				$\langle V$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,ap$ $C,D\rangle
-				\longrightarrow_{secdv5} 
-				\langle \emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle$
-				\item[] 
-				
-				\item[] \textbf{Récupération de sauvegarde :}  On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
-				\smallbreak  
-				$\langle V$ $S,E,\epsilon,\langle S',E',C,D\rangle\rangle
-				\longrightarrow_{secdv5} 
-				\langle V$ $S',E',C,D\rangle$
-			\end{itemize}
-			\item[]
-			
-			
-			
-			\item[] \textbf{Partie pour la concurrence} 
-			\item[]
-			\begin{itemize}
-				\item[]  \textbf{Création thread :} On veut créer un nouveau thread.
-				\smallbreak 
-				$\langle\langle I,\langle\langle X,C'\rangle, E\rangle$ $S,E,spawn$ $C,D\rangle,TL,SI,IP\rangle 
-				\longrightarrow_{secdv5} 
-				\langle\langle I,S,E,C,D\rangle,TL$ $\langle IP,S,E,C',D\rangle,SI,IP+1\rangle$
-				\item[]
-				
-				\item[] \textbf{Ajouter dans un signal :} On ajoute une constante dans une liste de valeurs d'un signal et mets à vraie le booléen $emit$
-				\smallbreak
-				$\langle\langle I,s$ $b$ $S,E,put$ $C,D\rangle,TL,SI\rangle
-				\longrightarrow_{secdv5} 
-				\langle\langle I,S,E,C,D\rangle,TL,SI$ $[(s,I) \leftarrow b]\rangle$ 
-				\item[]
-				
-				\item[] à vérifier \textbf{Prendre une valeur partagée (possible) :} On prends dans la liste de valeurs d'un signal partagé lié à un thread et on décale l'itérateur.
-				\smallbreak
-				$\langle\langle I,s$ $b$ $n$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,D\rangle,TL,SI\rangle 
-				\longrightarrow_{secdv5} 
-				\langle\langle I,\emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle,TL,SI\rangle$
-				\\ si pour $SI(s) = \langle emit,CS,SSI\rangle$ on a $SSI(b) = \langle CI,IL\rangle$ avec $I \notin IL$ alors $\gamma(SSI(b)) = V$
-				\item[]
-				
-				\item[] à vérifier \textbf{Prendre une valeur partagée (impossible) :} On prends dans la liste de valeurs d'un signal partagé lié à un identifant une constante mais si on a déjà tout pris on retourne la valeur par défaut
-				\smallbreak 
-				$\langle\langle I,s$ $b$ $n$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,get$ $C,D\rangle TL,SI,IP\rangle 
-				\longrightarrow_{secdv5} 
-				\langle\langle I,\emptyset,E'[X \leftarrow n],C',\langle S,E,C,D\rangle\rangle,TL,SI\rangle$
-				\\ si pour $SI(s) = \langle emit,CS,SSI\rangle$ on a $SSI(b) = \langle CI,IL\rangle$ avec $I \in IL$ alors on prends n la valeur par défaut
-				\item[]
-				
-				\item[] \textbf{Initialisation signal :} On initialise le signal via la fonction $\iota$.
-				\smallbreak 
-				$\langle\langle I,S,E,init$ $C,D\rangle,TL,SI\rangle 
-				\longrightarrow_{secdv4}
-				\langle\langle I,signal$ $S,E,C,D\rangle,TL,SI'\rangle$
-				avec $\iota(SI) = (signal,SI')$
-				\item[]	
-				
-				\item[] \textbf{Présence du signal :} On teste la présence d'un signal, via la fonction $\beta$ on sait qu'il est émit donc on prends le 1er choix.
-				\smallbreak
-				$\langle\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle,TL,SI\rangle 
-				\longrightarrow_{secdv5} 
-				\langle\langle I,S,E,C'$ $C,D\rangle,TL,SI\rangle$ 
-				\\avec $SI(s) = \langle vraie,CS,SSI,TL\rangle$
-				\item[]
-				
-				
-				\item[] à vérifier\textbf{ Thread bloqué remplacé :} On teste la présence d'un signal, il n'est pas émit et il y a un thread dans la file d'attente
-				donc on mets ce thread dans la liste de threads bloqués et on prends le thread en tête de la file.
-				\smallbreak
-				$\langle\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle,\langle I',S',E',C''',D'\rangle$ $TL,SI\rangle 
-				\\\longrightarrow_{secdv5} 
-				\langle\langle I',S',E',C''',D'\rangle,TL,SI'\rangle$ 
-				\\avec $SI(s) = \langle faux,CS,SSI,TL'\rangle$
-				\\et $SI'(s) = \langle faux,CS,SSI,TL'$ $\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle\rangle$
-				\item[]	
-				
-				\item[] à vérifier \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal, il n'est pas émit donc on mets ce thread dans la liste de threads bloqués.
-				\smallbreak 
-				$\langle\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,C,D\rangle,\emptyset,SI,IP\rangle 
-				\longrightarrow_{secdv5} 
-				\langle\langle IP,\emptyset,\epsilon,\emptyset,\emptyset\rangle,\emptyset,SI',IP+1\rangle$
-				\\avec $SI(s) = \langle faux,CS,SSI,TL'\rangle$
-				\\et $SI'(s) = \langle faux,CS,SSI,TL'$ $\langle I,\langle\langle X',C''\rangle,E\rangle$ $\langle\langle X,C'\rangle,E\rangle$ $s$ $S,E,present$ $C,D\rangle\rangle$
-				\item[]
-				
-				\item[] \textbf{Récupération dans la file d'attente :} On a plus rien à traité et on a aucune sauvegarde, du coup 
-				\\on change le thread courant par le thread en tête de la file d'attente.
-				\smallbreak
-				$\langle\langle I,V$ $S,E,\epsilon,\emptyset\rangle,\langle I',S',E',C,D\rangle$ $TL,SI\rangle 
-				\longrightarrow_{secdv5} 
-				\langle\langle I',V$ $S',E',C,D\rangle,TL,SI\rangle$
-				\item[]
-				
-				\item[] \textbf{Fin d'instant logique :} On a plus rien à traiter, on a aucune sauvegarde et on a plus rien dans la file d'attente, c'est la fin d'un instant logique.
-				\smallbreak
-				$\langle\langle I,V$ $S,E,\epsilon,\emptyset \rangle ,\emptyset,SI\rangle 
-				\longrightarrow_{secdv5} 
-				\langle\langle I,V$ $S,E,\epsilon,\emptyset\rangle,TL,SI'\rangle$
-				\\si $\forall~si \in SI : si = \langle emit,CS,SSI,\{\}\rangle$ alors $\tau(SI)$ = ($SI',TL$) 
-				\item[]
-				
-			\end{itemize}
-			\item[] \textbf{Partie commune} 
-			\item[]
-			\begin{itemize}
-				\item[] \textbf{Application neutre :} On a une application sur rien, cela revient juste à rien faire.
-				\smallbreak 
-				$\langle S,E,ap$ $C,D\rangle
-				\longrightarrow_{secdv5} 
-				\langle S,E,C,D\rangle$
-				\item[]
-				\item[] \textbf{Récupération de sauvegarde avec pile vide :}  On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
-				\smallbreak  
-				$\langle \emptyset,E,\epsilon,\langle S',E',C,D\rangle\rangle
-				\longrightarrow_{secdv5} 
-				\langle S',E',C,D\rangle$
-			\end{itemize}
-			
-			\item[]
-		\end{enumerate}
-		\bigbreak
-		\bigbreak
-		
-		
-		\textbf{\textit{la machine SECD version 4 peut s'arrêter dans 3 états différents:}}
-		\smallbreak
-		\begin{itemize}
-			\item[] on a une \textbf{constante b} tels que 
-			$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv5},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
-			\twoheadrightarrow_{secdv5} 
-			\langle\langle I,b$ $S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
-			\item[] 
-			\item[] on a une \textbf{abstraction function} tels que
-			$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv5},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
-			\twoheadrightarrow_{secdv5} 
-			\langle\langle I,\langle\langle X,C\rangle,E\rangle$ $S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
-			\item[] 
-			\item[] on a une \textbf{erreur} 
-		\end{itemize}
-		\newpage
+				\begin{itemize}
+					\item[] on a une \textbf{constante b} tels que 
+					$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv5},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
+					\twoheadrightarrow_{secdv5} 
+					\langle\langle I,b$ $S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
+					\item[] 
+					\item[] on a une \textbf{abstraction function} tels que
+					$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv5},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
+					\twoheadrightarrow_{secdv5} 
+					\langle\langle I,\langle\langle X,C\rangle,E\rangle$ $S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
+					\item[] 
+					\item[] on a une \textbf{erreur} 
+				\end{itemize}
+				\newpage
 	
 	
+	
+			\subsection{La gestion des erreurs}
 	
 	\section{Conclusion}
 		
@@ -1438,7 +1460,7 @@
 					\item[] SECD Machine : $\langle\epsilon,\emptyset,\langle f,\langle x,f$ $x$ $ap\rangle\rangle$ $\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap,\epsilon\rangle$ 
 					\item[] > $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
 					\item[] SECD Machine : $\langle\langle\langle f,\langle x,f$ $x$ $ap\rangle\rangle,\emptyset\rangle,\emptyset,\langle y,y$ $y$ $prim_{+}\rangle$ $ap$ $\ulcorner 1\urcorner$ $ap,\epsilon\rangle$ 
-					\item[] > $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+					\item[] > $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C}\widehat{,D}\rangle$
 					\item[] SECD Machine : $\langle\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle$ $\langle\langle f,\langle x,f$ $x$ $ap\rangle\rangle,\emptyset\rangle,\emptyset,ap$ $\ulcorner 1\urcorner$ $ap,\epsilon\rangle$
 					\item[] > $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
 					\item[] SECD Machine : $\langle\epsilon,\emptyset[f \leftarrow \langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle],\langle x,f$ $x$ $ap\rangle,\langle\epsilon,\emptyset,\ulcorner 1\urcorner$ $ap,\epsilon\rangle\rangle$
@@ -1454,7 +1476,8 @@
 					\item[] SECD Machine : $\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\},f$ $x$ $ap,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
 					\item[] > $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
 					\item[] SECD Machine : $\langle\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\},x$ $ap,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
-					\item[] > $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
+					\item[] > $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},v
+					\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
 					\item[] SECD Machine : $\langle\ulcorner 1\urcorner$ $\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\},ap,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle$
 					\item[] >  $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
 					\item[] SECD Machine :	$\langle\epsilon,\emptyset[y \leftarrow \ulcorner 1\urcorner],y$ $y$ $prim_{+},\langle\epsilon,\{\langle f,\langle\langle y,y$ $y$ $prim_{+}\rangle,\emptyset\rangle\rangle,\langle x,\ulcorner 1\urcorner\rangle\} ,\emptyset,\langle\epsilon,\emptyset,\epsilon,\epsilon\rangle\rangle\rangle$
@@ -1476,42 +1499,44 @@
 			
 		\subsection{Les différentes versions faite pour rendre la machine SECD concurrente}
 		
-			\subsubsection{1ère version des règles de la machine SECD Concurrente}\label{SECDConc1}
+			Cette partie énumére les différentes versions créées depuis le début du stage jusqu'à ce jour. Elle paraissent compliqué à comprendre à cause de leurs format qui est bien trop lourd mais elle garde le même principe que celle exprimé plus haut dans le rapport. Il ne faut donc pas avoir peur de chercher à comprendre.
+		
+			\subsubsection{1ère-2ème version des règles de la machine SECD Concurrente}\label{SECDConc1-2}
 				\smallbreak
 				Cette version ajoute les prémisse de la concurrence dans la machine SECD avec la possibilité de créér des threads d'initialiser des signaux,les émettre où encore de tester la présence d'un signal. Cette version est un condensé de 2 versions.
 				\bigbreak
 					
-				\textbf{\textit{Soit}} $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$ \textbf{\textit{avec :}}
+				\textbf{\textit{Soit}} $\langle S,E,C,D,W,ST,SI\rangle$ \textbf{\textit{avec :}}
 					
 					
 				\begin{itemize}
-					\item[] $\widehat{S}$ = $\epsilon$ 
+					\item[] $S$ = $\epsilon$ 
 					\begin{itemize}
-						\item[|] $\widehat{V}$ $\widehat{S}$ 
-						\item[|] $\langle C',C''\rangle$ $\widehat{S}$
-						\item[|] Remp $\widehat{S}$
+						\item[|] $V~S$ 
+						\item[|] $\langle C',C''\rangle~S$
+						\item[|] $Remp~S$
 					\end{itemize}
-					\item[] $\widehat{\varepsilon}$ = une fonction $\{\langle X,\widehat{V}\rangle,...\}$
-					\item[] $\widehat{C}$ = $\epsilon$ 
+					\item[] $E$ = une fonction $\{\langle X,V\rangle,...\}$
+					\item[] $C~=~\epsilon$ 
 					\begin{itemize}
-						\item[|] b $\widehat{C}$
-						\item[|] X $\widehat{C}$
-						\item[|] ap $\widehat{C}$
-						\item[|] $prim_{o^{n}}$ $\widehat{C}$  
-						\item[|] $\langle X,\widehat{C}\rangle$ $\widehat{C}$
-						\item[|] bspawn $\widehat{C}$ 
-						\item[|] espawn $\widehat{C}$
-						\item[|] $\langle s,C',C''\rangle$ $\widehat{C}$
-						\item[|] $\langle s,\widehat{C'}\rangle$ $\widehat{C}$ 
-						\item[|] $emit_{s}$ $\widehat{C}$ 
+						\item[|] $b~C$
+						\item[|] $X~C$
+						\item[|] $ap~C$
+						\item[|] $prim_{o^{n}}~C$  
+						\item[|] $\langle X,C\rangle~C$
+						\item[|] $bspawn~C$ 
+						\item[|] $espawn~C$
+						\item[|] $\langle s,C',C''\rangle~C$
+						\item[|] $\langle s,C'\rangle~C$ 
+						\item[|] $emit_{s}~C$ 
 					\end{itemize}
-					\item[] $\widehat{D}$ =  $\epsilon$
+					\item[] $D = \epsilon$
 					\begin{itemize}
-						\item[|] $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ 
+						\item[|] $\langle S,E,C,D\rangle$ 
 					\end{itemize}
-					\item[] $\widehat{W}$ = $\{\widehat{D},...\}$
-					\item[] $\widehat{ST}$ = $\{...,\langle s,\widehat{D}\rangle,...\}$
-					\item[] $\widehat{SI}$ = $\{ s,...\}$
+					\item[] $W = \{D,...\}$
+					\item[] $ST = \{...,\langle s,D\rangle,...\}$
+					\item[] $SI = \{ s,...\}$
 				\end{itemize}
 				\bigbreak
 				\bigbreak
@@ -1524,107 +1549,110 @@
 					\begin{itemize}
 						\item[] \textbf{Constante :} On a une constante, on la déplace dans la pile. 
 						\smallbreak
-						$\langle\widehat{S},\widehat{\varepsilon},b$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-						\longmapsto_{secdv1} 
-						\langle b$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$
+						$\langle S,E,b~C,D,W,ST,SI\rangle 
+						\longmapsto_{secdv1c} 
+						\langle b~S,E,C,D,W,ST,SI\rangle$
 						\item[]
 						\item[] \textbf{Substitution :} On a une variable, on prends la substitution dans l'environnement et on la mets dans la pile.  
 						\smallbreak 
-						$\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-						\longmapsto_{secdv1} 
-						\langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$ 
-						où $\widehat{V} = \varepsilon(X)$
+						$\langle S,E,X~C,D,W,ST,SI\rangle 
+						\longmapsto_{secdv1-2} 
+						\langle V~S,E,C,D,W,ST,SI\rangle$ 
+						où $V = E(X)$
 						\item[]
 						\item[] \textbf{Opération :} On a un opérateur et le nombre de constante nécessaire dans la pile, via la fonction $\delta$ et in retourne le résultat dans la pile. 
 						\smallbreak
-						$\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-						\longmapsto_{secdv1} 
-						\langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$ 
-						où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
+						$\langle b_{1}~...~b_{n}~S,E,prim_{o^{n}}~C,D,W,ST,SI\rangle 
+						\longmapsto_{secdv1-2} 
+						\langle V~S,E,C,D,W,ST,SI\rangle$ 
+						où $V = \delta(o^{n},b_1,...b_{n})$
 						\item[]
 						\item[] \textbf{Abstraction :} On a une abstraction, on crée une fermeture comportant l'abstraction et l'environnement courant et on mets la fermeture dans la pile
 						\smallbreak
-						$\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-						\longmapsto_{secdv1} 
-						\langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$
+						$\langle S,E,\langle X,C'\rangle~C,D,W,ST,SI\rangle 
+						\longmapsto_{secdv1-2} 
+						\langle\langle\langle X,C'\rangle,E\rangle~S,E,C,D,W,ST,SI\rangle$
 						\item[]
 						\item[] \textbf{Application :} On a une application, donc on dauvegarde dans le dépôt, on ajoute une substitution et on remplace la chaîne de contrôle et l'environnement par ceux présent dans la fermeture.
 						\smallbreak
-						$\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-						\longmapsto_{secdv1} 
-						\langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle,\widehat{W},\widehat{ST},\widehat{SI}\rangle$
+						$\langle V~\langle\langle X,C'\rangle,E'\rangle~S,E,ap~C,D,W,ST,SI\rangle 
+						\longmapsto_{secdv1-2} 
+						\langle\epsilon,E'[X \leftarrow V],C',\langle S,E,C,D\rangle,W,ST,SI\rangle$
 						\item[]
 						\item[] \textbf{Récupération de sauvegarde :} On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
 						\smallbreak
-						$\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle,\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-						\longmapsto_{secdv1} 
-						\langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$
+						$\langle V~S,E,\emptyset,\langle S,E,C,D\rangle,W,ST,SI\rangle 
+						\longmapsto_{secdv1-2} 
+						\langle V~S',E,C',D,W,ST,SI\rangle$
 						\item[]
 					\end{itemize}
 					\item[] \textbf{Partie pour la concurrence}
 					\begin{itemize}
 						\item[] \textbf{Création thread :} On veut créer un nouveau thread
 						\smallbreak
-						$\langle\widehat{S},\widehat{\varepsilon},bspawn$ $\widehat{C'}$ $espawn$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-						\longmapsto_{secdv1} 
-						\langle$ Remp $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W}\langle\widehat{S},\widehat{E},\widehat{C'},\widehat{D}\rangle,\widehat{ST},\widehat{SI}\rangle$
+						$\langle S,E,bspawn~C'~espawn~C,D,W,ST,SI\rangle 
+						\longmapsto_{secdv1-2} 
+						\langle Remp~S,E,C,D,W~\langle S,E,C',D\rangle,ST,SI\rangle$
 						\item[]
 						\item[] \textbf{Récupération dans la file d'attente :} On a plus rien à traiter et on a aucune sauvegarde, du coup on change de thread courant par le thread en tête de la file d'attente.
-						\smallbreak $\langle\widehat{S},\widehat{\varepsilon},\emptyset,\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C},\widehat{D}\rangle$ $\widehat{W},\widehat{ST},\widehat{SI}\rangle \longmapsto_{secdv1} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle$
+						\smallbreak $\langle S,E,\emptyset,\emptyset,\langle S',E',C,D\rangle$ $W,ST,SI\rangle 
+						\longmapsto_{secdv1-2} 
+						\langle S',E',C,D,W,ST,SI\rangle$
 						\item[]
 						\item[] \textbf{Fin d'instant logique :} On a plus rien à traiter et on a plus rien dans la file d'attente. C'est la fin de l'instant logique
-						\smallbreak  $\langle\widehat{S},\widehat{\varepsilon},\emptyset,\emptyset,\emptyset,\widehat{ST},\widehat{SI}\rangle 
-						\longmapsto_{secdv1} \langle\widehat{S},\widehat{\varepsilon},\emptyset,\emptyset,\widehat{W},\emptyset,\emptyset,\emptyset\rangle$ 
-						\\avec $\widehat{W}$ = tout les éléments de $\widehat{ST}$ qui prennent leurs 2nd choix 
+						\smallbreak  $\langle S,E,\emptyset,\emptyset,\emptyset,ST,SI\rangle 
+						\longmapsto_{secdv1-2} \langle S,E,\emptyset,\emptyset,W,\emptyset,\emptyset,\emptyset\rangle$ 
+						\\avec $W$ = tout les éléments de $ST$ qui prennent leurs 2nd choix 
 						\item[]
 						\item[] \textbf{\'{E}mettre :} on émet un signal 
 						\smallbreak
-						$\langle\widehat{S},\widehat{\varepsilon},emit_{s}$ $\widehat{C},\widehat{D},\widehat{W},\widehat{ST},\widehat{SI}\rangle 
-						\longmapsto_{secdv1} 
-						\langle \widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D},\widehat{W'},\widehat{ST'},\widehat{SI}\rangle$ 
-						\\avec $\widehat{W'}$ = $\widehat{W}$ $\cup$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s et
-						\\avec $\widehat{ST'}$ = $\widehat{ST}$ $\setminus$ tout les éléments de $\widehat{ST}$ qui attendent l'émission de s
+						$\langle S,E,emit_{s}~C,D,W,ST,SI\rangle 
+						\longmapsto_{secdv1-2} 
+						\langle S,E,C,D,W',ST',SI\rangle$ 
+						\\avec $W' = W~\cup$ tout les éléments de $ST$ qui attendent l'émission de s et
+						\\avec $ST' = ST~\setminus$ tout les éléments de $ST$ qui attendent l'émission de s
 						\item[]
 						\item[] \textbf{Présence d'un signal :} On teste la présence d'un signal et il l'est donc on prends la 1ère option. 
 						\smallbreak
-						$\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle 
-						\longmapsto_{secdv1} 
-						\langle\widehat{S},\widehat{\varepsilon},C'$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$ 
-						\\si s $\in \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+						$\langle S,E,\langle s, C',C''\rangle~C,D,W,ST,SI\rangle 
+						\longmapsto_{secdv1-2} 
+						\langle S,E,C'~C,D,W,ST,SI\rangle$ 
+						\\si $s \in SI$ et $s \in E$ 
 						\item[]
 						\item[] \textbf{Thread bloqué remplacé :} On teste la présence d'un signal et il ne l'est pas donc on le remplace par le thread en tête de la file d'attente.
 						\smallbreak 
-						$\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\langle\widehat{S'},\widehat{\varepsilon'},C''',\widehat{D'}\rangle\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle 
-						\longmapsto_{secdv1} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{W},\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\widehat{D'}\rangle$ 
-						\\si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+						$\langle S,E,\langle s, C',C''\rangle~C,D,\langle S',E',C''',D'\rangle W,ST,SI\rangle 
+						\longmapsto_{secdv1-2} 
+						\langle S',E',C''',D',W,ST~\langle S,E,\langle s, C',C''\rangle~C,D\rangle,SI\rangle$ 
+						\\si $s \notin SI$ et $S \in E$ 
 						\item[]
 						\item[] \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal et il ne l'est pas et la file est vide mest juste le thread courant dans la liste de threads bloqués.
 						\smallbreak
-						$\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\emptyset,\widehat{ST},\widehat{SI},\widehat{D}\rangle 
-						\longmapsto_{secdv1} 
-						\langle\epsilon,\emptyset,\emptyset,\emptyset,\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\emptyset\rangle$ 
-						\\si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+						$\langle S,E,\langle s, C',C''\rangle~C,D,\emptyset,ST,SI\rangle 
+						\longmapsto_{secdv1-2} 
+						\langle\epsilon,\emptyset,\emptyset,\emptyset,\emptyset,ST~\langle S,E,\langle s, C',C''\rangle~C,D\rangle,SI\rangle$ 
+						\\si $s \notin SI$ et $s \in E$ 
 						\item[]
 						\item[] \textbf{Initialisation signal :} On initialise le signal 
 						\smallbreak 
-						$\langle\widehat{S},\widehat{\varepsilon},\langle s, C'\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle 
-						\longmapsto_{secdv1} 
-						\langle\epsilon,\widehat{\varepsilon}[init \leftarrow s],C',\widehat{W},\widehat{ST},\widehat{SI},\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle\rangle$
+						$\langle S,E,\langle s, C'\rangle~C,D,W,ST,SI\rangle 
+						\longmapsto_{secdv1-2} 
+						\langle\epsilon,E~[init \leftarrow s],C',\langle S,E,C,D\rangle,W,ST,SI\rangle$
 						\item[] 
 					\end{itemize}
 					\item[] \textbf{Partie commune}
 					\begin{itemize}
 						\item[] \textbf{Application neutre droite :} on a une application avec un neutre dans la pile donc on l'enlève
 						\smallbreak
-						$\langle\widehat{V}$ Remp $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle 
-						\longmapsto_{secdv1} 
-						\langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+						$\langle V~Remp~S,E,ap~C,D,W,ST,SI\rangle 
+						\longmapsto_{secdv1-2} 
+						\langle V~S,E,C,D,W,ST,SI\rangle$
 						\item[]
 						\item[] \textbf{Application neutre gauche :} on a une application avec un neutre dans la pile donc on l'enlève
 						\smallbreak
-						$\langle$Remp $\widehat{V}$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle 
-						\longmapsto_{secdv1} 
-						\langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle$
+						$\langle Remp~V~S,E,ap~C,D,W,ST,SI\rangle 
+						\longmapsto_{secdv1-2} 
+						\langle V~S,E,C,D,W,ST,SI\rangle$
 						\item[]
 					\end{itemize}
 				\end{itemize}
@@ -1634,9 +1662,9 @@
 				\textbf{\textit{la machine SECD version 1 peut s'arrêter dans 4 états différents:}}
 				\smallbreak
 				\begin{itemize}
-					\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv1} \langle b,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon\rangle$;
-					\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv1} \langle\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon'}\rangle,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon\rangle$;
-					\item[]$\longrightarrow$ on a un \textbf{remplacement} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv1} \langle Remp,\widehat{\varepsilon},\epsilon,\emptyset,\emptyset,\widehat{SI},\epsilon\rangle$;
+					\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1-2},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv1-2} \langle b,E,\epsilon,\emptyset,\emptyset,SI,\epsilon\rangle$;
+					\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1-2},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv1-2} \langle\langle\langle X,C\rangle,E'\rangle,E,\epsilon,\emptyset,\emptyset,SI,\epsilon\rangle$;
+					\item[]$\longrightarrow$ on a un \textbf{remplacement} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1-2},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv1-2} \langle Remp,E,\epsilon,\emptyset,\emptyset,SI,\epsilon\rangle$;
 					\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
 				\end{itemize}
 				\newpage
@@ -1647,25 +1675,25 @@
 				Cette version ajoute le contrôle des erreurs sans propagation via l'ajout d'un gestionnaire d'erreur dans la machine.
 				\bigbreak
 					
-				\textbf{\textit{Soit}} $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ \textbf{\textit{avec :}}
+				\textbf{\textit{Soit}} $\langle S,E,C,D,W,ST,SI,H\rangle$ \textbf{\textit{avec :}}
 			
 				\begin{itemize}
-					\item[] $\widehat{S}$ = ... 
-					\item[] $\widehat{\varepsilon}$ = ... 
-					\item[] $\widehat{C}$ = ...
+					\item[] $S$ = ... 
+					\item[] $E$ = ... 
+					\item[] $C$ = ...
 					\begin{itemize}
-						\item[|] $throw_{e} $ $\widehat{C}$
-						\item[|] $\langle e,\langle\widehat{C'},\langle X,\widehat{C''}\rangle\rangle\rangle$ $\widehat{C}$ 
+						\item[|] $throw_{e}~C$
+						\item[|] $\langle e,\langle C',\langle X,C''\rangle\rangle\rangle~C$ 
 					\end{itemize}
-					\item[] $\widehat{W}$ = ...
-					\item[] $\widehat{ST}$ = ...
-					\item[] $\widehat{SI}$ = ...
-					\item[] $\widehat{D}$ = ...
-					\item[] $\widehat{H}$ = $\epsilon$ 
+					\item[] $W$ = ...
+					\item[] $ST$ = ...
+					\item[] $SI$ = ...
+					\item[] $D$ = ...
+					\item[] $H$ = $\epsilon$ 
 					\begin{itemize}
-						\item[|] $\langle e,\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle\rangle$ 
+						\item[|] $\langle e,\langle S,E,C,D,W,ST,SI,H\rangle\rangle$ 
 					\end{itemize}
-					\item[] $\widehat{V}$ = ... 
+					\item[] $V$ = ... 
 					\begin{itemize}
 						\item[|] $erreur_{e}$
 					\end{itemize}
@@ -1676,32 +1704,30 @@
 				\textbf{\textit{Les nouvelles règles sont les suivantes :}}
 				\smallbreak
 				\begin{enumerate}
-					\item $\langle\widehat{S},\widehat{\varepsilon},b$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle b$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item $\langle S,E,b~C,D,W,ST,SI,H\rangle \longmapsto_{secdv3} \langle b~S,E,C,W,ST,SI,H\rangle$
 					\item[]
-					\item $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
-					\\où $\widehat{V} = \varepsilon(X)$
+					\item $\langle S,E,X~C,D,W,ST,SI,H\rangle \longmapsto_{secdv3} \langle V~S,E,C,D,W,ST,SI,H\rangle$
+					\\où $V = E(X)$
 					\item[]
-					\item $\langle b_{1}$ $...$ $b_{n}\widehat{S},\widehat{\varepsilon},prim_{o^{n}}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ 
-					\\où $\widehat{V} = \delta(o^{n},b_1,...b_{n})$
+					\item $\langle b_{1}~...~b_{n}~S,E,prim_{o^{n}}~C,D,W,ST,SI,H\rangle \longmapsto_{secdv3} \langle V~S,E,C,D,W,ST,SI,H\rangle$ 
+					\\où $V = \delta(o^{n},b_1,...b_{n})$
 					\item[]
-					\item $\langle\widehat{S},\widehat{\varepsilon},throw_{e}$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle erreur_{e}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item $\langle S,E,throw_{e}~C,D,W,ST,SI,H\rangle \longmapsto_{secdv3} \langle erreur_{e}~S,E,C,D,W,ST,SI,H\rangle$
 					\item[]
-					\item $\langle\widehat{S},\widehat{\varepsilon},\langle X,C'\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item $\langle S,E,\langle X,C'\rangle~C,D,W,ST,SI,H\rangle \longmapsto_{secdv3} \langle\langle\langle X,C'\rangle,E\rangle~S,E,C,D,W,ST,SI,H\rangle$
 					\item[]
-					\item $\langle\widehat{V}$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\epsilon,\varepsilon'[X \leftarrow \widehat{V}],C',\widehat{W},\widehat{ST},\widehat{SI},\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle,\widehat{H}\rangle$
+					\item $\langle V~\langle\langle X,C'\rangle,E'\rangle~S,E,ap~C,D,W,ST,SI,H\rangle \longmapsto_{secdv3} \langle\epsilon,E'[X \leftarrow V],C',\langle S,E,C,D\rangle,W,ST,SI,H\rangle$
 					\item[]
-					\item $\langle\widehat{V}$ $\widehat{S},\widehat{\varepsilon},\emptyset,\langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D}\rangle,\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S'},\widehat{\varepsilon'},\widehat{C'},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item $\langle V~S,E,\emptyset,\langle S',E',C,D\rangle,W,ST,SI,H\rangle \longmapsto_{secdv3} \langle V~S',E',C,D,W,ST,SI,H\rangle$
 					\item[]
-					\item $\langle\widehat{V}$ Remp $\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item $\langle V~Remp~S,E,ap~C,D,W,ST,SI,H\rangle \longmapsto_{secdv3} \langle V~S,E,C,D,W,ST,SI,H\rangle$
 					\item[]
-					\item $\langle$ Remp $\widehat{V}\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item $\langle Remp~V~S,E,ap~C,D,W,ST,SI,H\rangle \longmapsto_{secdv3} \langle V~S,E,C,D,W,ST,SI,H\rangle$
 					\item[]
-					\item $\langle$ Remp $\widehat{V}\widehat{S},\widehat{\varepsilon},ap$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
+					\item $\langle S,E,bspawn~C'~espawn~C,D,W,ST,SI,H\rangle \longmapsto_{secdv3} \langle Remp~S,E,C,D,W~\langle S,E,C',D\rangle,ST,SI,H\rangle$
 					\item[]
-					\item $\langle\widehat{S},\widehat{\varepsilon},bspawn$ $\widehat{C'}$ $espawn$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle$ Remp $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{W}\langle\widehat{S},\widehat{E},\widehat{C'},\widehat{D}\rangle,\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$
-					\item[]
-			    	\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\widehat{S},\widehat{\varepsilon},C'$ $\widehat{C},\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle$ 
-			    	\\si s $\in \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
+			    	\item $\langle S,E,\langle s, C',C''\rangle~C,D,W,ST,SI,H\rangle \longmapsto_{secdv3} \langle S,E,C'~C,D,W,ST,SI,H\rangle$ 
+			    	\\si $s \in SI$ et $s \in E$ 
 			    	\item[]
 			    	\item $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\langle\widehat{S'},\widehat{\varepsilon'},C''',\widehat{D'}\rangle\widehat{W},\widehat{ST},\widehat{SI},\widehat{D},\widehat{H}\rangle \longmapsto_{secdv3} \langle\widehat{S'},\widehat{\varepsilon'},\widehat{C'''},\widehat{W},\widehat{ST}$ $\langle\widehat{S},\widehat{\varepsilon},\langle s, C',C''\rangle$ $\widehat{C},\widehat{D}\rangle,\widehat{SI},\widehat{D'},\widehat{H}\rangle$ si s $\notin \widehat{SI}$ et s $\in \widehat{\varepsilon}$ 
 			    	\item[]
