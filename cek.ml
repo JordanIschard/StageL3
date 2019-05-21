@@ -107,17 +107,11 @@ module CEKMachine =
         | h::t  ->   (Fermeture(h,env))::(fermeture_of_expr env t)
 
 
-    (* Vérifie si une variable est dans l'environnement *)
-    let rec estDansEnv env var =
+    let rec ajoutEnv env varARemp fermetureDeRemp =
       match env with
-          []                    ->   false
+          []  -> [(varARemp, fermetureDeRemp)]
         
-        | (var1, fermeture)::t  ->   if (equal var1 var) then true else estDansEnv t var 
-
-
-    (* Ajoute une variable et sa substitution dans l'environnement *)
-    let ajoutEnv env varARemp  fermetureDeRemp = if (estDansEnv env varARemp) then env else append env [(varARemp, fermetureDeRemp)]
-
+        | (var1,fermeture)::t -> if (equal var1 varARemp) then append [(var1,fermetureDeRemp)] t else append [(var1,fermeture)] (ajoutEnv t varARemp fermetureDeRemp) 
 
     (* Substitue une variable par sa  fermeture qui lui est assignée dans l'environnement *)
     let rec substitution var env =

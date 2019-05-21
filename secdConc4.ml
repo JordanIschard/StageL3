@@ -401,27 +401,43 @@ module MachineTTSI =
                 
                                                       else substitution x t
 
-    (* Vérifie si une variable est dans l'environnement *)
-    let rec in_environment env var =
-      match env with
-          []                                     ->   false
+                                                      
+    (* Ajoute une  fermeture à l'environnement *)
+    let rec add_env env varToRep stack_element =
+      match stack_element with
+          Stack_const(b)                ->    begin
+                                                match env with
+                                                    [] -> [EnvVar(varToRep,[Constant b])]
 
-        | EnvClos(var1,(control_string,env))::t  ->   if (equal var1 var) then true else in_environment t var 
+                                                  | EnvClos(var1,closure)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Constant b])] t 
+                                                                                                         else append [EnvClos(var1,closure)] (add_env t varToRep stack_element)
 
-        | EnvVar(var1,control_string)::t         ->   if (equal var1 var) then true else in_environment t var 
-    
+                                                  | EnvVar(var1,control_string)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Constant b])] t 
+                                                                                                               else append [EnvVar(var1,control_string)] (add_env t varToRep stack_element)
+                                              end
 
-    (* Ajoute une fermeture à l'environnement *)
-    let add_env env varToRep stack_element =
-      if(in_environment env varToRep) 
-        then env 
-        else  match stack_element with
-                  Stack_const b                 ->   (EnvVar(varToRep,[Constant b]))::env
+      | Stack_signal(signal)            ->    begin 
+                                                match env with
+                                                    [] -> [EnvVar(varToRep,[Signal signal])]
 
-                | Stack_signal s                ->   (EnvVar(varToRep,[Signal s]))::env
+                                                  | EnvClos(var1,closure)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Signal signal])] t 
+                                                                                                         else append [EnvClos(var1,closure)] (add_env t varToRep stack_element)
 
-                | Closure(control_string,env1)  ->   (EnvClos(varToRep,(control_string,env1)))::env
-                           
+                                                  | EnvVar(var1,control_string)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Signal signal])] t 
+                                                                                                               else append [EnvVar(var1,control_string)] (add_env t varToRep stack_element)
+                                              end
+
+      | Closure(control_string,env1)  ->   begin
+                                              match env with
+                                                    [] -> [EnvClos(varToRep,(control_string,env1))]
+
+                                                  | EnvClos(var1,closure)::t -> if (equal var1 varToRep) then append [EnvClos(varToRep,(control_string,env1))] t 
+                                                                                                         else append [EnvClos(var1,closure)] (add_env t varToRep stack_element)
+
+                                                  | EnvVar(var1,control_string1)::t -> if (equal var1 varToRep) then append [EnvClos(varToRep,(control_string,env1))] t 
+                                                                                                                else append [EnvVar(var1,control_string)] (add_env t varToRep stack_element)
+                                              end
+
                 
     (* Vérifie si le signal est émit *)
     let rec isEmit si signal = 

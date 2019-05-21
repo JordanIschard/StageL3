@@ -525,16 +525,6 @@ module SECDMachine =
                                                       else substitution x t
 
 
-    (* Vérifie si une variable est dans l'environnement *)
-    let rec in_environment env var =
-      match env with
-          []                                     ->   false
-
-        | EnvClos(var1,(control_string,env))::t  ->   if (equal var1 var) then true else in_environment t var 
-
-        | EnvVar(var1,control_string)::t         ->   if (equal var1 var) then true else in_environment t var 
-
-
     (* Vérifie si c'est un init *)
     let rec isInit current_signals id signal =
       match current_signals with
@@ -553,18 +543,43 @@ module SECDMachine =
 
 
 
-    (* Ajoute une fermeture à l'environnement *)
-    let add_environment env varToRep stack_element =
-      if(in_environment env varToRep) 
-        then env 
-        else  match stack_element with
-                  Stack_const b                 ->   (EnvVar(varToRep,[Constant b]))::env
+    (* Ajoute une  fermeture à l'environnement *)
+    let rec add_env env varToRep stack_element =
+      match stack_element with
+          Stack_const(b)                ->    begin
+                                                match env with
+                                                    [] -> [EnvVar(varToRep,[Constant b])]
 
-                | Stack_error error             ->   (EnvVar(varToRep,[Error error]))::env
+                                                  | EnvClos(var1,closure)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Constant b])] t 
+                                                                                                         else append [EnvClos(var1,closure)] (add_env t varToRep stack_element)
 
-                | Closure(control_string,env1)  ->   (EnvClos(varToRep,(control_string,env1)))::env
+                                                  | EnvVar(var1,control_string)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Constant b])] t 
+                                                                                                               else append [EnvVar(var1,control_string)] (add_env t varToRep stack_element)
+                                              end
 
-                | _                             ->   raise UnknowEnvState
+      | Stack_error(error)              ->    begin 
+                                                match env with
+                                                    [] -> [EnvVar(varToRep,[Error error])]
+
+                                                  | EnvClos(var1,closure)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Error error])] t 
+                                                                                                         else append [EnvClos(var1,closure)] (add_env t varToRep stack_element)
+
+                                                  | EnvVar(var1,control_string)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Error error])] t 
+                                                                                                               else append [EnvVar(var1,control_string)] (add_env t varToRep stack_element)
+                                              end
+
+        | Closure(control_string,env1)  ->   begin
+                                              match env with
+                                                    [] -> [EnvClos(varToRep,(control_string,env1))]
+
+                                                  | EnvClos(var1,closure)::t -> if (equal var1 varToRep) then append [EnvClos(varToRep,(control_string,env1))] t 
+                                                                                                         else append [EnvClos(var1,closure)] (add_env t varToRep stack_element)
+
+                                                  | EnvVar(var1,control_string1)::t -> if (equal var1 varToRep) then append [EnvClos(varToRep,(control_string,env1))] t 
+                                                                                                                else append [EnvVar(var1,control_string)] (add_env t varToRep stack_element)
+                                              end
+
+        | _                             ->   raise UnknowStackState
 
 
     (* Ajoute un signal initialisé dans l'environnement *)
@@ -823,7 +838,7 @@ module SECDMachine =
         
 
           (* On a Ap dans la chaîne de contrôle, on sauvegarde une partie de la machine dans le dépôt, on prends l'environnement de la fermeture et on ajoute la nouvelle substitution *)
-        | MachineSECD(id,v::Closure([Pair(abs,c1)],e1)::s,e,Ap::c,tl,si,d,h,ip)   ->    machineSECD (MachineSECD( id , [] , (add_environment e1 abs v) , c1 , tl , si , Save(s,e,c,d) , h , ip ))
+        | MachineSECD(id,v::Closure([Pair(abs,c1)],e1)::s,e,Ap::c,tl,si,d,h,ip)   ->    machineSECD (MachineSECD( id , [] , (add_env e1 abs v) , c1 , tl , si , Save(s,e,c,d) , h , ip ))
 
 
           (* On a la chaîne de contrôle vide et le dépôt à une sauvegarde, on prends la sauvegarde et on l'applique sur la machine *)
@@ -850,7 +865,7 @@ module SECDMachine =
 
                     | SaveHandler(er1,(id1,s1,e1,Pair(abs,c1)::c,tl1,si1,d1,h1,ip1))  
                       ->    if (er == er1) 
-                              then machineSECD (MachineSECD( id1 , [] , (add_environment e1 abs (Stack_error er)) , c1 , tl1 , si1 , Save(s1,e1,c,d1) , h1 , ip1 )) 
+                              then machineSECD (MachineSECD( id1 , [] , (add_env e1 abs (Stack_error er)) , c1 , tl1 , si1 , Save(s1,e1,c,d1) , h1 , ip1 )) 
                               else machineSECD (MachineSECD( id , Stack_throw er::s , e , [] , tl , si , d , h1 , ip ))
 
                     | _       ->    raise UnknowHandlerState 

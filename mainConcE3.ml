@@ -31,30 +31,7 @@ let expression7 = (Catch_ISWIM(12,App(
     )
   )
 ,("uygig",Const 7685))) ;;
-(*
-let expression8 = Signal_ISWIM("salut",
-                                    App(
-                                       Spawn(
-                                          Signal_ISWIM("coucou",
-                                                Present_ISWIM("coucou",Const 98,App(Op(Sub,[Get_ISWIM("salut",2);Get_ISWIM("salut",2)]),Get_ISWIM("salut",2)))
-                                                )
-                                            )
-                                      ,App(
-                                         Spawn(
-                                            App(
-                                               Put_ISWIM("salut",6)
-                                              ,App(Put_ISWIM("salut",3),Emit_ISWIM "salut")
-                                              )
-                                            )
-                                        ,Spawn(
-                                          Signal_ISWIM("coucou",
-                                                  Present_ISWIM("coucou",Const 98,App(Op(Add,[Get_ISWIM("salut",2);Get_ISWIM("salut",2)]),Get_ISWIM("salut",2)))
-                                                  )
-                                             )
-                                         )
-                                      )
-                              );;
-*)
+
 Printf.printf " Test de la MachineSECD\n\n" ;;
 
 lancerSECD expression5 ;;
@@ -67,7 +44,3 @@ Printf.printf "\n" ;;
 
 lancerSECD expression7 ;;
 Printf.printf "\n" ;;
-(*
-lancerSECD expression8 ;;
-Printf.printf "\n" ;;
-*)

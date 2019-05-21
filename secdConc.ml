@@ -260,16 +260,6 @@ module SECDMachine =
         | (_,_)       ->   raise FormatOpErreur
 
 
-    (* Vérifie si une variable est dans l'environnement *)
-    let rec estDansEnvSECD env var =
-      match env with
-          []                                 ->   false
-        
-        | Env(var1,(control_string,env))::t  ->   if ( equal var1 var) then true else estDansEnvSECD t var 
-        
-        | _::t                               ->   estDansEnvSECD t var
-
-
     (* Vérifie si c'est un init *)
     let rec estInit env signal =
       match env with
@@ -287,15 +277,24 @@ module SECDMachine =
 
         | Emit_SI signal1::t  ->   if (equal signal signal1) then true else estEmit t signal
 
+    
+     (* Ajoute une  fermeture à l'environnement *)
+     let rec ajoutEnv_secd env varARemp fermeture =
+      match env with
+          []  ->  begin
+                    match fermeture with
+                        Fermeture_secd (control_string,env1)  ->    [(Env(varARemp,(control_string,env1)))]
+                      | Remp                                  ->   raise EtatInconnu
+                  end
 
-    (* Ajoute une fermeture à l'environnement *)
-    let rec ajoutEnv_secd env varARemp  fermeture =
-      if(estDansEnvSECD env varARemp) 
-        then env
-        else  match  fermeture with
-                  Fermeture_secd (control_string,env1)  ->   (Env(varARemp,(control_string,env1)))::env
+        | Env(var1,(control_string,e))::t -> if (equal var1 varARemp) 
+                                                then match fermeture with
+                                                        Fermeture_secd (control_string,env1)  ->   append [(Env(varARemp,(control_string,env1)))] t 
+                                                      | Remp                                  ->   raise EtatInconnu
 
-                | Remp                                  ->   raise EtatInconnu
+                                                else append [Env(var1,(control_string,e))] (ajoutEnv_secd t varARemp fermeture) 
+
+        | Init(signal)::t -> append [Init(signal)] (ajoutEnv_secd t varARemp fermeture) 
 
 
     (* Ajoute un signal initialisé dans l'environnement *)

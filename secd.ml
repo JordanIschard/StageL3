@@ -162,23 +162,20 @@ module SECDMachine =
         | (_,_)       ->   raise FormatOpErreur
 
 
-    (* Vérifie si une variable est dans l'environnement *)
-    let rec estDansEnvSECD env var =
-      match env with
-          []                                 ->   false
-
-        | Env(var1,(control_string,env))::t  ->   if ( equal var1 var) then true else estDansEnvSECD t var 
-
-
     (* Ajoute une  fermeture à l'environnement *)
-    let rec ajoutEnv_secd e1 varARemp  fermeture =
-      if(estDansEnvSECD e1 varARemp) 
-        then e1
-        else  match  fermeture with
-                Fermeture_secd (control_string,env)  ->    (Env(varARemp,(control_string,env)))::e1
-    
+    let rec ajoutEnv_secd env varARemp fermeture =
+      match env with
+          []  ->  begin
+                    match fermeture with
+                      Fermeture_secd (control_string,env1)  ->    [(Env(varARemp,(control_string,env1)))]
+                  end
 
+        | Env(var1,(control_string,e))::t -> if (equal var1 varARemp) 
+                                                then match fermeture with
+                                                      Fermeture_secd (control_string,env1)  ->   append [(Env(varARemp,(control_string,env1)))] t 
 
+                                                else append [Env(var1,(control_string,e))] (ajoutEnv_secd t varARemp fermeture) 
+            
     
                 
 

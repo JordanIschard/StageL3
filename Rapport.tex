@@ -555,7 +555,7 @@
 		
 				Pour toutes les machines vues jusqu'à présent la $\beta$-réduction est appliquée immédiatement. Cela coûte cher surtout quand l'expression devient grande. De plus, si notre substitution n'est pas une variable elle est traitée avant d'être appliquée.
 				\smallbreak
-				Il est plus intéressant d'appliquer les substitutions quand on en a vraiment la necessité. Pour cela, la machine CEK ajoute les fermetures et un environnement $\varepsilon$ qui va stocker les substitutions à effectuer.
+				Il est plus intéressant d'appliquer les substitutions quand on en a vraiment la nécessité. Pour cela, la machine CEK ajoute les fermetures et un environnement $\varepsilon$ qui va stocker les substitutions à effectuer. Cette environnement est une fonction qui pour une variable va retourner une expression.
 				\medbreak
 				
 				On a alors:
@@ -578,43 +578,97 @@
 				
 				Les règles qui définissent la machine CEK sont les suivantes :
 				\begin{enumerate}
-					\item $\langle\langle(M$ $N),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle arg,\langle N,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$
-					\item $\langle\langle(o^{n}$ $M$ $N...),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle opd,\langle o^{n}\rangle,\langle \langle N,\varepsilon\rangle,...\rangle,\overline{\kappa}\rangle\rangle$
+					\item $\langle\langle(M$ $N),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle arg,\langle N,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$	
+					\item $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
 					\item $\langle\langle V,\varepsilon\rangle,\langle fun,\langle (\lambda X1.M),\varepsilon'\rangle,\overline{\kappa} \rangle \rangle \longmapsto_{cek} \langle \langle M,\varepsilon'[X1 \leftarrow \langle V,\varepsilon\rangle]\rangle,\overline{\kappa}\rangle$ si $V \notin X$
 					\item  $\langle \langle V,\varepsilon\rangle,\langle arg,\langle N,\varepsilon'\rangle,\kappa\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle fun,\langle V,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
+					\item $\langle\langle(o^{n}$ $M$ $N...),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle opd,\langle o^{n}\rangle,\langle \langle N,\varepsilon\rangle,...\rangle,\overline{\kappa}\rangle\rangle$
 					\item $\langle  \langle b,\varepsilon\rangle,\langle opd,\langle \langle b_{i},\varepsilon_{i}\rangle,...\langle b_{1},\varepsilon_{1}\rangle ,o^{n}\rangle,\langle\rangle,\overline{\kappa}\rangle\rangle \longmapsto_{cek} \langle \langle V,\emptyset\rangle,\overline{\kappa}\rangle$ avec $\delta(o^{n},b_{1},...b_{i},b) = V$
-					\item $\langle \langle V,\varepsilon\rangle,\langle opd,\langle v',...o^{n}\rangle,\langle  \langle N,\varepsilon'\rangle,c,...\rangle,\overline{\kappa}\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle opd,\langle  \langle V,\varepsilon\rangle,v',...o^{n}\rangle,\langle c,...\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$	
-					\item $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
+					\item $\langle \langle V,\varepsilon\rangle,\langle opd,\langle v',...o^{n}\rangle,\langle  \langle N,\varepsilon'\rangle,c,...\rangle,\overline{\kappa}\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle opd,\langle  \langle V,\varepsilon\rangle,v',...o^{n}\rangle,\langle c,...\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
 				\end{enumerate}
 				\bigbreak
 				
 				
 				la machine CEK peut s'arrêter dans 3 états différents:
 				\begin{itemize}
-					\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \langle M,\emptyset\rangle,mt\rangle \twoheadrightarrow_{cek} \langle\langle b,\varepsilon\rangle,mt\rangle$;
-					\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \langle M,\emptyset\rangle,mt\rangle \twoheadrightarrow_{cek} \langle\langle \lambda X.N,\varepsilon\rangle,mt\rangle$;
+					\item[]$\longrightarrow$ on a une \textbf{constante b} telle que $\langle \langle M,\emptyset\rangle,mt\rangle \twoheadrightarrow_{cek} \langle\langle b,\varepsilon\rangle,mt\rangle$;
+					\item[]$\longrightarrow$ on a une \textbf{fonction} telle que $\langle \langle M,\emptyset\rangle,mt\rangle \twoheadrightarrow_{cek} \langle\langle \lambda X.N,\varepsilon\rangle,mt\rangle$;
 					\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
 				\end{itemize}
-				\hyperref[CEK]{Un exemple de la machine CEK est fait dans les Annexes.}
+				\bigbreak
+				
+				
+				On va voir une partie d'un exemple pour voir le changement avec la machine CK. On se concentre sur l'utilisation de l'environnement.
+				\medbreak
+				
+				\begin{itemize}
+					\item[] CEK machine : $\langle\langle(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner)\emptyset\rangle,mt\rangle$
+					\item[] ...
+					\item[] On a deux parties qui appliquent une abstraction.
+					\item[] CEK machine : $\langle\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,\langle fun,\langle(\lambda f.\lambda x.f$ $x),\emptyset\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle\rangle$
+					\item[] > (3) $\langle\langle V,\varepsilon\rangle,\langle fun,\langle (\lambda X1.M),\varepsilon'\rangle,\overline{\kappa} \rangle \rangle \longmapsto_{cek} \langle \langle M,\varepsilon'[X1 \leftarrow \langle V,\varepsilon\rangle]\rangle,\overline{\kappa}\rangle$ si $V \notin X$
+					\item[] CEK machine : $\langle\langle(\lambda x.f$ $x),\emptyset[f \leftarrow \langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle]\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle$
+					\item[] CEK machine : $\langle\langle(\lambda x.f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle\}\rangle,\langle arg,\langle\ulcorner 1\urcorner,\emptyset\rangle,mt\rangle\rangle$
+					\item[] > (4) $\langle \langle V,\varepsilon\rangle,\langle arg,\langle N,\varepsilon'\rangle,\kappa\rangle\rangle \longmapsto_{cek} \langle \langle N,\varepsilon'\rangle,\langle fun,\langle V,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$ si $V \notin X$
+					\item[]
+					\item[] CEK machine : $\langle\langle\ulcorner 1\urcorner,\emptyset\rangle,\langle fun,\langle(\lambda x.f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle\}\rangle,mt\rangle\rangle$
+					\item[] > (3) $\langle\langle V,\varepsilon\rangle,\langle fun,\langle (\lambda X1.M),\varepsilon'\rangle,\overline{\kappa} \rangle \rangle \longmapsto_{cek} \langle \langle M,\varepsilon'[X1 \leftarrow \langle V,\varepsilon\rangle]\rangle,\overline{\kappa}\rangle$ si $V \notin X$
+					\item[] CEK machine : $\langle\langle(f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle\}[x \leftarrow \langle\ulcorner 1\urcorner,\emptyset\rangle]\rangle,mt\rangle$
+					\item[] CEK machine : $\langle\langle(f$ $x),\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,mt\rangle$
+					\item[] > (1) $\langle\langle(M$ $N),\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle \langle M,\varepsilon\rangle,\langle arg,\langle N,\varepsilon\rangle,\overline{\kappa}\rangle\rangle$
+					\item[]
+					\item[] On voit comment la subsitution s'applique sur cette partie.
+					\item[] CEK machine : $\langle\langle f,\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,\langle arg,\langle x,\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,mt\rangle\rangle$
+					\item[] > (2) $\langle\langle X,\varepsilon\rangle,\overline{\kappa}\rangle \longmapsto_{cek} \langle c,\overline{\kappa}\rangle$ avec $\varepsilon(X) = c$
+					\item[] CEK machine : $\langle\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle,\langle arg,\langle x,\{\langle f,\langle(\lambda y.(+$ $y$ $y)),\emptyset\rangle\rangle,\langle x,\langle\ulcorner 1\urcorner,\emptyset\rangle\rangle\}\rangle,mt\rangle\rangle$
+					\item[] ...
+					\item[] CEK machine : $\langle\langle\ulcorner 2\urcorner,\emptyset\rangle,mt\rangle$
+				\end{itemize}
+				\medbreak
+				
+				L'exemple complet peut être retrouvé dans l'\hyperref[CEK]{Annexe 6.1.1}.
 				\bigbreak
 				
 			
 			\paragraph{SECD Machine}
 			
-				La différence entre la machine CEK et SECD est la façon dont le contexte est sauvegarder pendant que les sous-expressions sont évaluées.\\
-				En effet, dans la machine SECD le contexte est créer par un appel de fonction, quand toute est stocké dans $\widehat{D}$ pour laisser un espace de travail. Par contre pour la machine CEK, le contexte est créé quant on évalue une application ou un argument indépendamment de la complexité de celui-ci.
+				La différence entre la machine CEK et SECD se situe dans la façon dont le contexte est sauvegardeé pendant que les sous-expressions sont évaluées.\\
+				En effet, dans la machine SECD le contexte est créé par un appel de fonction, quand tout est stocké dans $\widehat{D}$ pour laisser un espace de travail. Par contre pour la machine CEK, le contexte est créé quant on évalue une application ou un argument indépendamment de la complexité de celui-ci.
 				\smallbreak 
-				Dans les langages tels que Java, Pascal ou encore C la façon de faire de la machine SECD est plus naturel. Par contre  dans les langages $\lambda$-calculs, Scheme ou encore ML c'est la façon de faire de la machine CEK qui est la plus naturel.
+				Dans les langages tels que Java, Pascal ou encore C la façon de faire de la machine SECD est plus naturelle. Par contre  dans les langages $\lambda$-calculs, Scheme ou encore ML c'est la façon de faire de la machine CEK qui est la plus naturelle.
 				\medbreak
 				
-				La machine SECD est composé d'une pile ($\widehat{S}$), d'un environnement ($\widehat{\varepsilon}$), d'une chaîne de contrôle ($\widehat{C}$) et d'un dépôt ($\widehat{D}$). Les différentes définitions de ces élément sont les suivantes :
+				La machine SECD est composée d'une pile pour les valeurs ($\widehat{S}$), d'un environnement ($\widehat{\varepsilon}$) pour lier les variables $X$ à une valeur $\widehat{V}$, d'une chaîne de contrôle ($\widehat{C}$) et d'un dépôt ($\widehat{D}$). Les différentes définitions de ces éléments sont les suivantes :
 				\smallbreak
 				\begin{itemize}
-					\item[] $\widehat{S}$ = $\epsilon$ | $\widehat{V}$ $\widehat{S}$ 
-					\item[] $\widehat{\varepsilon}$ = une fonction $\{\langle X,\widehat{V}\rangle,...\}$
-					\item[] $\widehat{C}$ = $\epsilon$ | b $\widehat{C}$ | X $\widehat{C}$ | ap $\widehat{C}$ | $prim_{o^{n}}$ $\widehat{C}$ | $\langle X,\widehat{C}\rangle$ $\widehat{C}$
-					\item[] $\widehat{D}$ = $\epsilon$ | $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
-					\item[] $\widehat{V}$ = b | $\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon}\rangle$
+					\item[] $\widehat{S} = \epsilon$ 
+					\begin{itemize}
+						\item[|] $\widehat{V}~\widehat{S}$
+					\end{itemize}
+					\item[] $\widehat{\varepsilon} =$ une fonction $\{\langle X,\widehat{V}\rangle,...\}$
+					\item[] $\widehat{C}$ = $\epsilon$ 
+					\begin{itemize}
+						\item[|] $b~\widehat{C}$
+ 						\item[|] $X~\widehat{C}$
+						\item[|] $ap~\widehat{C}$
+						\item[|] $prim_{o^{n}}~\widehat{C}$
+						\item[|] $\langle X,\widehat{C}\rangle~\widehat{C}$
+					\end{itemize}
+					\item[] $\widehat{D}$ = $\epsilon$
+					\begin{itemize}
+						\item[|] $\langle\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
+					\end{itemize}
+					\item[] $\widehat{V} = b$
+					\begin{itemize}
+						\item[|] $\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon}\rangle$
+					\end{itemize}
+				\end{itemize}
+				\bigbreak
+			
+				Une autre spécificité de la machine SECD vient de sa propre grammaire. En effet la machine SECD convertit la $\lambda$-expression par son propre langage. Le langage fonctionne avec des éléments simple comme des constantes, des variables et des fonctions et des commandes qui permettent de savoir ce que doit faire la machine. Voici les règles de conversion :
+				\smallbreak
+				
+				\begin{itemize}
 					\item[] $\textlbrackdbl b\textrbrackdbl _{secd}$ = b
 					\item[] $\textlbrackdbl X\textrbrackdbl _{secd}$ = X
 					\item[] $\textlbrackdbl (M_{1}$ $M_{2})\textrbrackdbl _{secd}$ = $\textlbrackdbl M_{1}\textrbrackdbl _{secd}$ $\textlbrackdbl M_{2}\textrbrackdbl _{secd}$ ap
@@ -624,7 +678,7 @@
 				\bigbreak
 				
 			
-				Les règles qui définisse la machine SECD sont les suivantes :
+				Les règles qui définissent la machine SECD sont les suivantes :
 				\begin{enumerate}
 					\item $\langle\widehat{S},\widehat{\varepsilon},b$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle b$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$
 					\item $\langle\widehat{S},\widehat{\varepsilon},X$ $\widehat{C},\widehat{D}\rangle \longmapsto_{secd} \langle \widehat{V}$ $\widehat{S},\widehat{\varepsilon},\widehat{C},\widehat{D}\rangle$ où $\widehat{V} = \varepsilon(X)$
@@ -638,8 +692,8 @@
 				
 				la machine SECD peut s'arrêter dans 3 états différents:
 				\begin{itemize}
-					\item[]$\longrightarrow$ on a une \textbf{constante b} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secd},\epsilon\rangle \twoheadrightarrow_{secd} \langle b,\widehat{\varepsilon},\epsilon,\epsilon\rangle$;
-					\item[]$\longrightarrow$ on a une \textbf{abstraction function} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secd},\epsilon\rangle \twoheadrightarrow_{secd} \langle\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon'}\rangle,\widehat{\varepsilon},\epsilon,\epsilon\rangle$;
+					\item[]$\longrightarrow$ on a une \textbf{constante b} telle que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secd},\epsilon\rangle \twoheadrightarrow_{secd} \langle b,\widehat{\varepsilon},\epsilon,\epsilon\rangle$;
+					\item[]$\longrightarrow$ on a une \textbf{fonction} telle que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secd},\epsilon\rangle \twoheadrightarrow_{secd} \langle\langle\langle X,\widehat{C}\rangle,\widehat{\varepsilon'}\rangle,\widehat{\varepsilon},\epsilon,\epsilon\rangle$;
 					\item[]$\longrightarrow$ on a un \textbf{état inconnu} soit une \textbf{erreur}.
 				\end{itemize}
 				\hyperref[SECD]{Un exemple de la machine SECD est fait dans les Annexes.}
