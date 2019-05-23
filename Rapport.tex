@@ -68,7 +68,15 @@
 		
 		Le stage a pour intitulé \textit{Programmation réactive synchrone, implantation d’une machine virtuelle}. Il se place dans la thématique \textit{Sémantique des systèmes concurrents}. L’objectif de ce stage est de réaliser l’implantation d’une machine virtuelle (type JVM) destinée à exécuter un langage réactif synchrone purement fonctionnel encadré par deux maîtres de conférence : Mme Bousdira et Mr Dabrowski.
 		\smallbreak
-		Pour cela une recherche préliminaire sur des machines existantes sera faite en premier lieu pour se mettre à niveau. Ensuite une recherche sur la programmation réactive servira à comprendre les enjeux du sujet et à cerner les différentes contraintes que la réactivité apporte. Les recherches étant faite on pourra s'atteler à la création de notre propre machine concurrente. Pour finir, on pourra conclure par un résumé le travail effectué, des choix qui pourrait être améliorés, des voies qui n'ont pas été choisies et ce qu'il reste à faire.
+		Le processus de création d'un langage de programmation passe par le questionnement sur la nécessité de sa création, sur l'utilisation que l'on va pouvoir en faire, sur l'implantation optimale. Je vais développer ce dernier point, cependant il reste vaste. On va donc ce concentrer sur la méthode d'exécution du langage. Toute la partie sur le langage aura été décidé en amont par mes deux encadrants.
+		\smallbreak
+	    Le but est ,comme dit plus haut, de créer une machine abstraite. Avant même de s'atteler à cette tâche, on va devoir faire une recherche sur ce qui est déjà existant niveau machines abtraites : leurs fonctionnement, leurs avantages, leurs inconvénients, etc... La totalité des machines étudiées dans cette article utilisent les $\lambda$-calculs. Étant totalement ignorant sur ce langage, il m'a fallu me mettre à niveau, cela m'a donné la possibilité de retracer ma compréhension des $\lambda$-calculs afin qu'à la fin de la lecture de la première partie le lecteur puisse comprendre autant que moi ce langage. La première partie regroupe aussi toutes les recherches préliminaires effectué dans le but de pouvoir cerner complètement le sujet du stage et de pouvoir effectué un travail optimal.
+		\smallbreak
+		La deuxième partie traite du travail réalisé pour créer la machine abstraite demandée à partir d'une machine abstraite existante. J'y explique les contraintes créer par l'ajout de la concurrence dans une machine abtraite. Pour chaque commande ajoutée, une explication détaillée des changements apportés dans la machine est écrite. Deux sémantiques de la machine abstraite y sont décrit.
+		\smallbreak
+		Pour finir, je résumerai tous ce qui a été fait durant le stage jusqu'au rendu de ce rapport ainsi que les points qui sont à améliorer, à développer ou encore ce qu'il reste à faire. Un petit mot sera glisser par rapport aux sémantiques intermédiaire créées et leurs implantations en OCaml. 
+		\smallbreak
+		Je vous souhaite une bonne lecture et n'hésitez pas lire les articles qui sont donnés dans la bibliographie si le sujet vous intéresse.
 		\newpage
 		
 		
@@ -116,8 +124,7 @@
 					Le \textit{ZINC} n'a pas de fonctions n-aires. Malgré la facilité et l'efficacité que l'on peut voir dans les fonctions n-aires, un problème se pose. Il est dur de prévoir le comportement avec les fonctions de hautes ordres et le polymorphisme. Pour éviter ça on va préférer la curryfication malgré son exécution plus lente. Une explication précise de comment palier à sa vitesse d'exécution est décrite dans l'article\hyperref[ZINC]{[2]} que je vous conseille une nouvelle fois vivement.
 					\item[] - Quelle méthode d'exécution veut-on utiliser ?
  				\end{itemize}
-				\newpage
-				
+				\newpage	
 				
 				
 	
@@ -167,7 +174,7 @@
 				\textbf{Exemple de $eta$-réduction :} $(\lambda x.((\lambda z.(z~z))~x)$, On va garder $(\lambda z.(z~z))$ . $(\lambda x.((\lambda z.(z~z))~x) \rightarrow_{\eta} \lambda z.(z~z)$ 
 				\medbreak
 				
-				\textbf{Exemple de \textbf{n}-réduction :} On va prendre la $\lambda$-expression suivante : $((\lambda f.\lambda g.\lambda x.(f~x~(g~x))~(\lambda x.\lambda y.x))~(\lambda x.\lambda y.x))$. Cette exemple est assez lourd visuellement mais il faut d'abord comprendre avec avant d'allèger la syntaxe. Pour aider on va indicer les parenthèses pour se reposer. 
+				\textbf{Exemple de \textbf{n}-réduction :} On va prendre la $\lambda$-expression suivante : $((\lambda f.\lambda g.\lambda x.(f~x~(g~x))~(\lambda x.\lambda y.x))~(\lambda x.\lambda y.x))$. Cette exemple est assez lourd visuellement mais il faut d'abord comprendre avec avant d'allèger la syntaxe. Pour aider on va indicer les parenthèses pour s'y retrouver. 
 				\smallbreak
 				
 				\begin{itemize}
@@ -197,7 +204,7 @@
 				
 				
 				
-				\subparagraph{Simplification :}Afin d'allèger l'écriture en enlevant des parenthèses, il y a des règles de priorité qui sont les suivantes :
+				\subparagraph{Simplification :} Afin d'allèger l'écriture en enlevant des parenthèses, il y a des règles de priorité qui sont les suivantes :
 				\begin{itemize}
 					\item Application associative à gauche : $M1~M2~M3~= ((M1~M2)M3)$
 					\item Application prioritaire par rapport à l'abstraction : $\lambda X.M1~M2~= \lambda X.(M1~M2)$
