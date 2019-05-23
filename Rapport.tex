@@ -81,7 +81,7 @@
 	 		\item[-] \hyperref[ZINC]{[2]} développant toute la réflexion que l'on doit avoir pour créer un langage de programmation
 		 	\item[-] \hyperref[Calculi]{[3]} expliquant le fonctionnement des machines avec les $\lambda$-calculs
 		 \end{enumerate}
- 		 Pour mieux structurer ma démarche, je vais diviser mes recherches en deux sous parties. La première sera lié à mes recherches "préliminaires" qui ne sont pas lié directement à la programmation réactive. Elle regroupera l'article \hyperref[ZINC]{[2]} et \hyperref[Calculi]{[3]}. La second sera dédié à l'article \hyperref[ReactiveML]{[1]} qui est lui complètement axé sur le programmation réactive. 
+ 		 Pour mieux structurer ma démarche, je vais diviser mes recherches en deux sous parties. La première sera liée à mes recherches "préliminaires" qui ne sont pas liés directement à la programmation réactive. Elle regroupera l'article \hyperref[ZINC]{[2]} et \hyperref[Calculi]{[3]}. La seconde partie sera dédiée à l'article \hyperref[ReactiveML]{[1]} qui est ,lui, complètement axé sur la programmation réactive. 
 	 
 		\subsection{$\lambda$-calcul et machines abstraites}
 			
@@ -90,7 +90,7 @@
 			\medbreak
 			
 				\subparagraph{Pourquoi ?} 
-				La création d'un langage de programmation doit venir d'un besoin de celui-ci, par exemple quand on veut des critères spécifiques. Pour le \textit{ZINC}, La portabilité du langage ML sur micro-ordinateur ainsi que l'utilisation pour la pédagogie ont été soulevés comme problèmes des implantations déjà existantes. La nécessité de la création d'un nouveau langage devient donc flagrante. D'ailleurs \textit{ZINC} veut dire ZINC Is Not Caml, il pointe le principal langage qui a tous les problèmes exposé plus haut pour bien montrer qu'il ne va pas les faire. 
+				La création d'un langage de programmation doit venir d'un besoin de celui-ci, par exemple quand on veut des critères spécifiques. Pour le \textit{ZINC}, la portabilité du langage ML sur micro-ordinateur ainsi que l'utilisation pour la pédagogie ont été soulevés comme problèmes des implantations déjà existantes. La nécessité de la création d'un nouveau langage devient donc flagrante. D'ailleurs \textit{ZINC} veut dire ZINC Is Not Caml, il pointe le principal langage qui a tous les problèmes exposé plus haut pour bien montrer qu'il ne va pas les faire. 
 				
 				\subparagraph{Comment?}	
 				Le plus dur reste à faire. Maintenant on doit savoir ce que l'on veut dans notre langage, comment on pourra l'utiliser, qu'elle est la meilleure implantation pour une vitesse d'exécution optimale, qu'elle sera la méthode d'exécution. 
@@ -116,7 +116,7 @@
 					Le \textit{ZINC} n'a pas de fonctions n-aires. Malgré la facilité et l'efficacité que l'on peut voir dans les fonctions n-aires, un problème se pose. Il est dur de prévoir le comportement avec les fonctions de hautes ordres et le polymorphisme. Pour éviter ça on va préférer la curryfication malgré son exécution plus lente. Une explication précise de comment palier à sa vitesse d'exécution est décrite dans l'article\hyperref[ZINC]{[2]} que je vous conseille une nouvelle fois vivement.
 					\item[] - Quelle méthode d'exécution veut-on utiliser ?
  				\end{itemize}
-				\bigbreak
+				\newpage
 				
 				
 				
@@ -126,26 +126,28 @@
 				\subparagraph{Les bases :}
 				Le $\lambda$-calcul est un système formel inventé par Alonzo Church dans les années 1930, qui fonde les concepts de fonction et d'application. On y manipule des expressions appelées $\lambda$-expressions, où la lettre grecque $\lambda$ est utilisée pour lier une variable. Il y a trois termes qui composent les $\lambda$-expressions :
 				\begin{enumerate}
-					\item les variables : \textit{x, y...} sont des $\lambda$-termes 
-					\item les applications : \textit{u v} est un $\lambda$-terme si \textit{u} et \textit{v} sont des $\lambda$-termes , on peut voir l'application comme ceci : si \textit{u} est une fonction et \textit{v} un argument, alors \textit{u v} est le résultat de l'application à \textit{v} de la fonction \textit{u}; 
-					\item les abstractions : $\lambda$ \textit{x.v} est un $\lambda$-terme si \textit{x} est une variable et \textit{v} un $\lambda$-terme, on peut voir l'abstraction comme ceci : $\lambda$ \textit{x.v} peut être interprétée comme la fonction qui à \textit{x}, associe \textit{v}, où \textit{v} contient en général des occurrences de \textit{x}.
+					\item les variables : $\{x, y...\}$ sont des $\lambda$-termes 
+					\item les applications : $(u~v)$ est un $\lambda$-terme si $u$ et $v$ sont des $\lambda$-termes , on peut voir l'application comme ceci : si $u$ est une fonction et $v$ un argument, alors $(u~v)$ est le résultat de l'application à $v$ de la fonction $u$; 
+					\item les abstractions : $\lambda x.(v)$ est un $\lambda$-terme si $x$ est une variable et $v$ un $\lambda$-terme, on peut voir l'abstraction comme ceci : $\lambda x.(v)$ peut être interprétée comme la fonction qui à $x$, associe $v$, où $v$ contient en général des occurrences de $x$.
 				\end{enumerate}
 				\bigbreak
 				
 				
-				\subparagraph{La réduction :}Maintenant que nous connaissons les termes qui composent les $\lambda$-expressions, il faut savoir comment les faire interagir entre eux. Les $\lambda$-calculs fonctionnent par réductions des termes grâce à l'application. Il existe trois règles de \textbf{réduction générale :}
+				\subparagraph{La réduction :}Maintenant que nous connaissons les termes qui composent les $\lambda$-expressions, il faut savoir comment les faire interagir entre eux. On évalue les $\lambda$-calculs par une succession de réductions des termes grâce à l'application. Il existe trois règles de \textbf{réduction générale :}
 				\begin{itemize}
-					\item[-] $(\lambda X_{1}.M)~\alpha~(\lambda X_{1}.M[X_{1} \leftarrow X_{2}])$
+					\item[-] $(\lambda X_{1}.M)~~~~~~~~~~~~~~~~~~~\alpha~~~~~~~(\lambda X_{2}.M[X_{1} \leftarrow X_{2}])$
 					où $X_{2}~\notin~FV(M)$ : elle sert à renommer les variables
-					\item[-] $((\lambda X_{1}.M_{1})M_{2})~\beta~M_{1}[X \leftarrow M_{2}]$ : elle substitue une variable par un $\lambda$-terme
-    				\item[-] $(\lambda X.(M~X))~\eta~M$ 
-					où $X~\notin~FV(M)$ : elle représente le cas où $g$ est une fonction qui à $x$ associe  $f(x)$  telle que f est une fonction alors autant utiliser directement la fonction f.
+					\item[-] $((\lambda X.M_{1})M_{2})~~~~~~~~~~~~\beta~~~~~~~~M_{1}[X \leftarrow M_{2}]$ : elle substitue une variable par un $\lambda$-terme
+    				\item[-] $(\lambda X.(M~X))~~~~~~~~~~~~~~\eta~~~~~~~~M$ 
+					où $X~\notin~FV(M)$ : elle représente le cas où $g$ est une fonction qui à $x$ associe $f(x)$  telle que $f$ est une fonction alors autant utiliser directement la fonction $f$.
 				\end{itemize}
+				\medbreak
+				
 				\textit{La réduction générale \textbf{n} = $\alpha \cup \beta \cup \eta$}.
 				\bigbreak
 				
 				
-				La $\beta$-réduction est plus complexe et a ses propres règles :
+				On peut remarquer que dans les règles on a une forme particulière : $N [X \leftarrow M]$ avec deux $\lambda$-termes $M$ , $N$ et une variable $X$. Cette forme signifie que l'on va remplacer toutes les occurences de $X$ par $M$ dans le $\lambda$-terme $N$. Cependant cette substitution est régie par une suite de règles qui sont les suivantes: 
 				\begin{itemize}
 					\item $X_{1}[X_{1} \leftarrow M]~= M$
 					\item $X_{2}[X_{1} \leftarrow M]~= X_{2}$ où $X_{1}\neq X_{2}$
@@ -155,8 +157,46 @@
 					\item $(M_{1}~M_{2})[X \leftarrow M_{3}]~=(M_{1}[X \leftarrow M_{3}]~M_{2}[X \leftarrow M_{3}])$
 				\end{itemize}
 				\bigbreak
-			
-			
+				
+				\textbf{Exemple de $\alpha$-réduction :} $(\lambda x.(x~y)) $, On va renommer $x$ par $a$. $(\lambda x.(x~y)) \rightarrow_{\alpha} (\lambda a.(x~y)[x \leftarrow a]) \Longleftrightarrow (\lambda a.(a~y))$ 
+				\medbreak
+				
+				\textbf{Exemple de $\beta$-réduction :} $((\lambda x.(x~y))~f)$, On va substituer $x$ par $f$. $((\lambda x.(x~y))~f) \rightarrow_{\beta} ((x~y)[x \leftarrow f]) \Longleftrightarrow (f~y)$ 
+				\medbreak
+				
+				\textbf{Exemple de $eta$-réduction :} $(\lambda x.((\lambda z.(z~z))~x)$, On va garder $(\lambda z.(z~z))$ . $(\lambda x.((\lambda z.(z~z))~x) \rightarrow_{\eta} \lambda z.(z~z)$ 
+				\medbreak
+				
+				\textbf{Exemple de \textbf{n}-réduction :} On va prendre la $\lambda$-expression suivante : $((\lambda f.\lambda g.\lambda x.(f~x~(g~x))~(\lambda x.\lambda y.x))~(\lambda x.\lambda y.x))$. Cette exemple est assez lourd visuellement mais il faut d'abord comprendre avec avant d'allèger la syntaxe. Pour aider on va indicer les parenthèses pour se reposer. 
+				\smallbreak
+				
+				\begin{itemize}
+					\item[] $(^{1}(^{2}\lambda f.\lambda g.\lambda x.(^{3}(^{4}f~x)^{4}~(^{5}g~x)^{5})^{3}~(^{6}\lambda x.\lambda y.x)^{6})^{2}~\underline{(^{7}\lambda x.\lambda y.x)^{7}})^{1}$
+					\item[] Dans un premier temps, on a renommé $x$ et $y$ grâce à $\alpha$-réduction pour ne pas se mélanger
+					\item[$\rightarrow^{\alpha}_{\textbf{n}}$] $(^{1}(^{2}\lambda f.\lambda g.\lambda x.(^{3}(^{4}f~x)^{4}~(^{5}g~x)^{5})^{3}~\underline{(^{6}\lambda x.\lambda y.x)^{6}})^{2}~(^{7}\lambda a.\lambda b.a)^{7})^{1}$
+					
+					\item[] On a fait de même avec le second terme
+					\item[$\rightarrow^{\alpha}_{\textbf{n}}$] $(^{1}\underline{(^{2}\lambda f.\lambda g.\lambda x.(^{3}(^{4}f~x)^{4}~(^{5}g~x)^{5})^{3}~(^{6}\lambda c.\lambda d.c)^{6})^{2}}~(^{7}\lambda a.\lambda b.a)^{7})^{1}$
+					
+					\item[] On a subsitué $f$ par $(\lambda c.\lambda d.c)$
+					\item[$\rightarrow^{\beta}_{\textbf{n}}$] $\underline{(^{1}(^{2}\lambda g.\lambda x.(^{3}(^{4}(^{6}\lambda c.\lambda d.c)^{6}~x)^{4}~(^{5}g~x)^{5})^{3})^{2}~(^{7}\lambda a.\lambda b.a)^{7})^{1}}$
+					
+					\item[] On a subsitué $g$ par $(\lambda a.\lambda b.a)$
+					\item[$\rightarrow^{\beta}_{\textbf{n}}$] $\lambda x.(^{3}(^{4}(^{6}\lambda c.\lambda d.c)^{6}~x)^{4}~\underline{(^{5}(^{7}\lambda a.\lambda b.a)^{7}~x)^{5}})^{3}$
+					
+					\item[] On a subsitué $a$ par $x$
+					\item[$\rightarrow^{\beta}_{\textbf{n}}$] $\lambda x.(^{3}\underline{(^{4}(^{6}\lambda c.\lambda d.c)^{6}~x)^{4}}~x)^{3}$
+					
+					\item[] On a subsitué $c$ par $x$
+					\item[$\rightarrow^{\beta}_{\textbf{n}}$] $\lambda x.(^{3}x~x)^{3}$
+				\end{itemize}
+				\bigbreak
+				
+				Le résultat est $\lambda x.(x~x)$. On peut voir que l'on se perd facilement avec les parenthèse dans tous les sens. Pour éviter cela, des simplifications qui existent.
+				\newpage
+				
+				
+				
 				\subparagraph{Simplification :}Afin d'allèger l'écriture en enlevant des parenthèses, il y a des règles de priorité qui sont les suivantes :
 				\begin{itemize}
 					\item Application associative à gauche : $M1~M2~M3~= ((M1~M2)M3)$
@@ -1794,7 +1834,7 @@
 		
 			\subsubsection{1ère-2ème version des règles de la machine SECD Concurrente}\label{SECDConc1-2}
 				\smallbreak
-				Cette version ajoute les prémisse de la concurrence dans la machine SECD avec la possibilité de créér des threads d'initialiser des signaux,les émettre où encore de tester la présence d'un signal. Cette version est un condensé de 2 versions.
+				Cette version ajoute les prémisses de la concurrence dans la machine SECD avec la possibilité de créer des threads, d'initialiser des signaux et les émettre où encore de tester la présence d'un signal. Cette version est un condensé de 2 versions.
 				\bigbreak
 					
 				\textbf{\textit{Soit}} $\langle S,E,C,D,W,ST,SI\rangle$ \textbf{\textit{avec :}}
@@ -1848,7 +1888,7 @@
 						\langle b~S,E,C,D,W,ST,SI\rangle$
 						\item[]
 						
-						\item[] \textbf{Substitution :} On a une variable, on prends la substitution dans l'environnement et on la mets dans la pile.  
+						\item[] \textbf{Substitution :} On a une variable, on prend la substitution dans l'environnement lié à la variable via la fonction $E$ et on la met dans la pile.  
 						\smallbreak 
 						$\langle S,E,X~C,D,W,ST,SI\rangle 
 						\longmapsto_{secdv1-2} 
@@ -1864,21 +1904,21 @@
 						où $V = \delta(o^{n},b_1,...b_{n})$
 						\item[]
 						
-						\item[] \textbf{Abstraction :} On a une abstraction, on crée une fermeture comportant l'abstraction et l'environnement courant et on mets la fermeture dans la pile
+						\item[] \textbf{Abstraction :} On a une abstraction, on crée une fermeture comportant l'abstraction et l'environnement courant et on met la fermeture dans la pile
 						\smallbreak
 						$\langle S,E,\langle X,C'\rangle~C,D,W,ST,SI\rangle 
 						\longmapsto_{secdv1-2} 
 						\langle\langle\langle X,C'\rangle,E\rangle~S,E,C,D,W,ST,SI\rangle$
 						\item[]
 						
-						\item[] \textbf{Application :} On a une application, donc on dauvegarde dans le dépôt, on ajoute une substitution et on remplace la chaîne de contrôle et l'environnement par ceux présent dans la fermeture.
+						\item[] \textbf{Application :} On a une application, donc on sauvegarde dans le dépôt, on remplace la chaîne de contrôle et l'environnement par ceux présent dans la fermeture et on ajoute une substitution dans le nouveau environnement.
 						\smallbreak
 						$\langle V~\langle\langle X,C'\rangle,E'\rangle~S,E,ap~C,D,W,ST,SI\rangle 
 						\longmapsto_{secdv1-2} 
 						\langle\epsilon,E'[X \leftarrow V],C',\langle S,E,C,D\rangle,W,ST,SI\rangle$
 						\item[]
 						
-						\item[] \textbf{Récupération de sauvegarde :} On a rien mais le dépôt comporte une sauvegarde donc on prends celle-ci.
+						\item[] \textbf{Récupération de sauvegarde :} On a rien mais le dépôt comporte une sauvegarde donc on prend celle-ci.
 						\smallbreak
 						$\langle V~S,E,\epsilon,\langle S,E,C,D\rangle,W,ST,SI\rangle 
 						\longmapsto_{secdv1-2} 
@@ -1888,7 +1928,7 @@
 					\end{itemize}
 					\item[] \textbf{Partie pour la concurrence}
 					\begin{itemize}
-						\item[] \textbf{Création thread :} On veut créer un nouveau thread
+						\item[] \textbf{Création thread :} On crée un nouveau thread
 						\smallbreak
 						$\langle S,E,bspawn~C'~espawn~C,D,W,ST,SI\rangle 
 						\longmapsto_{secdv1-2} 
@@ -1903,7 +1943,7 @@
 						\langle\epsilon,E~[init \leftarrow s],C',\langle S,E,C,D\rangle,W,ST,SI\rangle$
 						\item[] 
 						
-						\item[] \textbf{Présence d'un signal :} On teste la présence d'un signal et il l'est donc on prends la 1ère option. 
+						\item[] \textbf{Présence d'un signal :} On teste la présence d'un signal et il l'est donc on prend la 1ère option. 
 						\smallbreak
 						$\langle S,E,\langle s, C',C''\rangle~C,D,W,ST,SI\rangle 
 						\longmapsto_{secdv1-2} 
@@ -1919,7 +1959,7 @@
 						\\si $s \notin SI$ et $S \in E$ 
 						\item[]
 						
-						\item[] \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal et il ne l'est pas et la file est vide mest juste le thread courant dans la liste de threads bloqués.
+						\item[] \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal et il ne l'est pas et la file est vide, on met juste le thread courant dans la liste de threads bloqués.
 						\smallbreak
 						$\langle S,E,\langle s, C',C''\rangle~C,D,\emptyset,ST,SI\rangle 
 						\longmapsto_{secdv1-2} 
@@ -1932,8 +1972,8 @@
 						$\langle S,E,emit_{s}~C,D,W,ST,SI\rangle 
 						\longmapsto_{secdv1-2} 
 						\langle S,E,C,D,W',ST',SI\rangle$ 
-						\\avec $W' = W~\cup$ tout les éléments de $ST$ qui attendent l'émission de s et
-						\\avec $ST' = ST~\setminus$ tout les éléments de $ST$ qui attendent l'émission de s
+						\\avec $W' = W~\cup$ tous les éléments de $ST$ qui attendent l'émission de $s$ et
+						\\avec $ST' = ST~\setminus$ tous les éléments de $ST$ qui attendent l'émission de $s$
 						\item[]
 						
 						\item[] \textbf{Récupération dans la file d'attente :} On a plus rien à traiter et on a aucune sauvegarde, du coup on change de thread courant par le thread en tête de la file d'attente.
@@ -1945,7 +1985,7 @@
 						\item[] \textbf{Fin d'instant logique :} On a plus rien à traiter et on a plus rien dans la file d'attente. C'est la fin de l'instant logique
 						\smallbreak  $\langle S,E,\epsilon,\emptyset,\emptyset,ST,SI\rangle 
 						\longmapsto_{secdv1-2} \langle S,E,\emptyset,\emptyset,W,\emptyset,\emptyset,\emptyset\rangle$ 
-						\\avec $W$ = tout les éléments de $ST$ qui prennent leurs 2nd choix 
+						\\avec $W$ = tous les éléments de $ST$ prennent leurs 2nd choix 
 						\item[]
 					\end{itemize}
 					\item[] \textbf{Partie commune}
@@ -1980,7 +2020,7 @@
 				
 			\subsubsection{3ème version des règles de la machine SECD Concurrente}\label{SECDConc3}
 				\smallbreak
-				Cette version ajoute le contrôle des erreurs sans propagation via l'ajout d'un gestionnaire d'erreur dans la machine. Il commence a y avior beaucoup d'élément dans notre machine donc on va en rassembler. On va définir $TL$ un couple qui regroupe $W$ et $ST$, c'est-à-dire $TL = \langle W,ST\rangle$.
+				Cette version ajoute le contrôle des erreurs sans propagation via l'ajout d'un gestionnaire d'erreur dans la machine. Il commence a y avior beaucoup d'éléments dans notre machine donc on va en rassembler certains. On va définir $TL$ un couple qui regroupe $W$ et $ST$, c'est-à-dire $TL = \langle W,ST\rangle$.
 				\bigbreak
 					
 				\textbf{\textit{Soit}} $\langle S,E,C,D,TL,SI,H\rangle$ \textbf{\textit{avec :}}
@@ -2030,6 +2070,8 @@
 				\bigbreak
 				\bigbreak
 				
+				
+				%% en cours de vérification
 				\textbf{\textit{Les nouvelles règles sont les suivantes :}}
 				\smallbreak
 				\begin{itemize}
@@ -2040,7 +2082,7 @@
 						$\langle S,E,b~C,D,TL,SI,H\rangle \longmapsto_{secdv3} \langle b~S,E,C,TL,SI,H\rangle$
 						\item[]
 						
-						\item[] \textbf{Substitution :} On a une abstraction, on créer une fermeture avec celle-ci et l'environnement courant et on la place dans la pile.
+						\item[] \textbf{Substitution :} On a une abstraction, on crée une fermeture avec celle-ci et l'environnement courant et on la place dans la pile.
 						\smallbreak
 						$\langle S,E,X~C,D,TL,SI,H\rangle \longmapsto_{secdv3} \langle V~S,E,C,D,TL,SI,H\rangle$
 						\\où $V = E(X)$
