@@ -17,6 +17,25 @@ let expression3 = (App(Abs("x",(
                                   )
                                 )),Signal_ISWIM));;
 
+let expression4 = (App(
+                        App(
+                            Abs("s",
+                                Abs("s1",
+                                    App(
+                                        App(
+                                             Spawn_ISWIM(Present_ISWIM("s",Const 6,Const 9))
+                                           , Spawn_ISWIM(Present_ISWIM("s1",Const 3,Const 5))
+                                           )
+                                       , Spawn_ISWIM(Put_ISWIM("s",0))
+                                       )
+                                   )
+                               )
+                          , Signal_ISWIM
+                          )
+                      , Signal_ISWIM
+                      )
+                  );;
+
 start expression1 ;;
 Printf.printf "\n" ;;
 
@@ -24,4 +43,7 @@ start expression2 ;;
 Printf.printf "\n" ;;
 
 start expression3 ;;
+Printf.printf "\n" ;;
+
+start expression4 ;;
 Printf.printf "\n" ;;

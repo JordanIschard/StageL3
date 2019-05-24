@@ -202,9 +202,9 @@ module MachineTTSI =
             
         | Abs(abs,expr)                         ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
 
-        | Spawn_ISWIM expr                      ->   [Pair("spawn",(secdLanguage_of_exprISWIM expr)) ; Spawn]
+        | Spawn_ISWIM expr                      ->   [Pair("",(secdLanguage_of_exprISWIM expr)) ; Spawn]
 
-        | Present_ISWIM (signal,expr1,expr2)    ->   [Variable signal ; Pair("present",(secdLanguage_of_exprISWIM expr1)) ; Pair("present",(secdLanguage_of_exprISWIM expr2)) ; Present]
+        | Present_ISWIM (signal,expr1,expr2)    ->   [Variable signal ; Pair("",(secdLanguage_of_exprISWIM expr1)) ; Pair("",(secdLanguage_of_exprISWIM expr2)) ; Present]
 
         | Emit_ISWIM signal                     ->   [Variable signal ; Emit]
 
@@ -214,7 +214,7 @@ module MachineTTSI =
 
         | Get_ISWIM(signal,id_thread,neutral)   ->   [Variable signal ; Constant id_thread ; Constant neutral ; Get]
 
-        | Wait                                  ->   [Signal(-1) ; Pair("present",[]) ; Pair("present",[]) ; Present]
+        | Wait                                  ->   [Signal(-1) ; Pair("",[]) ; Pair("",[]) ; Present]
 
 
     (* Convertit la chaîne de contrôle en une chaîne de caractères *)
@@ -473,12 +473,13 @@ module MachineTTSI =
       in
       let emit data =
         match data with
-          (emit,cs,ssi,tl)   ->   (true,(add cs),ssi,tl)
+          (emit,cs,ssi,tl)   ->   (tl,(true,(add cs),ssi,[]))
       in
       match si with
           []                 ->   raise UnknowSignalState
 
-        | (id_s,data)::t     ->   if (id_s = signal) then (id_s,emit data)::t else (id_s,data)::(put t signal b id)
+        | (id_s,data)::t     ->   if (id_s = signal) then let (tl,new_data) = emit data in (tl, append [(id_s,new_data)] t) 
+                                                     else let (tl,new_si) = put t signal b id in (tl,append [(id_s,data)] new_si) 
 
 
     let rec first_get ci my_id = 
@@ -570,7 +571,7 @@ module MachineTTSI =
       match tl with
           [] -> []
 
-        | Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_signal signal::s,e,Present::c,d)::t -> append [Thread(id,s,e,append c1 c,d)] (other_choice t)
+        | Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_signal signal::s,e,Present::c,d)::t -> append [Thread(id,s,e,append c2 c,d)] (other_choice t)
 
         | _ -> raise UnknowStuckState
     
@@ -592,7 +593,7 @@ module MachineTTSI =
       match signals with
           [] -> ([],[])
 
-        | (si,data)::t -> let (tl,new_signals) = next_moment t in let (tl1,new_data) = aux data in (append tl tl1 , append [(si,new_data)] new_signals)
+        | (si,data)::t -> let (tl,new_signals) = next_moment t in let (tl1,new_data) = aux data in (append tl1 tl , append [(si,new_data)] new_signals)
 
 
     let compute stack env op =
@@ -670,7 +671,7 @@ module MachineTTSI =
 
           (* On a put dans la chaîne de contrôle, on prend la constante en tête dans la pile et on la mets dans le signal *)
         | MachineTTSI(Thread(id,Stack_signal signal::Stack_const b::s,e,Put::c,d),tl,si,ip)   
-          ->    machineTTSI (MachineTTSI( Thread( id , s , e , c , d ) , tl , ((put si signal b id)) , ip ))
+          ->    let (st,new_si) = put si signal b id in machineTTSI (MachineTTSI( Thread( id , s , e , c , d ) , (append tl st) , new_si , ip ))
 
 
           (* On a get dans la chaîne de contrôle, on prends la constante dans la liste des valeurs partagées liées à un signal et u identifant de thread *)
