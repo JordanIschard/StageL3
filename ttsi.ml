@@ -723,12 +723,13 @@ module MachineTTSI =
           (* Je ne connais pas cette état ... *)
         | _                                                                       ->    raise StrangeEnd
 
+
     (* Applique les règles de la machine TTSI en affichant ou non les étapes *)
     let rec machineTTSI machine afficher =
       match machine with
           MachineTTSI(Thread(id,resultat,[],[],Empty),[],[],ip)  ->   printf "Le résultat est %s \n" (string_of_stack resultat)
 
-        | machine                                               ->   if afficher then afficherTTSI machine else printf ""; machineTTSI (compute machine) afficher 
+        | machine                                                ->   if afficher then afficherTTSI machine else printf ""; machineTTSI (compute machine) afficher 
       
   
 
