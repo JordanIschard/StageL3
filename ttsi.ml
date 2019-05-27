@@ -1,7 +1,7 @@
 open String ;;
 open Printf ;;
 open List ;;
-open LangISWIMConc4.ISWIM ;;
+open LangISWIMTTSI.ISWIM ;;
 
 
 module MachineTTSI =
@@ -130,7 +130,7 @@ module MachineTTSI =
     (**** MachineTTSI ****)
 
     (* Ce type représente la structure de la machineTTSI *)
-    type secd = MachineTTSI of thread              *
+    type ttsi = MachineTTSI of thread              *
                            thread_list         * 
                            signals             * 
                            identifier_producer 
@@ -231,7 +231,7 @@ module MachineTTSI =
 
         | Signal signal::t                   ->   (string_of_int signal)^" "^(string_of_control_string t)
       
-        | Pair(abs,expr_list)::t             ->   "("^abs^",("^(string_of_control_string expr_list)^")) "^(string_of_control_string t)
+        | Pair(abs,expr_list)::t             ->   "<"^abs^", "^(string_of_control_string expr_list)^"> "^(string_of_control_string t)
       
         | Prim(op)::t                        ->   "prim "^(string_of_operateur op)^" "^(string_of_control_string t)
 
@@ -628,106 +628,112 @@ module MachineTTSI =
 
     (**** Machine TTSI ****)
 
-    (* Applique les règles de la machine TTSI en affichant les étapes *)
-    let rec machineTTSI machine =
-      (afficherTTSI machine) ;
+    let compute machine =
       match machine with
           (* On a une constante dans la chaîne de contrôle, on la place dans la pile *)
-        | MachineTTSI(Thread(id,s,e,Constant b::c,d),tl,si,ip)                    ->    machineTTSI (MachineTTSI( Thread( id , Stack_const b::s , e , c , d ) , tl , si , ip )) 
+        | MachineTTSI(Thread(id,s,e,Constant b::c,d),tl,si,ip)                    ->    MachineTTSI( Thread( id , Stack_const b::s , e , c , d ) , tl , si , ip )
 
 
           (* On a une variable dans la chaîne de contrôle, on place sa substitution (stockée dans l'environnement) dans la pile *)
-        | MachineTTSI(Thread(id,s,e,Variable x::c,d),tl,si,ip)                    ->   machineTTSI (MachineTTSI( Thread( id , (substitution x e)::s , e , c , d ) , tl , si , ip )) 
+        | MachineTTSI(Thread(id,s,e,Variable x::c,d),tl,si,ip)                    ->   MachineTTSI( Thread( id , (substitution x e)::s , e , c , d ) , tl , si , ip )
 
 
           (* On a prim dans la chaîne de contrôle, on prends le nombre d'élément nécessaire au bon fonctionnement de l'opérateur lié à prim dans la pile 
-             et on effectue le calcul. On mets le résultat dans la pile *)
-        | MachineTTSI(Thread(id,s,e,Prim op::c,d),tl,si,ip)                       ->   machineTTSI (MachineTTSI( Thread( id , (compute s e op) , e , c , d ) , tl , si , ip ))                        
+            et on effectue le calcul. On mets le résultat dans la pile *)
+        | MachineTTSI(Thread(id,s,e,Prim op::c,d),tl,si,ip)                       ->   MachineTTSI( Thread( id , (compute s e op) , e , c , d ) , tl , si , ip )                        
 
 
           (* On a une abstraction dans la chaîne de contrôle, on place une fermeture ,qui comporte l'abstraction et l'environnment courant, dans la pile *)
-        | MachineTTSI(Thread(id,s,e,Pair(abs,c1)::c,d),tl,si,ip)                  ->    machineTTSI (MachineTTSI( Thread( id, Closure([Pair(abs,c1)],e)::s , e , c , d ) , tl , si , ip ))  
+        | MachineTTSI(Thread(id,s,e,Pair(abs,c1)::c,d),tl,si,ip)                  ->    MachineTTSI( Thread( id, Closure([Pair(abs,c1)],e)::s , e , c , d ) , tl , si , ip )
         
 
           (* On a Ap dans la chaîne de contrôle, on sauvegarde une partie de la machine TTSI dans le dépôt, on prends l'environnement de la fermeture et on ajoute la nouvelle substitution *)
         | MachineTTSI(Thread(id,v::Closure([Pair(abs,c1)],e1)::s,e,Ap::c,d),tl,si,ip)   
-          ->    machineTTSI (MachineTTSI( Thread( id , [] , (add_env e1 abs v) , c1 , Save(s,e,c,d) ) , tl , si , ip ))
+          ->    MachineTTSI( Thread( id , [] , (add_env e1 abs v) , c1 , Save(s,e,c,d) ) , tl , si , ip )
 
 
           (* On a la chaîne de contrôle vide et le dépôt à une sauvegarde, on prends la sauvegarde et on l'applique sur la machineTTSI *)
-        | MachineTTSI(Thread(id,v::s,e,[],Save(s1,e1,c,d)),tl,si,ip)              ->    machineTTSI (MachineTTSI( Thread( id , v::s1 , e1 , c , d ) , tl , si , ip ))
+        | MachineTTSI(Thread(id,v::s,e,[],Save(s1,e1,c,d)),tl,si,ip)              ->    MachineTTSI( Thread( id , v::s1 , e1 , c , d ) , tl , si , ip )
         
         (* On a la chaîne de contrôle vide et le dépôt à une sauvegarde, on prends la sauvegarde et on l'applique sur la machineTTSI *)
-        | MachineTTSI(Thread(id,s,e,[],Save(s1,e1,c,d)),tl,si,ip)                 ->    machineTTSI (MachineTTSI( Thread( id , s1 , e1 , c , d ) , tl , si , ip ))
+        | MachineTTSI(Thread(id,s,e,[],Save(s1,e1,c,d)),tl,si,ip)                 ->    MachineTTSI( Thread( id , s1 , e1 , c , d ) , tl , si , ip )
 
           (* On a un signal dans la chaîne de contrôle, on le mets dans la pile *)
-        | MachineTTSI(Thread(id,s,e,Signal signal::c,d),tl,si,ip)                 ->    machineTTSI (MachineTTSI( Thread( id , Stack_signal signal::s , e , c , d ) , tl , si , ip )) 
+        | MachineTTSI(Thread(id,s,e,Signal signal::c,d),tl,si,ip)                 ->    MachineTTSI( Thread( id , Stack_signal signal::s , e , c , d ) , tl , si , ip )
 
 
           (* On a Bspawn dans la chaîne de contrôle, on prends la partie de la chaîne de contrôle compris entre Bspawn et Espawn et le mets dans un nouveau thread *)
         | MachineTTSI(Thread(id,Closure([Pair(_,c1)],_)::s,e,Spawn::c,d),tl,si,ip)
-          ->    machineTTSI (MachineTTSI( Thread( id , s , e , c , d ) , (append tl [Thread(ip,s,e,c1,d)]) , si , (ip+1) ))
+          ->    MachineTTSI( Thread( id , s , e , c , d ) , (append tl [Thread(ip,s,e,c1,d)]) , si , (ip+1) )
               
 
           (* On a put dans la chaîne de contrôle, on prend la constante en tête dans la pile et on la mets dans le signal *)
         | MachineTTSI(Thread(id,Stack_signal signal::Stack_const b::s,e,Put::c,d),tl,si,ip)   
-          ->    let (st,new_si) = put si signal b id in machineTTSI (MachineTTSI( Thread( id , s , e , c , d ) , (append tl st) , new_si , ip ))
+          ->    let (st,new_si) = put si signal b id in MachineTTSI( Thread( id , s , e , c , d ) , (append tl st) , new_si , ip )
 
 
           (* On a get dans la chaîne de contrôle, on prends la constante dans la liste des valeurs partagées liées à un signal et u identifant de thread *)
         | MachineTTSI(Thread(id,Stack_const n::Stack_const b::Stack_signal signal::s,e,Get::c,d),tl,si,ip)          
-          ->    let (res,new_si) = get si b n signal id in machineTTSI (MachineTTSI( Thread(id , res::s , e , c , d ) , tl , new_si , ip ))
+          ->    let (res,new_si) = get si b n signal id in MachineTTSI( Thread(id , res::s , e , c , d ) , tl , new_si , ip )
                                           
 
           (* On a un signal s in t dans la chaîne de contrôle, on remplace la chaîne de contrôle (que l'on stock dans le dépôt) par t et on sauvegarde dans le dépôt le reste plus le signal *)
         | MachineTTSI(Thread(id,s,e,InitSignal::c,d),tl,si,ip)                   
-          ->    let (signal,new_si) = init_signal si in machineTTSI (MachineTTSI( Thread( id , signal::s , e , c , d ) , tl , new_si , ip ))
+          ->    let (signal,new_si) = init_signal si in MachineTTSI( Thread( id , signal::s , e , c , d ) , tl , new_si , ip )
 
 
           (* On a un present dans la chaîne de contrôle, on regarde si le signal est émit : si oui on prends la première possibilités sinon on le mets dans la liste de threads bloqués *)
         | MachineTTSI(Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_signal signal::s,e,Present::c,d),tl,si,ip)               
           ->    if (isEmit si signal)
-                  then machineTTSI (MachineTTSI( Thread( id , s , e , (append c1 c) , d ) , tl , si , ip ))
+                  then MachineTTSI( Thread( id , s , e , (append c1 c) , d ) , tl , si , ip )
                   else let st = Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_signal signal::s,e,Present::c,d) in
                       begin 
                         match tl with
-                            []                            ->   machineTTSI (MachineTTSI( Thread( ip , [] , [] , [] , Empty ) , [] , (add_stuck si signal st) , ip+1 ))
+                            []                            ->   MachineTTSI( Thread( ip , [] , [] , [] , Empty ) , [] , (add_stuck si signal st) , ip+1 )
 
-                          | Thread(id1,s1,e1,c3,d1)::tl1  ->   machineTTSI (MachineTTSI( Thread( id1 , s1 , e1 , c3 , d1 ) , tl1 , (add_stuck si signal st) , ip ))
+                          | Thread(id1,s1,e1,c3,d1)::tl1  ->   MachineTTSI( Thread( id1 , s1 , e1 , c3 , d1 ) , tl1 , (add_stuck si signal st) , ip )
                       end
 
 
           (* On a rien dans la chaîne de contrôle et le dépôt est vide mais la liste d'attente à au moins un élément, on prends un thread dans la liste d'attente *)                         
-        | MachineTTSI(Thread(id,s,e,[],Empty),Thread(id1,s1,e1,c,d)::tl,si,ip)    ->    machineTTSI (MachineTTSI( Thread( id1 , s1 , e1 , c , d ) , tl , si , ip ))
+        | MachineTTSI(Thread(id,s,e,[],Empty),Thread(id1,s1,e1,c,d)::tl,si,ip)    ->    MachineTTSI( Thread( id1 , s1 , e1 , c , d ) , tl , si , ip )
 
 
           (* On a rien dans la chaîne de contrôle, le dépôt est vide et la liste d'attente aussi, 
-             c'est la fin d'un instant où la fin du fonctionnement de la machine TTSI si la liste de threads bloqués est vide *)
+            c'est la fin d'un instant où la fin du fonctionnement de la machine TTSI si la liste de threads bloqués est vide *)
         | MachineTTSI(Thread(id,s,e,[],Empty),[],si,ip)                           
           ->   if (isEnd si)
                   then match s with
             
-                        | Stack_const b::s1             ->   [Constant b]
+                        | Stack_const b::s1             ->   MachineTTSI( Thread( id , [Stack_const b] , [] , [] , Empty ) , [] , [] , ip )
             
-                        | Closure([Pair(x,c)],env)::s1  ->   [Pair(x,c)]
+                        | Closure([Pair(x,c)],env)::s1  ->   MachineTTSI( Thread( id , [Closure([Pair(x,c)],env)] , [] , [] , Empty ) , [] , [] , ip )
 
-                        | []                            ->   [Variable "Unit"]
+                        | []                            ->   MachineTTSI( Thread( id , [] , [] , [] , Empty ) , [] , [] , ip )
             
                         | _                             ->   raise UnknowStackState
 
-                  else  let (tl,new_si) = next_moment si in machineTTSI (MachineTTSI( Thread( id , s , e , [] , Empty ) , tl , new_si , ip ))
+                  else  let (tl,new_si) = next_moment si in MachineTTSI( Thread( id , s , e , [] , Empty ) , tl , new_si , ip )
 
 
           (* On a Ap dans la chaîne de contrôle, on enlève Ap *)  
-        | MachineTTSI(Thread(id,s,e,Ap::c,d),tl,si,ip)                            ->    machineTTSI (MachineTTSI( Thread( id , s , e , c , d ) , tl , si , ip ))
-         
+        | MachineTTSI(Thread(id,s,e,Ap::c,d),tl,si,ip)                            ->    MachineTTSI( Thread( id , s , e , c , d ) , tl , si , ip )
+        
 
           (* Je ne connais pas cette état ... *)
         | _                                                                       ->    raise StrangeEnd
+
+
+    (* Applique les règles de la machine TTSI en affichant ou non les étapes *)
+    let rec machineTTSI machine afficher =
+      match machine with
+          MachineTTSI(Thread(id,resultat,[],[],Empty),[],[],ip)  ->   printf "Le résultat est %s \n" (string_of_stack resultat)
+
+        | machine                                                ->   if afficher then afficherTTSI machine else printf ""; machineTTSI (compute machine) afficher 
+      
   
 
     (* Lance et affiche le résultat de l'expression *)
-    let start expression =
-       printf "Le résultat est %s \n" (string_of_control_string (machineTTSI (MachineTTSI(Thread(0,[],[],(secdLanguage_of_exprISWIM expression),Empty),[],[(-1,(false,[],[],[]))],1))))
+    let start expression afficher = machineTTSI (MachineTTSI(Thread(0,[],[],(secdLanguage_of_exprISWIM expression),Empty),[],[(-1,(false,[],[],[]))],1)) afficher
     
   end
