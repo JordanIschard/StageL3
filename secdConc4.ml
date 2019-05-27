@@ -231,7 +231,7 @@ module MachineTTSI =
 
         | Signal signal::t                   ->   (string_of_int signal)^" "^(string_of_control_string t)
       
-        | Pair(abs,expr_list)::t             ->   "("^abs^",("^(string_of_control_string expr_list)^")) "^(string_of_control_string t)
+        | Pair(abs,expr_list)::t             ->   "<"^abs^", "^(string_of_control_string expr_list)^"> "^(string_of_control_string t)
       
         | Prim(op)::t                        ->   "prim "^(string_of_operateur op)^" "^(string_of_control_string t)
 

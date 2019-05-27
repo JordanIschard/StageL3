@@ -36,6 +36,22 @@ let expression4 = (App(
                       )
                   );;
 
+let expression5 = (App(
+                        App(
+                             Abs("s"
+                                ,Abs("s1"
+                                    ,App(
+                                          Spawn_ISWIM(Present_ISWIM("s1",Const 1,Op(Add,[Get_ISWIM("s",0,3);Get_ISWIM("s",0,3)])))
+                                         ,Put_ISWIM("s",10)
+                                        )
+                                    )
+                                )
+                            ,Signal_ISWIM
+                           )
+                       ,Signal_ISWIM
+                      )
+                  );;
+
 start expression1 ;;
 Printf.printf "\n" ;;
 
@@ -46,4 +62,7 @@ start expression3 ;;
 Printf.printf "\n" ;;
 
 start expression4 ;;
+Printf.printf "\n" ;;
+
+start expression5 ;;
 Printf.printf "\n" ;;

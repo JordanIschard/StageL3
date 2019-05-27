@@ -1908,7 +1908,7 @@
 		
 			\subsubsection{Exemple de fonctionnement de la machine TTS}\label{TTS}
 				
-				Voici un exemple de fonctionnement de la machine SECD :	
+				Voici un exemple de fonctionnement de la machine TTS :	
 				
 				\begin{itemize}
 					\item[] TTS Machine : $\langle\langle \epsilon,\emptyset,\langle s,\langle ,s~\langle,6\rangle~\langle,9\rangle~present\rangle~spawn~\langle ,s~emit\rangle~spawn~ap\rangle~init~ap,\emptyset\rangle,\emptyset,\emptyset\rangle$
@@ -2005,6 +2005,149 @@
 					\longrightarrow_{TTS} 
 					\langle V~S',E',C,D\rangle$
 					\item[] TTS Machine : $\langle \langle 6,\emptyset,\epsilon,\emptyset\rangle,\emptyset,\{\langle 0,\langle true,\emptyset\rangle\rangle\}\rangle$
+				\end{itemize}
+				\newpage
+				
+			\subsubsection{Exemple de fonctionnement de la machine TTSI}\label{TTSI}
+			
+				Voici un exemple de fonctionnement de la machine TTSI :
+				
+				\begin{itemize}
+					\item[] Machine TTSI $\langle\langle 0,\epsilon,\emptyset,\langle s,\langle s', \langle, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present\rangle~spawn~10~s~put~ap\rangle\rangle~init~ap~init~ap,\emptyset\rangle,\emptyset,\emptyset,1\rangle$
+					\item[] > \textbf{Abstraction} $\langle S,E,\langle X,C'\rangle~C,D\rangle
+					\longrightarrow_{TTSI} 
+					\langle \langle\langle X,C'\rangle,E\rangle~S,E,C,D\rangle$
+					\item[] Machine TTSI $\langle\langle 0,\langle\langle s,\langle s', \langle, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present\rangle~spawn~10~s~put~ap\rangle\rangle,\emptyset \rangle,\emptyset,init~ap~init~ap,\emptyset\rangle,\\\emptyset,\emptyset,1\rangle$
+					\item[] > \textbf{Initialisation Signal} $\langle\langle I,S,E,init~C,D\rangle,TL,SI\rangle 
+					\longrightarrow_{TTSI}
+					\langle\langle I,s~S,E,C,D\rangle,TL,SI'\rangle$
+					avec $\iota(SI) = (s,SI')$
+					\item[] Machine TTSI $\langle\langle 0,\langle 0~\langle s,\langle s', \langle, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present\rangle~spawn~10~s~put~ap\rangle\rangle,\emptyset \rangle,\emptyset,ap~init~ap,\emptyset\rangle,\\\emptyset,\{\langle 0,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},1\rangle$
+					\item[] > \textbf{Application} $\langle V~\langle\langle X,C'\rangle,E'\rangle~S,E,ap~C,D\rangle
+					\longrightarrow_{TTSI} 
+					\langle \emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle$
+					\item[] Machine TTSI $\langle\langle 0,\epsilon,\emptyset[s \leftarrow 0],\langle s', \langle, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present\rangle~spawn~10~s~put~ap\rangle,\langle\epsilon,\emptyset,init~ap,\emptyset\rangle\rangle,\\\emptyset,\{\langle 0,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},1\rangle$
+					\item[] Machine TTSI $\langle\langle 0,\epsilon,\{\langle s,0\rangle\},\langle s', \langle, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present\rangle~spawn~10~s~put~ap\rangle,\langle\epsilon,\emptyset,init~ap,\emptyset\rangle\rangle,\\\emptyset,\{\langle 0,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},1\rangle$
+					\item[] > \textbf{Abstraction} $\langle S,E,\langle X,C'\rangle~C,D\rangle
+					\longrightarrow_{TTSI} 
+					\langle \langle\langle X,C'\rangle,E\rangle~S,E,C,D\rangle$
+					\item[] Machine TTSI $\langle\langle 0,\langle\langle s', \langle, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present\rangle~spawn~10~s~put~ap\rangle,\{\langle s,0\rangle\}\rangle,\{\langle s,0\rangle\},\epsilon,\\\langle\epsilon,\emptyset,init~ap,\emptyset\rangle\rangle,\emptyset,\{\langle 0,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},1\rangle$
+					\item[] > \textbf{Récupération de sauvegarde} $\langle V~S,E,\epsilon,\langle S',E',C,D\rangle\rangle
+					\longrightarrow_{TTSI} 
+					\langle V~S',E',C,D\rangle$
+					\item[] Machine TTSI $\langle\langle 0,\langle\langle s', \langle, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present\rangle~spawn~10~s~put~ap\rangle,\{\langle s,0\rangle\}\rangle,\emptyset,init~ap,\emptyset\rangle\\,\emptyset,\{\langle 0,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},1\rangle$
+					\item[] > \textbf{Initialisation Signal} $\langle\langle I,S,E,init~C,D\rangle,TL,SI\rangle 
+					\longrightarrow_{TTSI}
+					\langle\langle I,s~S,E,C,D\rangle,TL,SI'\rangle$
+					avec $\iota(SI) = (s,SI')$
+					\item[] Machine TTSI $\langle\langle 0, 1~\langle\langle s', \langle, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present\rangle~spawn~10~s~put~ap\rangle,\{\langle s,0\rangle\}\rangle,\emptyset,ap,\emptyset\rangle\\,\emptyset,\{\langle 0,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},1\rangle$
+					\item[] > \textbf{Application} $\langle V~\langle\langle X,C'\rangle,E'\rangle~S,E,ap~C,D\rangle
+					\longrightarrow_{TTSI} 
+					\langle \emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle$
+					\item[] Machine TTSI $\langle\langle 0, \epsilon ,\{\langle s,0\rangle\}[s' \leftarrow 1],\langle, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present\rangle~spawn~10~s~put~ap,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle\\,\emptyset,\{\langle 0,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},1\rangle$
+					\item[] Machine TTSI $\langle\langle 0, \epsilon ,\{\langle s,0\rangle,\langle s',1\rangle\},\langle, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present\rangle~spawn~10~s~put~ap,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle\\,\emptyset,\{\langle 0,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},1\rangle$
+					\item[] > \textbf{Abstraction} $\langle S,E,\langle X,C'\rangle~C,D\rangle
+					\longrightarrow_{TTSI} 
+					\langle \langle\langle X,C'\rangle,E\rangle~S,E,C,D\rangle$
+					\item[] Machine TTSI $\langle\langle 0, \langle, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present\rangle,\{\langle s,0\rangle,\langle s',1\rangle\}\rangle ,\{\langle s,0\rangle,\langle s',1\rangle\},spawn~10~s~put~ap,\\\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\emptyset,\{\langle 0,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},1\rangle$
+					\item[] > \textbf{Création thread} $\langle\langle I,\langle\langle X,C'\rangle, E\rangle~S,E,spawn~C,D\rangle,TL,SI,IP\rangle 
+					\longrightarrow_{TTSI} 
+					\\\langle\langle I,S,E,C,D\rangle,TL~\langle IP,S,E,C',D\rangle,SI,IP+1\rangle$
+					\item[] Machine TTSI $\langle\langle 0,\epsilon,\{\langle s,0\rangle,\langle s',1\rangle\},10~s~put~ap,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\{\langle 1,\epsilon,\{\langle s,0\rangle,\langle s',1\rangle\}, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present ,\\\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle\},\{\langle 0,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},2\rangle$
+					\item[] > \textbf{Constante} $\langle S,E,n~C,D\rangle 
+					\longrightarrow_{TTSI} 
+					\langle n~S,E,C,D\rangle$ avec $n$ une constante $b$ ou un signal $s$
+					\item[] Machine TTSI $\langle\langle 0,10,\{\langle s,0\rangle,\langle s',1\rangle\},s~put~ap,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\{\langle 1,\epsilon,\{\langle s,0\rangle,\langle s',1\rangle\}, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present ,\\\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle\},\{\langle 0,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},2\rangle$
+					\item[] > \textbf{Substitution} $\langle S,E,X~C,D\rangle
+					\longrightarrow_{TTSI} 
+					\langle V~S,E,C,D\rangle$ avec $E(X) = V$
+					\item[] Machine TTSI $\langle\langle 0,0~10,\{\langle s,0\rangle,\langle s',1\rangle\},put~ap,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\{\langle 1,\epsilon,\{\langle s,0\rangle,\langle s',1\rangle\}, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present ,\\\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle\},\{\langle 0,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},2\rangle$
+					\item[] > \textbf{Ajouter dans un signal} $\langle\langle I,s~b~S,E,put~C,D\rangle,TL,SI\rangle
+					\longrightarrow_{TTSI} 
+					\langle\langle I,S,E,C,D\rangle,TL,SI~[(s,I) \leftarrow b]\rangle$ 
+					\item[] Machine TTSI $\langle\langle 0,\epsilon,\{\langle s,0\rangle,\langle s',1\rangle\},ap,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\{\langle 1,\epsilon,\{\langle s,0\rangle,\langle s',1\rangle\}, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present ,\\\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle\},\{\langle 0,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\}[(0,0) \leftarrow 10],2\rangle$
+					\item[] Machine TTSI $\langle\langle 0,\epsilon,\{\langle s,0\rangle,\langle s',1\rangle\},ap,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\{\langle 1,\epsilon,\{\langle s,0\rangle,\langle s',1\rangle\}, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present ,\\\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle\},\{\langle 0,\langle true,\{\langle 0,\{10\}\rangle\},\emptyset,\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},2\rangle$
+					\item[] > \textbf{Application neutre} $\langle S,E,ap~C,D\rangle
+					\longrightarrow_{TTSI} 
+					\langle S,E,C,D\rangle$
+					\item[] Machine TTSI $\langle\langle 0,\epsilon,\{\langle s,0\rangle,\langle s',1\rangle\},\epsilon,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\{\langle 1,\epsilon,\{\langle s,0\rangle,\langle s',1\rangle\}, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present ,\\\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle\},\{\langle 0,\langle true,\{\langle 0,\{10\}\rangle\},\emptyset,\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},2\rangle$
+					\item[] > \textbf{Récupération de sauvegarde neutre} $\langle S,E,\epsilon,\langle S',E',C,D\rangle\rangle
+					\longrightarrow_{TTSI} 
+					\langle S',E',C,D\rangle$
+					\item[] Machine TTSI $\langle\langle 0,\epsilon,\emptyset,\epsilon,\emptyset\rangle,\{\langle 1,\epsilon,\{\langle s,0\rangle,\langle s',1\rangle\}, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present ,\\\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle\},\{\langle 0,\langle true,\{\langle 0,\{10\}\rangle\},\emptyset,\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},2\rangle$
+					\item[] > \textbf{Récupération dans la file d'attente} $\langle\langle I,S,E,\epsilon,\emptyset\rangle,\langle I',S',E',C,D\rangle~TL,SI\rangle 
+					\longrightarrow_{TTSI} 
+					\langle\langle I',S',E',C,D\rangle,TL,SI\rangle$
+					\item[] Machine TTSI $\langle\langle 1,\epsilon,\{\langle s,0\rangle,\langle s',1\rangle\}, s'~\langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\emptyset,\{\langle 0,\langle true,\{\langle 0,\{10\}\rangle\},\emptyset,\emptyset\rangle\rangle,\\\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},2\rangle$
+					\item[] > \textbf{Substitution} $\langle S,E,X~C,D\rangle
+					\longrightarrow_{TTSI} 
+					\langle V~S,E,C,D\rangle$ avec $E(X) = V$
+					\item[] Machine TTSI $\langle\langle 1,1,\{\langle s,0\rangle,\langle s',1\rangle\}, \langle,1\rangle~\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\emptyset,\{\langle 0,\langle true,\{\langle 0,\{10\}\rangle\},\emptyset,\emptyset\rangle\rangle,\\\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},2\rangle$
+					\item[] > \textbf{Abstraction} $\langle S,E,\langle X,C'\rangle~C,D\rangle
+					\longrightarrow_{TTSI} 
+					\langle \langle\langle X,C'\rangle,E\rangle~S,E,C,D\rangle$
+					\item[] Machine TTSI $\langle\langle 1,\langle\langle,1\rangle,\{\langle s,0\rangle,\langle s',1\rangle\}\rangle~1,\{\langle s,0\rangle,\langle s',1\rangle\}, \langle,s~0~3~get~s~0~3~get~prim_{+}\rangle~present ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\emptyset,\\\{\langle 0,\langle true,\{\langle 0,\{10\}\rangle\},\emptyset,\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},2\rangle$
+					\item[] > \textbf{Abstraction} $\langle S,E,\langle X,C'\rangle~C,D\rangle
+					\longrightarrow_{TTSI} 
+					\langle \langle\langle X,C'\rangle,E\rangle~S,E,C,D\rangle$
+					\item[] Machine TTSI $\langle\langle 1,\langle\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle,\{\langle s,0\rangle,\langle s',1\rangle\}\rangle~\langle\langle,1\rangle,\{\langle s,0\rangle,\langle s',1\rangle\}\rangle~1,\{\langle s,0\rangle,\langle s',1\rangle\},present ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\\\emptyset,\{\langle 0,\langle true,\{\langle 0,\{10\}\rangle\},\emptyset,\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},2\rangle$
+					\item[] \textbf{Thread bloqué non remplacé } $\langle\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,C,D\rangle,\emptyset,SI,IP\rangle 
+					\longrightarrow_{TTSI} 
+					\\\langle\langle IP,\emptyset,\epsilon,\emptyset,\emptyset\rangle,\emptyset,SI',IP+1\rangle$
+					avec $SI(s) = \langle faux,CS,SSI,ST\rangle$
+					\\et $SI'(s) = \langle faux,CS,SSI,ST~\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,present~C,D\rangle\rangle$
+					\item[] Machine TTSI $\langle\langle 2,\epsilon,\emptyset,\epsilon,\emptyset\rangle,\emptyset,\{\langle 0,\langle true,\{\langle 0,\{10\}\rangle\},\emptyset,\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\{\langle 1,\langle\langle,s~0~3~get~s~0~3~get~prim_{+}\rangle,\\\{\langle s,0\rangle,\langle s',1\rangle\}\rangle~\langle\langle,1\rangle, \{\langle s,0\rangle,\langle s',1\rangle\}\rangle~1,\{\langle s,0\rangle,\langle s',1\rangle\},present ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle\}\rangle\rangle\},3\rangle$
+					\item[] > \textbf{Fin d'instant logique} $\langle\langle I,S,E,\epsilon,\emptyset \rangle ,\emptyset,SI\rangle 
+					\longrightarrow_{TTSI} 
+					\langle\langle I,S,E,\epsilon,\emptyset\rangle,TL,SI'\rangle$
+					avec $\tau(SI) = (SI',TL)$
+					\item[] Machine TTSI $\langle\langle 2,\epsilon,\emptyset,\epsilon,\emptyset\rangle,\{\langle 1,\epsilon,\{\langle s,0\rangle,\langle s',1\rangle\},s~0~3~get~s~0~3~get~prim_{+} ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle\},\\\{\langle 0,\langle false,\emptyset,\{\langle 0,\{\langle 10,\emptyset\rangle\},\emptyset\rangle\},\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},3\rangle$ 
+					\item[] > \textbf{Récupération dans la file d'attente} $\langle\langle I,S,E,\epsilon,\emptyset\rangle,\langle I',S',E',C,D\rangle~TL,SI\rangle 
+					\longrightarrow_{TTSI} 
+					\langle\langle I',S',E',C,D\rangle,TL,SI\rangle$
+					\item[] Machine TTSI $\langle\langle 1,\epsilon,\{\langle s,0\rangle,\langle s',1\rangle\},s~0~3~get~s~0~3~get~prim_{+} ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\emptyset,\{\langle 0,\langle false,\emptyset,\{\langle 0,\{\langle 10,\emptyset\rangle\},\emptyset\rangle\},\emptyset\rangle\rangle,\\\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},3\rangle$ 
+					\item[] > \textbf{Substitution} $\langle S,E,X~C,D\rangle
+					\longrightarrow_{TTSI} 
+					\langle V~S,E,C,D\rangle$ avec $E(X) = V$
+					\item[] Machine TTSI $\langle\langle 1,0,\{\langle s,0\rangle,\langle s',1\rangle\},0~3~get~s~0~3~get~prim_{+} ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\emptyset,\{\langle 0,\langle false,\emptyset,\{\langle 0,\{\langle 10,\emptyset\rangle\},\emptyset\rangle\},\emptyset\rangle\rangle,\\\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},3\rangle$ 
+					\item[] > \textbf{Constante} $\langle S,E,n~C,D\rangle 
+					\longrightarrow_{TTSI} 
+					\langle n~S,E,C,D\rangle$ avec $n$ une constante $b$ ou un signal $s$
+					\item[] Machine TTSI $\langle\langle 1,0~0,\{\langle s,0\rangle,\langle s',1\rangle\},3~get~s~0~3~get~prim_{+} ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\emptyset,\{\langle 0,\langle false,\emptyset,\{\langle 0,\{\langle 10,\emptyset\rangle\},\emptyset\rangle\},\emptyset\rangle\rangle,\\\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},3\rangle$ 
+					\item[] > \textbf{Constante} $\langle S,E,n~C,D\rangle 
+					\longrightarrow_{TTSI} 
+					\langle n~S,E,C,D\rangle$ avec $n$ une constante $b$ ou un signal $s$
+					\item[] Machine TTSI $\langle\langle 1,3~0~0,\{\langle s,0\rangle,\langle s',1\rangle\},get~s~0~3~get~prim_{+} ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\emptyset,\{\langle 0,\langle false,\emptyset,\{\langle 0,\{\langle 10,\emptyset\rangle\},\emptyset\rangle\},\emptyset\rangle\rangle,\\\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},3\rangle$ 
+					\item[] > \textbf{Prendre une valeur partagée} $\langle\langle I,s~b~n~\langle\langle X,C'\rangle,E'\rangle~S,E,get~C,D\rangle,TL,SI\rangle 
+					\longrightarrow_{TTSI} 
+					\\\langle\langle I,\emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle,TL,SI\rangle$
+					\\ si pour $SI(s) = \langle emit,CS,SSI\rangle$ et $SSI(b) = \langle CI,IL\rangle$ on a $I \notin IL$ alors $\gamma(SSI(b)) = V$ sinon $n = V$
+					\item[] Machine TTSI $\langle\langle 1,10,\{\langle s,0\rangle,\langle s',1\rangle\},s~0~3~get~prim_{+} ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\emptyset,\{\langle 0,\langle false,\emptyset,\{\langle 0,\{\langle 10,\emptyset\rangle\},\{1\}\rangle\},\emptyset\rangle\rangle,\\\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},3\rangle$ 
+					\item[] > \textbf{Substitution} $\langle S,E,X~C,D\rangle
+					\longrightarrow_{TTSI} 
+					\langle V~S,E,C,D\rangle$ avec $E(X) = V$
+					\item[] Machine TTSI $\langle\langle 1,0~10,\{\langle s,0\rangle,\langle s',1\rangle\},0~3~get~prim_{+} ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\emptyset,\{\langle 0,\langle false,\emptyset,\{\langle 0,\{\langle 10,\emptyset\rangle\},\{1\}\rangle\},\emptyset\rangle\rangle,\\\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},3\rangle$ 
+					\item[] > \textbf{Constante} $\langle S,E,n~C,D\rangle 
+					\longrightarrow_{TTSI} 
+					\langle n~S,E,C,D\rangle$ avec $n$ une constante $b$ ou un signal $s$
+					\item[] Machine TTSI $\langle\langle 1,0~0~10,\{\langle s,0\rangle,\langle s',1\rangle\},3~get~prim_{+} ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\emptyset,\{\langle 0,\langle false,\emptyset,\{\langle 0,\{\langle 10,\emptyset\rangle\},\{1\}\rangle\},\emptyset\rangle\rangle,\\\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},3\rangle$ 
+					\item[] > \textbf{Constante} $\langle S,E,n~C,D\rangle 
+					\longrightarrow_{TTSI} 
+					\langle n~S,E,C,D\rangle$ avec $n$ une constante $b$ ou un signal $s$
+					\item[] Machine TTSI $\langle\langle 1,3~0~0~10,\{\langle s,0\rangle,\langle s',1\rangle\},get~prim_{+} ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\emptyset,\{\langle 0,\langle false,\emptyset,\{\langle 0,\{\langle 10,\emptyset\rangle\},\{1\}\rangle\},\emptyset\rangle\rangle,\\\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},3\rangle$ 
+					\item[] > \textbf{Prendre une valeur partagée} $\langle\langle I,s~b~n~\langle\langle X,C'\rangle,E'\rangle~S,E,get~C,D\rangle,TL,SI\rangle 
+					\longrightarrow_{TTSI} 
+					\\\langle\langle I,\emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle,TL,SI\rangle$
+					\\ si pour $SI(s) = \langle emit,CS,SSI\rangle$ et $SSI(b) = \langle CI,IL\rangle$ on a $I \notin IL$ alors $\gamma(SSI(b)) = V$ sinon $n = V$
+					\item[] Machine TTSI $\langle\langle 1,3~10,\{\langle s,0\rangle,\langle s',1\rangle\},prim_{+} ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\emptyset,\{\langle 0,\langle false,\emptyset,\{\langle 0,\{\langle 10,\emptyset\rangle\},\{1\}\rangle\},\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},3\rangle$ 
+					\item[] \textbf{Opération} $\langle b_{n},...,b_{1}~S,E,prim_{o^{n}}~C,D\rangle
+					\longrightarrow_{TTSI} 
+					\langle V~S,E,C,D\rangle$ avec $\delta(o^{n}~b_{1}...b_{n}) = V$
+					\item[] Machine TTSI $\langle\langle 1,13,\{\langle s,0\rangle,\langle s',1\rangle\},\epsilon ,\langle\epsilon,\emptyset,\epsilon,\emptyset\rangle\rangle,\emptyset,\{\langle 0,\langle false,\emptyset,\{\langle 0,\{\langle 10,\emptyset\rangle\},\{1\}\rangle\},\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},3\rangle$ 
+					\item[] > \textbf{Récupération de sauvegarde} $\langle V~S,E,\epsilon,\langle S',E',C,D\rangle\rangle
+					\longrightarrow_{TTSI} 
+					\langle V~S',E',C,D\rangle$
+					\item[] Machine TTSI $\langle\langle 1,13,\emptyset,\epsilon,\emptyset\rangle,\emptyset,\{\langle 0,\langle false,\emptyset,\{\langle 0,\{\langle 10,\emptyset\rangle\},\{1\}\rangle\},\emptyset\rangle\rangle,\langle 1,\langle false,\emptyset,\emptyset,\emptyset\rangle\rangle\},3\rangle$ 
 				\end{itemize}
 				\newpage
 				
@@ -2756,9 +2899,6 @@
 			\item[] [1] \textit{Réactivité des systèmes coopératifs : le cas Réactive ML} de Louis Mandrel et Cédric Pasteur\label{ReactiveML}
 			\item[] [2] \textit{The ZINC experiment: an economical implementation of the ML language} de Xavier Leroy\label{ZINC}
 			\item[] [3] \textit{Programming Languages And Lambda Calculi} de Mathias Felleisen et Matthew Flatt\label{Calculi}
-			\item[] [4] \textit{https://www.irif.fr/~carton/Enseignement/Complexite/MasterInfo/Cours/turing.html}\label{Turing}
-			\item[] [5] \textit{https://fr.wikipedia.org/wiki/Automate$\_$fini$\_$déterministe}\label{AFD}
-			\item[] [6] \textit{https://fr.wikipedia.org/wiki/Algorithme$\_$déterministe}\label{MFD}
 		\end{itemize}
 		
 		
