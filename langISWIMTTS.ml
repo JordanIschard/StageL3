@@ -31,34 +31,7 @@ module ISWIM =
 
 
 
-
-
-
-
-
-
-    (***** Exception *****)
-
-    exception OpFormatError
-
-
-
-
-
-
-
-
-
-
     (**** Affichage ****)
-
-    (* Concatène tous les éléments d'une liste entre eux *)
-    let rec concat_string_liste liste =
-      match liste with
-          []    ->   ""
-
-        | h::t  ->   h^" "^(concat_string_liste t)
-
 
     (* Convertit un opérateur en chaîne de caractère *)
     let string_of_operateur op =

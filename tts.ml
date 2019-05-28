@@ -24,7 +24,6 @@ module MachineTTS =
         Constant of int                                         (* constante b                    *)
       | Variable of variable                                    (* variable X                     *)
       | Pair of variable * c list                               (* abstraction                    *)
-      | Signal of id_signal                                     (* un signal                      *)
 
       | Prim of operateur                                       (* opérateur                      *)
       | Ap                                                      (* application                    *)
@@ -58,8 +57,7 @@ module MachineTTS =
 
     (* type intermédiaire contenant une fermeture qui lie une abstraction à un environnement ou une constante ou encore un signal *)
     type s =  
-        Stack_signal of id_signal                             (* signal               *)
-      | Stack_const of int                                    (* constante            *)
+        Stack_const of int                                    (* constante            *)
       | Closure of (control_string * environment)             (* fermeture (C,Env)    *)
 
     
@@ -123,27 +121,17 @@ module MachineTTS =
 
     (**** Exception ****)
 
-    exception AFaire
     exception NoSubPossible                    (* Aucune substitution possible pour cette variable dans l'environnement             *)
     exception StrangeEnd                       (* Même moi je ne sais pas ce qu'il sait passé ...                                   *)
-    exception EndSpawnNotFound                 (* La délimitation de fin du spawn n'est pas trouvé dans la chaîne de contrôle       *)
 
     exception NotAllConstants                  (* Tous les éléments de la pile prisent pour l'opérateurs ne sont pas des constantes *)
     exception InsufficientOperandNb            (* Le nombre d'opérande est insuffisante par rapport au nombre requis                *)
     exception DivZero
 
-    exception SignalAlreadyInit                (* Le signal est déjà initialisé dans ce thread                                      *)
-    exception SignalNotInit                    (* Le signal n'est pas initialisé dans ce thread                                     *)
-    exception SignalNotShared                  (* Le signal n'est pas dans la liste des signaux partagés                            *)
-    exception ThreadSharedNotFound             (* L'identifiant de thread lié à un signal n'existe pas                              *)
-    exception PointerNotExist                  (* Le pointeur n'existe pas                                                          *)
 
     exception UnknowStackState                 (* Le format de la pile est invalide et/ou inconnu                                   *)
     exception UnknowEnvState                   (* Le format de l'environnement est invalide et/ou inconnu                           *)
-    exception UnknowWaitState                  (* Le format de la liste d'attente est invalide et/ou inconnu                        *)
     exception UnknowStuckState                 (* Le format de la liste d'élément bloqués est invalide et/ou inconnu                *)
-    exception UnknowDumpState                  (* Le format du dépôt est invalide et/ou inconnu                                     *)
-    exception UnknowHandlerState               (* Le format du gestionnaire d'erreur est invalide et/ou inconnu                     *)
     exception UnknowSignalState                   (* Le format de la liste de signaux partagés est invalide                         *)
 
 
@@ -199,8 +187,6 @@ module MachineTTS =
         | Variable var::t                    ->   var^" "^(string_of_control_string t)
       
         | Ap::t                              ->   "ap "^(string_of_control_string t)
-
-        | Signal signal::t                   ->   (string_of_int signal)^" "^(string_of_control_string t)
       
         | Pair(abs,expr_list)::t             ->   "<"^abs^", "^(string_of_control_string expr_list)^"> "^(string_of_control_string t)
       
@@ -233,8 +219,6 @@ module MachineTTS =
     let rec string_of_stack stack =
       match stack with
           []                                ->   ""
-
-        | Stack_signal signal::t            ->   (string_of_int signal)^" "^(string_of_stack t)
 
         | Stack_const b::t                  ->   (string_of_int b)^" "^(string_of_stack t)
 
@@ -334,8 +318,6 @@ module MachineTTS =
                                                       then  match control_string with
                                                                 [Constant b]  ->   Stack_const b 
 
-                                                              | [Signal s]    ->   Stack_signal s
-
                                                               | _             ->   raise UnknowEnvState
                 
                                                       else substitution x t
@@ -352,17 +334,6 @@ module MachineTTS =
                                                                                                          else append [EnvClos(var1,closure)] (add_env t varToRep stack_element)
 
                                                   | EnvVar(var1,control_string)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Constant b])] t 
-                                                                                                               else append [EnvVar(var1,control_string)] (add_env t varToRep stack_element)
-                                              end
-
-      | Stack_signal(signal)            ->    begin 
-                                                match env with
-                                                    [] -> [EnvVar(varToRep,[Signal signal])]
-
-                                                  | EnvClos(var1,closure)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Signal signal])] t 
-                                                                                                         else append [EnvClos(var1,closure)] (add_env t varToRep stack_element)
-
-                                                  | EnvVar(var1,control_string)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Signal signal])] t 
                                                                                                                else append [EnvVar(var1,control_string)] (add_env t varToRep stack_element)
                                               end
 
@@ -406,9 +377,9 @@ module MachineTTS =
     (* Initialise un signal *)
     let rec init_signal si = 
       match si with
-          []              ->   (Stack_signal 0,[(0,(false,[]))])     
+          []              ->   (Stack_const 0,[(0,(false,[]))])     
         
-        | [(id_s,data)]   ->   (Stack_signal (id_s+1), append [(id_s,data)] [(id_s+1,(false,[]))])
+        | [(id_s,data)]   ->   (Stack_const (id_s+1), append [(id_s,data)] [(id_s+1,(false,[]))])
 
         | (id_s,data)::t  ->   let (res,new_si) = init_signal t in (res, append [(id_s,data)] new_si)
 
@@ -440,7 +411,7 @@ module MachineTTS =
       match tl with
           [] -> []
 
-        | Thread(Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_signal signal::s,e,Present::c,d)::t -> append [Thread(s,e,append c2 c,d)] (other_choice t)
+        | Thread(Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d)::t -> append [Thread(s,e,append c2 c,d)] (other_choice t)
 
         | _ -> raise UnknowStuckState
     
@@ -519,9 +490,6 @@ module MachineTTS =
         (* On a la chaîne de contrôle vide et le dépôt à une sauvegarde, on prends la sauvegarde et on l'applique sur la machineTTS *)
         | MachineTTS(Thread(s,e,[],Save(s1,e1,c,d)),tl,si)                 ->    MachineTTS( Thread( s1 , e1 , c , d ) , tl , si )
 
-          (* On a un signal dans la chaîne de contrôle, on le mets dans la pile *)
-        | MachineTTS(Thread(s,e,Signal signal::c,d),tl,si)                 ->    MachineTTS( Thread( Stack_signal signal::s , e , c , d ) , tl , si )
-
 
           (* On a Bspawn dans la chaîne de contrôle, on prends la partie de la chaîne de contrôle compris entre Bspawn et Espawn et le mets dans un nouveau thread *)
         | MachineTTS(Thread(Closure([Pair(_,c1)],_)::s,e,Spawn::c,d),tl,si)
@@ -533,14 +501,14 @@ module MachineTTS =
           ->    let (signal,new_si) = init_signal si in MachineTTS( Thread( signal::s , e , c , d ) , tl , new_si )
 
 
-        | MachineTTS(Thread(Stack_signal signal::s,e,Emit::c,d),tl,si)                   
+        | MachineTTS(Thread(Stack_const signal::s,e,Emit::c,d),tl,si)                   
           ->    let (st,new_si) = emit_signal si signal in MachineTTS( Thread( s , e , c , d ) , append tl st , new_si )
 
           (* On a un present dans la chaîne de contrôle, on regarde si le signal est émit : si oui on prends la première possibilités sinon on le mets dans la liste de threads bloqués *)
-        | MachineTTS(Thread(Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_signal signal::s,e,Present::c,d),tl,si)               
+        | MachineTTS(Thread(Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d),tl,si)               
           ->    if (isEmit si signal)
                   then MachineTTS( Thread( s , e , (append c1 c) , d ) , tl , si )
-                  else let st = Thread(Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_signal signal::s,e,Present::c,d) in
+                  else let st = Thread(Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d) in
                       begin 
                         match tl with
                             []                        ->   MachineTTS( Thread( [] , [] , [] , Empty ) , [] , (add_stuck si signal st) )
@@ -575,7 +543,7 @@ module MachineTTS =
         
 
           (* Je ne connais pas cette état ... *)
-        | _                                                                       ->    raise StrangeEnd
+        | _                                                                ->    raise StrangeEnd
 
 
     (* Applique les règles de la machine TTS en affichant ou non les étapes *)
