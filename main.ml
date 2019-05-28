@@ -27,6 +27,15 @@ let expression2 = (App(Abs("x",Abs("y",App(Var "x", Var "y"))),Abs("y",App(Var "
 let expression3 = (App(Abs("z",Abs("b",App(Var "z", Var "b"))),Abs("a",App(Var "a",Var "g"))));;
 let expression4 = (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
 let expression5 = (App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1));;
+let expression6 = (App(
+                        Abs("x",App(Var "x",Var "x"))
+                      , Abs("y",App(
+                                     Abs("x",Var "x")
+                                    ,Abs("x",Var "x")
+                                   )
+                           )
+                      )
+                  );;
 
 afficherExpr expression ;;
 let res = beta_red expression ;;
@@ -55,12 +64,20 @@ Printf.printf "Réduction \n" ;;
 let res4 = n_red expression4 ;;
 Printf.printf "\n" ;;
 
+
+Printf.printf "Réduction \n" ;;
+let res4 = n_red expression6;;
+Printf.printf "\n" ;;
+(*
 Printf.printf "Test de la MachineCC\n\n" ;;
 
 lancerCC expression5 ;;
 Printf.printf "\n" ;;
 
 lancerCC expression4 ;;
+Printf.printf "\n" ;;
+
+lancerCC expression6 ;;
 Printf.printf "\n" ;;
 
 Printf.printf "Test de la MachineSCC\n\n" ;;
@@ -114,3 +131,4 @@ Printf.printf "\n" ;;
 
 lancerSECD expression4 ;;
 Printf.printf "\n" ;;
+*)

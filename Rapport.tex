@@ -310,7 +310,7 @@ Cependant cette substitution est régie par une suite de règles qui sont les su
 
 
 \subsection{Forme normale}
-
+\change[inline]{A retravailler entièrement l'explication pour la forme normale}
 \textit{Une expression est une forme normale si on ne peut pas réduire l'expression via une $\beta$ ou $\eta$ rédution.}
 \medbreak
 
@@ -338,20 +338,30 @@ Le problème se pose lorsqu'on évalue un argument de la fonction qui n'est jama
   \\ et  $\forall~L$, $(M~N)~\beta~L$ impossible et $(M~N)~\eta~L$ impossible
 \end{itemize}
 \smallbreak
-Cette solution est sûre mais reste peut utilisée car elle est assez lente.
-\improvement[inline]{A justifier}
+Cette solution est sûre mais reste peut utilisée car elle est assez lente. Le problème vient du faite que l'on ne prend pas forcément la meilleure réduction à faire. Je vais l'illustrer à travers un exemple
+\begin{ex}
+	On prend $((\lambda x.(x~x))~(\lambda y.((\lambda x.x)~((\lambda x.x)))$. SI on suit les règles de la forme normale on va faire la séquence suivante :
+	\begin{itemize}
+		\item[] $\underline{((\lambda x.(x~x))~(\lambda y.((\lambda x.x)~(\lambda x.x))))}$
+		\item[$\rightarrow_{n}^{\beta}$] $(x~x)[x \leftarrow (\lambda y.((\lambda x.x)~(\lambda x.x)))]$
+		\item[] $((\lambda y.((\lambda x.x)~(\lambda x.x)))~(\lambda y.((\lambda x.x)~(\lambda x.x))))$
+	\end{itemize}
+\end{ex}
 \medbreak
 
 Pour évaluer un langage, on utilise ce qui s'appelle une \textbf{stratégie d'évaluation}. Cette stratégie explique quand les arguments d'une fonction est évalué. Je vous présente les 2 stratégies qui nous intéresse :
 \begin{enumerate}
-\item \textbf{l'appel par nom :} pour une fonction f donnée, on évalue chaque arguments quand on en a besoin, c'est-à-dire que l'on évalue pas les arguments avant l'appel de la fonction. Cette stratégie est pratique quand on a des arguments non utilisé  et quand on veut travailler avec des listes infinies. Mais par contre si tous les arguments sont utilisés cette stratégie est plus lente que celle présentée après car on doit réévaluer les arguments à chaque fois. 
-  \\Cette stratégie fait partie du groupe des stratégie d'évaluation non stricte, c'est-à-dire qu'il n'évalue pas forcément la fonction en entier. 
-  \smallbreak
-  \textbf{Exemple :} Pour une fonction $fst$ tels que pour deux arguments $x$ et $y$ on retourne le 1er. Si on a : $fst(3+4,5/5)$ on va évalué $3+4$. Ce qui donne $fst(7,5/5)$ et on retourne 7 on n'évalue pas $5/5$.
+\item \textbf{l'appel par nom :} pour une fonction f donnée, on évalue chaque arguments quand on en a besoin, c'est-à-dire que l'on évalue pas les arguments avant l'appel de la fonction. Cette stratégie est pratique quand on a des arguments non utilisés  et quand on veut travailler avec des listes infinies. 
+\\Mais par contre si tous les arguments sont utilisés elle est plus lente que celle présentée après car on doit réévaluer les arguments à chaque fois. Elle fait partie du groupe des stratégie d'évaluation non stricte, c'est-à-dire qu'il n'évalue pas forcément la fonction en entier. 
+  \begin{ex}
+  	Pour une fonction $fst$ tels que pour deux arguments $x$ et $y$ on retourne le 1er. Si on a : $fst(3+4,5/5)$ on va évalué $3+4$. Ce qui donne $fst(7,5/5)$ et on retourne 7 on n'évalue pas $5/5$.
+  \end{ex}
+\item[]
 \item  \textbf{l'appel par valeurs :} pour une fonction g donné, on évalue ces arguments avant d'évalué la fonction.
   \\Cette stratégie fait partie du groupe des stratégie d'évaluation stricte, c'est-à-dire qu'il évalue forcément la fonction en entier.
-  \smallbreak
-  \textbf{Exemple :} Pour une fonction $fst$ tels que pour deux arguments $x$ et $y$ on retourne le 1er. Si on a : $fst(3+4,5/5)$ on va évalué $3+4$. Ce qui donne $fst(7,5/5)$, on évalue $5/5$ . On arrive à $fst(7,1)$ et on retourne 7.
+  \begin{ex}
+  	Pour une fonction $fst$ tels que pour deux arguments $x$ et $y$ on retourne le 1er. Si on a : $fst(3+4,5/5)$ on va évalué $3+4$. Ce qui donne $fst(7,5/5)$, on évalue $5/5$ . On arrive à $fst(7,1)$ et on retourne 7.
+  \end{ex}
 \end{enumerate}
 \medbreak
 
@@ -937,6 +947,9 @@ la machine SECD peut s'arrêter dans 3 états différents:
 
 \paragraph{Explication formelle}
 En informatique, la programmation réactive est un paradigme de programmation déclarative qui concerne les flux de données et la propagation du changement. Avec ce paradigme, il est possible d’exprimer facilement des flux de données statiques (par exemple, des tableaux) ou dynamiques (par exemple, des émetteurs d’événements) et également de signaler l’existence d’une dépendance inférée au sein du modèle d’exécution associé, ce qui facilite la propagation automatique des données modifiées.
+\medbreak
+
+\paragraph{Historique} (en cours)
 \medbreak
 
 On s'intéresse à une spécification de la programmation réactive : la \textbf{programmation réactive synchrone concurrente}.
