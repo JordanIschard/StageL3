@@ -68,7 +68,7 @@ Printf.printf "\n" ;;
 Printf.printf "Réduction \n" ;;
 let res4 = n_red expression6;;
 Printf.printf "\n" ;;
-(*
+
 Printf.printf "Test de la MachineCC\n\n" ;;
 
 lancerCC expression5 ;;
@@ -80,12 +80,17 @@ Printf.printf "\n" ;;
 lancerCC expression6 ;;
 Printf.printf "\n" ;;
 
+(*
+
 Printf.printf "Test de la MachineSCC\n\n" ;;
 
 lancerSCC expression5 ;;
 Printf.printf "\n" ;;
 
 lancerSCC expression4 ;;
+Printf.printf "\n" ;;
+
+lancerSCC expression6 ;;
 Printf.printf "\n" ;;
 
 
@@ -101,6 +106,10 @@ Printf.printf "\n" ;;
 
 lancerCK expression4 ;;
 Printf.printf "\n" ;;
+
+lancerCK expression6 ;;
+Printf.printf "\n" ;;
+
 
 Printf.printf " Test de la MachineCEK\n\n" ;;
 
@@ -119,6 +128,9 @@ Printf.printf "\n" ;;
 lancerCEK expression4 ;;
 Printf.printf "\n" ;;
 
+lancerCEK expression6 ;;
+Printf.printf "\n" ;;
+
 Printf.printf " Test de la MachineSECD\n\n" ;;
 
 afficherExpr expression5 ;;
@@ -131,4 +143,6 @@ Printf.printf "\n" ;;
 
 lancerSECD expression4 ;;
 Printf.printf "\n" ;;
-*)
+
+lancerSECD expression6 ;;
+Printf.printf "\n" ;;*)

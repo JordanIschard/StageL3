@@ -19,7 +19,13 @@ module SCCMachine =
 
     (**** Affichage ****)
 
+
+    (* Convertit une expression et une liste d'expression en chaîne de caractère *)
+    let string_of_cc cs c = "("^(string_of_expr cs )^" ,[ "^(concat_string_liste( map string_of_expr c ))^"])\n"
+
     (* Affiche une étape de la machine SCC *)
+    
+
     let afficherSCC cs c = printf "MachineSCC : %s" (string_of_cc cs c)
 
 

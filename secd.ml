@@ -80,7 +80,7 @@ module SECDMachine =
       
         | Ap::t                    ->   "ap "^(string_of_control_string t)
       
-        | Pair(abs,liste_expr)::t  ->   "("^abs^",("^(string_of_control_string liste_expr)^") "^(string_of_control_string t)
+        | Pair(abs,liste_expr)::t  ->   "( "^abs^"."^(string_of_control_string liste_expr)^") "^(string_of_control_string t)
       
         | Prim op::t               ->   "prim "^(string_of_operateur op)^" "^(string_of_control_string t)
 
