@@ -391,6 +391,17 @@ module MachineTTS =
 
         | (id_s,data)::t  ->   if (id_s = signal) then (aux data) else (isEmit t signal)
 
+    
+    let rec emit_signal si signal =
+      let aux data =
+        match data with
+            (_,st) -> (st,(true,[]))
+      in
+      match si with
+          [] -> raise UnknowSignalState
+
+        | (id_s,data)::t  -> if (id_s = signal) then let (st,new_data) = aux data             in (st,append [(id_s,new_data)] t)
+                                                else let (st,new_si)   = emit_signal t signal in (st,append [(id_s,data)] new_si)
 
     (* Initialise un signal *)
     let rec init_signal si = 
@@ -521,6 +532,9 @@ module MachineTTS =
         | MachineTTS(Thread(s,e,InitSignal::c,d),tl,si)                   
           ->    let (signal,new_si) = init_signal si in MachineTTS( Thread( signal::s , e , c , d ) , tl , new_si )
 
+
+        | MachineTTS(Thread(Stack_signal signal::s,e,Emit::c,d),tl,si)                   
+          ->    let (st,new_si) = emit_signal si signal in MachineTTS( Thread( s , e , c , d ) , append tl st , new_si )
 
           (* On a un present dans la chaîne de contrôle, on regarde si le signal est émit : si oui on prends la première possibilités sinon on le mets dans la liste de threads bloqués *)
         | MachineTTS(Thread(Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_signal signal::s,e,Present::c,d),tl,si)               
