@@ -171,23 +171,23 @@ car il est bien détailler et assez accessible pour un novice comme moi.
 \section{$\lambda$-calcul : sémantique et machines abstraites}
 
 Le $\lambda$-calcul est un système formel inventé par Alonzo Church dans les années 1930, qui fonde les concepts de fonction et
-d'application. On y manipule des expressions appelées $\lambda$-expressions, où la lettre grecque $\lambda$ est utilisée pour
-lier une variable.
-\improvement{Donner plus d'intuition sur la notion d'abstraction.}
+d'application. On y manipule des expressions appelées $\lambda$-expressions, où la lettre grecque $\lambda$ est utilisée pour lier une variable. On va lier une variable à une $\lambda$-expression, le composant créé est nommé \textit{abstraction}. On peut voir une \textit{abstraction} comme une fonction qui a un paramètre. On va revoir ce point dans l'introduction de la syntaxe et de la sémantique.
 \improvement[inline]{Le $\lambda$-calcul est le modèle le plus communément accepté du calcul séquentiel.}
 \subsection{Le $\lambda$-calculs : syntaxe et sémantique}
 
 \paragraph{Les termesdu $\lambda$-calcul :}
  Il y a trois termes qui composent les $\lambda$-expressions :
 \begin{enumerate}
-\item les variables : $\{x, y...\}$ sont des $\lambda$-termes 
-\item les applications : $(u~v)$ est un $\lambda$-terme si $u$ et $v$ sont des $\lambda$-termes , on peut voir l'application
-  comme ceci : si $u$ est une fonction et $v$ un argument, alors $(u~v)$ est le résultat de l'application à $v$ de la fonction $u$; 
-\item les abstractions : $\lambda x.(v)$ est un $\lambda$-terme si $x$ est une variable et $v$ un $\lambda$-terme, on peut voir
-  l'abstraction comme ceci : $\lambda x.(v)$ peut être interprétée comme la fonction qui à $x$, associe $v$, où $v$ contient en
-  général des occurrences de $x$.
+\item les variables : $\{x, y...\}$ sont des $\lambda$-termes. Ce sont des variables comme on peut trouver partout dans les langages de programmations; 
+\item les abstractions : $\lambda x.(v)$ est un $\lambda$-terme si $x$ est une variable et $v$ un $\lambda$-terme. On peut voir une abstraction comme une fonction comme dit plus haut.
+\begin{ex}
+	On prend la fonction toute simple $f$ qui à $y$ associe $y+1$. Si on revient au $\lambda$-calcul : $y$ sera notre variable lié à $\lambda$ (c'est $x$ dans l'abstraction $\lambda x.(v)$) et $y+1$ sera la $\lambda$-expression (c'est $v$ dans l'abstraction $\lambda x.(v)$). Quand on utilise la fonction $f$ on va donner une valeur à $y$ et on remplacera $y$ par cette valeur dans $y+1$. Les $\lambda$-expressions fonctionnent de façon semblable.
+\end{ex}
+\item les applications : $(u~v)$ est un $\lambda$-terme si $u$ et $v$ sont des $\lambda$-termes. L'application a un nom assez explicite, il va appliquer l'élément de droite à celui de gauche, c'est-à-dire qu'il va appliquer $v$ à $u$. Cette application ce fait avec $u$ une abstraction et $v$ une $\lambda$-expression. 
+\begin{ex}
+	Si on prend un exemple dans Ocaml, on a la fonction $string\_of\_int$ pour pouvoir l'utiliser on va faire $string\_of\_int~3$. C'est exactement de la forme $(u~v)$.  
+\end{ex}
 \end{enumerate}
-\improvement[inline]{Donner l'intuition des règles au fur et à mesure de leur introduction}
 \bigbreak
 
 \subparagraph{Les règles de réduction :}
@@ -197,21 +197,35 @@ comment les faire interagir entre eux. On évalue les $\lambda$-calculs par une 
 l'application. Il existe trois règles de \textbf{réduction générale :}
 \begin{itemize}
 \item[-] $(\lambda X_{1}.M)~~~~~~~~~~~~~~~~~~~\alpha~~~~~~~(\lambda X_{2}.M[X_{1} \leftarrow X_{2}])$
-  où $X_{2}~\notin~FV(M)$ : elle sert à renommer les variables
-\item[-] $((\lambda X.M_{1})M_{2})~~~~~~~~~~~~\beta~~~~~~~~M_{1}[X \leftarrow M_{2}]$ : elle substitue une variable par un $\lambda$-terme
+  où $X_{2}~\notin~FV(M)$ 
+  \\
+  elle sert à renommer les variables. On peut comparer cela à une réecriture d'une expression pour rendre plus lisible la lecture et moins ambigüe.
+  \begin{ex}
+  	
+  \end{ex}
+\improvement[inline]{Trouver un exemple}
+\item[-] $((\lambda X.M_{1})M_{2})~~~~~~~~~~~~\beta~~~~~~~~M_{1}[X \leftarrow M_{2}]$ 
+\\
+elle substitue une variable par un $\lambda$-terme. C'est la réduction principale, elle fait ce que j'ai expliqué plus haut avec l'\textit{abstraction} : elle va remplacer la variable en paramètre par une $\lambda$-expression.
+\begin{ex}
+	
+\end{ex}
+\improvement[inline]{Trouver un exemple}
 \item[-] $(\lambda X.(M~X))~~~~~~~~~~~~~~\eta~~~~~~~~M$ 
-  où $X~\notin~FV(M)$ : elle représente le cas où $g$ est une fonction qui à $x$ associe $f(x)$  telle que $f$ est une fonction
-  alors autant utiliser directement la fonction $f$.
+  où $X~\notin~FV(M)$ 
+  \\ Cette règle traite le cas particulier d'une fonction inutile.
+  \begin{ex}
+  	On a $g$ une fonction qui à $x$ associe $f(x)$. On aura donc $g(x) = f(x)$. La fonction $g$ devient obsolète. Ici c'est pareil, on a $(\lambda X.(M~X))$ quand on va appliquer une $\lambda$-expression $N$ on va avoir $((\lambda X.(M~X))~N)$. Si on suit la $\beta$-réduction on va substituer $X$ par $N$. On aura donc $(M~N)$. Cela revient au même dans la cas ou on utilise l'$eta$-réduction.
+  \end{ex}
 \end{itemize}
-\improvement[inline]{Donner l'intuition des règles au fur et à mesure de leur introduction. Expliquer la substitution avant en donnant l'intuition.}
 \medbreak
 
-\textit{La réduction générale \textbf{n} = $\alpha \cup \beta \cup \eta$}.
+\textbf{\textit{La réduction générale \textbf{n} = $\alpha \cup \beta \cup \eta$}.}
 \bigbreak
 
 
 On peut remarquer que dans les règles on a une forme particulière : $N [X \leftarrow M]$ avec deux $\lambda$-termes $M$ ,
-$N$ et une variable $X$. Cette forme signifie que l'on va remplacer toutes les occurences de $X$ par $M$ dans le $\lambda$-terme $N$.
+$N$ et une variable $X$. Cette forme signifie que l'on va remplacer toutes les occurences de $X$ par $M$ dans la $\lambda$-expression $N$.
 Cependant cette substitution est régie par une suite de règles qui sont les suivantes: 
 \begin{itemize}
 \item $X_{1}[X_{1} \leftarrow M]~= M$
@@ -788,7 +802,7 @@ la machine CEK peut s'arrêter dans 3 états différents:
 	\end{itemize}
 	\medbreak
 	
-	L'exemple complet peut être retrouvé dans l'\hyperref[CEK]{Annexe 6.1.2}.
+	L'exemple complet peut être retrouvé en Annexe \hyperref[CEK]{page 32}.
 \end{ex}
 \bigbreak
 
@@ -879,7 +893,7 @@ la machine SECD peut s'arrêter dans 3 états différents:
 
 
 \begin{ex}
-	Voyons sur un exemple les avantages de cette machine. Un exemple étant assez long, on va s'intéresser à certaines parties. L'exemple complet est disponible dans l'\hyperref[SECD]{Annexe 6.1.3}. 
+	Voyons sur un exemple les avantages de cette machine. Un exemple étant assez long, on va s'intéresser à certaines parties. L'exemple complet est disponible en Annexe \hyperref[SECD]{page 33}. 
 	\\
 	On va tester la machine sur la $\lambda$-expression suivante : $(((\lambda f.\lambda x.f$ $x)$ $\lambda y.(+$ $y$ $y))$ $\ulcorner 1\urcorner)$ .
 	\bigbreak
@@ -1877,7 +1891,7 @@ Ce stage m'a permi d'entrevoir le monde de la recherche, ses avantages et ses in
 
 \chapter*{Annexes}
 
-\subsection{Les Exemples des machines étudiées}
+\subsection*{Les Exemples des machines étudiées}
 
 \subsubsection{Exemple de fonctionnement de la machine CK}\label{CK}
 
@@ -2261,7 +2275,7 @@ Voici un exemple de fonctionnement de la machine SECD :
  			\end{itemize}
  			\newpage
 
-\subsection{Les différentes versions faite pour rendre la machine SECD concurrente}
+\subsection*{Les différentes versions faite pour rendre la machine SECD concurrente}
 
 Cette partie énumére les différentes versions créées depuis le début du stage jusqu'à ce jour. Elle paraissent compliqué à comprendre à cause de leurs format qui est bien trop lourd mais elle garde le même principe que celle exprimé plus haut dans le rapport. Il ne faut donc pas avoir peur de chercher à comprendre.
 
