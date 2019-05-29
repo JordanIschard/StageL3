@@ -16,6 +16,7 @@ module ISWIM =
       | Sub
       | Mult
       | Div 
+      | Add4
 
     type exprISWIM = 
         Var of string 
@@ -74,6 +75,8 @@ module ISWIM =
         | Mult    ->   "*"
       
         | Div     ->   "/"
+
+        | Add4    ->   "+ + +"
       
 
     (* Convertit une expression en chaîne de caractère *)
@@ -119,13 +122,15 @@ module ISWIM =
 
         | Add | Sub | Mult | Div  ->   2
 
+        | Add4 -> 4
+
 
     (* Donne l'ensemble des variables *)
     let rec liste_variable expression =
       match expression with
           Var var             ->   [var]
         
-        | Abs(abs,expr)       ->   liste_variable expr
+        | Abs(abs,expr)       ->   append [abs] (liste_variable expr)
       
         | App(expr1,expr2)    ->   append (liste_variable expr1) (liste_variable expr2)
       
@@ -217,7 +222,7 @@ module ISWIM =
 
     (* Donne un nouveau nom de var (À améliorer pour éviter la liste finie) *)
     let renommage liste_interdit =
-      let variables = ["x";"y";"z";"w"] in
+      let variables = ["x";"y";"z1";"w1"] in
       let rec aux liste_interdit variables =
         match variables with
           | []    ->   "lkihgoihoi"
@@ -229,10 +234,10 @@ module ISWIM =
 
     (* Renomme si nécessaire *)
     let renommer abs expr varARemp varDeRemp =
-      let libreexpr = libre expr in let librevarDeRemp = libre varDeRemp 
+      let variables = liste_variable varDeRemp
       in
-      let rec aux abs =
-        if((mem abs libreexpr) || (mem abs librevarDeRemp)) then aux (renommage (append libreexpr librevarDeRemp)) else abs
+      let rec aux abs = 
+        if(mem abs variables) then aux (renommage variables) else abs
       in 
       aux abs
 
@@ -247,7 +252,7 @@ module ISWIM =
 
         | Op(op,liste_expr)  ->   Op(op,(map (fun x -> reduction varARemp x varDeRemp) liste_expr))
 
-        | Abs(abs,expr)      ->   if ( equal abs varARemp) then Abs(abs,expr) else 
+        | Abs(abs,expr)      ->   if (equal abs varARemp) then Abs(abs,expr) else 
                                                                                let newX = (renommer abs expr varARemp varDeRemp) in
                                                                                Abs(newX,(reduction varARemp (reduction abs expr (Var newX)) varDeRemp))
 
@@ -284,6 +289,8 @@ module ISWIM =
           | (Mult,[h;h1])  ->   Const (h*h1)
           
           | (Div,[h;h1])   ->   Const (h/h1) 
+
+          | (Add4,[h;h1;h2;h3]) -> Const (h+h1+h2+h3)
           
           | (_,_)          ->   raise FormatOpErreur
 

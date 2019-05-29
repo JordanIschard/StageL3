@@ -12,19 +12,18 @@ module CEKMachine =
 
     (**** Types ****)
 
+    (* Type représentant une fermeture *)
     type  fermeture =  Fermeture of exprISWIM * (string *  fermeture) list
 
-    
-    type k_CEK = 
-        Fun_CEK of  fermeture * k_CEK
-      | Arg_CEK of  fermeture * k_CEK
-      | Opd_CEK of ( fermeture list * operateur) * ( fermeture list) * k_CEK
-      | MT_CEK
+    (* Type représentant la continuation *)
+    type k = 
+        Fun of  fermeture * k
+      | Arg of  fermeture * k
+      | Opd of ( fermeture list * operateur) * ( fermeture list) * k
+      | MT
 
-
-
-
-
+    (* Type représentant la machine CEK *)
+    type machineCEK = MachineCEK of fermeture * k
 
 
 
@@ -38,20 +37,14 @@ module CEKMachine =
 
 
 
-
-
-
-
-
-
     (**** Affichage ****)
 
     (* Vérifie si le registre est vide *)
-    let estMT_CEK mt =
+    let estMT mt =
       match mt with
-          MT_CEK  ->   true
+          MT  ->   true
         
-        | _       ->   false
+        | _   ->   false
 
 
     (* Convertit une  fermeture en chaîne de caractère *)
@@ -65,32 +58,31 @@ module CEKMachine =
 
 
     (* Convertit le registre en chaîne de caractère *)
-    let rec string_of_registre_CEK registre =
+    let rec string_of_registre registre =
       match registre with 
-          (Fun_CEK( fermeture,mt))                             ->   if (estMT_CEK mt) then "(fun , "^(string_of_fermeture  fermeture)^" , mt)"
-                                                                                      else "(fun , "^(string_of_fermeture  fermeture)^" , "^(string_of_registre_CEK mt)^")"
+          (Fun( fermeture,mt))                             ->   if (estMT mt) then "(fun , "^(string_of_fermeture  fermeture)^" , mt)"
+                                                                                      else "(fun , "^(string_of_fermeture  fermeture)^" , "^(string_of_registre mt)^")"
       
-        | (Arg_CEK( fermeture,mt))                             ->   if (estMT_CEK mt) then "(arg , "^(string_of_fermeture  fermeture)^" , mt)"
-                                                                                      else "(arg , "^(string_of_fermeture  fermeture)^" , "^(string_of_registre_CEK mt)^")"
+        | (Arg( fermeture,mt))                             ->   if (estMT mt) then "(arg , "^(string_of_fermeture  fermeture)^" , mt)"
+                                                                                      else "(arg , "^(string_of_fermeture  fermeture)^" , "^(string_of_registre mt)^")"
        
-        | (Opd_CEK((liste_fermeture,op),liste_fermeture1,mt))  ->   if (estMT_CEK mt) 
+        | (Opd((liste_fermeture,op),liste_fermeture1,mt))  ->   if (estMT mt) 
                                                                       then   "(opd , ["^(concat_string_liste( map string_of_fermeture liste_fermeture ))^", "^(string_of_operateur op)^"] , [ "
                                                                             ^(concat_string_liste( map string_of_fermeture liste_fermeture1 ))^"] , mt)"
                                                                       else   "(opd , ["^(concat_string_liste( map string_of_fermeture liste_fermeture ))^", "^(string_of_operateur op)^"] , [ "
-                                                                            ^(concat_string_liste( map string_of_fermeture liste_fermeture1 ))^"] , "^(string_of_registre_CEK mt)^")"
+                                                                            ^(concat_string_liste( map string_of_fermeture liste_fermeture1 ))^"] , "^(string_of_registre mt)^")"
                                                                           
-        | MT_CEK                                               ->   "mt"
+        | MT                                               ->   "mt"
       
 
     (* Convertit un état de la machine CEK en chaîne de caractère *)
-    let string_of_cek  fermeture registre = "("^(string_of_fermeture  fermeture)^" , "^(string_of_registre_CEK registre)^")\n" 
+    let string_of_machineCEK  machine = 
+      match machine with 
+        MachineCEK(fermeture,registre)  ->   "("^(string_of_fermeture  fermeture)^" , "^(string_of_registre registre)^")\n" 
 
-    (* Affiche un état de la machine CK *)
-    let afficherCEK expression registre = printf "MachineCEK : %s" (string_of_cek expression registre)
-
-
-
-
+        
+    (* Affiche un état de la machine CEK *)
+    let afficherCEK machine = printf "MachineCEK : %s" (string_of_machineCEK machine)
 
 
 
@@ -109,18 +101,11 @@ module CEKMachine =
 
     let rec ajoutEnv env varARemp fermetureDeRemp =
       match env with
-          []  -> [(varARemp, fermetureDeRemp)]
+          []                   ->   [(varARemp, fermetureDeRemp)]
         
-        | (var1,fermeture)::t -> if (equal var1 varARemp) then append [(var1,fermetureDeRemp)] t else append [(var1,fermeture)] (ajoutEnv t varARemp fermetureDeRemp) 
+        | (var1,fermeture)::t  ->   if (equal var1 varARemp) then append [(var1,fermetureDeRemp)] t else append [(var1,fermeture)] (ajoutEnv t varARemp fermetureDeRemp) 
 
-    (* Substitue une variable par sa  fermeture qui lui est assignée dans l'environnement *)
-    let rec substitution var env =
-      match env with
-          []                    ->   raise AucuneSubPossible
         
-        | (var1, fermeture)::t  ->   if( equal var1 var) then fermeture else substitution var t
-
-
     (* Vérifie si une  fermeture contient une constante *)
     let rec estConstFermeture  fermeture =
       match  fermeture with
@@ -138,9 +123,21 @@ module CEKMachine =
         
         | _                                ->   raise NotConstErreur
       
+    
+    (* Retourne le 1er élément d'une liste *)
+    let getPremElem liste env = 
+      match liste with
+        | []    ->   raise FormatOpErreur
         
+        | h::t  ->   (Fermeture(h,env),(map (fun x -> Fermeture(x,env)) t))
 
 
+    (* Substitue une variable par sa  fermeture qui lui est assignée dans l'environnement *)
+    let rec substitution var env =
+      match env with
+          []                    ->   raise AucuneSubPossible
+        
+        | (var1, fermeture)::t  ->   if( equal var1 var) then fermeture else substitution var t
 
 
 
@@ -149,53 +146,40 @@ module CEKMachine =
 
     (**** Machine CEK ****)
 
+    (* Applique une transition de la machine CK pour un état donné *)
+    let transitionCEK machine =
+      match machine with
+          MachineCEK(Fermeture(App(expr1,expr2),env),mt)                        ->   MachineCEK(Fermeture(expr1,env),Arg(Fermeture(expr2,env),mt))
+
+        | MachineCEK(Fermeture(Op(op,liste_expr),env),mt)                       ->   let (expr,new_liste) = getPremElem liste_expr env in MachineCEK(expr,Opd(([],op),new_liste,mt))
+
+        | MachineCEK(Fermeture(Var var,env),mt)                                 ->   MachineCEK((substitution var env),mt)
+
+        | MachineCEK(Fermeture(var,env),Arg(Fermeture(expr,env1),mt))           ->   MachineCEK(Fermeture(expr,env1),Fun(Fermeture(var,env),mt))
+
+        | MachineCEK(Fermeture(var,env),Fun(Fermeture(Abs(abs,expr),env1),mt))  ->   MachineCEK(Fermeture(expr,(ajoutEnv env1 abs (Fermeture(var,env)))),mt)
+
+        | MachineCEK(Fermeture(var,env),Opd((liste_ferm,op),[],mt))             ->   let new_liste = Fermeture(var,env)::liste_ferm in
+                                                                                     if (for_all estConstFermeture new_liste)
+                                                                                        then MachineCEK(Fermeture(calcul op (rev (convert_liste_fermeture_liste_int new_liste)),[]),mt)
+                                                                                        else raise EtatInconnu
+
+        | MachineCEK(Fermeture(var,env),Opd((liste_ferm,op),h::t,mt))           ->   MachineCEK(h,Opd((Fermeture(var,env)::liste_ferm,op),t,mt))
+
+        | _                                                                     ->   raise EtatInconnu
+
+
     (* Applique les règles de la machine CEK en affichant les étapes *)
-    let rec machineCEK  fermeture registre = 
-      let testRegistre registre  fermeture =
-        match registre with
-            (Fun_CEK(Fermeture((Abs(abs,expr1)),env),mt))        ->   machineCEK (Fermeture(expr1,(ajoutEnv env abs  fermeture))) mt
-
-          | (Arg_CEK(Fermeture(expr1,env),mt))                   ->   machineCEK (Fermeture(expr1,env)) (Fun_CEK( fermeture,mt))
-
-          | (Opd_CEK((liste_fermeture,op),liste_fermeture1,mt))  -> 
-                                if (estVide liste_fermeture1)
-                                  then 
-                                    begin
-                                      let newliste =  append [fermeture] liste_fermeture in
-                                      if ( for_all estConstFermeture newliste) then machineCEK ( Fermeture(calcul op ( rev (convert_liste_fermeture_liste_int newliste)),[])) mt else raise EtatInconnu
-                                    end
-                                  else 
-                                    begin
-                                      let newliste =  append [fermeture] liste_fermeture in machineCEK (getPremElem liste_fermeture1) (Opd_CEK((newliste,op),(enleverTete liste_fermeture1),mt))
-                                    end
-
-          | _                                                    ->   raise EtatInconnu
-
-      in
-
-      afficherCEK  fermeture registre ;
-      match ( fermeture,registre) with
-
-        ( Fermeture(App(expr1,expr2),env),mt)       ->   machineCEK ( Fermeture(expr1,env)) (Arg_CEK(( Fermeture(expr2,env),mt))) 
-
-        | ( Fermeture(Op(op,liste_expr),env),mt)    -> 
-                                      begin
-                                        match liste_expr with
-                                            []      ->   raise FormatOpErreur
-                                          
-                                          | [h]     ->   machineCEK (Fermeture(h,env)) (Opd_CEK(([],op),[],mt))
-                                          
-                                          | h::t    ->   machineCEK (Fermeture(h,env)) (Opd_CEK(([],op),( fermeture_of_expr env t),mt))
-                                      end
-
-        | ( Fermeture(Const b,env),registre)        ->   if (estMT_CEK registre) then Const b else testRegistre registre (Fermeture(Const b,env))
-    
-        | ( Fermeture(Abs(abs,expr),env),registre)  ->   if (estMT_CEK registre) then Abs(abs,expr) else testRegistre registre ( Fermeture(Abs(abs,expr),env))
+    let rec machineCEK machine afficher= 
+      match machine with
+          MachineCEK(Fermeture(Const b,env),MT)        ->   Const b
         
-        | ( Fermeture((Var var),env),registre)      ->   machineCEK (substitution var env) registre
+        | MachineCEK(Fermeture(Abs(abs,expr),env),MT)  ->   Abs(abs,expr)
 
+        | machine                                      ->   if (afficher) then (afficherCEK machine) else printf ""; machineCEK (transitionCEK machine) afficher
+    
 
     (* Lance et affiche le résultat de l'expression *)
-    let lancerCEK expression = printf "Le résultat est %s \n" (string_of_expr (machineCEK ( Fermeture(expression,[])) MT_CEK))
+    let lancerCEK expression afficher = printf "Le résultat est %s \n" (string_of_expr (machineCEK (MachineCEK(Fermeture(expression,[]),MT)) afficher))
 
   end

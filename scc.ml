@@ -8,10 +8,10 @@ open LangISWIM.ISWIM ;;
 module SCCMachine =
   struct
 
+    (**** Types ****)
 
-
-
-
+    (* Type représentant la machine SCC *)
+    type machineSCC = MachineSCC of controle * contexte
 
 
 
@@ -19,19 +19,14 @@ module SCCMachine =
 
     (**** Affichage ****)
 
-
     (* Convertit une expression et une liste d'expression en chaîne de caractère *)
-    let string_of_cc cs c = "("^(string_of_expr cs )^" ,[ "^(concat_string_liste( map string_of_expr c ))^"])\n"
+    let string_of_machineSCC machine = 
+      match machine with
+        MachineSCC(controle,contexte) -> "("^(string_of_expr controle )^" ,[ "^(concat_string_liste( map string_of_expr contexte ))^"])\n"
+
 
     (* Affiche une étape de la machine SCC *)
-    
-
-    let afficherSCC cs c = printf "MachineSCC : %s" (string_of_cc cs c)
-
-
-
-
-
+    let afficherSCC machine = printf "MachineSCC : %s" (string_of_machineSCC machine)
 
 
 
@@ -39,24 +34,12 @@ module SCCMachine =
 
     (**** Fonctions utiles ****)
 
-
     (* Retourne le 1er élément d'une liste *)
-    let getPremElem liste = 
+    let getPremier liste = 
       match liste with
         | []    ->   raise FormatOpErreur
         
-        | h::t  ->   h
-
-
-    (* Remplace le 1er élément par un Trou *)
-    let trouPremElem liste =
-      let rec aux premier liste =
-        match liste with
-          | []    ->   []
-
-          | h::t  ->   if premier then (Var "[ ]")::(aux false t) else h::(aux premier t)
-      in 
-      aux true liste
+        | h::t  ->   (h,Var "[ ]"::t)
 
 
     (* Le dernière élément d'une liste est un Trou *)
@@ -72,26 +55,13 @@ module SCCMachine =
     (* Donne le suivant d'un élément d'une liste *)
     let rec suivantDe expr liste =
       match liste with
-          []         ->    raise EtatInconnu
+          []               ->   raise EtatInconnu
 
-        | [h]        ->    raise EtatInconnu
+        | [h]              ->   raise EtatInconnu
 
-        | h1::h2::t  ->   if (equalExpr expr h1) then h2 else (suivantDe expr (h2::t))
+        | Var "[ ]"::h::t  ->   (h,expr::Var "[ ]"::t) 
 
-
-    (* Remplace le suivant d'un élément par un Trou *)
-    let rec trouSuivantDeElem expr liste =
-      match liste with
-          []         ->   []
-
-        | [h]        ->   [h]
-
-        | h1::h2::t  ->   if (equalExpr expr h1) then h1::(Var "[ ]")::(trouSuivantDeElem expr t) else h1::(trouSuivantDeElem expr (h2::t))
-
-
-
-
-        
+        | h1::h2::t        ->   let (elem,new_liste) = suivantDe expr (h2::t) in (elem, append [h1] new_liste)
 
 
 
@@ -99,46 +69,41 @@ module SCCMachine =
 
     (**** Machine SCC ****)  
 
-    
+    (* Applique une transition de la machine CC pour un état donné *)
+    let transitionSCC machine =
+      match machine with
+          MachineSCC(App(expr1,expr2),contexte)                   ->   MachineSCC(expr1,App(Var "[ ]",expr2)::contexte)
+
+        | MachineSCC(Op(op,liste_expr),contexte)                  ->   let (elem,new_liste) = getPremier liste_expr in MachineSCC(elem,(Op(op,new_liste))::contexte)
+
+        | MachineSCC(var,App(Abs(abs,expr),Var "[ ]")::contexte)  ->   MachineSCC((reduction abs expr var),contexte)
+
+        | MachineSCC(var,App(Var "[ ]",expr)::contexte)           ->   MachineSCC(expr,App(var,Var "[ ]")::contexte)
+
+        | MachineSCC(var,Op(op,liste_expr)::contexte)             ->   if (aTrouFinListe liste_expr) 
+                                                                          then let liste = rempTrou var liste_expr in
+
+                                                                              if (for_all estConst liste) 
+                                                                                  then MachineSCC(calcul op (convert_liste_expr_liste_int liste),contexte) 
+
+                                                                                  else raise FormatOpErreur
+
+                                                                          else let (elem,new_liste) = suivantDe var liste_expr in MachineSCC(elem,(Op(op,new_liste))::contexte)
+
+        | _                                                       ->   raise EtatInconnu
+
+
     (* Applique les règles de la machine SCC en affichant les étapes *)
-    let rec machineSCC control_string context =
-      let testContext context expr1 =
-        match context with
-          
-            App(Abs(abs,expr2),Var "[ ]")::t  ->   machineSCC (reduction abs expr2 expr1) t
-
-          | App(Var "[ ]", expr2)::t          ->   machineSCC expr2 ((App(expr1,Var "[ ]"))::t)
-
-          | Op(op,liste_expr)::t              ->    
-                                        if (aTrouFinListe liste_expr) 
-                                          then 
-                                            begin
-                                              let newListe = rempTrou expr1 liste_expr in
-                                              if ( for_all estConst newListe ) then machineSCC (calcul op (convert_liste_expr_liste_int newListe)) t else raise EtatInconnu 
-                                            end
-                                          else 
-                                            begin
-                                              let newListe = rempTrou expr1 liste_expr in
-                                              machineSCC (suivantDe expr1 newListe) (Op(op,(trouSuivantDeElem expr1 newListe))::t)
-                                            end
-
-          | _                                 ->   raise EtatInconnu
-      in
-      afficherSCC control_string context ;
-      match (control_string,context) with 
-
-        | (App(expr1,expr2),context)   ->   machineSCC expr1 ( append [(App(Var "[ ]" , expr2))] context)
-
-        | (Op(op,liste_expr),context)  ->   machineSCC (getPremElem liste_expr) ( append [(Op(op,(trouPremElem liste_expr)))] context)
-
-        | (Const b,context)            ->   if ( length context) = 0  then Const b else testContext context (Const b)
-    
-        | (Abs(abs,expr),context)      ->   if ( length context) = 0 then Abs(abs,expr) else testContext context (Abs(abs,expr))
+    let rec machineSCC machine afficher= 
+      match machine with
+          MachineSCC(Const b,[])        ->   Const b
         
-        | ((Var var),context)          ->   testContext context (Var var)
+        | MachineSCC(Abs(abs,expr),[])  ->   Abs(abs,expr)
 
+        | machine                       ->   if (afficher) then (afficherSCC machine) else printf ""; machineSCC (transitionSCC machine) afficher
+    
 
     (* Lance et affiche le résultat de l'expression *)
-    let lancerSCC expression = printf "Le résultat est %s \n" (string_of_expr (machineSCC expression []))
+    let lancerSCC expression afficher = printf "Le résultat est %s \n" (string_of_expr (machineSCC (MachineSCC(expression,[])) afficher))
 
   end

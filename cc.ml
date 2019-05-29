@@ -1,25 +1,31 @@
 open Printf ;;
 open List ;;
-open Printf ;;
 open LangISWIM.ISWIM;;
 
 (* Module qui implémente la machine CC *)
 module CCMachine =
   struct
 
+    (**** Types ****)
+
+    (* Type représentant la chaîne de contrôle de la machine CC *)
     type controle = exprISWIM
+
+
+    (* Type représentant le contexte de la machine CC *)
     type contexte = exprISWIM list
 
+
+    (* Type représentant la machine CC *)
     type machineCC = MachineCC of controle * contexte
     
+
+
+
+
     (**** Exception ****)
 
-    exception EtatInconnu
-
-
-
-
-
+    exception EtatInconnu     (* L'état de la machine n'est pas normal *)
 
 
 
@@ -32,6 +38,7 @@ module CCMachine =
       match machine with
         MachineCC(controle,contexte) -> "("^(string_of_expr controle )^" ,[ "^(concat_string_liste( map string_of_expr contexte ))^"])\n"
 
+
     (* Affiche une étape de la machine CC *)
     let afficherCC machine = printf "MachineCC : %s" (string_of_machineCC machine)
 
@@ -39,50 +46,34 @@ module CCMachine =
 
 
 
-
-
-
-
-
     (**** Fonctions utiles ****)
 
-    (* Donne le 1er élément non variable d'une liste d'expression *)
-    let rec premNonVarListe liste_expr =
-      match liste_expr with
+    (* Prend l'élément qui n'est pas une variable et le remplace par un Trou *)
+    let rec nextElem liste_expr =
+      match liste_expr with 
           []    ->   raise FormatOpErreur
-        
-        | h::t  ->   if (estVariable h) then premNonVarListe t else h
 
+        | h::t  ->   if (estVariable h) then let (elem,new_liste) = nextElem t in (elem,append [h] new_liste)
+                                        else (h,append [Var "[ ]"] t)
+    
 
-    (* Remplace le 1er élément non variable d'une liste d'expression par un Trou *)
-    let trouPremNonVarListe liste_expr =
-      let rec aux pas_pris liste =
-        match liste with 
-            []    ->   []
-          
-          | h::t  ->   if (estVariable h) then h::(aux pas_pris t) else if pas_pris 
-                                                                            then (Var "[ ]")::(aux false t) else h::(aux pas_pris t)
-    in 
-    aux true liste_expr
-
-
-    (* Remplace le 1er Trou de la liste d'expression par l'élément donné *)
+    (* Remplace le Trou par un élément *)
     let rec rempTrou elem liste_expr =
-      let rec aux pasChanger liste_expr =
-        match liste_expr with
-            []            ->   []
-          
-          | Var "[ ]"::t  ->   elem::(aux false t)
-          
-          | h::t          ->   h::(aux pasChanger t)
-      in 
-      aux true liste_expr 
+      match liste_expr with
+          []            ->   raise EtatInconnu
+
+        | Var "[ ]"::t  ->   append [elem] t
+
+        | h::t          ->   append [h] (rempTrou elem t)
+
 
 
 
 
     (**** Machine CC ****)
-    let transition machine =
+
+    (* Applique une transition de la machine CC pour un état donné *)
+    let transitionCC machine =
       match machine with
           MachineCC(App(Abs(abs,expr1),expr2),contexte)   ->  if (estVariable expr2) then MachineCC((reduction abs expr1 expr2),contexte)  else MachineCC(expr2,(App(Abs(abs,expr1),Var "[ ]"))::contexte)
         
@@ -94,24 +85,25 @@ module CCMachine =
                                                                  then if (length liste_expr = (getNbrOperande op)) 
                                                                           then MachineCC((calcul op (convert_liste_expr_liste_int liste_expr)),contexte)
                                                                           else raise FormatOpErreur
-                                                                 else MachineCC((premNonVarListe liste_expr),(Op(op,(trouPremNonVarListe liste_expr)))::contexte)
+                                                                 else let (elem,new_liste) = nextElem liste_expr in MachineCC(elem,(Op(op,new_liste))::contexte)
 
+        | MachineCC(expr,Op(op,liste_expr)::contexte)     ->  MachineCC(Op(op,(rempTrou expr liste_expr)),contexte)
+        
         | MachineCC(expr2,App(expr1,Var "[ ]")::contexte) ->  MachineCC(App(expr1,expr2),contexte) 
 
         | MachineCC(expr1,App(Var "[ ]",expr2)::contexte) ->  MachineCC(App(expr1,expr2),contexte) 
 
-        | _ -> raise EtatInconnu
-
+        | _                                               ->  raise EtatInconnu
 
 
     (* Applique les règles de la machine CC en affichant les étapes *)
     let rec machineCC machine afficher= 
       match machine with
-          MachineCC(Const b,[]) -> Const b
+          MachineCC(Const b,[])        ->   Const b
         
-        | MachineCC(Abs(abs,expr),[]) -> Abs(abs,expr)
+        | MachineCC(Abs(abs,expr),[])  ->   Abs(abs,expr)
 
-        | machine -> if (afficher) then (afficherCC machine) else printf ""; machineCC (transition machine) afficher
+        | machine                      ->   if (afficher) then (afficherCC machine) else printf ""; machineCC (transitionCC machine) afficher
     
 
     (* Lance et affiche le résultat de l'expression *)
