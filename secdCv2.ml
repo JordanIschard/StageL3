@@ -3,10 +3,10 @@ open Printf ;;
 open List ;;
 open Cc.CCMachine ;;
 open Cek.CEKMachine ;;
-open LangISWIMCv1.ISWIM ;;
+open LangISWIMCv2.ISWIM ;;
 
 
-module SECDCv1Machine =
+module SECDCv2Machine =
   struct
 
     (**** Types ****)
@@ -14,6 +14,7 @@ module SECDCv1Machine =
     (* Types permettant une meilleure compréhension des autres types *)
     type id = string
     type variable = string
+    type erreur = int
 
     (* Type intermédiaire pour représenter la chaîne de contrôle *)
     type c =
@@ -27,6 +28,8 @@ module SECDCv1Machine =
       | Emit of id                               (* emet s *)
       | Present of id * c list * c list          (* present s in t1 t2 *)
       | Signal of id * c list                    (* signal s in t *)
+      | Throw of erreur
+      | Catch of erreur * c list * (variable * c list)
 
     (* Type représentant la chaîne de contrôle *)
     type control_string = c list
@@ -67,8 +70,14 @@ module SECDCv1Machine =
     type wait = dump list
 
 
+    (* Type représentant le gestionnaire d'erreur *)
+    type handler = 
+        None
+      | Handler of int * (stack * env * control_string * dump *  wait * stuck * signals * handler) 
+
+
     (* Type représentant la machine SECD concurrente version 1 *)
-    type secdCv1 = Machine of stack * env * control_string * dump * wait * stuck * signals
+    type secdCv2 = Machine of stack * env * control_string * dump * wait * stuck * signals
 
 
 
@@ -104,6 +113,25 @@ module SECDCv1Machine =
      
         | Signal_ISWIM(s,expr)          ->   [Signal(s,(secdLanguage_of_exprISWIM expr))]
 
+        | Throw_ISWIM erreur            ->   [Throw erreur]
+
+        | Catch_ISWIM(erreur,expr1,(abs,expr2))  ->   [Catch(erreur,(secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
+
+
+    (* Retourne un message par rapport à un identifiant d'erreur *)
+    let message_of_erreur erreur =
+      match erreur with
+          1  ->   "ERREUR : Je ne comprends pas ce qu'il s'est passé :/"
+        | 2  ->   "ERREUR : Format de la liste bloqué invalide"
+        | 3  ->   "ERREUR : Format de la liste d'attente invalide"
+        | 4  ->   "ERREUR : Format de l'environnement invalide"
+        | 5  ->   "ERREUR : Format de l'opérateur erroné"
+        | 6  ->   "ERREUR : Le spawn n'est pas bien délimité"
+        | 7  ->   "ERREUR : Signal non initialisé"
+        | 8  ->   "ERREUR : Signal déjà initialisé"
+        | 9  ->   "ERREUR : Format du catch invalide"
+        | _  ->   "ERREUR : Cette erreur n'existe pas "
+
 
     (* Convertit la chaîne de contrôle en une chaîne de caractère *)
     let rec string_of_control_string expression =
@@ -130,6 +158,11 @@ module SECDCv1Machine =
         
         | Signal(s,expr)::t           ->   "< "^s^","^(string_of_control_string expr)^" > "^(string_of_control_string t)
       
+        | Throw erreur::t                     ->   (message_of_erreur erreur)^" "^(string_of_control_string t)
+
+        | Catch(erreur,expr1,(abs,expr2))::t  ->    "try "^(string_of_control_string expr1)^" catch "^(message_of_erreur erreur)
+                                                        ^" in <"^abs^" , "^(string_of_control_string expr2)^"> "^(string_of_control_string t) 
+
 
     (* Convertit un environnement en chaîne de caractère *)
     let rec string_of_env env =
@@ -198,11 +231,29 @@ module SECDCv1Machine =
 
         | s::t  ->   s^" , "^(string_of_signals t)
 
+    
+    (* Convertit le gestionnaire d'erreur en chaîne de caractères *)
+    let rec string_of_handler handler =
+      match handler with
+          None                                                                ->   ""
 
-    (* Convertit une machine SECD concurrente version 1 en chaîne de caractère *)
+        | Handler(erreur,(stack,env,control_string,dump,wait,stuck,si,handler))  -> 
+                                       "\n   ERREUR  : "^(message_of_erreur erreur)
+                                      ^"\n   STACK   : "^(string_of_stack stack)
+                                      ^"\n   ENV     : "^(string_of_env env)
+                                      ^"\n   CONTROL : "^(string_of_control_string control_string)
+                                      ^"\n   DUMP    : "^(string_of_dump dump)
+                                      ^"\n   WAIT    : "^(string_of_wait wait)
+                                      ^"\n   STUCK   : "^(string_of_stuck stuck)
+                                      ^"\n   SIGNALS : "^(string_of_signals si)
+                                      ^"\n   HANDLER : "^(string_of_handler handler)
+                                      ^" \n"
+
+
+    (* Convertit une machine SECD concurrente version 2 en chaîne de caractère *)
     let rec string_of_Machine machine =
       match machine with
-        Machine(stack,env,control_string,dump,wait,stuck,signals)  ->
+        Machine(stack,env,control_string,dump,wait,stuck,signals,handler)  ->
                                                                    "\n STACK   : "^(string_of_stack stack)
                                                                   ^"\n ENV     : ["^(string_of_env env)^"]"
                                                                   ^"\n CONTROL : "^(string_of_control_string control_string)
@@ -210,11 +261,12 @@ module SECDCv1Machine =
                                                                   ^"\n WAIT    : "^(string_of_wait wait)
                                                                   ^"\n STUCK   : "^(string_of_stuck stuck)
                                                                   ^"\n SIGNALS : ["^(string_of_signals signals)^"]"
+                                                                  ^"\n HANDLER : "^(string_of_handler handler)
                                                                   ^"\n"
 
 
-    (* Affiche la machine SECD concurrente version 1 *)
-    let afficherSECDCv1 machine = printf "MachineSECDCv1 : %s" (string_of_Machine machine)
+    (* Affiche la machine SECD concurrente version 2 *)
+    let afficherSECDCv2 machine = printf "MachineSECDCv1 : %s" (string_of_Machine machine)
 
 
 
@@ -300,20 +352,20 @@ module SECDCv1Machine =
 
 
     (* Emet un signal et vérifie si des threads sont en attente de cette émission *)
-    let emit signal env st si =
+    let emit signal st si =
       let rec aux st =
         match st with 
             []             ->   ([],[])
 
           | (s,thread)::t  ->   let (w1,st1) = aux t in if (equal signal s) then (append [thread] w1,st1) else (w1,append [(s,thread)] st1)
       in
-      if (isInit env signal) then let (w1,st1) = aux st in (w1,st1,(append [signal] si)) else raise SignalNotInit
+      if (isInit signal then let (w1,st1) = aux st in (w1,st1,(append [signal] si)) else raise SignalNotInit
 
 
-    (**** Machine SECD concurrente version 1 ****)
+    (**** Machine SECD concurrente version 2 ****)
 
-    (* Applique une transition de la machine SECD concurrente version 1 pour un état donné *)
-    let transitionSECDCv1 machine =
+    (* Applique une transition de la machine SECD concurrente version 2 pour un état donné *)
+    let transitionSECDCv2 machine =
       match machine with
           Machine(s,e,Constant b::c,d,w,st,si)                           ->   Machine(Stack_const b::s,e,c,d,w,st,si)
         
@@ -344,7 +396,7 @@ module SECDCv1Machine =
 
         | Machine(s,e,Signal(signal,c1)::c,d,w,st,si)                    ->   let e1 = addInit e signal in Machine([],e1,c1,Save(s,e,c,d),w,st,si)
 
-        | Machine(s,e,Emit signal::c,d,w,st,si)                          ->   let (w1,st1,si1) = emit signal e st si in Machine(Remp::s,e,c,d,w1,st1,si1)
+        | Machine(s,e,Emit signal::c,d,w,st,si)                          ->   let (w1,st1,si1) = emit signal st si in Machine(Remp::s,e,c,d,w1,st1,si1)
 
         | Machine(s,e,Present(signal,c1,c2)::c,d,w,st,si)                ->   if (mem signal si) 
                                                                                 then Machine(s,e,(append c1 c),d,w,st,si)
@@ -364,17 +416,17 @@ module SECDCv1Machine =
         | _                                                              ->   raise EtatInconnu
 
 
-    (* Applique les règles de la machine SECD en affichant les étapes *)
-    let rec machineSECDCv1 machine afficher= 
+    (* Applique les règles de la machine SECD concurrente version 2 en affichant les étapes *)
+    let rec machineSECDCv2 machine afficher= 
       match machine with
           Machine([Stack_const b],e,[],Vide,[],[],si)                ->   [Constant b]
         
         | Machine([Fermeture([Pair(abs,c)],e1)],e,[],Vide,[],[],si)  ->   [Pair(abs,c)]
 
-        | machine                                                    ->   if (afficher) then (afficherSECDCv1 machine) else printf ""; machineSECDCv1 (transitionSECDCv1 machine) afficher
+        | machine                                                    ->   if (afficher) then (afficherSECDCv2 machine) else printf ""; machineSECDCv2 (transitionSECDCv2 machine) afficher
 
         
     (* Lance et affiche le résultat de l'expression *)
-    let lancerSECDCv1 expression afficher = printf "Le résultat est %s \n" (string_of_control_string (machineSECDCv1 (Machine([],[],(secdLanguage_of_exprISWIM expression),Vide,[],[],[])) afficher))
+    let lancerSECDCv2 expression afficher = printf "Le résultat est %s \n" (string_of_control_string (machineSECDCv2 (Machine([],[],(secdLanguage_of_exprISWIM expression),Vide,[],[],[])) afficher))
 
   end
