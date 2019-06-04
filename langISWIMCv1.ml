@@ -23,10 +23,10 @@ module ISWIM =
       | App of exprISWIM * exprISWIM
       | Op of operateur * exprISWIM list
       | Const of int
-      | Spawn of exprISWIM
-      | Present of string * exprISWIM * exprISWIM
-      | Emit of string 
-      | Signal of string * exprISWIM
+      | Spawn_ISWIM of exprISWIM
+      | Present_ISWIM of string * exprISWIM * exprISWIM
+      | Emit_ISWIM of string 
+      | Signal_ISWIM of string * exprISWIM
 
 
 
@@ -89,16 +89,16 @@ module ISWIM =
         | App(expr1,expr2)              ->   "("^(string_of_expr expr1)^" "^(string_of_expr expr2)^")"
 
         | Abs(abs,expr)                 ->   "(lam "^abs^"."^(string_of_expr expr)^")"
-
+        
         | Op(op,liste_expr)             ->   "("^(string_of_operateur op)^" "^(concat_string_liste ( map string_of_expr  liste_expr))^")"
 
-        | Spawn expr                    ->   "spawn ("^(string_of_expr expr)^")"
+        | Spawn_ISWIM expr                    ->   "spawn ("^(string_of_expr expr)^")"
 
-        | Present (signal,expr1,expr2)  ->   "present "^signal^" in "^(string_of_expr expr1)^" "^(string_of_expr expr2)
+        | Present_ISWIM (signal,expr1,expr2)  ->   "present "^signal^" in "^(string_of_expr expr1)^" "^(string_of_expr expr2)
 
-        | Emit signal                   ->   "emit "^signal 
+        | Emit_ISWIM signal                   ->   "emit "^signal 
 
-        | Signal(signal,expr)           ->   "signal "^signal^" in "^(string_of_expr expr)
+        | Signal_ISWIM(signal,expr)           ->   "signal "^signal^" in "^(string_of_expr expr)
 
 
     (* Affiche une expression *)

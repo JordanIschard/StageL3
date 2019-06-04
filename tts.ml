@@ -556,6 +556,6 @@ module MachineTTS =
   
 
     (* Lance et affiche le résultat de l'expression *)
-    let start expression afficher = machineTTS (MachineTTS(Thread([],[],(secdLanguage_of_exprISWIM expression),Empty),[],[])) afficher
+    let startTTS expression afficher = machineTTS (MachineTTS(Thread([],[],(secdLanguage_of_exprISWIM expression),Empty),[],[])) afficher
     
   end

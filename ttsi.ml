@@ -694,6 +694,6 @@ module MachineTTSI =
   
 
     (* Lance et affiche le résultat de l'expression *)
-    let start expression afficher = machineTTSI (MachineTTSI(Thread(0,[],[],(secdLanguage_of_exprISWIM expression),Empty),[],[(-1,(false,[],[],[]))],1)) afficher
+    let startTTSI expression afficher = machineTTSI (MachineTTSI(Thread(0,[],[],(secdLanguage_of_exprISWIM expression),Empty),[],[(-1,(false,[],[],[]))],1)) afficher
     
   end

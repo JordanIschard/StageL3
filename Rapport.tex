@@ -2451,7 +2451,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			\item[|] $\langle s,C'\rangle~C$ 
 			\item[|] $emit_{s}~C$ 
 		\end{itemize}
-		\item[] $D = \epsilon$
+		\item[] $D = \emptyset$
 		\begin{itemize}
 			\item[|] $\langle S,E,C,D\rangle$ 
 		\end{itemize}
@@ -2571,7 +2571,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			
 			\item[] \textbf{Fin d'instant logique :} On a plus rien à traiter et on a plus rien dans la file d'attente. C'est la fin de l'instant logique
 			\smallbreak  $\langle S,E,\epsilon,\emptyset,\emptyset,ST,SI\rangle 
-			\longmapsto_{secdv1-2} \langle S,E,\emptyset,\emptyset,W,\emptyset,\emptyset,\emptyset\rangle$ 
+			\longmapsto_{secdv1-2} \langle S,E,\emptyset,\emptyset,W,\emptyset,\emptyset\rangle$ 
 			\\avec $W$ = tous les éléments de $ST$ prennent leurs 2nd choix 
 			\item[]
 		\end{itemize}
@@ -2597,9 +2597,9 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\textbf{\textit{la machine SECD version 1 peut s'arrêter dans 4 états différents:}}
 	\smallbreak
 	\begin{itemize}
-		\item[]$\longrightarrow$ Soit on a une \textbf{constante b} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1-2},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv1-2} \langle b,E,\epsilon,\emptyset,\emptyset,SI,\epsilon\rangle$;
-		\item[]$\longrightarrow$ Soit on a une \textbf{abstraction function} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1-2},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv1-2} \langle\langle\langle X,C\rangle,E'\rangle,E,\epsilon,\emptyset,\emptyset,SI,\epsilon\rangle$;
-		\item[]$\longrightarrow$ Soit on a un \textbf{remplacement} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1-2},\emptyset,\emptyset,\emptyset,\epsilon\rangle \twoheadrightarrow_{secdv1-2} \langle Remp,E,\epsilon,\emptyset,\emptyset,SI,\epsilon\rangle$;
+		\item[]$\longrightarrow$ Soit on a une \textbf{constante b} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1-2},\emptyset,\emptyset,\emptyset,\emptyset\rangle \twoheadrightarrow_{secdv1-2} \langle b,E,\epsilon,\emptyset,\emptyset,\emptyset,SI\rangle$;
+		\item[]$\longrightarrow$ Soit on a une \textbf{abstraction function} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1-2},\emptyset,\emptyset,\emptyset,\emptyset\rangle \twoheadrightarrow_{secdv1-2} \langle\langle\langle X,C\rangle,E'\rangle,E,\epsilon,\emptyset,\emptyset,\emptyset,SI\rangle$;
+		\item[]$\longrightarrow$ Soit on a un \textbf{remplacement} tels que $\langle \epsilon,\emptyset,\textlbrackdbl M\textrbrackdbl_{secdv1-2},\emptyset,\emptyset,\emptyset,\emptyset\rangle \twoheadrightarrow_{secdv1-2} \langle Remp,E,\epsilon,\emptyset,\emptyset,\emptyset,SI\rangle$;
 		\item[]$\longrightarrow$ Sinon on a un \textbf{état inconnu} soit une \textbf{erreur}.
 	\end{itemize}
 	\newpage

@@ -1,38 +1,39 @@
 open Printf ;;
 open Lambda.LambdaCalcul ;;
-open LangISWIM.ISWIM;;
 open Cc.CCMachine ;;
 open Scc.SCCMachine ;;
 open Ck.CKMachine ;;
 open Cek.CEKMachine ;;
 open Secd.SECDMachine ;;
+open Tts.MachineTTS;;
+open Ttsi.MachineTTSI ;;
 
 
 (* Test *)
 
 (* Correspond à l'expression suivante : ( (lam w.( w ( + 2 w ) ))  2 ) *)
-let expression  = App((Abs("w",(App(Var "w",Op(Add,[Const 2;Var "w"]))))),Const 2) ;;
+let expression  = let open LangISWIM.ISWIM in App((Abs("w",(App(Var "w",Op(Add,[Const 2;Var "w"]))))),Const 2) ;;
 
 (* Correspond à l'expression suivante : ( (lam x.( x y )) z ) *)
-let expression1 = App(Abs("x",App(Var "x", Var "y" )),Var "z");;
+let expression1 = let open LangISWIM.ISWIM in App(Abs("x",App(Var "x", Var "y" )),Var "z");;
 
 (*  Correspond à l'expression suivante : ( (lam x.lam y.( x y )) (lam y.( y f )) ) *)
-let expression2 = App(Abs("x",Abs("y",App(Var "x", Var "y"))),Abs("y",App(Var "y",Var "f")));;
+let expression2 = let open LangISWIM.ISWIM in App(Abs("x",Abs("y",App(Var "x", Var "y"))),Abs("y",App(Var "y",Var "f")));;
 
 (*  Correspond à l'expression suivante : ( (lam z.lam b.( z b )) (lam a.( a g )) ) *)
-let expression3 = App(Abs("z",Abs("b",App(Var "z", Var "b"))),Abs("a",App(Var "a",Var "g")));;
+let expression3 = let open LangISWIM.ISWIM in App(Abs("z",Abs("b",App(Var "z", Var "b"))),Abs("a",App(Var "a",Var "g")));;
 
 (*  Correspond à l'expression suivante : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) *)
-let expression4 = App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"])))));;
+let expression4 = let open LangISWIM.ISWIM in App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"])))));;
 
 (*  Correspond à l'expression suivante :  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) *)
-let expression5 = App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1);;
+let expression5 = let open LangISWIM.ISWIM in App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1);;
 
 (*  Correspond à l'expression suivante : ( (lam x.( x x )) (lam y.( (lam x.x) (lam x.x) )) ) *)
-let expression6 = App(Abs("x",App(Var "x",Var "x")), Abs("y",App(Abs("x",Var "x"),Abs("x",Var "x"))));;
+let expression6 = let open LangISWIM.ISWIM in App(Abs("x",App(Var "x",Var "x")), Abs("y",App(Abs("x",Var "x"),Abs("x",Var "x"))));;
 
 (*  Correspond à l'expression suivante : ( +++ ( (lam x.x) 2 ) ( (lam x.x) 3 ) 4 ( (lam x.x) 5 ) ) *)
-let expression7 = Op(Add4,[App(Abs("x",Var "x"),Const 2); App(Abs("x",Var "x"),Const 3); Const 4;App(Abs("x",Var "x"),Const 5)]);;
+let expression7 = let open LangISWIM.ISWIM in Op(Add4,[App(Abs("x",Var "x"),Const 2); App(Abs("x",Var "x"),Const 3); Const 4;App(Abs("x",Var "x"),Const 5)]);;
 
 (* Correspond à l'expression suivante : ( (lam x.lam y.( x y )) (lam y.( y y )) ) *)
 let expression8 = App_term(Abs_term("x",Abs_term("y",App_term(Var_term "x", Var_term "y"))),Abs_term("y",App_term(Var_term "y",Var_term "y")));;
@@ -61,12 +62,12 @@ printf "\n" ;;
 printf "Tests du langage ISWIM \n\n" ;; 
 
 printf "Réduction \n" ;;
-let res4 = n_red expression4 ;;
+let res4 = let open LangISWIM.ISWIM in n_red expression4 ;;
 printf "\n" ;;
 
 
 printf "Réduction \n" ;;
-let res4 = n_red expression6;;
+let res4 = let open LangISWIM.ISWIM in n_red expression6;;
 printf "\n" ;;
 
 
@@ -174,33 +175,33 @@ printf "\n" ;;
 
 
 
-(*
+
 (**** Partie pour la machine SECD Concurrente V1 ****)
 
-
+(*  Correspond à l'expression suivante : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) *)
 let expression9  = let open LangISWIMCv1.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
+
+(*  Correspond à l'expression suivante :  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) *)
 let expression10 = let open LangISWIMCv1.ISWIM in (App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1));;
-let expression11 = let open LangISWIMCv1.ISWIM in (
-  Signal("signal",
-    (App(
-      (Spawn
-        (Present("signal",Op(Add,[App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1);Signal("coucou",Present("coucou",Const 5,Const 65))]),Const 3))
-      )
-      ,(Spawn
-        (Emit "signal"))
-      )
-    )
-  )
-);;
 
-let open SecdCv1.SECDMachine in lancerSECD expression9 ;;
+(*  Correspond à l'expression suivante :  Signal( signal , ( Spawn( Present( signal , ( + expression10 Signal( coucou , Present( coucou , 5 , 65 ) ) ) , 3 ) ) Spawn( emit signal ) ) ) *)
+let expression11 = let open LangISWIMCv1.ISWIM in 
+(Signal_ISWIM("signal",(App((Spawn_ISWIM(Present_ISWIM("signal",Op(Add,[expression10;Signal_ISWIM("coucou",Present_ISWIM("coucou",Const 5,Const 65))]),Const 3))),(Spawn_ISWIM(Emit_ISWIM "signal"))))));;
+
+
+
+
+
+printf " Test de la MachineSECD concurrente version 1 \n\n" ;;
+
+let open SecdCv1.SECDCv1Machine in lancerSECDCv1 expression9 false;;
 printf "\n" ;;
 
-let open SecdCv1.SECDMachine in lancerSECD expression10 ;;
+let open SecdCv1.SECDCv1Machine in lancerSECDCv1 expression10 false;;
 printf "\n" ;;
 
-let open SecdCv1.SECDMachine in lancerSECD expression11 ;;
-printf "\n" ;;*)
+let open SecdCv1.SECDCv1Machine in lancerSECDCv1 expression11 false;;
+printf "\n" ;;
 
 
 
@@ -224,13 +225,13 @@ let expression14 = let open LangISWIMTTS.ISWIM in (App(App(Abs("s",Abs("s1",App(
 
 printf "Test de la MachineTTS\n\n" ;;
 
-let open Tts.MachineTTS in start expression12 false ;;
+startTTS expression12 false ;;
 printf "\n" ;;
                   
-let open Tts.MachineTTS in start expression13 false;;
+startTTS expression13 false;;
 printf "\n" ;;
                   
-let open Tts.MachineTTS in start expression14 false;;
+startTTS expression14 false;;
 printf "\n" ;;
 
 
@@ -255,11 +256,11 @@ let expression17 = let open LangISWIMTTSI.ISWIM in (App(Abs("x",(App(App(Spawn_I
 
 printf "Test de la MachineTTSI\n\n" ;;
 
-let open Ttsi.MachineTTSI in start expression15 false ;;
+startTTSI expression15 false ;;
 printf "\n" ;;
 
-let open Ttsi.MachineTTSI in start expression16 false;;
+startTTSI expression16 false;;
 printf "\n" ;;
 
-let open Ttsi.MachineTTSI in start expression17 false;;
+startTTSI expression17 false;;
 printf "\n" ;;
