@@ -107,6 +107,9 @@ suivants a été nécessaire au bon déroulement du stage.
 	\item[-] \hyperref[Calculi]{[3]} expliquant le fonctionnement des machines abstraites permettant de réduire les termes du $\lambda $-calcul.
 \end{enumerate}
 Pour mieux structurer ma démarche, je vais diviser mes recherches en deux sous-parties. La première sera liée à mes recherches "préliminaires" qui ne sont pas liées directement à la programmation réactive. Elle regroupera l'article \hyperref[ZINC]{[2]} et \hyperref[Calculi]{[3]}. La seconde partie sera dédiée à l'article \hyperref[ReactiveML]{[1]} qui est, lui, complètement axé sur la programmation réactive. 
+\newpage
+
+
 
 	\section{Conception de langages}
 	
@@ -167,12 +170,14 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		temps d'interprétation non-négligeable
 	\end{itemize}
 \end{itemize}
+	\newpage
+	
+	
 	
 	\section{$\lambda$-calcul : sémantique et machines abstraites}
 	
 	Le $\lambda$-calcul est un système formel inventé par Alonzo Church dans les années 1930, qui fonde les concepts de fonction et
-	d'application. On y manipule des expressions appelées $\lambda$-expressions, où la lettre grecque $\lambda$ est utilisée pour lier une variable. On va lier une variable à une $\lambda$-expression, le composant créé est nommé \textit{abstraction}. On peut voir une \textit{abstraction} comme une fonction qui a un paramètre. On va revoir ce point dans l'introduction de la syntaxe et de la sémantique.
-	\improvement[inline]{Le $\lambda$-calcul est le modèle le plus communément accepté du calcul séquentiel.}
+	d'application. Le $\lambda$-calcul est le modèle le plus communément accepté du calcul séquentiel. On y manipule des expressions appelées $\lambda$-expressions, où la lettre grecque $\lambda$ est utilisée pour lier une variable. On va lier une variable à une $\lambda$-expression, le composant créé est nommé \textit{abstraction}. On peut voir une \textit{abstraction} comme une fonction qui a un paramètre. On va revoir ce point dans l'introduction de la syntaxe et de la sémantique.
 	\subsection{Le $\lambda$-calculs : syntaxe et sémantique}
 	
 	\paragraph{Les termesdu $\lambda$-calcul :}
@@ -191,32 +196,22 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\bigbreak
 	
 	\subparagraph{Les règles de réduction :}
-	\improvement{Idée de transformation des termes. Seul mode de calcul pour des fonctions : l'application.}
 	Maintenant que nous connaissons les termes qui composent les $\lambda$-expressions, il faut savoir
-	comment les faire interagir entre eux. On évalue les $\lambda$-calculs par une succession de réductions des termes grâce à
+	comment les faire interagir entre eux. Les $\lambda$-calculs vont seulement transformer les termes, son évaluation est lié à l'application. En effet, on travaille avec des abstractions, des variables et des applications qui représentent respectivement les fonctions , les variables et les utilisations de fonctions. Quand on va donner une variable à une fonction on va l'appliquer ce qui va avoir pour impact de réduire l'expression. On évalue donc les $\lambda$-calculs par une succession de réductions des termes grâce à
 	l'application. Il existe trois règles de \textbf{réduction générale :}
 	\begin{itemize}
 		\item[-] $(\lambda X_{1}.M)~~~~~~~~~~~~~~~~~~~\alpha~~~~~~~(\lambda X_{2}.M[X_{1} \leftarrow X_{2}])$
 		où $X_{2}~\notin~FV(M)$ 
 		\\
 		elle sert à renommer les variables. On peut comparer cela à une réecriture d'une expression pour rendre plus lisible la lecture et moins ambigüe.
-		\begin{ex}
-			
-		\end{ex}
-		\improvement[inline]{Trouver un exemple}
+		\smallbreak
 		\item[-] $((\lambda X.M_{1})M_{2})~~~~~~~~~~~~\beta~~~~~~~~M_{1}[X \leftarrow M_{2}]$ 
 		\\
 		elle substitue une variable par un $\lambda$-terme. C'est la réduction principale, elle fait ce que j'ai expliqué plus haut avec l'\textit{abstraction} : elle va remplacer la variable en paramètre par une $\lambda$-expression.
-		\begin{ex}
-			
-		\end{ex}
-		\improvement[inline]{Trouver un exemple}
+		\smallbreak
 		\item[-] $(\lambda X.(M~X))~~~~~~~~~~~~~~\eta~~~~~~~~M$ 
 		où $X~\notin~FV(M)$ 
-		\\ Cette règle traite le cas particulier d'une fonction inutile.
-		\begin{ex}
-			On a $g$ une fonction qui à $x$ associe $f(x)$. On aura donc $g(x) = f(x)$. La fonction $g$ devient obsolète. Ici c'est pareil, on a $(\lambda X.(M~X))$ quand on va appliquer une $\lambda$-expression $N$ on va avoir $((\lambda X.(M~X))~N)$. Si on suit la $\beta$-réduction on va substituer $X$ par $N$. On aura donc $(M~N)$. Cela revient au même dans la cas ou on utilise l'$eta$-réduction.
-		\end{ex}
+		\\ Cette règle traite le cas particulier d'une fonction inutile. En effet, si on a $g$ une fonction qui à $x$ associe $f(x)$. On aura donc $g(x) = f(x)$. La fonction $g$ devient obsolète. Ici c'est pareil, on a $(\lambda X.(M~X))$ quand on va appliquer une $\lambda$-expression $N$ on va avoir $((\lambda X.(M~X))~N)$. Si on suit la $\beta$-réduction on va substituer $X$ par $N$. On aura donc $(M~N)$. Cela revient au même dans la cas ou on utilise l'$\eta$-réduction.
 	\end{itemize}
 	\medbreak
 	
@@ -227,15 +222,28 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	On peut remarquer que dans les règles on a une forme particulière : $N [X \leftarrow M]$ avec deux $\lambda$-termes $M$ ,
 	$N$ et une variable $X$. Cette forme signifie que l'on va remplacer toutes les occurences de $X$ par $M$ dans la $\lambda$-expression $N$.
 	Cependant cette substitution est régie par une suite de règles qui sont les suivantes: 
-	\begin{itemize}
-		\item $X_{1}[X_{1} \leftarrow M]~= M$
-		\item $X_{2}[X_{1} \leftarrow M]~= X_{2}$ où $X_{1}\neq X_{2}$
+	\begin{enumerate}
+		\item $X_{1}[X_{1} \leftarrow M]~= M$ : Si on a $X_{1}$ et que l'on doit remplacer $X_{1}$ par $M$, on substitue $X_{1}$ par $M$.
+		\item $X_{2}[X_{1} \leftarrow M]~= X_{2}$ où $X_{1}\neq X_{2}$ : Si on a $X_{2}$ et que l'on doit remplacer $X_{1}$ par $M$, ce n'est pas la variable recherchée donc on ne fait rien. 
 		\item $(\lambda X_{1}.M_{1})[X_{1} \leftarrow M_{2}]~= (\lambda X_{1}.M_{1})$
 		\item $(\lambda X_{1}.M_{1})[X_{2} \leftarrow M_{2}]~= (\lambda X_{3}.M_{1}[X_{1} \leftarrow X_{3}][X_{2} \leftarrow M_{2}])$ 
 		\\où $X_{1} \neq X_{2}$, $X_{3} \notin FV(M_{2})$ et $X_{3} \notin FV(M_{1})\backslash{X_{1}}$ 
 		\item $(M_{1}~M_{2})[X \leftarrow M_{3}]~=(M_{1}[X \leftarrow M_{3}]~M_{2}[X \leftarrow M_{3}])$
-	\end{itemize}
-	\improvement[inline]{Expliquer les contraintes sur la substitution pour éviter la capture de variable; donner unexemple de problème}
+	\end{enumerate}
+	\medbreak
+	
+	Les deux premières règles ont été expliquées et pas les autres car on a besoin de le représenter par un exemple pour vraiment saisir le problème.
+	\begin{ex}
+		Prenons un exemple de de programme Ocaml :
+		\begin{itemize}
+			\item[] $let~g~x = let~x = x + 1~in~x + 3;;$
+		\end{itemize}
+		On a $x$ comme seule variable cependant il n'a pas la même valeur dans l'entièreté du programme. Si on fait $g 4$, on aura les variables $x$ soulignées suivantes : $let~g~\underline{x} = let~x = \underline{x} + 1~in~x + 3;;$ égales à $4$ et seulement elle. Les autres sont définies par le deuxième $let$ est sont donc "protégées" part celui-ci. 
+		\medbreak
+		
+		Dans les $\lambda$-calcul c'est la même chose. On prend l'expression $((\lambda x.((\lambda x.x)~x))~y)$.
+		Si on fait une $\beta$ réduction sur  $\underline{((\lambda x.((\lambda x.x)~x))~y)}$ on va avoir  $((\lambda z.z)~y)$. Pour éviter la confusion ce que l'on va faire c'est renommer avant pour éviter les conflits. C'est ce que l'on fait dans la règle 4.
+	\end{ex}
 	\bigbreak
 	
 	\begin{ex} 
@@ -309,47 +317,102 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\bigbreak
 	
 	
-	\subsection{Forme normale}
-	\change[inline]{A retravailler entièrement l'explication pour la forme normale}
-	\textit{Une expression est une forme normale si on ne peut pas réduire l'expression via une $\beta$ ou $\eta$ rédution.}
+	\subsection{Forme normale et stratégie de réduction}
+	
+	\paragraph{Forme normale} Comment peut on savoir quand une expression est réduite au maximum ? On peut se dire que l'on a réduit une expression au maximum quand on ne peut plus appliquer aucune réduction. Or l'$\alpha$-réduction est presque toujours applicable. On va se focaliser sur les deux autres réductions : La $\beta$ et l'$\eta$ réduction. On en ressort la règle suivante : \textit{Une expression est une forme normale si on ne peut pas réduire l'expression via une $\beta$ ou $\eta$ rédution}.
 	\medbreak
 	
 	\textbf{Théorème de la forme normale :}
 	Si on peut réduire $L$ tels que $L =_{n}~M$ et $L =_{n}~N$ et que $N$ et $M$ sont en forme normale alors $M = N$ à n renommages près.
-	\medbreak	
-	
-	\textbf{Théorème de Church-Rosser ( pour $=_{n}$ ) :}
-	Si on a $M =_{n} N$, alors il existe un $L'$ tels que $M \twoheadrightarrow n_{n}~L'$ et $N \twoheadrightarrow n_{n}~L'$.
 	\medbreak
 	
-	Certaines lambda calcul expressions n'ont pas de forme normale comme: $((\lambda x.x x)~(\lambda x.x x)$. 
-	D'autres en ont une mais on peut rentrer dans une boucle infinie de réduction si on choisit la mauvaise réduction.
-	\medbreak
-	
-	Le problème se pose lorsqu'on évalue un argument de la fonction qui n'est jamais utilisé. Pour palier à ce problème, on utilise la stratégie d'appliquer toujours les $\beta$ et $\eta$ réductions les plus à gauche. Ces règles sont les suivantes:
-	\begin{itemize}
-		\item[-] $M \longrightarrow_{\bar{n}}~N$ si $M~\beta~N$
-		\item[-] $M \longrightarrow_{\bar{n}}~N$ si $M~\eta~N$
-		\item[-] $(\lambda X.M) \longrightarrow_{\bar{n}}~(\lambda X.N)$
-		\item[-] $(M~N) \longrightarrow_{\bar{n}}~(M'~N)$ si $M \longrightarrow_{\bar{n}}~M'$
-		\\ et $\forall~L$, $(M~N)~\beta~L$ impossible et $(M~N)~\eta~L$ impossible
-		\item[-] $(M~N) \longrightarrow_{\bar{n}}~(M~N')$ si $N \longrightarrow_{\bar{n}}~N'$
-		\\ et $M$ est une forme normale
-		\\ et  $\forall~L$, $(M~N)~\beta~L$ impossible et $(M~N)~\eta~L$ impossible
-	\end{itemize}
-	\smallbreak
-	Cette solution est sûre mais reste peut utilisée car elle est assez lente. Le problème vient du faite que l'on ne prend pas forcément la meilleure réduction à faire. Je vais l'illustrer à travers un exemple
+	Certaines $\lambda$-expressions n'ont pas de forme normale. On va voir cela sur un exemple.
 	\begin{ex}
-		On prend $((\lambda x.(x~x))~(\lambda y.((\lambda x.x)~((\lambda x.x)))$. SI on suit les règles de la forme normale on va faire la séquence suivante :
+		 L'expression $((\lambda x.x x)~(\lambda x.x x))$ n'a pas de forme normale, elle va boucler indéfiniment.
 		\begin{itemize}
-			\item[] $\underline{((\lambda x.(x~x))~(\lambda y.((\lambda x.x)~(\lambda x.x))))}$
-			\item[$\rightarrow_{n}^{\beta}$] $(x~x)[x \leftarrow (\lambda y.((\lambda x.x)~(\lambda x.x)))]$
-			\item[] $((\lambda y.((\lambda x.x)~(\lambda x.x)))~(\lambda y.((\lambda x.x)~(\lambda x.x))))$
+			\item[~~~~] $\underline{((\lambda x.x x)~(\lambda x.x x))}$
+			\item[$\rightarrow_{\beta}$] $\underline{((\lambda x.x x)~(\lambda x.x x))}$
+			\item[$\rightarrow_{\beta}$] $\underline{((\lambda x.x x)~(\lambda x.x x))}$
+			\item ...
+			\item[$\rightarrow_{\beta}$] $\underline{((\lambda x.x x)~(\lambda x.x x))}$
 		\end{itemize}
 	\end{ex}
+
+	Le problème de la boucle infinie de réduction est possible si on applique une "mauvaise" réduction.
+	\begin{ex}
+		Par exemple, si on prend l'expression $((\lambda x.\lambda y. y) ((\lambda x.x x)~(\lambda x.x x))~z)$.
+		\begin{itemize}
+			\item[] Si on choisit de réduire $((\lambda x.\lambda y. y) \underline{((\lambda x.x x)~(\lambda x.x x))}~z)$ on va rentrer dans une boucle infinie. 
+			\item[] Mais si on décide de $(\underline{(\lambda x.\lambda y. y) ((\lambda x.x x)~(\lambda x.x x))}~z)$ cela reviendra à $((\lambda y.y)~z)$ ce qui donnera $z$.
+		\end{itemize}
+		
+	\end{ex}
+	\medbreak
+	Pour régler se problème on va utiliser \textbf{une stratégie de réduction}.
+	
+	
+	\paragraph{Stratégie de réduction} 
+	La question de l'ordre dans laquelle il faut réduire l'expression se pose. En effet si on prend l'exemple suivant : $(\lambda x.x~x)~((\lambda y.y)~(\lambda z.z))$. On a deux possibilités de réduction :
+	\begin{enumerate}
+		\item $\underline{(\lambda x.x~x)~((\lambda y.y)~(\lambda z.z))} \rightarrow_{\beta} ((\lambda y.y)~(\lambda z.z))~((\lambda y.y)~(\lambda z.z))$ 
+		\item $(\lambda x.x~x)~\underline{((\lambda y.y)~(\lambda z.z))} \rightarrow_{\beta} (\lambda x.x~x)~(\lambda z.z)$ 
+	\end{enumerate} 
+	\bigbreak
+	
+	
+	Pour palier à ce problème on va définir des règles qui vont donner un ordre précis de réduction à faire. L'idée va être d'appliquer la réduction la plus large d'abord puis la plus à gauche. Cela va permettre d'éviter l'évaluation de sous-expressions inutiles. Voici les règles qui régissent la stratégie de réduction :
+	\begin{itemize}
+		\item[-] $M \longrightarrow_{\bar{n}}~N$~~~si $M~\beta~N$ : $N$ est une réduction de $M$ si on peut $\beta$ réduire $M$ en $N$.
+		\smallbreak
+		\item[-] $M \longrightarrow_{\bar{n}}~N$~~~si $M~\eta~N$ : $N$ est une réduction de $M$ si on peut $\eta$ réduire $M$ en $N$.
+		\smallbreak
+		\item[-] $(\lambda X.M) \longrightarrow_{\bar{n}}~(\lambda X.N)$ : $(\lambda X.N)$ est une réduction de $(\lambda X.M)$ si on a $M~\beta~N$ ou $M~\eta~N$.
+		\smallbreak
+		\item[-] $(M~N) \longrightarrow_{\bar{n}}~(M'~N)$~~~si $M \longrightarrow_{\bar{n}}~M'$ et $\forall~L$, $(M~N)~\beta~L$ impossible et $(M~N)~\eta~L$ impossible :\\
+		$(M'~N)$ est une réduction de $(M~N)$ si il existe une réduction pour $M$ et si on ne peut pas appliquer une réduction sur $(M~N)$.
+		\smallbreak
+		\item[-] $(M~N) \longrightarrow_{\bar{n}}~(M~N')$~~~si $N \longrightarrow_{\bar{n}}~N'$
+		et $M$ est une forme normale
+		et  $\forall~L$, $(M~N)~\beta~L$ impossible et $(M~N)~\eta~L$ \\impossible :
+		$(M~N')$ est une réduction de $(M~N')$ si $M$ est en forme normale, si il existe une réduction pour $N$ et si on ne peut pas appliquer une réduction sur $(M~N)$.
+	\end{itemize}
+	\smallbreak
+	Cette suite de règles permet d'être sûr d'avoir une forme normale. Cependant elle ne suit pas forcément le chemin optimal cela créer donc une lenteur. 
+	\newpage
+	
+	
+	
+	\begin{ex}
+		Si on prend l'expression suivante : $(\lambda x.(x~x))~((\lambda y.y)~(\lambda z.z)))$. On va faire deux développements, un qui suit les règles de la stratégie de réduction et l'autre que l'on va faire par nous-même en regardant ce qui nous avantages le plus.
+		\begin{multicols}{2}{
+				\begin{itemize}
+					\item[] Version qui suit la stratégie de réduction
+					\item[] $\underline{(\lambda x.(x~x))~((\lambda y.y)~(\lambda z.z))}$
+					\item[$\rightarrow_{n}^{\beta}$] $\underline{((\lambda y.y)~(\lambda z.z))}~((\lambda y.y)~(\lambda z.z))$
+					\item[$\rightarrow_{n}^{\beta}$] $\underline{(\lambda z.z)~((\lambda y.y)~(\lambda z.z))}$
+					\item[$\rightarrow_{n}^{\beta}$] $\underline{((\lambda y.y)~(\lambda z.z))}$
+					\item[$\rightarrow_{n}^{\beta}$] $(\lambda z.z)$
+				\end{itemize}
+				
+				\begin{itemize}
+					\item[] Version personnelle
+					\item[] $(\lambda x.(x~x))~\underline{((\lambda y.y)~(\lambda z.z))}$
+					\item[$\rightarrow_{n}^{\beta}$] $\underline{(\lambda x.(x~x))~(\lambda z.z)}$
+					\item[$\rightarrow_{n}^{\beta}$] $\underline{(\lambda z.z)~(\lambda z.z)}$
+					\item[$\rightarrow_{n}^{\beta}$] $(\lambda z.z)$
+				\end{itemize}
+			}
+		\end{multicols}
+		\smallbreak 
+		J'ai résussi à atteindre la forme normale plus vite sans suivre la stratégie de réduction.
+	\end{ex} 
 	\medbreak
 	
-	Pour évaluer un langage, on utilise ce qui s'appelle une \textbf{stratégie d'évaluation}. Cette stratégie explique quand les arguments d'une fonction est évalué. Je vous présente les 2 stratégies qui nous intéresse :
+	Le faite de pouvoir atteindre le même résultat avec deux suites de réductions différentes vient de la propriétée du diamant est la suivante :
+	\smallbreak
+	\textbf{Théorème (Diamond Property pour $\twoheadrightarrow_{n}$) :} Si $L \twoheadrightarrow_{n} M$ et $L \twoheadrightarrow_{n} N$ alors il existe une expression $L'$ telle que $M \twoheadrightarrow_{n} L'$ et $N \twoheadrightarrow_{n} L'$.
+	
+	\paragraph{Stratégie d'évaluation} Pour évaluer un langage, on utilise ce qui s'appelle une \textbf{stratégie d'évaluation},ici on parlait de stratégie de réduction. Cette stratégie explique quand les arguments d'une fonction sont évalués(). Je vous présente les 2 stratégies qui nous intéresse :
 	\begin{enumerate}
 		\item \textbf{l'appel par nom :} pour une fonction f donnée, on évalue chaque arguments quand on en a besoin, c'est-à-dire que l'on évalue pas les arguments avant l'appel de la fonction. Cette stratégie est pratique quand on a des arguments non utilisés  et quand on veut travailler avec des listes infinies. 
 		\\Mais par contre si tous les arguments sont utilisés elle est plus lente que celle présentée après car on doit réévaluer les arguments à chaque fois. Elle fait partie du groupe des stratégie d'évaluation non stricte, c'est-à-dire qu'il n'évalue pas forcément la fonction en entier. 
@@ -367,9 +430,30 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	La preuve de la compréhension des $\lambda$-calculs a été faite à travers son implantation en OCaml. Cependant cette implantation reste simplifiée et une version plus complète sera présentée dans la suite. 
 	\smallbreak
-	L'appel par valeur est plus facile à mettre en oeuvre dans un langage.
-	\improvement[inline]{A justifier}
-	On va voir cela dans le langage ISWIM qui est un langage qui utilise l'appel par valeur.
+	L'appel par valeur est plus facile à mettre en oeuvre dans un langage. En effet, on a la garantit que l'élément que l'on va appliquer est réduit au maximum et que plus de traitement ne sera à faire sur lui ce qui réduit considérablement le nombre de règle qui va régir le langage. Cependant on va perdre en vitesse d'éxécution ce qui est dérangeant mais que l'on va préférer à  un recalcul de chaque élément.
+	\begin{ex}
+		Si on reprend l'expression $(\lambda x.(x~x))~\underline{((\lambda y.y)~(\lambda z.z))}$. Un appel par nom va faire la chose suivante :
+		\begin{itemize}
+			\item[] $\underline{(\lambda x.(x~x))~((\lambda y.y)~(\lambda z.z))}$
+			\item[$\rightarrow_{n}^{\beta}$] $\underline{((\lambda y.y)~(\lambda z.z))}~((\lambda y.y)~(\lambda z.z))$
+			\item[$\rightarrow_{n}^{\beta}$] $\underline{(\lambda z.z)~((\lambda y.y)~(\lambda z.z))}$
+			\item[$\rightarrow_{n}^{\beta}$] $\underline{((\lambda y.y)~(\lambda z.z))}$
+			\item[$\rightarrow_{n}^{\beta}$] $(\lambda z.z)$
+		\end{itemize}
+		\medbreak
+		
+		On ne va pas traiter tout de suite $((\lambda y.y)~(\lambda z.z))$ ce qui va nous obliger à le traiter deux fois. Alors que si on réduit avec la stratégie de l'appel par valeur, on va avoir :
+		\begin{itemize}
+			\item[] $(\lambda x.(x~x))~\underline{((\lambda y.y)~(\lambda z.z))}$
+			\item[$\rightarrow_{n}^{\beta}$] $\underline{(\lambda x.(x~x))~(\lambda z.z)}$
+			\item[$\rightarrow_{n}^{\beta}$] $\underline{(\lambda z.z)~(\lambda z.z)}$
+			\item[$\rightarrow_{n}^{\beta}$] $(\lambda z.z)$
+		\end{itemize}
+	\end{ex} 
+	\bigbreak
+	
+	
+	On va voir ISWIM qui est un langage qui utilise la stratégie de l'appel par valeur.
 	\newpage
 	
 	
@@ -942,16 +1026,27 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	\section{Programmation réactive}
 	
-	\improvement[inline]{Section à développer 2-3 pages}
-	
 	\paragraph{Explication formelle}
 	En informatique, la programmation réactive est un paradigme de programmation déclarative qui concerne les flux de données et la propagation du changement. Avec ce paradigme, il est possible d’exprimer facilement des flux de données statiques (par exemple, des tableaux) ou dynamiques (par exemple, des émetteurs d’événements) et également de signaler l’existence d’une dépendance inférée au sein du modèle d’exécution associé, ce qui facilite la propagation automatique des données modifiées.
 	\medbreak
 	
-	\paragraph{Historique} (en cours)
+	\paragraph{Historique} La programmation réactive a été portée jusqu'à nos jours à travers différents langage, un des plus vieux est l'\textbf{ESTEREL}. ESTEREL est un langage de programmation développé dans les années 80 par une équipe de chercheurs des Mines de Paris et de l’INRIA. Il a initialement été conçu pour la programmation de robots industriels et pour la simulation de circuit électrique. La programmation réactive s'est diversifiée en s'implantant soit dans des langages déjà existant comme le C, le SCHEME ou encore le JAVA via l'extension \textbf{Fair Threads} (présentée dans \hyperref[FT]{[4]} datant de 2001) soit en créant un tout nouveau langage de programmation comme le \textbf{SL} (présentée dans \hyperref[SL]{[5]} datant de 1995) ou encore \textbf{Icobj} (présentée dans \hyperref[IJ]{[6]} présentée en 1996).
 	\medbreak
 	
-	On s'intéresse à une spécification de la programmation réactive : la \textbf{programmation réactive synchrone concurrente}.
+	Le framework \textbf{Fair Threads} est une implantation de la programmation réactive dans différents langages. Je me suis intéressé à l'implantation java. Ce langage se base sur la notion de \textit{fair thread}, basiquement ce sont des threads qui fonctionnent par concurrence coopérative (expliquée plus bas). Cependant il y a une forme de préemption via un planificateur qui donne les mêmes droits à tous. Son implantation est déterministe et portable. On peut remarquer cependant que le bon fonctionnement de la machine va beaucoup dépendre du développeur car il va devoir rendre ces threads coopératifs.
+	\medbreak
+	
+	Le langage synchrone \textbf{SL} est, comme dit plus haut, basé sur le langage ESTEREL. Son but est de régler le problème de causalité présent dans le ESTEREL. Le problème venait de savoir si oui ou non un signal est absent. Dans l'instant courant on ne peut pas être sûr qu'il ne va pas être émit donc ESTEREL se basait sur une hypothèse. Le SL règle le problème en attendant la fin de l'instant courant pour dire si un signal est émit ou non. 
+	\medbreak
+	
+	Le langage \textbf{Icobj} est un langage assez atypique. En effet, il n'a pas de syntaxe car il est entièrement graphique et il possède une sémantique simple basée sur le Reactive script. De plus, il n'est pas compilé mais interprété directement. Il fonctionne comme les autres langages de programmation réactif : il peut fonctionner de façon séquentielle, parallèle ou encore dans une boucle. Il fonctionne aussi avec un système d'événement qui permet une bonne communication. 
+	\bigbreak
+	
+	
+	Il y a de nombreuses implantations dont je n'ai pas parlé. Si vous souhaitez plus d'informations voici le un lien des recherches de Frédéric Bussinot : http://www-sop.inria.fr/mimosa/Frederic.Boussinot/. Ces recherches se focalisent sur la programmation réactive, tous les langages précédemments cités dans l'historique viennent de ces articles.
+	\bigbreak
+
+  	\paragraph{Le cas étudié} Chaque implantations travaillent un aspect de la programmation réactive pour une utilisation spécifique. Nous n'allons pas déroger à cette remarque en travaillant sur un aspect de la programmation réactive : la \textbf{programmation réactive synchrone concurrente}. Premièrement, on va expliquer tous ces termes.
 	\begin{itemize}
 		\item[] - \textbf{Synchrone} signifie que les informations seront obtenues de manière immédiate au contraire de la programmation réactive asynchrone qui attend un "instant" avant de distribuer les valeurs. 
 		\item[] - \textbf{Concurrent} signifie que plusieurs processus vont se dérouler durant le même instant logique. Il existe deux sous-catégories à la concurrence :
@@ -960,13 +1055,18 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			\item \textbf{Concurrence préemptive :} le système va "donner un temps de parole"
 		\end{enumerate}
 	\end{itemize}
-	\smallbreak
+	\medbreak
+	
 	Dans notre machine abstraite, on utilise un peu des deux principes en laissant les processus fonctionner seuls mais le système garde la possibilité de gérer les processus bloqués. On va voir à travers un exemple comment fonctionne la programmation réactive synchrone concurrente coopérative.
+	\newpage
+	
+	
 	
 	\paragraph{Le cas de Réactive ML}
-	Réactive ML utilise le modèle de programmation de concurrence coopérative. 
-	\smallbreak
-	L'analyse est découpée en 2 sous-analyses :
+	Le langage Reactive ML utilise le modèle de programmation de concurrence coopérative. C'est-à-dire que les différents processus vont fonctionner en même temps (de façon hypothétique) tout en laissant la main pour que tout le monde puissent fonctionner. 
+	\medbreak
+	
+	La spécificité du ReactiveML est sont analyse qui va détecter les erreurs de concurrence avant de le tester via une sémantique spéciale. L'analyse est découpée en 2 sous-analyses :
 	\begin{itemize}
 		\item[] - \textbf{statique} : système de type et d'effet
 		\item[] - \textbf{réactive} : détecter les erreurs de concurrence
@@ -980,27 +1080,41 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\\\textbf{Un programme est r\'{e}actif si son ex\'{e}cution fait progresser les instants logiques.}
 	\medbreak
 	
-	\textbf{Exemple :}
-	\smallbreak
-	\begin{enumerate}
-		\item let process clock timer s =
-		\item $\quad$ let time = ref(Unix.gettimeofday()) in
-		\item $\quad$ loop
-		\item $\quad$ $\quad$ let time' = Unix.gettimeofday() in
-		\item $\quad$ $\quad$ if time' -. !time >= timer
-		\item $\quad$ $\quad$ then(emit s(); time := time')
-		\item $\quad$ end 
-	\end{enumerate}
-	\medbreak
-	
-	Le problème ici est que le contenu de la boucle peut s'effectuer instantanément alors qu'il faudrait attendre un instant logique pour l'exécuter. Par conséquent, on doit ajouter une \textbf{pause entre les lignes 6 et 7}.
+	\begin{ex}
+		Voici un exemple de programme qui contient une erreur de réactivité.
+		\begin{enumerate}
+			\item let process clock timer s =
+			\item $\quad$ let time = ref(Unix.gettimeofday()) in
+			\item $\quad$ loop
+			\item $\quad$ $\quad$ let time' = Unix.gettimeofday() in
+			\item $\quad$ $\quad$ if time' -. !time >= timer
+			\item $\quad$ $\quad$ then(emit s(); time := time')
+			\item $\quad$ end 
+		\end{enumerate}
+		\bigbreak
+
+
+		Le problème ici est que le contenu de la boucle peut s'effectuer instantanément alors qu'il faudrait attendre un instant logique pour l'exécuter. Par conséquent, on doit ajouter une \textbf{pause entre les lignes 6 et 7}. Le nouveau programme sera donc :
+		\begin{enumerate}
+			\item let process clock timer s =
+			\item $\quad$ let time = ref(Unix.gettimeofday()) in
+			\item $\quad$ loop
+			\item $\quad$ $\quad$ let time' = Unix.gettimeofday() in
+			\item $\quad$ $\quad$ if time' -. !time >= timer
+			\item $\quad$ $\quad$ then(emit s(); time := time')
+			\item $\quad$ $\quad$ pause
+			\item $\quad$ end 
+		\end{enumerate}
+	\end{ex}
 	\bigbreak
 	
+	
+	L'analyse étant spéciale, l'écriture du programme a des règles strict par exemple :
 	Une \textbf{condition suffisante} pour qu'un \textbf{processus r\'{e}cursif soit r\'{e}actif} est qu'il y ait \textbf{toujours} \textbf{un instant logique entre l'instanciation du processus et l'appel r\'{e}cursif}.
 	\bigbreak
 	
 	
-	Le reste de l'article rentre beaucoup plus dans les détails avec l'analyse syntaxique qui prend en compte la réactivité du langage ce qui permet de vérifier la réactivité du programme très rapidement. Cette partie nous intéresse moins car on ne va pas travailler sur l'analyse mais sur la méthode d'exécution mais si cela vous intéresse vous pouvez retrouver cet article dans la bibliographie.
+	Le reste de l'article rentre beaucoup plus dans les détails avec l'analyse syntaxique qui prend en compte la réactivité du langage ce qui permet de vérifier la réactivité du programme très rapidement. Cette partie nous intéresse moins car on ne va pas travailler sur l'analyse mais sur la méthode d'exécution mais si cela vous intéresse vous pouvez retrouver cet article dans la \hyperref[biblio]{bibliographie}.
 	
 	
 	\chapter{Langage fonctionnel réactif}\label{SECDConc4}
@@ -1846,6 +1960,10 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\item[]
 	\item[] - Sinon on a un \textbf{état inconnu} : on a une \textbf{erreur} 
 \end{itemize}
+\bigbreak
+
+
+ Un exemple de fonctionnement de la machine TTS se trouve dans les \hyperref[TTSI]{Annexes}.
 \newpage
 	
 	
@@ -1880,7 +1998,15 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	\chapter{Conclusion}
 	
-	Le sujet traitait \textit{la programmation réactive synchrone} à travers un travail d'implantation d'une machine virtuelle. Pour cela, nous sommes repartis de la base en apprenant le langage de programmation $\lambda$-calcul. On a continué notre apprentissage avec le langage de programmation ISWIM. On sait intéressé aux machines abstraite qui découle de ces langages. On sait aussi intéressé à la programmation réactive. De là, nous sommes partie d'une machine existante pour créer dans un premier temps une machine abstraite fonctionnelle réactive pure et dans un deuxième temps une machine abstraite fonctionnelle réactive avec partage de valeurs. Dans un troisième temps un petit mot a été glissé sur la gestion des erreurs. J'aimerai souligner tout le travail effectué durant le stage qui n'est pas présent dans le rapport ou seulement en Annexe. Beaucoup de version intermédiaire de notre travail final existe ainsi que leurs implantations en OCaml. 
+	Le sujet traitait \textit{la programmation réactive synchrone} à travers un travail d'implantation d'une machine virtuelle. Pour cela, nous sommes repartis de la base en apprenant le langage de programmation $\lambda$-calcul. On a continué notre apprentissage avec le langage de programmation ISWIM. On s'est intéressé aux machines abstraites qui découle de ces langages. On sait aussi intéressé à la programmation réactive. De là, nous sommes partie d'une machine existante pour créer notre machine fonctionnelle réactive.
+	\begin{itemize}
+		\item[-] Dans un premier temps une machine abstraite fonctionnelle réactive pure. On a mis les bases de la programmation réactive via l'ajout des threads et des signaux en prenant le principe du langage SL pour connaître l'absence d'un signal. 
+		\item[-]Dans un deuxième temps une machine abstraite fonctionnelle réactive avec partage de valeurs. Les signaux ne sont plus seulement présent ou absent mais permettent de transférer des données entre chaque thread. On a créé une mémoire partagée découpée grâce au signal qui le contient et au thread qui la mit dans la mémoire.
+		\item[-] Dans un troisième temps un petit mot a été glissé sur la gestion des erreurs. 
+	\end{itemize}
+	\medbreak
+	
+	J'aimerai souligner tout le travail effectué durant le stage qui n'est pas présent dans le rapport ou seulement en Annexe. Beaucoup de version intermédiaire de notre travail final existe ainsi que leurs implantations en OCaml.
 	\medbreak
 	
 	Encore beaucoup de travail reste à faire. En effet, il manque une preuve du déterminisme de la machine qui a été effectuée en partie au brouillon. Une implantation avec un système de gestion d'erreur est une prochaine étape à franchir pour que notre machine abstraite fonctionnelle réactive soit entièrement opérationnelle.
@@ -1890,12 +2016,15 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	
 	
-	\chapter*{Bibliographie}
+	\chapter*{Bibliographie}\label{biblio}
 	
 	\begin{itemize}
 		\item[] [1] \textit{Réactivité des systèmes coopératifs : le cas Réactive ML} de Louis Mandrel et Cédric Pasteur\label{ReactiveML}
 		\item[] [2] \textit{The ZINC experiment: an economical implementation of the ML language} de Xavier Leroy\label{ZINC}
 		\item[] [3] \textit{Programming Languages And Lambda Calculi} de Mathias Felleisen et Matthew Flatt\label{Calculi}
+		\item[] [4] \textit{Java Fair Threads} de Frédéric Bussinot \label{FT} 
+		\item[] [5] \textit{The SL Synchronous Language} de Frédéric Bussinot et Robert de Simone \label{SL}
+		\item[] [6] \textit{Icobj Programming} de Frédéric Bussinot \label{IJ}
 	\end{itemize}
 	
 	\chapter*{Annexes}
