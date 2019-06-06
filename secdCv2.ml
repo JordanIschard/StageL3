@@ -47,6 +47,7 @@ module SECDCv2Machine =
     type s =  
         Fermeture of (control_string * env) 
       | Stack_const of int
+      | Stack_throw of erreur
       | Remp
 
     (* Type représentant la pile *)
@@ -77,7 +78,7 @@ module SECDCv2Machine =
 
 
     (* Type représentant la machine SECD concurrente version 1 *)
-    type secdCv2 = Machine of stack * env * control_string * dump * wait * stuck * signals
+    type secdCv2 = Machine of stack * env * control_string * dump * wait * stuck * signals * handler
 
 
 
@@ -121,13 +122,13 @@ module SECDCv2Machine =
     (* Retourne un message par rapport à un identifiant d'erreur *)
     let message_of_erreur erreur =
       match erreur with
-          1  ->   "ERREUR : Je ne comprends pas ce qu'il s'est passé :/"
-        | 2  ->   "ERREUR : Format de la liste bloqué invalide"
-        | 3  ->   "ERREUR : Format de la liste d'attente invalide"
-        | 4  ->   "ERREUR : Format de l'environnement invalide"
-        | 5  ->   "ERREUR : Format de l'opérateur erroné"
-        | 6  ->   "ERREUR : Le spawn n'est pas bien délimité"
-        | 7  ->   "ERREUR : Signal non initialisé"
+          1  ->   "ERREUR : Aucune substitution possible"                (* AucuneSubPossible *)
+        | 2  ->   "ERREUR : Etat inconnu"                                (* Etatinconnu *)
+        | 3  ->   "ERREUR : Format de l'opération erronée"               (* FormatOpErreur *)
+        | 4  ->   "ERREUR : Format de l'environnement invalide"          (* IllegalAddEnv*)
+        | 5  ->   "ERREUR : Format du spawn est erroné"                  (* FormatSpawnError *)
+        | 6  ->   "ERREUR : Le sigbal n'est pas initialisé"              (* SignalNotInit *)
+        | 7  ->   "ERREUR : Format de la file d'attente erronée"         (* UnknowWaitState *)
         | 8  ->   "ERREUR : Signal déjà initialisé"
         | 9  ->   "ERREUR : Format du catch invalide"
         | _  ->   "ERREUR : Cette erreur n'existe pas "
@@ -190,6 +191,8 @@ module SECDCv2Machine =
         | Fermeture(control_string,env)::t      ->   "["^(string_of_control_string control_string)^" , {"^(string_of_env env)^"}] "^(string_of_stack t)
 
         | Stack_const b::t                      ->   (string_of_int b)^" "^(string_of_stack t)
+
+        | Stack_throw e::t                      ->   (message_of_erreur e)^" "^(string_of_stack t)
 
         | Remp::t                               ->   "Remp "^(string_of_stack t)   
 
@@ -266,7 +269,7 @@ module SECDCv2Machine =
 
 
     (* Affiche la machine SECD concurrente version 2 *)
-    let afficherSECDCv2 machine = printf "MachineSECDCv1 : %s" (string_of_Machine machine)
+    let afficherSECDCv2 machine = printf "MachineSECDCv2 : %s" (string_of_Machine machine)
 
 
 
@@ -302,6 +305,8 @@ module SECDCv2Machine =
       match (env,var) with
           ([],Stack_const b)               ->   [EnvVar(varARemp,b)]
 
+        | ([],Stack_throw e)               ->   [EnvVar(varARemp,e)]
+
         | ([],Fermeture(c,e))              ->   [EnvFerm(varARemp,(c,e))]
 
         | (EnvVar(v,b)::t,Fermeture f)     ->   if (equal v varARemp) then append [EnvFerm(v,f)] t else append [EnvVar(v,b)] (ajoutEnv t varARemp (Fermeture f))
@@ -311,6 +316,10 @@ module SECDCv2Machine =
         | (EnvVar(v,b1)::t,Stack_const b)  ->   if (equal v varARemp) then append [EnvVar(v,b)] t else append [EnvVar(v,b1)] (ajoutEnv t varARemp (Stack_const b))
 
         | (EnvFerm(v,f)::t,Stack_const b)  ->   if (equal v varARemp) then append [EnvVar(v,b)] t else append [EnvFerm(v,f)] (ajoutEnv t varARemp (Stack_const b))
+
+        | (EnvVar(v,b1)::t,Stack_throw e)  ->   if (equal v varARemp) then append [EnvVar(v,e)] t else append [EnvVar(v,b1)] (ajoutEnv t varARemp (Stack_throw e))
+
+        | (EnvFerm(v,f)::t,Stack_throw e)  ->   if (equal v varARemp) then append [EnvVar(v,e)] t else append [EnvFerm(v,f)] (ajoutEnv t varARemp (Stack_throw e))
 
         | (Init s::t,v)                    ->   append [Init s] (ajoutEnv t varARemp v)
 
@@ -352,14 +361,18 @@ module SECDCv2Machine =
 
 
     (* Emet un signal et vérifie si des threads sont en attente de cette émission *)
-    let emit signal st si =
+    let emit signal env st si =
       let rec aux st =
         match st with 
             []             ->   ([],[])
 
           | (s,thread)::t  ->   let (w1,st1) = aux t in if (equal signal s) then (append [thread] w1,st1) else (w1,append [(s,thread)] st1)
       in
-      if (isInit signal then let (w1,st1) = aux st in (w1,st1,(append [signal] si)) else raise SignalNotInit
+      if (isInit env signal) then let (w1,st1) = aux st in (w1,st1,(append [signal] si)) else raise SignalNotInit
+
+
+    (* Test si un signal est émis *)
+    let isEmit env signal si = if (isInit env signal) then if(mem signal si) then true else false else raise SignalNotInit
 
 
     (**** Machine SECD concurrente version 2 ****)
@@ -367,66 +380,110 @@ module SECDCv2Machine =
     (* Applique une transition de la machine SECD concurrente version 2 pour un état donné *)
     let transitionSECDCv2 machine =
       match machine with
-          Machine(s,e,Constant b::c,d,w,st,si)                           ->   Machine(Stack_const b::s,e,c,d,w,st,si)
+
+          (* Traitement erreur *)                                                                            
+          | Machine(Stack_throw erreur::s,e,c,d,w,st,si,Handler(erreur1,(s1,e1,Pair(abs,c1)::c2,d1,w1,st1,si1,h)))                
+          ->  if (erreur = erreur1) then Machine([],(ajoutEnv e1 abs (Stack_throw erreur)),c1,Save(s1,e1,c2,d1),w1,st1,si1,h)
+                                    else Machine(Stack_throw erreur::s,e,c,d,w,st,si,h)            
+
+          (* Erreur non traitée *)
+        | Machine(Stack_throw erreur::s,e,c,d,w,st,si,None)                ->   Machine([Stack_throw erreur],[],[],Vide,[],[],[],None)
+
+
+          (* Constante *)
+        | Machine(s,e,Constant b::c,d,w,st,si,h)                           ->   Machine(Stack_const b::s,e,c,d,w,st,si,h)
         
-        | Machine(s,e,Variable x::c,d,w,st,si)                           ->   Machine((substitution x e)::s,e,c,d,w,st,si)
+          (* Substitution *)
+        | Machine(s,e,Variable x::c,d,w,st,si,h)                           ->   begin try Machine((substitution x e)::s,e,c,d,w,st,si,h)
+                                                                                      with AucuneSubPossible -> Machine(Stack_throw 1::s,e,c,d,w,st,si,h)
+                                                                                end
 
-        | Machine(s,e,Pair(abs,expr)::c,d,w,st,si)                       ->   Machine(Fermeture([Pair(abs,expr)],e)::s,e,c,d,w,st,si)
+          (* Abstraction *)                                                                      
+        | Machine(s,e,Pair(abs,expr)::c,d,w,st,si,h)                       ->   Machine(Fermeture([Pair(abs,expr)],e)::s,e,c,d,w,st,si,h)
 
-        | Machine(s,e,Prim op::c,d,w,st,si)                              ->   begin
-                                                                               let (liste_entier,new_stack) = prendre_entier s (getNbrOperande op) in 
-                                                                               let res = (secdLanguage_of_exprISWIM (calcul op liste_entier)) in
-                                                                               match res with
-                                                                                   [Constant b] ->  Machine(Stack_const b::new_stack,e,c,d,w,st,si)
+          (* Opération *)
+        | Machine(s,e,Prim op::c,d,w,st,si,h)                              ->   begin
+                                                                                  try 
+                                                                                      let (liste_entier,new_stack) = prendre_entier s (getNbrOperande op) in 
+                                                                                      let res = (secdLanguage_of_exprISWIM (calcul op liste_entier)) in
+                                                                                      match res with
+                                                                                          [Constant b] ->  Machine(Stack_const b::new_stack,e,c,d,w,st,si,h)
 
-                                                                                 | [Pair(abs,c1)] -> Machine(Fermeture([Pair(abs,c1)],e)::new_stack,e,c,d,w,st,si)
+                                                                                        | [Pair(abs,c1)] -> Machine(Fermeture([Pair(abs,c1)],e)::new_stack,e,c,d,w,st,si,h)
 
-                                                                                 | _ -> raise EtatInconnu
+                                                                                        | _ -> Machine(Stack_throw 2::s,e,c,d,w,st,si,h) 
+                                                                                  with FormatOpErreur -> Machine(Stack_throw 3::s,e,c,d,w,st,si,h) 
                                                                               end
 
-        | Machine(v::Remp::s,e,Ap::c,d,w,st,si)                          ->   Machine(v::s,e,c,d,w,st,si)
+          (* Application neutre droite *)                                                                    
+        | Machine(v::Remp::s,e,Ap::c,d,w,st,si,h)                          ->   Machine(v::s,e,c,d,w,st,si,h)
         
-        | Machine(Remp::v::s,e,Ap::c,d,w,st,si)                          ->   Machine(v::s,e,c,d,w,st,si)
+          (* Application neutre gauche *)
+        | Machine(Remp::v::s,e,Ap::c,d,w,st,si,h)                          ->   Machine(v::s,e,c,d,w,st,si,h)
 
-        | Machine(v::Fermeture([Pair(abs,c1)],e1)::s,e,Ap::c,d,w,st,si)  ->   Machine([],(ajoutEnv e1 abs v),c1,Save(s,e,c,d),w,st,si)
+          (* Application *)                                                                    
+        | Machine(v::Fermeture([Pair(abs,c1)],e1)::s,e,Ap::c,d,w,st,si,h)  ->   begin try Machine([],(ajoutEnv e1 abs v),c1,Save(s,e,c,d),w,st,si,h)
+                                                                                      with IllegalAddEnv -> Machine(Stack_throw 4::s,e,c,d,w,st,si,h) 
+                                                                                end
+          (* Récupération de sauvegarde *)
+        | Machine(v::s,e,[],Save(s1,e1,c,d),w,st,si,h)                     ->   Machine(v::s1,e1,c,d,w,st,si,h)
 
-        | Machine(v::s,e,[],Save(s1,e1,c,d),w,st,si)                     ->   Machine(v::s1,e1,c,d,w,st,si)
+          (* Création de thread *)
+        | Machine(s,e,Bspawn::c,d,w,st,si,h)                               ->   begin try let (c1,c2) = spawn c in Machine(Remp::s,e,c2,d,(append w [Save(s,e,c1,d)]),st,si,h)
+                                                                                      with FormatSpawnError -> Machine(Stack_throw 5::s,e,c,d,w,st,si,h)  
+                                                                                end
+          (* Initialisation signal *)
+        | Machine(s,e,Signal(signal,c1)::c,d,w,st,si,h)                    ->   let e1 = addInit e signal in Machine([],e1,c1,Save(s,e,c,d),w,st,si,h)
 
-        | Machine(s,e,Bspawn::c,d,w,st,si)                               ->   let (c1,c2) = spawn c in Machine(Remp::s,e,c2,d,(append w [Save(s,e,c1,d)]),st,si)
+          (* Emission *)                                                                    
+        | Machine(s,e,Emit signal::c,d,w,st,si,h)                          ->   begin try let (w1,st1,si1) = emit signal e st si in Machine(Remp::s,e,c,d,w1,st1,si1,h)
+                                                                                      with SignalNotInit -> Machine(Stack_throw 6::s,e,c,d,w,st,si,h)  
+                                                                                end
+          (* Présence d'un signal *)
+        | Machine(s,e,Present(signal,c1,c2)::c,d,w,st,si,h)                ->   begin try 
+                                                                                        if (isEmit e signal si) 
+                                                                                          then Machine(s,e,(append c1 c),d,w,st,si,h)
+                                                                                          else begin
+                                                                                                match w with 
+                                                                                                    []                    
+                                                                                                    ->   Machine([],[],[],Vide,[],(append st [(signal,Save(s,e,Present(signal,c1,c2)::c,d))]),si,h)
 
-        | Machine(s,e,Signal(signal,c1)::c,d,w,st,si)                    ->   let e1 = addInit e signal in Machine([],e1,c1,Save(s,e,c,d),w,st,si)
+                                                                                                  | Save(s1,e1,c3,d1)::t  
+                                                                                                    ->   Machine(s1,e1,c3,d1,t,(append st [(signal,Save(s,e,Present(signal,c1,c2)::c,d))]),si,h)
 
-        | Machine(s,e,Emit signal::c,d,w,st,si)                          ->   let (w1,st1,si1) = emit signal st si in Machine(Remp::s,e,c,d,w1,st1,si1)
+                                                                                                  | _  ->   Machine(Stack_throw 7::s,e,c,d,w,st,si,h)  
+                                                                                              end
+                                                                                      with SignalNotInit ->  Machine(Stack_throw 6::s,e,c,d,w,st,si,h)  
+                                                                                end
+         
+          (* Erreur *)                                                                           
+        | Machine(s,e,Throw erreur::c,d,w,st,si,h)                         ->   Machine(Stack_throw erreur::s,e,c,d,w,st,si,h)
+     
+          (* Création gestionnaire d'erreur *)
+        | Machine(s,e,Catch(erreur,c1,(abs,c2))::c,d,w,st,si,h)            ->   Machine(s,e,(append c1 c),d,w,st,si,Handler(erreur,(s,e,(append [Pair(abs,c2)] c),d,w,st,si,h)))
+                                          
+          (* Récupération de thread *)
+        | Machine(s,e,[],Vide,Save(s1,e1,c,d)::w,st,si,h)                  ->   Machine(s1,e1,c,d,w,st,si,h)
 
-        | Machine(s,e,Present(signal,c1,c2)::c,d,w,st,si)                ->   if (mem signal si) 
-                                                                                then Machine(s,e,(append c1 c),d,w,st,si)
-                                                                                else begin
-                                                                                      match w with 
-                                                                                          []                    ->   Machine([],[],[],Vide,[],(append st [(signal,Save(s,e,Present(signal,c1,c2)::c,d))]),si)
+          (* Fin d'un instant logique *)                                                                           
+        | Machine(s,e,[],Vide,[],st,si,h)                                  ->   let w = secondChoix st in Machine(s,e,[],Vide,w,[],[],h)
 
-                                                                                        | Save(s1,e1,c3,d1)::t  ->   Machine(s1,e1,c3,d1,t,(append st [(signal,Save(s,e,Present(signal,c1,c2)::c,d))]),si)
-
-                                                                                        | _                     ->   raise UnknowWaitState
-                                                                                     end
-
-        | Machine(s,e,[],Vide,Save(s1,e1,c,d)::w,st,si)                  ->   Machine(s1,e1,c,d,w,st,si)
-
-        | Machine(s,e,[],Vide,[],st,si)                                  ->   let w = secondChoix st in Machine(s,e,[],Vide,w,[],[])
-
-        | _                                                              ->   raise EtatInconnu
+        | _                                                                ->   raise EtatInconnu
 
 
     (* Applique les règles de la machine SECD concurrente version 2 en affichant les étapes *)
     let rec machineSECDCv2 machine afficher= 
       match machine with
-          Machine([Stack_const b],e,[],Vide,[],[],si)                ->   [Constant b]
+          Machine([Stack_const b],e,[],Vide,[],[],si,h)                ->   [Constant b]
         
-        | Machine([Fermeture([Pair(abs,c)],e1)],e,[],Vide,[],[],si)  ->   [Pair(abs,c)]
+        | Machine([Fermeture([Pair(abs,c)],e1)],e,[],Vide,[],[],si,h)  ->   [Pair(abs,c)]
 
-        | machine                                                    ->   if (afficher) then (afficherSECDCv2 machine) else printf ""; machineSECDCv2 (transitionSECDCv2 machine) afficher
+        | Machine([Stack_throw erreur],e,[],Vide,[],[],si,h)           ->   [Throw erreur]
+
+        | machine                                                      ->   if (afficher) then (afficherSECDCv2 machine) else printf ""; machineSECDCv2 (transitionSECDCv2 machine) afficher
 
         
     (* Lance et affiche le résultat de l'expression *)
-    let lancerSECDCv2 expression afficher = printf "Le résultat est %s \n" (string_of_control_string (machineSECDCv2 (Machine([],[],(secdLanguage_of_exprISWIM expression),Vide,[],[],[])) afficher))
+    let lancerSECDCv2 expression afficher = printf "Le résultat est %s \n" (string_of_control_string (machineSECDCv2 (Machine([],[],(secdLanguage_of_exprISWIM expression),Vide,[],[],[],None)) afficher))
 
   end

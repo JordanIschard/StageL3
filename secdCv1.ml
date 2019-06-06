@@ -256,9 +256,9 @@ module SECDCv1Machine =
 
         | (EnvFerm(v,f1)::t,Fermeture f)   ->   if (equal v varARemp) then append [EnvFerm(v,f)] t else append [EnvFerm(v,f1)] (ajoutEnv t varARemp (Fermeture f))
 
-        | (EnvVar(v,b1)::t,Stack_const b)  ->   if (equal v varARemp) then append [EnvVar(v,b)] t else append [EnvVar(v,b1)] (ajoutEnv t varARemp (Stack_const b))
+        | (EnvVar(v,b1)::t,Stack_const b)  ->   if (equal v varARemp) then append [EnvVar(v,b)] t  else append [EnvVar(v,b1)] (ajoutEnv t varARemp (Stack_const b))
 
-        | (EnvFerm(v,f)::t,Stack_const b)  ->   if (equal v varARemp) then append [EnvVar(v,b)] t else append [EnvFerm(v,f)] (ajoutEnv t varARemp (Stack_const b))
+        | (EnvFerm(v,f)::t,Stack_const b)  ->   if (equal v varARemp) then append [EnvVar(v,b)] t  else append [EnvFerm(v,f)] (ajoutEnv t varARemp (Stack_const b))
 
         | (Init s::t,v)                    ->   append [Init s] (ajoutEnv t varARemp v)
 
@@ -310,17 +310,30 @@ module SECDCv1Machine =
       if (isInit env signal) then let (w1,st1) = aux st in (w1,st1,(append [signal] si)) else raise SignalNotInit
 
 
+    (* Test si un signal est émis *)
+    let isEmit env signal si = if (isInit env signal) then if(mem signal si) then true else false else raise SignalNotInit
+
+
+
+
+
+
     (**** Machine SECD concurrente version 1 ****)
 
     (* Applique une transition de la machine SECD concurrente version 1 pour un état donné *)
     let transitionSECDCv1 machine =
       match machine with
+
+          (* Constante *)
           Machine(s,e,Constant b::c,d,w,st,si)                           ->   Machine(Stack_const b::s,e,c,d,w,st,si)
         
+          (* Substitution *)
         | Machine(s,e,Variable x::c,d,w,st,si)                           ->   Machine((substitution x e)::s,e,c,d,w,st,si)
 
+          (* Abstraction *)
         | Machine(s,e,Pair(abs,expr)::c,d,w,st,si)                       ->   Machine(Fermeture([Pair(abs,expr)],e)::s,e,c,d,w,st,si)
 
+          (* Opération *)
         | Machine(s,e,Prim op::c,d,w,st,si)                              ->   begin
                                                                                let (liste_entier,new_stack) = prendre_entier s (getNbrOperande op) in 
                                                                                let res = (secdLanguage_of_exprISWIM (calcul op liste_entier)) in
@@ -332,21 +345,29 @@ module SECDCv1Machine =
                                                                                  | _ -> raise EtatInconnu
                                                                               end
 
+          (* Application neutre droite *)                                                                
         | Machine(v::Remp::s,e,Ap::c,d,w,st,si)                          ->   Machine(v::s,e,c,d,w,st,si)
         
+          (* Application neutre gauche*)
         | Machine(Remp::v::s,e,Ap::c,d,w,st,si)                          ->   Machine(v::s,e,c,d,w,st,si)
 
+          (* Application *)
         | Machine(v::Fermeture([Pair(abs,c1)],e1)::s,e,Ap::c,d,w,st,si)  ->   Machine([],(ajoutEnv e1 abs v),c1,Save(s,e,c,d),w,st,si)
 
+          (* Récupération de sauvegarde *)                                                                  
         | Machine(v::s,e,[],Save(s1,e1,c,d),w,st,si)                     ->   Machine(v::s1,e1,c,d,w,st,si)
 
+          (* Création de thread *)                                                                    
         | Machine(s,e,Bspawn::c,d,w,st,si)                               ->   let (c1,c2) = spawn c in Machine(Remp::s,e,c2,d,(append w [Save(s,e,c1,d)]),st,si)
 
+          (* Initialisation signal *)
         | Machine(s,e,Signal(signal,c1)::c,d,w,st,si)                    ->   let e1 = addInit e signal in Machine([],e1,c1,Save(s,e,c,d),w,st,si)
 
+          (* Emission *)
         | Machine(s,e,Emit signal::c,d,w,st,si)                          ->   let (w1,st1,si1) = emit signal e st si in Machine(Remp::s,e,c,d,w1,st1,si1)
 
-        | Machine(s,e,Present(signal,c1,c2)::c,d,w,st,si)                ->   if (mem signal si) 
+          (* Présence d'un signal *)
+        | Machine(s,e,Present(signal,c1,c2)::c,d,w,st,si)                ->   if (isEmit e signal si) 
                                                                                 then Machine(s,e,(append c1 c),d,w,st,si)
                                                                                 else begin
                                                                                       match w with 
@@ -356,9 +377,11 @@ module SECDCv1Machine =
 
                                                                                         | _                     ->   raise UnknowWaitState
                                                                                      end
-
+           
+          (* Récupération d'un thread*)                                                                           
         | Machine(s,e,[],Vide,Save(s1,e1,c,d)::w,st,si)                  ->   Machine(s1,e1,c,d,w,st,si)
 
+          (* Fin d'un instant logique *)
         | Machine(s,e,[],Vide,[],st,si)                                  ->   let w = secondChoix st in Machine(s,e,[],Vide,w,[],[])
 
         | _                                                              ->   raise EtatInconnu
