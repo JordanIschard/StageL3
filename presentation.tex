@@ -3,33 +3,155 @@
 \usepackage[frenchb]{babel}
 \usepackage[T1]{fontenc}
 \usepackage[latin1]{inputenc}
+\usepackage{textcomp}
 
 \usetheme{Warsaw}
-
+\setbeamertemplate{headline}{}
 
 \begin{document}
-\title{Faire une prÃ©sentation en LaTeX avec Beamer}
-\author{Spader}
-\institute{www.siteduzero.com}
-\date{09 avril 2012}
+\title{Programmation réactive synchrone
+	\\Implantation d'une machine virtuelle}
+\subtitle{Stage de fin d'année}
+\author{Jordan Ischard}
+\institute{Université d'Orléans}
+\date{06 juin 2019}
 
 	\begin{frame}
 		\titlepage
 	\end{frame}
+	
+	\section*{Sommaire}
+	\begin{frame}
+		\frametitle{Sommaire}
+		\begin{columns}
+			\begin{column}{5cm}
+				\tableofcontents[sections={1-4}]
+			\end{column}
+			\begin{column}{5cm}
+				\tableofcontents[sections={5-8}]
+			\end{column}
+		\end{columns}
+	\end{frame}
+
+
+	\section{Introduction}
 
 	\begin{frame}
 	\frametitle{Introduction}
+	\subsection{Sujet du stage}
 	Voici votre premi\`{e}re page de pr\'{e}sentation en LaTeX !
-	
+	\subsection{Présentation de l'équipe}
 	\begin{semiverbatim}
 		isdfhihfprej $ma dver$
 	\end{semiverbatim}
 	\end{frame}
 
+	\section{$\lambda$-calculs }
+	
+	
 	\begin{frame}
+		\subsection{Bases}
+		\frametitle{$\lambda$-calculs }
+		
+		
 		\begin{exampleblock}{test}
 			content...
 		\end{exampleblock}
+	
+	\end{frame}
+
+	
+	\begin{frame}
+		\subsection{Forme normale}
+		\frametitle{$\lambda$-calculs }
+		
+		\begin{exampleblock}{test}
+			content...
+		\end{exampleblock}
+		\subsection{Stratégie de réduction}
+		
+		
+	\end{frame}
+
+	\section{Machines étudiées}
+	
+	\begin{frame}
+		\frametitle{Machines étudiées}
+		\subsection{Machine CC-SCC}
+		
+		\subsection{Machine CK}
+		
+		\subsection{Machine CEK}
+		
+		\subsection{Machine SECD}
+		
+		\begin{exampleblock}{test}
+			content...
+		\end{exampleblock}
+	
+	\end{frame}
+
+	\section{Programmation réactive}
+	
+	\begin{frame}
+		\frametitle{Programmation réactive}
+		
+		\subsection{Concept}
+		
+		\begin{exampleblock}{test}
+			content...
+		\end{exampleblock}
+		
+		\subsection{Dérivées}
+	\end{frame}
+
+	\section{Machine TTS}
+	
+	\begin{frame}
+		\subsection{Explication informelle}
+		\frametitle{Machines TTS : Explication informelle }
+		\begin{exampleblock}{test}
+			content...
+		\end{exampleblock}
+	\end{frame}
+
+	\begin{frame}
+		\subsection{Sémantique de la machine}
+		\frametitle{Machines TTS : Sémantique de la machine }
+		\begin{exampleblock}{test}
+			content...
+		\end{exampleblock}
+	\end{frame}
+
+	\section{Machine TTSI}
+	\begin{frame}
+		\subsection{Explication informelle}
+		\frametitle{Machines TTSI : Explication informelle }
+		\begin{exampleblock}{test}
+			content...
+		\end{exampleblock}
+	\end{frame}
+
+	\begin{frame}
+		\subsection{Sémantique de la machine}
+		\frametitle{Machines TTSI : Sémantique de la machine }
+		\begin{exampleblock}{test}
+			content...
+		\end{exampleblock}
+	\end{frame}
+
+	
+	\section{Conclusion}
+	
+	\begin{frame}
+		\frametitle{Conclusion}
+		
+		\subsection{Résumer}
+		\begin{exampleblock}{test}
+			content...
+		\end{exampleblock}
+		
+		\subsection{Travaux futures}
 	\end{frame}
 
 \end{document}

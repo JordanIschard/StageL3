@@ -241,12 +241,12 @@ module ISWIM =
 
     (* Renomme si nécessaire *)
     let renommer abs expr varARemp varDeRemp =
-      let libreexpr = libre expr in let librevarDeRemp = libre varDeRemp 
+      let variables = liste_variable varDeRemp
       in
-      let rec aux abs = if(( mem abs libreexpr) || ( mem abs librevarDeRemp)) then aux (renommage ( append libreexpr librevarDeRemp)) else abs
+      let rec aux abs = 
+        if(mem abs variables) then aux (renommage variables) else abs
       in 
       aux abs
-
 
     (* Applique une réduction *)
     let rec reduction varARemp expr varDeRemp =
