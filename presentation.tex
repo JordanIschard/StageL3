@@ -1,16 +1,16 @@
-\documentclass{beamer}
+\documentclass[10pt]{beamer}
 
 \usepackage[frenchb]{babel}
 \usepackage[T1]{fontenc}
 \usepackage[latin1]{inputenc}
 \usepackage{textcomp}
-
+\usepackage{ulem}
+\usepackage{graphicx}
 \usetheme{Warsaw}
 \setbeamertemplate{headline}{}
 
 \begin{document}
-\title{Programmation réactive synchrone
-	\\Implantation d'une machine virtuelle}
+\title{Sémantique des systèmes concurrents}
 \subtitle{Stage de fin d'année}
 \author{Jordan Ischard}
 \institute{Université d'Orléans}
@@ -39,11 +39,21 @@
 	\begin{frame}
 	\frametitle{Introduction}
 	\subsection{Sujet du stage}
-	Voici votre premi\`{e}re page de pr\'{e}sentation en LaTeX !
+	Sujet du stage : \textbf{Programmation réactive synchrone et Implantation d'une machine virtuelle}
+	\bigbreak
+	
+	
 	\subsection{Présentation de l'équipe}
-	\begin{semiverbatim}
-		isdfhihfprej $ma dver$
-	\end{semiverbatim}
+	Encadrants : \textbf{Madame Bousdira} et \textbf{Monsieur Dabrowski}
+	\bigbreak
+	
+	
+	\textbf{LIFO} : {\small Le Laboratoire d'Informatique Fondamentale d'Orléans (LIFO) est un laboratoire de l'Université d'Orléans et de l'INSA Centre-Val de Loire. 
+	Les recherches menées au LIFO concernent la science informatique et les STIC (Système de Traitement des Infractions Constatées).}
+	\bigbreak
+	
+	
+	\textbf{LMV} : {\small L'objectif de l'équipe LMV est de contribuer à l'amélioration de la compréhension des problèmes de sûreté et de sécurité des systèmes  informatiques.}
 	\end{frame}
 
 	\section{$\lambda$-calculs }
@@ -52,11 +62,46 @@
 	\begin{frame}
 		\subsection{Bases}
 		\frametitle{$\lambda$-calculs }
+		\begin{block}{Définition}
+			Le $\lambda$-calcul est un système formel inventé par Alonzo Church dans les années 1930, qui fonde les concepts de fonction et
+			d'application.
+		\end{block}
+	
+		\begin{columns}
+			\begin{column}{3cm}
+				\begin{semiverbatim}
+					Variable
+					\smallbreak 
+					$X$
+				\end{semiverbatim}	
+			
+			\end{column}
+			
+			\begin{column}{3cm}
+				\begin{semiverbatim}
+				Abstraction
+				\smallbreak 
+				$\lambda X.M$
+			\end{semiverbatim}	
+			\end{column}
+			
+			\begin{column}{3cm}
+				\begin{semiverbatim}
+				Application
+				\smallbreak 
+				$(M~N)$
+			\end{semiverbatim}	
+			\end{column}
+		\end{columns}
 		
+				\begin{block}{Règles de réduction}
+					\begin{itemize}
+						\item[$\alpha$] $(\lambda X_{1}.M)~~~~~~~~~~\rightarrow_{\alpha}~~~(\lambda X_{2}.M[X_{1} \leftarrow X_{2}])$ où $X_{2}~\notin~FV(M)$ 
+						\item[$\beta$] $((\lambda X.M_{1})M_{2})~~~\rightarrow_{\beta}~~~M_{1}[X \leftarrow M_{2}]$ 
+						\item[$\eta$] $(\lambda X.(M~X))~~~~~\rightarrow_{\eta}~~~M$ où $X~\notin~FV(M)$ 
+					\end{itemize}
+				\end{block}
 		
-		\begin{exampleblock}{test}
-			content...
-		\end{exampleblock}
 	
 	\end{frame}
 
@@ -65,9 +110,19 @@
 		\subsection{Forme normale}
 		\frametitle{$\lambda$-calculs }
 		
-		\begin{exampleblock}{test}
-			content...
-		\end{exampleblock}
+		\begin{block}{Théorème de la forme normale}
+			Si on peut réduire $L$ tels que $L =_{n}~M$ et $L =_{n}~N$ et que $N$ et $M$ sont en forme normale alors $M = N$ à n renommages près.
+		\end{block}
+		
+		\begin{block}{Règles de la stratégie de réduction}
+			\begin{itemize}
+				\item[] $M~~~~~~~~~~~\longrightarrow_{\bar{n}}~~~N$
+				\item[] $M~~~~~~~~~~~\longrightarrow_{\bar{n}}~~~N$
+				\item[] $(\lambda X.M)~~~\longrightarrow_{\bar{n}}~~~(\lambda X.N)$ 
+				\item[] $(M~N)~~~~~\longrightarrow_{\bar{n}}~~~(M'~N)$
+				\item[] $(M~N)~~~~~\longrightarrow_{\bar{n}}~~~(M~N')$
+			\end{itemize}
+		\end{block}
 		\subsection{Stratégie de réduction}
 		
 		
@@ -77,67 +132,244 @@
 	
 	\begin{frame}
 		\frametitle{Machines étudiées}
-		\subsection{Machine CC-SCC}
+		\begin{columns}
+			\begin{column}{5cm}
+				
+				\subsection{Machine CC}
+				Machine CC
+				\begin{itemize}
+					\item utilise la $\beta$-réduction
+					\item Sépare l'expression en 2 sous-expressions
+					\item Exploite la chaîne de contôle uniquement
+				\end{itemize}
+				\bigbreak
+				
+				
+				\subsection{Machine CK}
+				Machine CK
+				\begin{itemize}
+					\item Utilise la $\beta$-réduction
+					\item principe de la continuation
+				\end{itemize}
+			\end{column}
+				\bigbreak
+				
 		
-		\subsection{Machine CK}
+			\begin{column}{5cm}
+				
+				\subsection{Machine SCC}
+				Machine SCC
+				\begin{itemize}
+					\item Utilise la $\beta$-réduction
+					\item Version simplifiée de la machine CC
+					\item Exploite les deux sous-expressions
+				\end{itemize}
+				\bigbreak
+				
+				\subsection{Machine CEK}
+				Machine CEK
+				\begin{itemize}
+					\item Version plus complète de la machine CK
+					\item Ajout d'un environnement
+				\end{itemize}
+			\end{column}
+		\end{columns}
 		
-		\subsection{Machine CEK}
-		
-		\subsection{Machine SECD}
-		
-		\begin{exampleblock}{test}
-			content...
-		\end{exampleblock}
-	
+		\begin{block}{Définition : La continuation}
+			La continuation d'un système désigne son futur, c'est-à-dire la suite des instructions qu'il lui reste à exécuter à un moment précis.
+		\end{block}
 	\end{frame}
 
-	\section{Programmation réactive}
+	\begin{frame}
+		\frametitle{Machines étudiées}
+		
+		\subsection{Machine SECD}
+		\textbf{Machine SECD}
+		\begin{columns}
+			\begin{column}{5cm}
+				\begin{itemize}
+				\item Sauvegarde différente du CEK 
+				\item Appel par valeur
+				\item Fonctionne avec son propre langage
+			\end{itemize}
+			\end{column}
+			\begin{column}{5cm}
+				\begin{itemize}
+				\item Composée de quatres éléments :
+				\begin{itemize}
+					\item {\scriptsize une pile $S$}
+					\item {\scriptsize un environnement $E$}
+					\item {\scriptsize une chaîne de contrôle $C$}
+					\item {\scriptsize un dépôt $D$}
+				\end{itemize} 
+			\end{itemize}
+			\end{column}
+		\end{columns}
+		\
+	
+		\begin{block}{Règles de la machine SECD}
+		\begin{enumerate}
+			\item  {\scriptsize $\langle S,\varepsilon,b~C,D\rangle 
+				\longmapsto_{secd}
+				\langle b~S,\varepsilon,C,D\rangle$}
+			
+			\item  {\scriptsize $\langle S,\varepsilon,X$ $C,D\rangle 
+				\longmapsto_{secd}
+				\langle V$ $S,\varepsilon,C,D\rangle$ où $V = \varepsilon(X)$}
+			
+			\item  {\scriptsize $\langle S,\varepsilon,\langle X,C'\rangle$ $C,D\rangle \longmapsto_{secd}
+				\langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $S,\varepsilon,C,D\rangle$}
+			
+			\item  {\scriptsize $\langle V$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $S,\varepsilon,ap$ $C,D\rangle 
+				\longmapsto_{secd}
+				\langle\epsilon,\varepsilon'[X \leftarrow V],C',\langle S,\varepsilon,C,D\rangle\rangle$}
+			
+			\item  {\scriptsize $\langle V$ $S,\varepsilon,\emptyset,\langle S',\varepsilon',C',D\rangle\rangle \longmapsto_{secd}
+				\langle V$ $S',\varepsilon',C',D\rangle$}
+			
+			\item  {\scriptsize $\langle b_{1}$ $...$ $b_{n}~S,\varepsilon,prim_{o^{n}}$ $C,D\rangle \longmapsto_{secd}
+				\langle V$ $S,\varepsilon,C,D\rangle$ où $V = \delta(o^{n},b_1,...b_{n})$}
+		\end{enumerate}
+		\end{block}	
+		 
+	\end{frame}
+
+	\section{Programmation réactive synchrone concurrente}
 	
 	\begin{frame}
-		\frametitle{Programmation réactive}
+		\frametitle{Programmation réactive synchrone concurrente}
 		
 		\subsection{Concept}
-		
-		\begin{exampleblock}{test}
-			content...
-		\end{exampleblock}
-		
-		\subsection{Dérivées}
+			\begin{block}{Synchrone}
+				\textbf{Synchrone} signifie que les informations seront obtenues de manière immédiate. 
+			\end{block}
+			\bigbreak
+			\bigbreak
+			
+			
+			
+			
+			\begin{block}{Concurrente}
+				\textbf{Concurrente} signifie que plusieurs processus vont se dérouler durant le même instant logique. 
+			\end{block}
+			
+			
 	\end{frame}
 
 	\section{Machine TTS}
 	
 	\begin{frame}
-		\subsection{Explication informelle}
-		\frametitle{Machines TTS : Explication informelle }
-		\begin{exampleblock}{test}
-			content...
-		\end{exampleblock}
+		\subsection{Explication}
+		\frametitle{Machines TTS : Explication }
+		\begin{center}
+		{\scriptsize $\lambda s.(\lambda s'.(~Spawn(present~s~in~6~9)~Spawn(present~s'~in~3~5)~Spawn(emit~s))~init)~ init$}
+		\\
+		{\scriptsize $\langle s,\langle s', \langle, s \langle, 6 \rangle \langle, 9 \rangle present \rangle~spawn~\langle, s' \langle, 3 \rangle \langle, 5 \rangle present\rangle~spawn~ap~\langle, s~ emit\rangle ~spawn~ap~\rangle\rangle~init~ap~init~ap$ }
+		\end{center}
+		\includegraphics[scale=0.5]{images/exempleTTS}
 	\end{frame}
 
 	\begin{frame}
 		\subsection{Sémantique de la machine}
 		\frametitle{Machines TTS : Sémantique de la machine }
-		\begin{exampleblock}{test}
-			content...
-		\end{exampleblock}
+		\begin{itemize}
+			\item[]\textbf{\small Création d'un thread :} \\
+			{\scriptsize$\langle\langle\langle\langle X,C'\rangle, E\rangle~S,E,spawn~C,D\rangle,TL,SI\rangle 
+				\longrightarrow_{TTS} 
+				\langle\langle S,E,C,D\rangle,TL~\langle S,E,C',D\rangle,SI\rangle$}
+			\item[]
+			
+			\item[] \textbf{\small Initialisation d'un signal :} \\
+			{\scriptsize$\langle\langle S,E,init~C,D\rangle,TL,SI\rangle 
+				\longrightarrow_{TTS}
+				\langle\langle s~S,E,C,D\rangle,TL,SI'\rangle$
+				\\avec $\iota(SI) = (s,SI')$}
+			\item[]
+			
+			\item[] \textbf{\small Émettre :} \\
+			{\scriptsize $\langle\langle s~S,E,emit~C,D\rangle,TL,SI\rangle 
+				\longrightarrow_{TTS}
+				\langle\langle S,E,C,D\rangle,TL~ST,SI'\rangle$
+				\\ avec $\varepsilon(s,SI) = (ST,SI)'$}
+			\item[]
+			
+			\item[] \textbf{\small Récupération de thread :}\\
+			{\scriptsize $\langle\langle S,E,\epsilon,\emptyset\rangle,\langle S',E',C,D\rangle~TL,SI\rangle 
+				\longrightarrow_{TTS} 
+				\langle\langle S',E',C,D\rangle,TL,SI\rangle$}
+			\item[]
+			
+			\item[] \textbf{\small Fin d'un instant logique :}\\
+			{\scriptsize $\langle\langle S,E,\epsilon,\emptyset \rangle ,\emptyset,SI\rangle 
+				\longrightarrow_{TTS} 
+				\langle\langle S,E,\epsilon,\emptyset\rangle,TL,SI'\rangle$
+				avec $\tau(SI) = (TL,SI')$ }
+		\end{itemize}	
+	\end{frame}
+
+	\begin{frame}
+	\subsection{Sémantique de la machine}
+	\frametitle{Machines TTS : Sémantique de la machine }
+		\begin{itemize}
+			\item[] \textbf{\small Test d'un signal présent :} \\
+			{\scriptsize$\langle\langle \langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,present~C,D\rangle,TL,SI\rangle 
+				\longrightarrow_{TTS} 
+				\langle\langle S,E,C'~C,D\rangle,TL,SI\rangle$ 
+				avec $SI(s) = \langle vraie,ST\rangle$}
+			\item[]
+			
+			\item[] \textbf{\small Test d'un signal non présent avec thread remplaçable :}\\
+				{\scriptsize$\langle\langle \langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,present~C,D\rangle,\langle S',E',C''',D'\rangle$ $TL,SI\rangle 
+				\longrightarrow_{TTS} 
+				\langle\langle S',E',C''',D'\rangle,TL,SI'\rangle~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~$ 
+				avec $SI(s) = \langle faux,ST\rangle~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~$
+				et $SI'(s) = \langle faux,ST~\langle \langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,present~C,D\rangle\rangle$}
+			\item[]
+			
+			\item[] \textbf{\small Test d'un signal non présent sans thread remplaçable :}\\
+				{\scriptsize $\langle\langle \langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,C,D\rangle,\emptyset,SI\rangle 
+					\longrightarrow_{TTS} 
+					\langle\langle \emptyset,\epsilon,\emptyset,\emptyset\rangle,\emptyset,SI'\rangle~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~$
+					avec $SI(s) = \langle faux,ST\rangle~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~$
+					et $SI'(s) = \langle faux,ST~\langle\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,present~C,D\rangle\rangle$}
+		\end{itemize}	
 	\end{frame}
 
 	\section{Machine TTSI}
 	\begin{frame}
 		\subsection{Explication informelle}
 		\frametitle{Machines TTSI : Explication informelle }
-		\begin{exampleblock}{test}
-			content...
-		\end{exampleblock}
+		\begin{center}
+			{\scriptsize $\lambda s.(Spawn(put~x~4)~put~x~3~Spawn(wait~get~x~1~0))~init$}
+			\\
+			{\scriptsize $\langle x, \langle, 4~x~put \rangle~spawn~3~x~put~ap~\langle, -1~\langle, \rangle~\langle, \rangle~present~x~1~0~get~ap \rangle~spawn~ap~\rangle~init~ap$}
+		\end{center}
+		\includegraphics[scale=0.5]{images/exempleTTSI}
 	\end{frame}
 
+	\subsection{Sémantique de la machine}
 	\begin{frame}
-		\subsection{Sémantique de la machine}
-		\frametitle{Machines TTSI : Sémantique de la machine }
-		\begin{exampleblock}{test}
-			content...
-		\end{exampleblock}
+	\frametitle{Machines TTSI : Sémantique de la machine }
+		\begin{itemize}
+			\item[] \textbf{\small Ajout d'une valeur :} \\
+			{\scriptsize$\langle\langle I,s~b~S,E,put~C,D\rangle,TL,SI\rangle
+				\longrightarrow_{TTSI} 
+				\langle\langle I,S,E,C,D\rangle,TL,SI~[(s,I) \leftarrow b]\rangle$ } 
+			\item[]
+			
+			\item[] \textbf{\small Prise d'une valeur :} \\
+			{\scriptsize$\langle\langle I,s~b~n~\langle\langle X,C'\rangle,E'\rangle~S,E,get~C,D\rangle,TL,SI\rangle 
+				\longrightarrow_{TTSI}$} \\ 
+			{\scriptsize$\langle\langle I,\emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle,TL,SI\rangle$} \\
+			{\scriptsize si pour $SI(s) = \langle emit,CS,SSI\rangle$ et $SSI(b) = \langle CI,IL\rangle$ on a $I \notin IL$ alors $\gamma(I,b,SSI(b)) = V$ sinon $n = V$}
+			\item[]
+			
+			\item[] \sout{\textbf{\small Émettre :} \\
+			{\scriptsize $\langle\langle s~S,E,emit~C,D\rangle,TL,SI\rangle 
+				\longrightarrow_{TTS}
+				\langle\langle S,E,C,D\rangle,TL~ST,SI'\rangle$}
+				\\ {\scriptsize avec $\varepsilon(s,SI) = (ST,SI)'$}}
+		\end{itemize}
 	\end{frame}
 
 	
@@ -147,11 +379,24 @@
 		\frametitle{Conclusion}
 		
 		\subsection{Résumer}
-		\begin{exampleblock}{test}
-			content...
-		\end{exampleblock}
+		\begin{block}{En Résumé :}
+			\begin{itemize}
+				\item Machine réactive pure
+				\item Machine réactive avec partages de valeurs
+			\end{itemize}
+		\end{block}
+		\bigbreak
+		\bigbreak
+		
 		
 		\subsection{Travaux futures}
+		\begin{block}{Travaux futures :}
+			\begin{itemize}
+				\item Preuve du déterminisme
+				\item Gestion des erreurs
+			\end{itemize}
+		\end{block}
+		
 	\end{frame}
 
 \end{document}

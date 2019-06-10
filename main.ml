@@ -7,6 +7,7 @@ open Cek.CEKMachine ;;
 open Secd.SECDMachine ;;
 open SecdCv1.SECDCv1Machine;;
 open SecdCv2.SECDCv2Machine;;
+(*open SecdCv3.SECDCv3Machine;;*)
 open Tts.MachineTTS;;
 open Ttsi.MachineTTSI ;;
 
@@ -349,7 +350,7 @@ startTTS expression23 false;;
 printf "\n" ;;
                   
 printf "On teste l'expression  ( ( (lam s.lam s1.( ( Spawn( Present s in 6 9 ) Spawn( Present s1 in 3 5 ) ) Spawn( emit s ) )) init ) init ) \n" ;;
-startTTS expression24 false;;
+startTTS expression24 true;;
 printf "\n" ;;
 
 
@@ -383,5 +384,5 @@ startTTSI expression26 false;;
 printf "\n" ;;
 
 printf "On teste l'expression  ( (lam x.( ( Spawn( put( x 4) ) Spawn( put( x 3 ) ) ) Spawn( wait get( x 1 0 ) ) )) init ) \n" ;;
-startTTSI expression27 false;;
+startTTSI expression27 true;;
 printf "\n" ;;
