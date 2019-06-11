@@ -6,6 +6,7 @@
 \usepackage{textcomp}
 \usepackage{ulem}
 \usepackage{graphicx}
+\usepackage{cancel}
 \usetheme{Warsaw}
 \setbeamertemplate{headline}{}
 
@@ -116,11 +117,11 @@
 		
 		\begin{block}{Règles de la stratégie de réduction}
 			\begin{itemize}
-				\item[] $M~~~~~~~~~~~\longrightarrow_{\bar{n}}~~~N$
-				\item[] $M~~~~~~~~~~~\longrightarrow_{\bar{n}}~~~N$
-				\item[] $(\lambda X.M)~~~\longrightarrow_{\bar{n}}~~~(\lambda X.N)$ 
-				\item[] $(M~N)~~~~~\longrightarrow_{\bar{n}}~~~(M'~N)$
-				\item[] $(M~N)~~~~~\longrightarrow_{\bar{n}}~~~(M~N')$
+				\item[] $M~~~~~~~~~~~\longrightarrow_{\bar{n}}~~~N$~~~si $M~\beta~N$
+				\item[] $M~~~~~~~~~~~\longrightarrow_{\bar{n}}~~~N$~~~si $M~\eta~N$
+				\item[] $(\lambda X.M)~~~\longrightarrow_{\bar{n}}~~~(\lambda X.N)$ si on a $M~\beta~N$ ou $M~\eta~N$
+				\item[] $(M~N)~~~~~\longrightarrow_{\bar{n}}~~~(M'~N)$ si $M \longrightarrow_{\bar{n}}~M'$ et $\forall~L$, $(M~N)~\cancel{\beta}~L$
+				\item[] $(M~N)~~~~~\longrightarrow_{\bar{n}}~~~(M~N')$  si $N \longrightarrow_{\bar{n}}~N'$ et $\forall~L$, $(M~N)~\cancel{\beta}~L$
 			\end{itemize}
 		\end{block}
 		\subsection{Stratégie de réduction}
@@ -240,13 +241,16 @@
 		\frametitle{Programmation réactive synchrone concurrente}
 		
 		\subsection{Concept}
+			\begin{block}{Programmation réactive}
+				\textbf{La programmation réactive} est un paradigme de programmation visant à conserver une cohérence d'ensemble en propageant les modifications d'une source réactive aux éléments dépendants de cette source. 
+			\end{block}
+			\bigbreak
+			
+					
 			\begin{block}{Synchrone}
 				\textbf{Synchrone} signifie que les informations seront obtenues de manière immédiate. 
 			\end{block}
 			\bigbreak
-			\bigbreak
-			
-			
 			
 			
 			\begin{block}{Concurrente}
