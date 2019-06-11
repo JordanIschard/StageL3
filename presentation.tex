@@ -203,7 +203,7 @@
 				\item Composée de quatres éléments :
 				\begin{itemize}
 					\item {\scriptsize une pile $S$}
-					\item {\scriptsize un environnement $\varepsilon$}
+					\item {\scriptsize un environnement $E$}
 					\item {\scriptsize une chaîne de contrôle $C$}
 					\item {\scriptsize un dépôt $D$}
 				\end{itemize} 
@@ -214,26 +214,26 @@
 	
 		\begin{block}{Règles de la machine SECD}
 		\begin{enumerate}
-			\item  {\scriptsize $\langle S,\varepsilon,b~C,D\rangle 
+			\item  {\scriptsize $\langle S,E,b~C,D\rangle 
 				\longmapsto_{secd}
-				\langle b~S,\varepsilon,C,D\rangle$}
+				\langle b~S,E,C,D\rangle$}
 			
-			\item  {\scriptsize $\langle S,\varepsilon,X$ $C,D\rangle 
+			\item  {\scriptsize $\langle S,E,X$ $C,D\rangle 
 				\longmapsto_{secd}
-				\langle V$ $S,\varepsilon,C,D\rangle$ où $V = \varepsilon(X)$}
+				\langle V$ $S,E,C,D\rangle$ où $V = E(X)$}
 			
-			\item  {\scriptsize $\langle S,\varepsilon,\langle X,C'\rangle$ $C,D\rangle \longmapsto_{secd}
-				\langle\langle\langle X,C'\rangle,\varepsilon\rangle$ $S,\varepsilon,C,D\rangle$}
+			\item  {\scriptsize $\langle S,E,\langle X,C'\rangle$ $C,D\rangle \longmapsto_{secd}
+				\langle\langle\langle X,C'\rangle,E\rangle$ $S,E,C,D\rangle$}
 			
-			\item  {\scriptsize $\langle V$ $\langle\langle X,C'\rangle,\varepsilon'\rangle$ $S,\varepsilon,ap$ $C,D\rangle 
+			\item  {\scriptsize $\langle V$ $\langle\langle X,C'\rangle,E'\rangle$ $S,E,ap$ $C,D\rangle 
 				\longmapsto_{secd}
-				\langle\epsilon,\varepsilon'[X \leftarrow V],C',\langle S,\varepsilon,C,D\rangle\rangle$}
+				\langle\epsilon,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle$}
 			
-			\item  {\scriptsize $\langle V$ $S,\varepsilon,\emptyset,\langle S',\varepsilon',C',D\rangle\rangle \longmapsto_{secd}
-				\langle V$ $S',\varepsilon',C',D\rangle$}
+			\item  {\scriptsize $\langle V$ $S,E,\emptyset,\langle S',E',C',D\rangle\rangle \longmapsto_{secd}
+				\langle V$ $S',E',C',D\rangle$}
 			
-			\item  {\scriptsize $\langle b_{1}$ $...$ $b_{n}~S,\varepsilon,prim_{o^{n}}$ $C,D\rangle \longmapsto_{secd}
-				\langle V$ $S,\varepsilon,C,D\rangle$ où $V = \delta(o^{n},b_1,...b_{n})$}
+			\item  {\scriptsize $\langle b_{1}$ $...$ $b_{n}~S,E,prim_{o^{n}}$ $C,D\rangle \longmapsto_{secd}
+				\langle V$ $S,E,C,D\rangle$ où $V = \delta(o^{n},b_1,...b_{n})$}
 		\end{enumerate}
 		\end{block}	
 		 

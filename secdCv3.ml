@@ -128,6 +128,8 @@ module SECDCv3Machine =
     exception SignalNotInit
     exception StrangeStuck
     exception UnknowWaitState
+    exception DataNotFound
+    exception SignalAlreadyEmit
 
 
     (**** Affichage ****)
@@ -431,8 +433,40 @@ module SECDCv3Machine =
         | h::t        ->   let (c1,c2) = spawn t in ((append [h] c1),c2)
 
 
+    let prendreDataSignalCS thread s si =
+      let rec aux cs_list = 
+        match cs_list with
+            []                   ->   raise DataNotFound
+
+          | CS(id,data,_)::t  ->   if (equal id s) then data else aux t
+      in
+      match si with
+        (cs,ssi) -> aux cs
+
+
     (* Regarde dans l'environnement si le signal est initialisé *)
-    let rec isInit env s = false
+    let isInit thread s si = 
+      let rec aux1 data =
+        match data with
+            []              ->   false
+           
+          | (th,_,init)::t  ->   if (th = thread) then init else aux1 t
+      in
+      try  aux1 (prendreDataSignalCS thread s si)
+      with DataNotFound -> false
+
+
+      (* Test si un signal est émis *)
+    let isEmit s si = 
+      let rec aux cs_list = 
+        match cs_list with
+            []                   ->   raise SignalNotInit
+
+          | CS(id,_,emit)::t  ->   if (equal id s) then emit else aux t
+      in
+      match si with
+        (cs,ssi) -> aux cs
+
 
     (* Prends le choix qui représente l'absence d'un signal *)
     let rec secondChoix st =
@@ -445,18 +479,24 @@ module SECDCv3Machine =
 
 
     (* Emet un signal et vérifie si des threads sont en attente de cette émission *)
-    let emit signal env st si =
-      let rec aux st =
+    let emit signal st si =
+      let rec aux1 st =
         match st with 
             []             ->   ([],[])
 
-          | (s,thread)::t  ->   let (w1,st1) = aux t in if (equal signal s) then (append [thread] w1,st1) else (w1,append [(s,thread)] st1)
+          | (s,thread)::t  ->   let (w1,st1) = aux1 t in if (equal signal s) then (append [thread] w1,st1) else (w1,append [(s,thread)] st1)
       in
-      if (isInit env signal) then let (w1,st1) = aux st in (w1,st1,(append [signal] si)) else raise SignalNotInit
+      let rec aux cs_list = 
+        match cs_list with
+            []                    ->   raise SignalNotInit
 
+          | CS(id,data,true)::t   ->   if (equal id signal) then raise SignalAlreadyEmit else (append [CS(id,data,true)] (aux t))
 
-    (* Test si un signal est émis *)
-    let isEmit env signal si = if (isInit env signal) then if(mem signal si) then true else false else raise SignalNotInit
+          | CS(id,data,false)::t  ->   if (equal id signal) then (append [CS(id,data,true)] t) else (append [CS(id,data,false)] (aux t))
+      in
+      match si with
+        (cs,ssi) -> let (w1,st1) = aux1 st in (w1,st1,(aux cs,ssi))
+
 
 
     (**** Machine SECD concurrente version 2 ****)
