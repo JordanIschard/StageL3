@@ -1172,7 +1172,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	\chapter{Langage fonctionnel réactif}\label{SECDConc4}
 	
-	Le but est de réutiliser une des machines étudiées et de la rendre réactive. Les premières machines sont trop simple pour être utilisées. Restent la machine CEK et la machine SECD. Cependant il y a une contrainte qui va réussir à les départager. En effet, il nous faut une machine qui fait un appel par valeur, c'est-à-dire que les paramètres seront évalués avant la fonction. La machine SECD remplit ce critère donc c'est celle que nous utiliserons comme base.
+	Le but est de réutiliser une des machines étudiées et de la rendre réactive. Les premières machines sont trop simple pour être utilisées. Restent la machine CEK et la machine SECD. Cependant il y a une contrainte qui va réussir à les départager. En effet, il faut pouvoir incorporer les ajouts facilement. La machine SECD remplit ce critère via la composition de la chaîne de contrôle : des éléments simples et des commandes. Nous utiliserons donc la machine SECD comme base.
 	\medbreak
 	
 	Mes encadrants m'ont donné des ajouts à faire par petites parties afin de structurer mon avancé. Je vais donc redonner les ajouts pour chaque partie ainsi que l'explication de leurs implantations.
@@ -1378,10 +1378,10 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\begin{itemize}
 			\item[] $T =$ $\langle S,E,C,D\rangle$ \textbf{le thread courant avec :}
 			\begin{itemize}
+				\item[] $b,s,n$ = une constante ou un identifiant de signal (un entier)
 				\item[] $V = b$	
 				\begin{itemize}
 					\item[|] $\langle\langle X,C' \rangle E\rangle$
-					\item[|] $signal$
 				\end{itemize}
 				\item[] $S =  \emptyset$ 
 				\begin{itemize}
@@ -1390,9 +1390,8 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 				\item[] $E = \{...,\langle X,V\rangle,...\}$
 				\item[] $C = \epsilon$								
 				\begin{itemize}
-					\item[|] $b~C$~~~~~~~~~~~~~~~~~~~~~~~~~~~(une constante)
+					\item[|] $b~C$~~~~~~~~~~~~~~~~~~~~~~~~~~~(une constante ou un identifiant de signal)
 					\item[|] $X~C$~~~~~~~~~~~~~~~~~~~~~~~~~~(une variable)
-					\item[|] $signal~C$~~~~~~~~~~~~~~~~~~~~(un signal)
 					\item[|] $\langle X,C'\rangle~C$~~~~~~~~~~~~~~~~~~~(une abstraction)
 					\item[|] $ap~C$~~~~~~~~~~~~~~~~~~~~~~~~~(une application)
 					\item[|] $prim_{o^{n}}~C$~~~~~~~~~~~~~~~~~~~(un opérateur)
@@ -1408,8 +1407,9 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			\end{itemize}	
 		\end{itemize}
 		\item[]
-		\item[] \textbf{$SI =$ une liste de signaux telle que :} $\forall$ $si \in SI$ $|$ $si =$ $\langle signal,\langle emit,ST\rangle\rangle$ avec :
+		\item[] \textbf{$SI =$ une liste de signaux telle que :} $\forall$ $si \in SI$ $|$ $si =$ $\langle s,\langle emit,ST\rangle\rangle$ avec :
 		\begin{itemize}
+			\item[] - \textbf{un identifiant de signal :} $s$
 			\item[] - \textbf{un booléen représentant l'émission de ce signal :} $emit$
 			\item[] - \textbf{la liste des threads bloqués par ce signal :} $ST$ avec $\forall st \in ST~:~st = T$
 		\end{itemize}
@@ -1478,11 +1478,11 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\item[] \textbf{Partie de base de la machine SECD :} Nous avons ajouté des règles mais la machine doit pouvoir traiter les mêmes informations que la machine de base donc on reprend directement les règles de la machine SECD. 
 		\item[]
 		\begin{itemize}
-			\item[] \textbf{Constante :} On a une constante, on la déplace dans la pile.
+			\item[] \textbf{Constante ou Signal :} On a une constante, on la déplace dans la pile.
 			\smallbreak
 			$\langle S,E,n~C,D\rangle 
 			\longrightarrow_{TTS} 
-			\langle n~S,E,C,D\rangle$ où $n$ est une constante $b$ ou un signal $s$
+			\langle n~S,E,C,D\rangle$ où $n$ est une constante $b$ ou un identifiant de signal $s$
 			\item[]
 			
 			\item[] \textbf{Substitution :} On a une variable, on substitue la variable par sa valeur liée dans l'environnement via la fonction $E$.
@@ -1720,10 +1720,10 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\begin{itemize}
 			\item[] $T = \langle I,S,E,C,D\rangle$ \textbf{le thread courant avec :}
 			\begin{itemize}
+				\item[] $b,s,n$ = une constante ou un identifiant de signal (un entier)
 				\item[] $V = b$	
 				\begin{itemize}
 					\item[|] $\langle\langle X,C' \rangle E\rangle$
-					\item[|] $signal$
 				\end{itemize}
 				\item[] $I =$ un entier représentant l'identifiant du thread
 				\item[] $S =  \emptyset$ 
@@ -1733,9 +1733,8 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 				\item[] $E = \{...,\langle X,V\rangle,...\}$
 				\item[] $C = \epsilon$
 				\begin{itemize}
-					\item[|] $b~C$~~~~~~~~~~~~~~~~~~~~~~~~~~    (une constante)
+					\item[|] $b~C$~~~~~~~~~~~~~~~~~~~~~~~~~~ (une constante ou un signal)
 					\item[|] $X~C$~~~~~~~~~~~~~~~~~~~~~~~~~~(une variable)
-					\item[|] $signal~C$~~~~~~~~~~~~~~~~~~~~(un signal)
 					\item[|] $\langle X,C'\rangle~C$~~~~~~~~~~~~~~~~~~~(une abstraction)
 					\item[|] $ap~C$~~~~~~~~~~~~~~~~~~~~~~~~~(une application)
 					\item[|] $prim_{o^{n}}~C$~~~~~~~~~~~~~~~~~~~(un opérateur)
@@ -1753,8 +1752,9 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\end{itemize}
 		
 		\item[]
-		\item[] \textbf{$SI =$ une liste de signaux telle que :} $\forall~si \in SI~:~si = \langle signal,\langle emit,CS,SSI,TL\rangle\rangle$ avec :
+		\item[] \textbf{$SI =$ une liste de signaux telle que :} $\forall~si \in SI~:~si = \langle s,\langle emit,CS,SSI,TL\rangle\rangle$ avec :
 		\begin{itemize}
+			\item[] - \textbf{un identifiant de signal :} $s$
 			\item[] - \textbf{un booléen représentant l'émission du signal :} $emit$
 			\item[] - \textbf{un identifiant de thread :} $I$
 			\item[] - \textbf{une liste des signaux courants telle que :} $\forall~cs \in CS~:~cs = \langle I,CL\rangle$ avec 
@@ -1851,11 +1851,11 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\item[] \textbf{Partie de base de la machine SECD :} On veut garder le fonctionnement de la machine SECD de base donc il faut garder ces règles.	
 		\item[]
 		\begin{itemize}
-			\item[] \textbf{Constante :} On a une constante, on la déplace dans la pile.
+			\item[] \textbf{Constante ou Signal :} On a une constante, on la déplace dans la pile.
 			\smallbreak
 			$\langle S,E,n~C,D\rangle 
 			\longrightarrow_{TTSI} 
-			\langle n~S,E,C,D\rangle$ avec $n$ une constante $b$ ou un signal $s$
+			\langle n~S,E,C,D\rangle$ avec $n =$ une constante $b$ ou un identifiant de signal $s$
 			\item[]
 			
 			\item[] \textbf{Substitution :} On a une variable, on substitue la variable par sa valeur liée dans l'environnement via la fonction $E$.
@@ -2946,7 +2946,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\begin{itemize}
 			\item[|] $b~C$~~~~~~~~~~~~~~~~~~~~~~~~~~    (une constante)
 			\item[|] $X~C$~~~~~~~~~~~~~~~~~~~~~~~~~~(une variable)
-			\item[|] $s~C$~~~~~~~~~~~~~~~~~~~~(un signal)
+			\item[|] $s~C$~~~~~~~~~~~~~~~~~~~~~~~~~~~(un signal)
 			\item[|] $\langle X,C'\rangle~C$~~~~~~~~~~~~~~~~~~~(une abstraction)
 			\item[|] $ap~C$~~~~~~~~~~~~~~~~~~~~~~~~~(une application)
 			\item[|] $prim_{o^{n}}~C$~~~~~~~~~~~~~~~~~~~(un opérateur)
@@ -3198,6 +3198,12 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			\smallbreak 
 			$\langle I,S,E,ap~C,D,TL,SI,H,IP\rangle
 			\longrightarrow_{secdv4} \langle I,S,E,C,D,TL,SI,H,IP\rangle$
+			\item[]
+			
+			\item[] \textbf{Récupération de sauvegarde neutre :}  On a rien mais le dépôt comporte une sauvegarde donc on prend celle-ci.
+			\smallbreak  
+			$\langle I,S,E,\epsilon,\langle S',E',C,D\rangle,TL,SI,H,IP\rangle
+			\longrightarrow_{secdv4} \langle I,S',E',C,D,TL,SI,H,IP\rangle$
 		\end{itemize}
 	\end{enumerate}
 	\bigbreak

@@ -9,92 +9,92 @@ open LangISWIMCv3.ISWIM ;;
 module SECDCv3Machine =
   struct
 
+    
     (**** Types ****)
 
-    (* Types permettant une meilleure compréhension des autres types *)
-    type id = string
-    type variable = string
-    type erreur = int
-    type id_thread = int
-    type init = bool
-    type emit = bool
+    (* Petits types très pratique pour ne pas se mélanger dans la compréhension des types suivants *)
+    type id_signal  =   string
+    type variable   =   string
+    type id_thread  =   int
+    type id_error   =   int
+    type emit       =   bool
 
-    (* Type intermédiaire pour représenter la chaîne de contrôle *)
+
+
+
+    (**** Control string ****)
+
+    (* type intermédiaire qui va servir à représenter la chaîne de contrôle *)
     type c =
-        Constant of int 
-      | Variable of string
-      | Ap
-      | Prim of operateur
-      | Pair of string * c list
-      | Bspawn                                   (* début du spawn *)
-      | Espawn                                   (* fin du spawn *)
-      | Emit of id                               (* emet s *)
-      | Present of id * c list * c list          (* present s in t1 t2 *)
-      | Signal of id * c list                    (* signal s in t *)
-      | Erreur of erreur
-      | Throw of erreur
-      | Catch of erreur * c list * (variable * c list)
-      | Put of id                                        (* place dans un signal      *)
-      | Get of id                                        (* prend dans un signal     *)
+        Constant of int                                         (* constante b               *)
+      | Variable of variable                                    (* variable X                *)
+      | Pair of variable * c list                               (* abstraction               *)
+      | Prim of operateur                                       (* opérateur                 *)
+      | Ap                                                      (* application               *)
 
-    (* Type représentant la chaîne de contrôle *)
-    type control_string = c list
+      | Error of id_error                                       (* une erreur traitée        *)
+      | Throw                                                   (* lève l'erreur             *)
+      | Catch of c list * (variable * c list)                   (* try and catch classique   *)
 
-    (* Type intermédiaire pour représenter l'environnement *)
-    type e =  
-        EnvFerm of string * (control_string * e list) 
-      | EnvVar of string * int
+      | Signal of id_signal                                     (* un signal                 *)
+      | Bspawn                                                  (* début du spawn            *)
+      | Espawn                                                  (* fin du spawn              *)
+      | Emit                                                    (* émet                      *)
+      | InitSignal                                              (* initialise un signal      *)
+      | Put                                                     (* place dans un signal      *)
+      | Get                                                     (* prends dans un signal     *)
+      | Present of c list * c list                              (* present s in t1 t2        *)
+      
+     
 
-    (* Type représentant l'environnement *)
-    type env = e list
+    (* Ce type représente la chaîne de contrôle de la machine SECD, c'est notre entrée *)
+    type control_string = c list   
 
-    (* Type intermédiaire pour représenter la pile *)
+
+    
+
+    (**** Environment ****)
+
+    (* type intermédiaire qui va servir à représenter l'environnement *)
+    type e =   
+        EnvClos of (variable * (control_string * e list))     (* (X,(C,Env))                   *)
+      | EnvVar  of (variable * control_string)                (* (X,V) V une constante/erreur  *)
+
+    (* Ce type représente l'environnement de la machine SECD, c'est notre liste de substitution *)
+    type environment = e list
+
+
+
+
+
+    (**** Stack ****)
+
+    (* type intermédiaire contenant une fermeture qui lie une abstraction à un environnement ou juste une constante ou encore une erreur *)
     type s =  
-        Fermeture of (control_string * env) 
-      | Stack_const of int
-      | Stack_erreur of erreur
-      | Unit
+        Stack_signal of id_signal 
+      | Stack_const of int                                    (* constante            *)
+      | Stack_error of id_error                               (* une erreur           *)
+      | Stack_throw of id_error                               (* une erreur levé      *)
+      | Closure of (control_string * environment)             (* fermeture (C,Env)    *)
 
-    (* Type représentant la pile *)
+    
+    (* Ce type représente la pile de la machine SECD, c'est la où la machine travaille *)
     type stack = s list
-
-    (* Type représentant le dépôt *)
-    type dump =
-        Vide
-      | Save of stack * env * control_string * dump
-      | SaveS of id * (stack * env * control_string * dump)
-
-
-    (**** Thread list ****)
-
-    (* type intermédiaire représentant un thread, comprenant son identifiant, sa pile , son environnement, sa chaîne de contrôle et son dépôt *)
-    type thread = Thread of id_thread * stack * env * control_string * dump
-
-    (* Ce type représente la file d'attente de la machine SECD version concurrente, c'est-à-dire, 
-       la file contenant les threads qui doivent être traité dans l'instant courant *)
-    type wait = thread list
-
-    (* Ce type représente la file de thread bloqués de la machine SECD version concurrente, c'est-à-dire, 
-       la file contenant les threads qui sont en attente d'un signal ou juste de la fin de l'instant courant *)
-    type stuck = (id * thread) list
-
-    (* Ce type représente l'ensemble des threads en cours de la machine SECD version concurrente. Cette ensemble est divisé en deux dans une pair, 
-       d'un côté la liste d'attente de leurs tours et de l'autre la lite de threads bloqués *)
-    type thread_list = wait * stuck
-
+    
+    
 
 
     (**** Signals ****)
 
     (* type intermédiaire contenant pour un id de thread donné, sa liste de signaux qui ont eux même 
        leurs liste de valeurs, un booléen qui représente leurs initialisations et un autre leurs émissions *)
-    type cs = CS of id * (id_thread * int list * init) list * emit
+    type cs = CS of id_signal * (id_thread * int list) list * emit
 
     (* Ce type représente les signaux courants, c'est-à-dire, les signaux qui sont initialisé et émit à l'instant courant *)
     type current_signals = cs list
 
     (* type intermédiaire contenant pour un id de thread donné, sa liste de signaux qui ont eux mếme leurs liste de valeurs *)
-    type ssi = SSI of id * ((id_thread * ((int * (id_thread list)) list) * id_thread list ) list)
+    type ssi = SSI of id_signal * ((id_thread * ((int * (id_thread list)) list) * id_thread list ) list)
 
     (* Ce type représente les signaux partagés, c'est-à-dire, les signaux qui ont été émit à l'instant précédent *)
     type shared_signals = ssi list
@@ -103,22 +103,81 @@ module SECDCv3Machine =
        les signaux courants et les signaux partagés qui sont les signaux de l'instant précédent *)
     type signals = current_signals * shared_signals
 
-        (**** Identifier producer ****)
 
-    (* Ce type représente un producteur d'identifiant de la machine SECD version concurrente, c'est-à-dire,
+
+
+    (**** Dump ****)
+
+    (* Ce type représente le dépôt de la machine SECD, c'est-à-dire, l'endroit où l'on sauvegarde une partie de l'état 
+       de la machine pour travailler sur une autre partie de la chaîne de contrôle *)
+    type dump =
+        Vide_D                                                                      (* le dépôt est vide      *)
+      | Save of stack * environment * control_string * dump                         (* (s,e,c,d)              *)
+
+
+
+
+    (**** Thread list ****)
+
+    (* type intermédiaire représentant un thread, comprenant son identifiant, sa pile , son environnement, sa chaîne de contrôle et son dépôt *)
+    type thread = Thread of id_thread * stack * environment * control_string * dump
+
+    (* Ce type représente la file d'attente de la machine SECD version 3, c'est-à-dire, 
+       la file contenant les threads qui doivent être traité dans l'instant courant *)
+    type wait = thread list
+
+    (* Ce type représente la file de thread bloqués de la machine SECD version 3, c'est-à-dire, 
+       la file contenant les threads qui sont en attente d'un signal ou juste de la fin de l'instant courant *)
+    type stuck = (id_signal * thread) list
+
+    (* Ce type représente l'ensemble des threads en cours de la machine SECD version 3. Cette ensemble est divisé en deux dans une pair, 
+       d'un côté la liste d'attente de leurs tours et de l'autre la lite de threads bloqués *)
+    type thread_list = wait * stuck
+
+
+    
+
+    (**** Identifier producer ****)
+
+    (* Ce type représente un producteur d'identifiant de la machine SECD version 3, c'est-à-dire,
        un entier qui va donné un identifiant unique à chaque thread et s'incrémenter *)
-       type identifier_producer = int
+    type identifier_producer = int
 
 
-    (* Type représentant le gestionnaire d'erreur *)
+
+
+    (**** Handler ****)
+
+    (* Ce type représente le gestionnaire de la machine SECD, c'est-à-dire, 
+       l'endroit où l'on met une sauvegarde complète de la machine quand on a un try and catch *)
     type handler = 
-        None
-      | Handler of int * (stack * env * control_string * dump *  thread_list * signals * handler * identifier_producer) 
+        Vide_H                                                (* le handler est vide        *)
+      | SaveHandler of id_error             *                 (* (erreur,(id,s,e,c,d,h,ip)) *)
+                      ( id_thread           * 
+                        stack               * 
+                        environment         * 
+                        control_string      *
+                        thread_list         * 
+                        signals             * 
+                        dump                * 
+                        handler             *
+                        identifier_producer ) 
 
 
-    (* Type représentant la machine SECD concurrente version 3 *)
-    type secdCv3 = Machine of stack * env * control_string * dump * thread_list * signals * handler * identifier_producer
+    
 
+    (**** Machine SECD version 3 ****)
+
+    (* Ce type représente la structure de la machine SECD version 3 *)
+    type secdCv3 = Machine of id_thread           * 
+                              stack               * 
+                              environment         * 
+                              control_string      * 
+                              thread_list         * 
+                              signals             * 
+                              dump                * 
+                              handler             *
+                              identifier_producer 
 
 
     (**** Exceptions ****)
@@ -128,8 +187,6 @@ module SECDCv3Machine =
     exception SignalNotInit
     exception StrangeStuck
     exception UnknowWaitState
-    exception DataNotFound
-    exception SignalAlreadyEmit
 
 
     (**** Affichage ****)
@@ -147,7 +204,7 @@ module SECDCv3Machine =
             
         | Abs(abs,expr)                 ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
 
-        | Spawn(expr)                   ->   append (append [Bspawn] (secdLanguage_of_exprISWIM expr)) [Espawn]
+        | Spawn_ISWIM(expr)             ->   append (append [Bspawn] (secdLanguage_of_exprISWIM expr)) [Espawn]
       
         | Present_ISWIM(s,expr1,expr2)  ->   [Present(s,(secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr2))]
       
@@ -158,10 +215,6 @@ module SECDCv3Machine =
         | Throw_ISWIM erreur            ->   [Throw erreur]
 
         | Catch_ISWIM(erreur,expr1,(abs,expr2))  ->   [Catch(erreur,(secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
-
-        | Put_ISWIM(id,valeur)          ->   [Constant valeur ; Put id]
-
-        | Get_ISWIM(id,valeur)          ->   [Constant valeur ; Get id]
 
 
     (* Retourne un message par rapport à un identifiant d'erreur *)
@@ -206,14 +259,8 @@ module SECDCv3Machine =
       
         | Throw erreur::t                     ->   (message_of_erreur erreur)^" "^(string_of_control_string t)
 
-        | Erreur erreur::t                     ->   (message_of_erreur erreur)^" "^(string_of_control_string t)
-
         | Catch(erreur,expr1,(abs,expr2))::t  ->    "try "^(string_of_control_string expr1)^" catch "^(message_of_erreur erreur)
                                                         ^" in <"^abs^" , "^(string_of_control_string expr2)^"> "^(string_of_control_string t) 
-
-        | Put id::t               ->   "put in "^id^" "^(string_of_control_string t) 
-
-        | Get id::t               ->   "get in "^id^" "^(string_of_control_string t) 
 
 
     (* Convertit un environnement en chaîne de caractère *)
@@ -229,6 +276,10 @@ module SECDCv3Machine =
 
         | EnvVar(var,const)::t                  ->   "<"^var^" ,"^(string_of_int const)^"> , "^(string_of_env t)
 
+        | [Init s]                              ->   "<"^s^",init>"
+
+        | Init s::t                             ->   "<"^s^",init> , "^(string_of_env t)
+
 
     (* Convertit une pile en chaîne de caractère *)
     let rec string_of_stack stack =
@@ -239,9 +290,9 @@ module SECDCv3Machine =
 
         | Stack_const b::t                      ->   (string_of_int b)^" "^(string_of_stack t)
 
-        | Stack_erreur e::t                     ->   (message_of_erreur e)^" "^(string_of_stack t)
+        | Stack_throw e::t                      ->   (message_of_erreur e)^" "^(string_of_stack t)
 
-        | Unit::t                               ->   "Unit "^(string_of_stack t)   
+        | Remp::t                               ->   "Remp "^(string_of_stack t)   
 
 
     (* Convertit la sauvegarde en chaîne de caractère *)
@@ -251,23 +302,15 @@ module SECDCv3Machine =
 
         | Save(stack,env,control_string,dump)  ->   "( "^(string_of_stack stack)^" , ["^(string_of_env env)^"] , "^(string_of_control_string control_string)^" , "^(string_of_dump dump)^" )"
 
-        | SaveS(id,(stack,env,control_string,dump))  ->   "("^id^",( "^(string_of_stack stack)^" , ["^(string_of_env env)^"] , "^(string_of_control_string control_string)^" , "^(string_of_dump dump)^" ))"
-
-
-    (* Convertit un thread en chaîne de caractère *)
-    let string_of_thread thread = 
-      match thread with
-        Thread(i,s,e,c,d)  ->   "( "^(string_of_int i)^" , "^(string_of_stack s)^" , ["^(string_of_env e)^"] , "^(string_of_control_string c)^" , "^(string_of_dump d)^" )" 
     
-
     (* Convertit la file d'attente en chaîne de caractère *)
     let rec string_of_wait wait = 
       match wait with
           []        ->   ""
 
-        | [thread]  ->   (string_of_thread thread)
+        | [thread]  ->   (string_of_dump thread)
 
-        | thread::t ->     (string_of_thread thread)^", "^(string_of_wait t)
+        | thread::t ->   (string_of_dump thread)^" , "^(string_of_wait t)
 
     
     (* Convertit la liste de threads bloqués en chaîne de caractère *)
@@ -275,102 +318,56 @@ module SECDCv3Machine =
       match stuck with
           []             ->   ""
 
-        | [(s,thread)]   ->   "< "^s^","^(string_of_thread thread)^" >"
+        | [(s,thread)]   ->   "< "^s^","^(string_of_dump thread)^" >"
 
-        | (s,thread)::t  ->   "< "^s^","^(string_of_thread thread)^" > , "^(string_of_stuck t)
-
-    let string_of_thread_list thread_list =
-      match thread_list with
-        (wait,stuck)  ->    "\n    WAIT    : "^(string_of_wait wait)
-                           ^"\n    STUCK   : "^(string_of_stuck stuck)
+        | (s,thread)::t  ->   "< "^s^","^(string_of_dump thread)^" > , "^(string_of_stuck t)
 
 
-    (* Convertit une liste de signaux courant en chaîne de caractères *)
-    let rec string_of_cs cs_list =
-      match cs_list with
-          []                               ->   ""
-
-        | (id_thread,values,init)::t       ->    "("^(string_of_int id_thread)^",{"^(concat_string_liste(map string_of_int values))^"},"^(string_of_bool init)^") "^(string_of_cs t)
-
-
-    (* Convertit la liste des signaux courant liés à leurs threads en chaîne de caractères *)
-    let rec string_of_current_signals current_signals =
-      match current_signals with
-          []                                 ->   "" 
-
-        | [CS(id_signal,thread_list,emit)]   ->   "["^id_signal^" : {"^(string_of_cs thread_list)^","^(string_of_bool emit)^"}]"
-
-        | CS(id_signal,thread_list,emit)::t  ->   "["^id_signal^" : {"^(string_of_cs thread_list)^","^(string_of_bool emit)^"}] ; "^(string_of_current_signals t) 
-
-
-    (* Convertit la liste des signaux partagés en chaîne de caractères *)
-    let rec string_of_ssi ssi_list = 
-      let rec aux values =
-        match values with
-            []                                 ->   ""
-
-          | [(value,pointers)]                 ->   "("^( string_of_int value)^",{"^(concat_string_liste(map string_of_int pointers))^"})"
-
-          | (value,pointers)::t                ->   "("^( string_of_int value)^",{"^(concat_string_liste(map string_of_int pointers))^"});"^(aux t)
-      in
-      match ssi_list with
-          []                                   ->   ""
-
-        | (id_thread,values,thread_list)::t    ->   " ("^(string_of_int id_thread)^",["^(aux values)^"],{"^(concat_string_liste( map string_of_int thread_list))^"}) "^(string_of_ssi t)
-
-    
-    (* Convertit la liste des signaux partagés lié à leurs threads en chaîne de caractères *)
-    let rec string_of_shared_signals shared_signals =
-      match shared_signals with
-          []                             ->   ""
-
-        | [SSI(id_signal,thread_list)]   ->   "["^id_signal^" : {"^(string_of_ssi thread_list)^"}]" 
-
-        | SSI(id_signal,thread_list)::t  ->   "["^id_signal^" : {"^(string_of_ssi thread_list)^"}] , "^(string_of_shared_signals t)  
-
-
-    (* Convertit la liste de tous les signaux en chaîne de caractères *)
+    (* Convertit la liste des signaux émis en chaîne de caractère *)
     let rec string_of_signals signals =
       match signals with
-        (current_signals,shared_signals)  ->    "\n     CURRENT  : "^(string_of_current_signals current_signals)
-                                               ^"\n     SHARED   : "^(string_of_shared_signals shared_signals)
+          []    ->   ""
+
+        | [s]   ->   s
+
+        | s::t  ->   s^" , "^(string_of_signals t)
 
     
     (* Convertit le gestionnaire d'erreur en chaîne de caractères *)
     let rec string_of_handler handler =
       match handler with
-          None                                                                       ->   ""
+          None                                                                ->   ""
 
-        | Handler(erreur,(stack,env,control_string,dump,thread_list,si,handler,ip))  -> 
+        | Handler(erreur,(stack,env,control_string,dump,wait,stuck,si,handler))  -> 
                                        "\n   ERREUR  : "^(message_of_erreur erreur)
                                       ^"\n   STACK   : "^(string_of_stack stack)
                                       ^"\n   ENV     : "^(string_of_env env)
                                       ^"\n   CONTROL : "^(string_of_control_string control_string)
                                       ^"\n   DUMP    : "^(string_of_dump dump)
-                                      ^"\n   THREADS : "^(string_of_thread_list thread_list)
+                                      ^"\n   WAIT    : "^(string_of_wait wait)
+                                      ^"\n   STUCK   : "^(string_of_stuck stuck)
                                       ^"\n   SIGNALS : "^(string_of_signals si)
                                       ^"\n   HANDLER : "^(string_of_handler handler)
-                                      ^"\n   IP      : "^(string_of_int ip)
                                       ^" \n"
 
 
-    (* Convertit une machine SECD concurrente version 3 en chaîne de caractère *)
+    (* Convertit une machine SECD concurrente version 2 en chaîne de caractère *)
     let rec string_of_Machine machine =
       match machine with
-        Machine(stack,env,control_string,dump,thread_list,signals,handler,ip)  ->
+        Machine(stack,env,control_string,dump,wait,stuck,signals,handler)  ->
                                                                    "\n STACK   : "^(string_of_stack stack)
                                                                   ^"\n ENV     : ["^(string_of_env env)^"]"
                                                                   ^"\n CONTROL : "^(string_of_control_string control_string)
                                                                   ^"\n DUMP    : "^(string_of_dump dump)
-                                                                  ^"\n THREADS : "^(string_of_thread_list thread_list)
+                                                                  ^"\n WAIT    : "^(string_of_wait wait)
+                                                                  ^"\n STUCK   : "^(string_of_stuck stuck)
                                                                   ^"\n SIGNALS : ["^(string_of_signals signals)^"]"
                                                                   ^"\n HANDLER : "^(string_of_handler handler)
-                                                                  ^"\n IP      : "^(string_of_int ip)
                                                                   ^"\n"
 
 
-    (* Affiche la machine SECD concurrente version 3 *)
-    let afficherSECDCv3 machine = printf "MachineSECDCv3 : %s" (string_of_Machine machine)
+    (* Affiche la machine SECD concurrente version 2 *)
+    let afficherSECDCv2 machine = printf "MachineSECDCv2 : %s" (string_of_Machine machine)
 
 
 
@@ -388,6 +385,8 @@ module SECDCv3Machine =
 
         | EnvVar(var,b)::t           ->   if ( equal x var) then  Stack_const b else substitution x t
 
+        | Init s::t                  ->   substitution x t
+
 
     (* Convertit une liste de  fermeture contenant des constante en liste d'entier *)
     let rec prendre_entier stack nbrOperande =
@@ -404,7 +403,7 @@ module SECDCv3Machine =
       match (env,var) with
           ([],Stack_const b)               ->   [EnvVar(varARemp,b)]
 
-        | ([],Stack_erreur e)              ->   [EnvVar(varARemp,e)]
+        | ([],Stack_throw e)               ->   [EnvVar(varARemp,e)]
 
         | ([],Fermeture(c,e))              ->   [EnvFerm(varARemp,(c,e))]
 
@@ -416,9 +415,11 @@ module SECDCv3Machine =
 
         | (EnvFerm(v,f)::t,Stack_const b)  ->   if (equal v varARemp) then append [EnvVar(v,b)] t else append [EnvFerm(v,f)] (ajoutEnv t varARemp (Stack_const b))
 
-        | (EnvVar(v,b1)::t,Stack_erreur e) ->   if (equal v varARemp) then append [EnvVar(v,e)] t else append [EnvVar(v,b1)] (ajoutEnv t varARemp (Stack_erreur e))
+        | (EnvVar(v,b1)::t,Stack_throw e)  ->   if (equal v varARemp) then append [EnvVar(v,e)] t else append [EnvVar(v,b1)] (ajoutEnv t varARemp (Stack_throw e))
 
-        | (EnvFerm(v,f)::t,Stack_erreur e) ->   if (equal v varARemp) then append [EnvVar(v,e)] t else append [EnvFerm(v,f)] (ajoutEnv t varARemp (Stack_erreur e))
+        | (EnvFerm(v,f)::t,Stack_throw e)  ->   if (equal v varARemp) then append [EnvVar(v,e)] t else append [EnvFerm(v,f)] (ajoutEnv t varARemp (Stack_throw e))
+
+        | (Init s::t,v)                    ->   append [Init s] (ajoutEnv t varARemp v)
 
         | (_,_)                            ->   raise  IllegalAddEnv
 
@@ -433,39 +434,18 @@ module SECDCv3Machine =
         | h::t        ->   let (c1,c2) = spawn t in ((append [h] c1),c2)
 
 
-    let prendreDataSignalCS thread s si =
-      let rec aux cs_list = 
-        match cs_list with
-            []                   ->   raise DataNotFound
-
-          | CS(id,data,_)::t  ->   if (equal id s) then data else aux t
-      in
-      match si with
-        (cs,ssi) -> aux cs
+    (* Ajoute une initialisation de signal *)
+    let addInit env s = append env [Init s]
 
 
     (* Regarde dans l'environnement si le signal est initialisé *)
-    let isInit thread s si = 
-      let rec aux1 data =
-        match data with
-            []              ->   false
-           
-          | (th,_,init)::t  ->   if (th = thread) then init else aux1 t
-      in
-      try  aux1 (prendreDataSignalCS thread s si)
-      with DataNotFound -> false
+    let rec isInit env s = 
+      match env with
+          []          ->   false
 
+        | Init s1::t  ->   if (equal s s1) then true else (isInit t s)
 
-      (* Test si un signal est émis *)
-    let isEmit s si = 
-      let rec aux cs_list = 
-        match cs_list with
-            []                   ->   raise SignalNotInit
-
-          | CS(id,_,emit)::t  ->   if (equal id s) then emit else aux t
-      in
-      match si with
-        (cs,ssi) -> aux cs
+        | _::t        ->   isInit t s
 
 
     (* Prends le choix qui représente l'absence d'un signal *)
@@ -479,30 +459,24 @@ module SECDCv3Machine =
 
 
     (* Emet un signal et vérifie si des threads sont en attente de cette émission *)
-    let emit signal st si =
-      let rec aux1 st =
+    let emit signal env st si =
+      let rec aux st =
         match st with 
             []             ->   ([],[])
 
-          | (s,thread)::t  ->   let (w1,st1) = aux1 t in if (equal signal s) then (append [thread] w1,st1) else (w1,append [(s,thread)] st1)
+          | (s,thread)::t  ->   let (w1,st1) = aux t in if (equal signal s) then (append [thread] w1,st1) else (w1,append [(s,thread)] st1)
       in
-      let rec aux cs_list = 
-        match cs_list with
-            []                    ->   raise SignalNotInit
-
-          | CS(id,data,true)::t   ->   if (equal id signal) then raise SignalAlreadyEmit else (append [CS(id,data,true)] (aux t))
-
-          | CS(id,data,false)::t  ->   if (equal id signal) then (append [CS(id,data,true)] t) else (append [CS(id,data,false)] (aux t))
-      in
-      match si with
-        (cs,ssi) -> let (w1,st1) = aux1 st in (w1,st1,(aux cs,ssi))
+      if (isInit env signal) then let (w1,st1) = aux st in (w1,st1,(append [signal] si)) else raise SignalNotInit
 
 
+    (* Test si un signal est émis *)
+    let isEmit env signal si = if (isInit env signal) then if(mem signal si) then true else false else raise SignalNotInit
 
-    (**** Machine SECD concurrente version 2 ****)
 
-    (* Applique une transition de la machine SECD concurrente version 2 pour un état donné *)
-    let transitionSECDCv2 machine =
+    (**** Machine SECD concurrente version 3 ****)
+
+    (* Applique une transition de la machine SECD concurrente version 3 pour un état donné *)
+    let transitionSECDCv3 machine =
       match machine with
 
           (* Traitement erreur *)                                                                            
@@ -596,7 +570,7 @@ module SECDCv3Machine =
 
 
     (* Applique les règles de la machine SECD concurrente version 2 en affichant les étapes *)
-    let rec machineSECDCv2 machine afficher= 
+    let rec machineSECDCv3 machine afficher= 
       match machine with
           Machine([Stack_const b],e,[],Vide,[],[],si,h)                ->   [Constant b]
         
@@ -604,7 +578,7 @@ module SECDCv3Machine =
 
         | Machine([Stack_throw erreur],e,[],Vide,[],[],si,h)           ->   [Throw erreur]
 
-        | machine                                                      ->   if (afficher) then (afficherSECDCv2 machine) else printf ""; machineSECDCv2 (transitionSECDCv2 machine) afficher
+        | machine                                                      ->   if (afficher) then (afficherSECDCv3 machine) else printf ""; machineSECDCv3 (transitionSECDCv3 machine) afficher
 
         
     (* Lance et affiche le résultat de l'expression *)

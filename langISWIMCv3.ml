@@ -127,7 +127,7 @@ module ISWIM =
     (**** Fonctions utiles ****)
 
     (* Donne le nombre d'opérande requis pour utiliser l'opérateur *)
-    let getOperandNb op =
+    let getNbrOperande op =
       match op with
           Add1 | Sub1 | IsZero    ->   1
 
