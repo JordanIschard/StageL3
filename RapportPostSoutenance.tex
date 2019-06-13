@@ -2142,6 +2142,10 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\end{itemize}
 		\item[]
 		\item[] $IP =$ un entier servant à attribuer l'identifiant à un nouveau thread 
+		\item[] $H = \emptyset$
+		\begin{itemize}
+			\item[|] $\langle T,TL,SI,IP,H\rangle$
+		\end{itemize}
 	\end{itemize}
 	\bigbreak
 	
@@ -2205,14 +2209,14 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\begin{itemize}
 		\item[] Dans tous les cas :
 		\item[] \begin{center}
-			$\dfrac{\langle S,E,C,D\rangle \longrightarrow_{TTSI} \langle S',E',C',D'\rangle}{\langle\langle I,S,E,C,D\rangle,TL,SI,IP,H\rangle \longrightarrow_{TTSI} \langle\langle I,S',E',C',D'\rangle,TL,SI,IP,H\rangle}$
+			$\dfrac{\langle S,E,C,D\rangle \longrightarrow_{TTSIH} \langle S',E',C',D'\rangle}{\langle\langle I,S,E,C,D\rangle,TL,SI,IP,H\rangle \longrightarrow_{TTSIH} \langle\langle I,S',E',C',D'\rangle,TL,SI,IP,H\rangle}$
 		\end{center}
 		\item[]
 		\item[]
 		\item[] Si la règle utilisée n'est ni \textbf{Thread bloqué non remplacé} ni \textbf{Création thread} :
 		\smallbreak 
 		\item[] \begin{center}
-			$\dfrac{\langle\langle S,E,C,D\rangle,TL,SI\rangle \longrightarrow_{TTSI} \langle\langle S',E',C',D'\rangle,TL',SI'\rangle}{\langle\langle I,S,E,C,D\rangle,TL,SI,IP\rangle \longrightarrow_{TTSI} \langle\langle I,S',E',C',D'\rangle,TL',SI',IP\rangle}$ 
+			$\dfrac{\langle\langle S,E,C,D\rangle,TL,SI\rangle \longrightarrow_{TTSIH} \langle\langle S',E',C',D'\rangle,TL',SI'\rangle}{\langle\langle I,S,E,C,D\rangle,TL,SI,IP,H\rangle \longrightarrow_{TTSIH} \langle\langle I,S',E',C',D'\rangle,TL',SI',IP,H\rangle}$ 
 		\end{center}
 	\end{itemize}
 	\newpage
@@ -2226,42 +2230,42 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			\item[] \textbf{Constante ou Signal :} On a une constante, on la déplace dans la pile.
 			\smallbreak
 			$\langle S,E,n~C,D\rangle 
-			\longrightarrow_{TTSI} 
+			\longrightarrow_{TTSIH} 
 			\langle n~S,E,C,D\rangle$ avec $n =$ une constante $b$ ou un identifiant de signal $s$
 			\item[]
 			
 			\item[] \textbf{Substitution :} On a une variable, on substitue la variable par sa valeur liée dans l'environnement via la fonction $E$.
 			\smallbreak
 			$\langle S,E,X~C,D\rangle
-			\longrightarrow_{TTSI} 
+			\longrightarrow_{TTSIH} 
 			\langle V~S,E,C,D\rangle$ avec $E(X) = V$
 			\item[]
 			
 			\item[] \textbf{Opération :} On a un opérateur et le nombre de constantes nécessaires dans la pile, \\via la fonction $\delta$ on retourne le résultat dans la pile.
 			\smallbreak
 			$\langle b_{n},...,b_{1}~S,E,prim_{o^{n}}~C,D\rangle
-			\longrightarrow_{TTSI} 
+			\longrightarrow_{TTSIH} 
 			\langle V~S,E,C,D\rangle$ avec $\delta(o^{n}~b_{1}...b_{n}) = V$
 			\item[]
 			
 			\item[]  \textbf{Abstraction :} On a une abstraction, on crée une fermeture comportant l'abstraction et l'environnement courant et on met la fermeture dans la pile.
 			\smallbreak
 			$\langle S,E,\langle X,C'\rangle~C,D\rangle
-			\longrightarrow_{TTSI} 
+			\longrightarrow_{TTSIH} 
 			\langle \langle\langle X,C'\rangle,E\rangle~S,E,C,D\rangle$
 			\item[]
 			
 			\item[]  \textbf{Application :} On a une application, on sauvegarde dans le dépôt, on remplace la chaîne de contrôle et l'environnement par ceux présents dans la fermeture et on ajoute une substitution  dans le nouvel environnement.
 			\smallbreak
 			$\langle V~\langle\langle X,C'\rangle,E'\rangle~S,E,ap~C,D\rangle
-			\longrightarrow_{TTSI} 
+			\longrightarrow_{TTSIH} 
 			\langle \emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle$
 			\item[] 
 			
 			\item[] \textbf{Récupération de sauvegarde :}  On n'a rien mais le dépôt comporte une sauvegarde donc on prend celle-ci.
 			\smallbreak  
 			$\langle V~S,E,\epsilon,\langle S',E',C,D\rangle\rangle
-			\longrightarrow_{TTSI} 
+			\longrightarrow_{TTSIH} 
 			\langle V~S',E',C,D\rangle$
 		\end{itemize}
 		\item[]
@@ -2273,22 +2277,22 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\begin{itemize}
 			\item[]  \textbf{Création thread :} On crée un nouveau thread.
 			\smallbreak 
-			$\langle\langle I,\langle\langle X,C'\rangle, E\rangle~S,E,spawn~C,D\rangle,TL,SI,IP\rangle 
-			\longrightarrow_{TTSI} 
-			\langle\langle I,S,E,C,D\rangle,TL~\langle IP,S,E,C',D\rangle,SI,IP+1\rangle$
+			$\langle\langle I,\langle\langle X,C'\rangle, E\rangle~S,E,spawn~C,D\rangle,TL,SI,IP,H\rangle 
+			\longrightarrow_{TTSIH} 
+			\langle\langle I,S,E,C,D\rangle,TL~\langle IP,S,E,C',D\rangle,SI,IP+1,H\rangle$
 			\item[]
 			
 			\item[] \textbf{Ajouter dans un signal :} On ajoute une constante dans une liste de valeurs d'un signal et on met à vrai le booléen $emit$
 			\smallbreak
 			$\langle\langle I,s~b~S,E,put~C,D\rangle,TL,SI\rangle
-			\longrightarrow_{TTSI} 
+			\longrightarrow_{TTSIH} 
 			\langle\langle I,S,E,C,D\rangle,TL,SI~[(s,I) \leftarrow b]\rangle$ 
 			\item[]
 			
 			\item[] \textbf{Prendre une valeur partagée :} On prend dans la liste de valeurs d'un signal partagé lié à un thread et on décale l'itérateur.
 			\smallbreak
 			$\langle\langle I,s~b~n~\langle\langle X,C'\rangle,E'\rangle~S,E,get~C,D\rangle,TL,SI\rangle 
-			\longrightarrow_{TTSI} 
+			\longrightarrow_{TTSIH} 
 			\langle\langle I,\emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle,TL,SI\rangle$
 			\\ si pour $SI(s) = \langle emit,CS,SSI\rangle$ et $SSI(b) = \langle CI,IL\rangle$ on a $I \notin IL$ alors $\gamma(I,b,SSI(b)) = V$ sinon $n = V$
 			\item[]
@@ -2296,7 +2300,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			\item[] \textbf{Initialisation signal :} On initialise le signal via la fonction $\iota$.
 			\smallbreak 
 			$\langle\langle I,S,E,init~C,D\rangle,TL,SI\rangle 
-			\longrightarrow_{TTSI}
+			\longrightarrow_{TTSIH}
 			\langle\langle I,s~S,E,C,D\rangle,TL,SI'\rangle$
 			avec $\iota(SI) = (s,SI')$
 			\item[]	
@@ -2304,7 +2308,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			\item[] \textbf{Présence du signal :} On teste la présence d'un signal, via la fonction $SI$ on sait qu'il est émis donc on prend le premier choix.
 			\smallbreak
 			$\langle\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,present~C,D\rangle,TL,SI\rangle 
-			\longrightarrow_{TTSI} 
+			\longrightarrow_{TTSIH} 
 			\langle\langle I,S,E,C'~C,D\rangle,TL,SI\rangle$ 
 			\\avec $SI(s) = \langle vraie,CS,SSI,TL\rangle$
 			\item[] \newpage
@@ -2315,7 +2319,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			\item[] \textbf{ Thread bloqué remplacé :} On teste la présence d'un signal, il n'est pas émis et il y a un thread dans la file d'attente donc on met le thread courant dans la liste de threads bloqués et on prend le thread en tête de la file.
 			\smallbreak
 			$\langle\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,present~C,D\rangle,\langle I',S',E',C''',D'\rangle~TL,SI\rangle 
-			\\\longrightarrow_{TTSI} 
+			\\\longrightarrow_{TTSIH} 
 			\langle\langle I',S',E',C''',D'\rangle,TL,SI'\rangle$ 
 			\\avec $SI(s) = \langle faux,CS,SSI,ST\rangle$
 			\\et $SI'(s) = \langle faux,CS,SSI,ST~\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,present~C,D\rangle\rangle$
@@ -2323,9 +2327,9 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			
 			\item[] \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal, il n'est pas émis donc on met ce thread dans la liste de threads bloqués.
 			\smallbreak 
-			$\langle\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,C,D\rangle,\emptyset,SI,IP\rangle 
-			\longrightarrow_{TTSI} 
-			\langle\langle IP,\emptyset,\epsilon,\emptyset,\emptyset\rangle,\emptyset,SI',IP+1\rangle$
+			$\langle\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,C,D\rangle,\emptyset,SI,IP,H\rangle 
+			\longrightarrow_{TTSIH} 
+			\langle\langle IP,\emptyset,\epsilon,\emptyset,\emptyset\rangle,\emptyset,SI',IP+1,H\rangle$
 			\\avec $SI(s) = \langle faux,CS,SSI,ST\rangle$
 			\\et $SI'(s) = \langle faux,CS,SSI,ST~\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,present~C,D\rangle\rangle$
 			\item[]
@@ -2333,18 +2337,49 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			\item[] \textbf{Récupération dans la file d'attente :} On n'a plus rien à traiter et on n'a aucune sauvegarde, du coup on change le thread courant par le thread en tête de la file d'attente.
 			\smallbreak
 			$\langle\langle I,S,E,\epsilon,\emptyset\rangle,\langle I',S',E',C,D\rangle~TL,SI\rangle 
-			\longrightarrow_{TTSI} 
+			\longrightarrow_{TTSIH} 
 			\langle\langle I',S',E',C,D\rangle,TL,SI\rangle$
 			\item[]
 			
 			\item[] \textbf{Fin d'instant logique :} On n'a plus rien à traiter, on n'a aucune sauvegarde et on n'a plus rien dans la file d'attente, c'est la fin d'un instant logique.
 			\smallbreak
 			$\langle\langle I,S,E,\epsilon,\emptyset \rangle ,\emptyset,SI\rangle 
-			\longrightarrow_{TTSI} 
+			\longrightarrow_{TTSIH} 
 			\langle\langle I,S,E,\epsilon,\emptyset\rangle,TL,SI'\rangle$
 			avec $\tau(SI)$ = ($SI',TL$) 
 			\item[]
 			
+		\end{itemize}
+		\item[] \textbf{Partie pour la gestion des erreurs :} Cette partie ajoute la gestion des erreurs dans notre machine. 
+		\item[]
+		\begin{itemize}
+			\item[] \textbf{Erreur :} On a une erreur, on la déplace dans la pile 
+			\smallbreak
+			$\langle S,E,e~C,D\rangle 
+			\longrightarrow_{TTSIH} 
+			\langle e~S,E,C,D\rangle $
+			\item[]
+			
+			\item[] \textbf{Lever une erreur et la gérer :} On a la commande throw, on regarde si on peut gérer l'erreur. On le peut donc on prend la sauvegarde dans le gestionnaire d'erreur
+			\smallbreak
+			$\langle\langle e~S,E,throw~C,D\rangle,TL,SI,IP,\langle \langle S',E',\langle X,C''\rangle~C',D'\rangle,TL',SI',IP',H\rangle\rangle 
+			\\\longrightarrow_{TTSIH} 
+			\langle\langle \epsilon,E'[X \leftarrow e],C'',\langle S',E',C',D\rangle\rangle,TL',SI',IP',H\rangle $
+			\item[]
+			
+			\item[] \textbf{Lever une erreur et arrêter la machine :} On a la commande throw, on regarde si on peut gérer l'erreur. On ne le peut pas donc on arrête la machine
+			\smallbreak
+			$\langle\langle e~S,E,throw~C,D\rangle,TL,SI,IP,\emptyset\rangle 
+			\longrightarrow_{TTSIH} 
+			\langle\langle e,E,throw,\emptyset\rangle,\emptyset,\emptyset,IP,\emptyset\rangle $
+			\item[]
+			
+			\item[] \textbf{Créer un gestionnaire d'erreur :} On a la commande catch, 
+			\smallbreak
+			$\langle\langle \langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~S,E,catch~C,D\rangle,TL,SI,IP,H\rangle 
+			\\\longrightarrow_{TTSIH} 
+			\langle\langle S,E,C'~C,D\rangle,TL,SI,IP,\langle \langle S,E,\langle X,C''\rangle~C,D\rangle,TL,SI,IP,H\rangle\rangle $
+			\item[]
 		\end{itemize}
 		\item[] \textbf{Partie commune :} Quand on ajoute des règles dans une machine déjà existante, le plus délicat est de ne pas avoir de conflits dans les règles. Pour cela, on définit des règles exprès pour faire la liaison entre ce qui existait et ce que l'on ajoute. 
 		\item[]
@@ -2352,13 +2387,13 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			\item[] \textbf{Application neutre :} On a une application sur rien, cela revient juste à ne rien faire.
 			\smallbreak 
 			$\langle S,E,ap~C,D\rangle
-			\longrightarrow_{TTSI} 
+			\longrightarrow_{TTSIH} 
 			\langle S,E,C,D\rangle$
 			\item[]
 			\item[] \textbf{Récupération de sauvegarde avec pile vide :}  On n'a rien mais le dépôt comporte une sauvegarde donc on prend celle-ci.
 			\smallbreak  
 			$\langle \emptyset,E,\epsilon,\langle S',E',C,D\rangle\rangle
-			\longrightarrow_{TTSI} 
+			\longrightarrow_{TTSIH} 
 			\langle S',E',C,D\rangle$
 		\end{itemize}
 		
@@ -2368,25 +2403,33 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\bigbreak
 	
 	
-	\textbf{\textit{la machine TTSI peut s'arrêter dans 4 états différents:}}
+	\textbf{\textit{la machine TTSIH peut s'arrêter dans 5 états différents:}}
 	\smallbreak
 	\begin{itemize}
 		\item[] - Soit on a une \textbf{constante} telle que 
-		$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTSI},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
-		\twoheadrightarrow_{TTSI} 
+		$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTSIH},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
+		\twoheadrightarrow_{TTSIH} 
 		\langle\langle I,b~S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
 		\item[] 
 		\item[] - Soit on a une \textbf{fonction} telle que
-		$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTSI},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
-		\twoheadrightarrow_{TTSI} 
+		$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTSIH},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
+		\twoheadrightarrow_{TTSIH} 
 		\langle\langle I,\langle\langle X,C\rangle,E\rangle~S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
 		\item[] 
 		\item[] - Soit on a \textbf{rien} telle que  
-		$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTSI},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
-		\twoheadrightarrow_{TTSI} 
+		$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTSIH},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
+		\twoheadrightarrow_{TTSIH} 
 		\langle\langle I,\epsilon,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
 		\item[]
-		\item[] - Sinon on a un \textbf{état inconnu} : on a une \textbf{erreur} 
+		\item[] - Soit on a \textbf{une erreur traitée} telle que  
+		$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTSIH},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
+		\twoheadrightarrow_{TTSIH} 
+		\langle\langle I,e,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
+		\item[]
+		\item[] - Soit on a \textbf{une erreur non traitée} telle que  
+		$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTSIH},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
+		\twoheadrightarrow_{TTSIH} 
+		\langle\langle I,e,E,throw,\emptyset\rangle,\emptyset,SI,IP\rangle$;
 	\end{itemize}
 	\bigbreak
 	

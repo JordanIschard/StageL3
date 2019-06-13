@@ -10,6 +10,7 @@ open SecdCv2.SECDCv2Machine;;
 open SecdCv3.SECDCv3Machine;;
 open Tts.MachineTTS;;
 open Ttsi.MachineTTSI ;;
+open Ttsih.MachineTTSIH ;;
 
 
 (* Test *)
