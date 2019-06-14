@@ -360,15 +360,16 @@ printf "On teste l'expression  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 )
 lancerSECDCv3 expression23 false;;
 printf "\n" ;;
                               
-printf "On teste l'expression   \n" ;;
+printf "On teste l'expression  signal s in ( Spawn( present s in ( + expression23 ( signal s1 in ( present s1 in 5 65 ) ) ) 3 ) Spawn( emit s ) ) \n" ;;
 lancerSECDCv3 expression24 false;;
 printf "\n" ;;
                               
-printf "On teste l'expression  \n" ;;
+printf "On teste l'expression  try ( signal s in ( Spawn( present s in ( + expression23 ( signal s1 in ( present s2 in 5 65 ) ) ) 3 ) Spawn( emit s ) ) ) catch 8 ( 7685 ) \n" ;;
 lancerSECDCv3 expression25 false;;
 printf "\n" ;;
                               
-printf "On teste l'expression   \n" ;;
+printf "On teste l'expression  signal s in ( Spawn( signal s1 in ( present s1 in ( 98 ( ( - get( s 2 ) get( s 2 ) ) get( s 2 ) ) ) ) ) ( Spawn( put( s 6 ) ( put( s 3 ) emit s ) ) 
+Spawn( signal s1 in ( present s1 in ( 98 ( ( - get( s 2 ) get( s 2 ) ) get( s 2 ) ) ) ) ) ) ) \n" ;;
 lancerSECDCv3 expression26 false;;
 printf "\n" ;;                          
 

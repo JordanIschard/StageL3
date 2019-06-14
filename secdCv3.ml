@@ -553,17 +553,12 @@ module SECDCv3Machine =
 
     
     (* Retourne la liste des signaux courant par rapport à un identifiant d'un thread *)
-    let give_signals signals signal=
-      let rec aux current_signals =
-        match current_signals with
-            []                     ->   []
+    let rec give_signals current_signals signal=
+      match current_signals with
+          []                     ->   []
   
-          | CS(signal1,threads,_)::t     ->   if (signal = signal1) then threads else aux t
-        in
-      match signals with
-          ([],_)                   ->   []
-  
-        | (current_signals,_)      ->   aux current_signals
+        | CS(signal1,threads,_)::t     ->   if (signal = signal1) then threads else (give_signals t signal)
+      
 
 
     (* Vérifie si c'est un init *)
@@ -578,15 +573,11 @@ module SECDCv3Machine =
 
 
     (* Vérifie si c'est une émission *)
-    let isEmit signals signal =
-      let rec aux current_signals =
-        match current_signals with
-            []                     ->   false
+    let rec isEmit current_signals signal =
+      match current_signals with
+          []                     ->   false
 
-          | CS(signal1,_,emit)::t  ->   if (signal = signal1) then emit else aux t
-      in
-      match signals with
-        (cs,_)                     ->   aux cs 
+        | CS(signal1,_,emit)::t  ->   if (signal = signal1) then emit else isEmit t signal
 
       
     (* Ajoute une  fermeture à l'environnement *)
@@ -629,25 +620,19 @@ module SECDCv3Machine =
 
 
     (* Ajoute un signal initialisé dans l'environnement *)
-    let add_init_signal signals id signal = 
+    let rec add_init_signal current_signals id signal = 
       let rec aux1 threads =
         match threads with
             (id1,values,init)::t                  ->   if (id = id1) then append [(id,values,true)] t else append [(id1,values,init)] (aux1 t)
 
           | []                                    ->   [(id,[],true)]
       in
-      let rec aux current_signals =
-        match current_signals with
-            CS(signal1,threads,emit)::t           ->   if (signal = signal1) then (append [CS(signal,(aux1 threads),emit)] t) else (append [CS(signal1,threads,emit)] (aux t))
-          
-          | []                                    ->   [CS(signal,[(id,[],true)],false)]
-        in
-      if (isInit signals id signal)
+      if (isInit current_signals id signal) 
         then raise SignalAlreadyInit
-        else match signals with
-                ([],shared_signals)               ->   ([CS(signal,[(id,[],true)],false)],shared_signals)
-              
-              | (current_signals,shared_signals)  ->   ((aux current_signals),shared_signals)
+        else  match current_signals with
+                  CS(signal1,threads,emit)::t   ->   if (signal = signal1) then (append [CS(signal,(aux1 threads),emit)] t) else (append [CS(signal1,threads,emit)] (add_init_signal t id signal))
+          
+                | []                            ->   [CS(signal,[(id,[],true)],false)]
 
 
     (* Retire la partie du spawn de la chaîne de contrôle *)
@@ -743,21 +728,15 @@ module SECDCv3Machine =
     
 
     (* Mets vrai pour l'émission du signal dans liste de signaux *)
-    let rec emit_signal signals id signal =
-      let rec aux current_signals =
-        if isInit signals id signal
-          then match current_signals with
+    let rec emit_signal current_signals id signal =
+      if isInit current_signals id signal
+        then match current_signals with
 
-                  CS(signal1,threads,emit)::t  ->   if (signal = signal1) then (append [CS(signal1,threads,true)]  t) else (append [CS(signal1,threads,emit)]  (aux t))
+                CS(signal1,threads,emit)::t  ->   if (signal = signal1) then (append [CS(signal1,threads,true)]  t) else (append [CS(signal1,threads,emit)]  (emit_signal t id signal))
                 
-                | []                           ->   raise SignalNotInit  
+              | []                           ->   raise SignalNotInit  
 
           else raise SignalNotInit
-        in
-        match signals with
-            ([],shared_signals)                ->   raise SignalNotInit
-              
-          | (current_signals,shared_signals)   ->   ((aux current_signals),shared_signals)
 
 
     (* Donne la pile avec le calcul fait *)
@@ -773,27 +752,21 @@ module SECDCv3Machine =
 
 
     (* Mets à faux l'initilisation du signal dans la liste des signaux *)
-    let remove_init_signal signals id signal =
+    let rec remove_init_signal current_signals id signal =
       let rec aux1 threads =
         match threads with
             (id1,values,init)::t            ->   if (id = id1) then (append [(id1,values,false)]  t) else (append [(id1,values,init)]  (aux1 t))
 
           | []                              ->   raise SignalNotInit
         in
-      let rec aux current_signals  =
-        match current_signals with
-            CS(signal1,threads,emit)::t     ->   if (signal = signal1) then (append [CS(signal1,(aux1 threads),emit)]  t) else (append [CS(signal1,threads,emit)] (aux t))
+      match current_signals with
+          CS(signal1,threads,emit)::t     ->   if (signal = signal1) then (append [CS(signal1,(aux1 threads),emit)]  t) else (append [CS(signal1,threads,emit)] (remove_init_signal t id signal))
           
-          | []                              ->   raise SignalNotInit
-      in
-      match signals with
-          ([],shared_signals)               ->   raise SignalNotInit
-              
-        | (current_signals,shared_signals)  ->   ((aux current_signals),shared_signals)
+        | []                              ->   raise SignalNotInit
 
     
     (* Ajoute un élément dans la liste des variables liés au signal et à l'id du thread courant *)
-    let put si signal id b = 
+    let rec put current_signal signal id b = 
       let rec aux1 signals =
         match signals with
           (id1,values,true)::t     ->   if (id = id1) then (append [(id1,(append values [b]),true)] t) else (append [(id1,values,true)]  (aux1 t))
@@ -802,43 +775,31 @@ module SECDCv3Machine =
 
         | []                       ->   raise SignalNotInit
       in
-      let rec aux current_signal =
-        match current_signal with
-            CS(signal1,threads,emit)::t  ->   if (signal = signal1) then (append [CS(signal1,(aux1 threads),emit)]  t) else (append [CS(signal1,threads,emit)] (aux t))
+      match current_signal with
+          CS(signal1,threads,emit)::t  ->   if (signal = signal1) then (append [CS(signal1,(aux1 threads),emit)]  t) else (append [CS(signal1,threads,emit)] (put t signal id b))
 
-          | []                           ->   raise SignalNotInit
-      in
-      match si with
-          ([],_)                         ->   raise SignalNotInit
-
-        | (cs,ssi)                       ->   ((aux cs),ssi)
+        | []                           ->   raise SignalNotInit
 
 
     (* Copie l'état d'un signal pour un thread donné  pour un nouveau thread*)
-    let clone id_current_thread id_new_thread signals =
+    let rec clone id_current_thread id_new_thread current_signals =
       let rec aux1 threads =
         match threads with
             []                          ->   []
 
           | (id,values,init)::t         ->   if (id = id_current_thread) then  append [(id,values,init);(id_new_thread,values,init)] t else append [(id,values,init)] (aux1 t)
       in
-      let rec aux current_signals =
-        match current_signals with
-            CS(signal,threads,emit)::t  ->   CS(signal,(aux1 threads),emit)::(aux t)
+      match current_signals with
+          CS(signal,threads,emit)::t  ->   CS(signal,(aux1 threads),emit)::(clone id_current_thread id_new_thread t)
 
-          | []                          ->   []
-      in
-      match signals with
-          ([],ssi)                      ->   ([],ssi)
-
-        | (cs,ssi)                      ->   ((aux cs),ssi)
+        | []                          ->   []
 
 
     (* Vérifie si c'est la première fois que l'on pioche dans une liste de valeurs *)
     let rec first_get id_thread values =
       match values with
           []                     ->   true
-          
+
         | (_,pointers)::t        ->   if (mem id_thread pointers) then false else first_get id_thread t
 
     
@@ -973,18 +934,18 @@ module SECDCv3Machine =
 
 
           (* Création d'un thread *)
-        | Machine(id,s,e,Bspawn::c,d,(w,st),si,h,ip)                          
+        | Machine(id,s,e,Bspawn::c,d,(w,st),(cs,ssi),h,ip)                          
           ->    begin 
-                  try   Machine( id , Unit::s , e , (remove_spawn c) , d , (append w [Thread(ip,s,e,(recover_spawn c),d)],st) , (clone id ip si) , h , (ip+1) )
-                  with  EndSpawnNotFound  ->   Machine( id , s , e , Throw 11::c , d , (w,st) , si , h , ip )
+                  try   Machine( id , Unit::s , e , (remove_spawn c) , d , (append w [Thread(ip,s,e,(recover_spawn c),d)],st) , ((clone id ip cs),ssi) , h , (ip+1) )
+                  with  EndSpawnNotFound  ->   Machine( id , s , e , Throw 11::c , d , (w,st) , (cs,ssi) , h , ip )
                 end
 
 
           (* Ajout d'une valeur *)
-        | Machine(id,Stack_const b::s,e,Put signal::c,d,tl,si,h,ip)           
+        | Machine(id,Stack_const b::s,e,Put signal::c,d,tl,(cs,ssi),h,ip)           
           ->    begin
-                  try   Machine( id , Unit::s , e , c , d , tl , (put si signal id b) , h , ip )
-                  with  SignalNotInit  ->   Machine( id , s , e , Throw 8::c , d , tl , si , h , ip ) 
+                  try   Machine( id , Unit::s , e , c , d , tl , ((put cs signal id b),ssi) , h , ip )
+                  with  SignalNotInit  ->   Machine( id , s , e , Throw 8::c , d , tl , (cs,ssi) , h , ip ) 
                 end
 
 
@@ -1019,40 +980,40 @@ module SECDCv3Machine =
 
 
           (* Récupération sauvegarde signal *)                             
-        | Machine(id,v::s,e,[],SaveSignal(signal,s1,e1,c,d),tl,si,h,ip)       
+        | Machine(id,v::s,e,[],SaveSignal(signal,s1,e1,c,d),tl,(cs,ssi),h,ip)       
           ->    begin
-                  try   Machine( id , v::s1 , e1 , c , d , tl , (remove_init_signal si id signal ) , h , ip )
-                  with  SignalNotInit  ->   Machine( id , s , e , Throw 8::c , d , tl , si , h , ip )
+                  try   Machine( id , v::s1 , e1 , c , d , tl , ((remove_init_signal cs id signal ),ssi) , h , ip )
+                  with  SignalNotInit  ->   Machine( id , s , e , Throw 8::c , d , tl , (cs,ssi) , h , ip )
                 end
 
 
           (* Initialisation d'un signal *)
-        | Machine(id,s,e,Signal(signal,c1)::c,d,tl,si,h,ip)                   
+        | Machine(id,s,e,Signal(signal,c1)::c,d,tl,(cs,ssi),h,ip)                   
           ->    begin
-                  try   Machine( id , [] , e , c1 , SaveSignal(signal,s,e,c,d) , tl , (add_init_signal si id signal) , h , ip )
-                  with  SignalAlreadyInit  ->   Machine( id , s , e , Throw 9::c , d , tl , si , h , ip )
+                  try   Machine( id , [] , e , c1 , SaveSignal(signal,s,e,c,d) , tl , ((add_init_signal cs id signal),ssi) , h , ip )
+                  with  SignalAlreadyInit  ->   Machine( id , s , e , Throw 9::c , d , tl , (cs,ssi) , h , ip )
                 end
 
 
           (* Test de présence *)
-        | Machine(id,s,e,Present(signal,c1,c2)::c,d,tl,si,h,ip)               
-          ->    if (isInit si id signal)
-                  then if (isEmit si signal)
-                          then Machine( id , Unit::s , e , (append c1 c) , d , tl , si , h , ip )
+        | Machine(id,s,e,Present(signal,c1,c2)::c,d,tl,(cs,ssi),h,ip)               
+          ->    if (isInit cs id signal)
+                  then if (isEmit cs signal)
+                          then Machine( id , Unit::s , e , (append c1 c) , d , tl , (cs,ssi) , h , ip )
 
                           else match tl with
-                                  ([],st)                          ->   Machine( ip , [] , [] , [] , Vide_D , ([],(append st [(signal,Thread(id,s,e,Present(signal,c1,c2)::c,d))])) , si , h , (ip+1) )
+                                  ([],st)                          ->   Machine( ip , [] , [] , [] , Vide_D , ([],(append st [(signal,Thread(id,s,e,Present(signal,c1,c2)::c,d))])) , (cs,ssi) , h , (ip+1) )
 
-                                | (Thread(id1,s1,e1,c3,d1)::w,st)  ->   Machine( id1 , s1 , e1 , c3 , d1 , (w,(append st [(signal,Thread(id,s,e,Present(signal,c1,c2)::c,d))])) , si , h , ip )
+                                | (Thread(id1,s1,e1,c3,d1)::w,st)  ->   Machine( id1 , s1 , e1 , c3 , d1 , (w,(append st [(signal,Thread(id,s,e,Present(signal,c1,c2)::c,d))])) , (cs,ssi) , h , ip )
 
-                  else Machine( id , s , e , Throw 8::c , d , tl , si , h , ip )
+                  else Machine( id , s , e , Throw 8::c , d , tl , (cs,ssi) , h , ip )
 
 
           (* Émission d'un signal *)
-        | Machine(id,s,e,Emit signal::c,d,tl,si,h,ip)                         
+        | Machine(id,s,e,Emit signal::c,d,tl,(cs,ssi),h,ip)                         
           ->    begin 
-                  try   Machine( id , Unit::s , e , c , d , (check_thread_list signal tl) , (emit_signal si id signal) , h , ip)
-                  with  SignalNotInit  ->   Machine( id , s , e , Throw 8::c , d , tl , si , h , ip ) 
+                  try   Machine( id , Unit::s , e , c , d , (check_thread_list signal tl) , ((emit_signal cs id signal),ssi) , h , ip)
+                  with  SignalNotInit  ->   Machine( id , s , e , Throw 8::c , d , tl , (cs,ssi) , h , ip ) 
                 end
 
 
