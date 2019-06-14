@@ -1,6 +1,6 @@
 open Printf ;;
 open List ;;
-open LangISWIM.ISWIM;;
+open Iswim.ISWIM;;
 
 (* Module qui implémente la machine CC *)
 module CCMachine =

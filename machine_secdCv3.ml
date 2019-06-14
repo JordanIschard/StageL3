@@ -1,7 +1,7 @@
 open String ;;
 open Printf ;;
 open List ;;
-open LangISWIMCv3.ISWIM ;;
+open Lang_secdCv3.ISWIM ;;
 
 
 module SECDCv3Machine =

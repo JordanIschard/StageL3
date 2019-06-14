@@ -1,7 +1,7 @@
 open String ;;
 open Printf ;;
 open List ;;
-open LangISWIMTTSIH.ISWIM ;;
+open Lang_ttsih.ISWIM ;;
 
 
 module MachineTTSIH =

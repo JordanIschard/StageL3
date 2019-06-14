@@ -3,7 +3,7 @@ open Printf ;;
 open List ;;
 open Machine_cc.CCMachine ;;
 open Machine_cek.CEKMachine ;;
-open LangISWIM.ISWIM ;;
+open Iswim.ISWIM ;;
 
 
 module SECDMachine =

@@ -3,7 +3,7 @@ open Printf ;;
 open List ;;
 open Machine_cc.CCMachine ;;
 open Machine_cek.CEKMachine ;;
-open LangISWIMCv2.ISWIM ;;
+open Lang_secdCv2.ISWIM ;;
 
 
 module SECDCv2Machine =

@@ -1,7 +1,7 @@
 open String ;;
 open Printf ;;
 open List ;;
-open LangISWIMTTSI.ISWIM ;;
+open Lang_ttsi.ISWIM ;;
 
 
 module MachineTTSI =

@@ -2,7 +2,7 @@ open String ;;
 open Printf ;;
 open List ;;
 open Machine_cc.CCMachine ;;
-open LangISWIM.ISWIM ;;
+open Iswim.ISWIM ;;
 
 (* Module qui implémente la machine SCC *)
 module SCCMachine =

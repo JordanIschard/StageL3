@@ -1,7 +1,7 @@
 open String ;;
 open Printf ;;
 open List ;;
-open LangISWIMTTS.ISWIM ;;
+open Lang_tts.ISWIM ;;
 
 
 module MachineTTS =
