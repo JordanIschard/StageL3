@@ -1,10 +1,10 @@
 open String ;;
 open Printf ;;
 open List ;;
-open LangISWIMCv3.ISWIM ;;
+open LangISWIMCv4.ISWIM ;;
 
 
-module SECDCv3Machine =
+module SECDCv4Machine =
   struct
 
 
@@ -18,7 +18,6 @@ module SECDCv3Machine =
     type id_thread  =   int
     type id_error   =   int
     type emit       =   bool
-    type init       =   bool
 
 
 
@@ -29,19 +28,24 @@ module SECDCv3Machine =
     type c =
         Constant of int                                         (* constante b               *)
       | Variable of variable                                    (* variable X                *)
-      | Ap                                                      (* application               *)
-      | Prim of operateur                                       (* opérateur                 *)
       | Pair of variable * c list                               (* abstraction               *)
+      | Prim of operateur                                       (* opérateur                 *)
+      | Ap                                                      (* application               *)
+
+      | Error of id_error                                       (* une erreur traitée        *)
+      | Throw                                                   (* lève l'erreur             *)
+      | Catch of c list * (variable * c list)                   (* try and catch classique   *)
+
+      | Signal of id_signal                                     (* un signal                 *)
       | Bspawn                                                  (* début du spawn            *)
       | Espawn                                                  (* fin du spawn              *)
-      | Emit of id_signal                                       (* emet s                    *)
-      | Present of id_signal * c list * c list                  (* present s in t1 t2        *)
-      | Signal of id_signal * c list                            (* signal s in t             *)
-      | Throw of id_error                                       (* lève l'erreur             *)
-      | Catch of id_error * c list * (variable * c list)        (* try and catch classique   *)
-      | Error of id_error                                       (* une erreur traitée        *)
-      | Put of id_signal                                        (* place dans un signal      *)
-      | Get of id_signal                                        (* prends dans un signal     *)
+      | Emit                                                    (* émet                      *)
+      | InitSignal                                              (* initialise un signal      *)
+      | Put                                                     (* place dans un signal      *)
+      | Get                                                     (* prends dans un signal     *)
+      | Present of c list * c list                              (* present s in t1 t2        *)
+      
+     
 
     (* Ce type représente la chaîne de contrôle de la machine SECD, c'est notre entrée *)
     type control_string = c list   
@@ -67,9 +71,10 @@ module SECDCv3Machine =
 
     (* type intermédiaire contenant une fermeture qui lie une abstraction à un environnement ou juste une constante ou encore une erreur *)
     type s =  
-        Unit                                                  (* remplace             *)
+        Stack_signal of id_signal 
       | Stack_const of int                                    (* constante            *)
       | Stack_error of id_error                               (* une erreur           *)
+      | Stack_throw of id_error                               (* une erreur levé      *)
       | Closure of (control_string * environment)             (* fermeture (C,Env)    *)
 
     
@@ -83,7 +88,7 @@ module SECDCv3Machine =
 
     (* type intermédiaire contenant pour un id de thread donné, sa liste de signaux qui ont eux même 
        leurs liste de valeurs, un booléen qui représente leurs initialisations et un autre leurs émissions *)
-    type cs = CS of id_signal * (id_thread * int list * init) list * emit
+    type cs = CS of id_signal * (id_thread * int list) list * emit
 
     (* Ce type représente les signaux courants, c'est-à-dire, les signaux qui sont initialisé et émit à l'instant courant *)
     type current_signals = cs list
@@ -107,8 +112,7 @@ module SECDCv3Machine =
        de la machine pour travailler sur une autre partie de la chaîne de contrôle *)
     type dump =
         Vide_D                                                                      (* le dépôt est vide      *)
-      | Save       of stack * environment * control_string * dump                   (* (s,e,c,d)              *)
-      | SaveSignal of id_signal * stack * environment * control_string * dump       (* (signal,s,e,c,d)       *)
+      | Save of stack * environment * control_string * dump                         (* (s,e,c,d)              *)
 
 
 
@@ -144,33 +148,32 @@ module SECDCv3Machine =
 
     (**** Handler ****)
 
-    (* Ce type représente le gestionnaire de la machine SECD, c'est-à-dire, 
+    (* Ce type représente le gestionnaire de la machine SECD concurrente version 4, c'est-à-dire, 
        l'endroit où l'on met une sauvegarde complète de la machine quand on a un try and catch *)
     type handler = 
         Vide_H                                                (* le handler est vide        *)
-      | SaveHandler of id_error            *                  (* (erreur,(id,s,e,c,d,h,ip)) *)
-                                              (
-                       id_thread           * 
-                       stack               * 
-                       environment         * 
-                       control_string      *
-                       dump                * 
-                       thread_list         * 
-                       signals             * 
-                       handler             *
-                       identifier_producer    ) 
+      | SaveHandler of id_error             *                 (* (erreur,(id,s,e,c,d,h,ip)) *)
+                      ( id_thread           * 
+                        stack               * 
+                        environment         * 
+                        control_string      *
+                        dump                *
+                        thread_list         * 
+                        signals             *  
+                        handler             *
+                        identifier_producer ) 
 
 
     
 
-    (**** Machine SECD version concurrente 3 ****)
+    (**** Machine SECD version concurrente 4 ****)
 
-    (* Ce type représente la structure de la machine SECD version concurrente 3 *)
-    type secdCv3 = Machine of  id_thread           * 
+    (* Ce type représente la structure de la machine SECD version concurrente 4 *)
+    type secdCv4 = Machine of  id_thread           * 
                                stack               * 
                                environment         * 
                                control_string      * 
-                               dump                * 
+                               dump                *
                                thread_list         * 
                                signals             * 
                                handler             *
@@ -190,20 +193,18 @@ module SECDCv3Machine =
     exception NoSubPossible                    (* Aucune substitution possible pour cette variable dans l'environnement             *)
     exception StrangeEnd                       (* Même moi je ne sais pas ce qu'il sait passé ...                                   *)
     exception EndSpawnNotFound                 (* La délimitation de fin du spawn n'est pas trouvé dans la chaîne de contrôle       *)
-    exception NoSharedValues                   (* Il n'y a pas de valeurs partagées                                                 *)
 
     exception NotAllConstants                  (* Tous les éléments de la pile prisent pour l'opérateurs ne sont pas des constantes *)
     exception InsufficientOperandNb            (* Le nombre d'opérande est insuffisante par rapport au nombre requis                *)
-    exception ImpossibleResult                 (* Le résultat n'est pas dans un format autorisé, soit un entier ou une abstraction  *)
+    exception DivZero
 
     exception SignalAlreadyInit                (* Le signal est déjà initialisé dans ce thread                                      *)
-    exception SignalAlreadyEmit                (* Le signal est déjà émit dans la machine                                           *)
     exception SignalNotInit                    (* Le signal n'est pas initialisé dans ce thread                                     *)
     exception SignalNotShared                  (* Le signal n'est pas dans la liste des signaux partagés                            *)
     exception ThreadSharedNotFound             (* L'identifiant de thread lié à un signal n'existe pas                              *)
     exception PointerNotExist                  (* Le pointeur n'existe pas                                                          *)
+    exception EndIt                            (* L'itérateur a finit son parcours                                                  *)
 
-    exception UnknowState                      (* Le format de la machine est invalide et/ou inconnu                                *)
     exception UnknowStackState                 (* Le format de la pile est invalide et/ou inconnu                                   *)
     exception UnknowEnvState                   (* Le format de l'environnement est invalide et/ou inconnu                           *)
     exception UnknowWaitState                  (* Le format de la liste d'attente est invalide et/ou inconnu                        *)
@@ -237,30 +238,30 @@ module SECDCv3Machine =
     let rec secdLanguage_of_exprISWIM expression =
       match expression with
           Const const                           ->   [Constant const]
-            
+          
         | Var var                               ->   [Variable var]
             
-        | App(expr1,expr2)                      ->   append (  append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
+        | App(expr1,expr2)                      ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
             
-        | Op(op,liste_expr)                     ->   append ( flatten( map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
+        | Op(op,liste_expr)                     ->   append (flatten(map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
             
         | Abs(abs,expr)                         ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
 
-        | Spawn expr                            ->   append [Bspawn] (append (secdLanguage_of_exprISWIM expr) [Espawn])
+        | Spawn_ISWIM expr                      ->   append [Bspawn] (append (secdLanguage_of_exprISWIM expr) [Espawn])
 
-        | Present_ISWIM (signal,expr1,expr2)    ->   [Present (signal,(secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr2))]
+        | Present_ISWIM (signal,expr1,expr2)    ->   [Signal signal ; Present ((secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr2))]
 
-        | Emit_ISWIM (signal)                   ->   [Emit (signal)]
+        | Emit_ISWIM (signal)                   ->   [Signal signal ; Emit]
 
-        | Signal_ISWIM (signal,expr)            ->   [Signal (signal,(secdLanguage_of_exprISWIM expr))]
+        | Signal_ISWIM signal                   ->   [Signal signal ; InitSignal]
 
-        | Throw_ISWIM error                     ->   [Throw(error)]
+        | Throw_ISWIM error                     ->   [Error error ; Throw]
 
-        | Catch_ISWIM(error,expr1,(abs,expr2))  ->   [Catch(error,(secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
+        | Catch_ISWIM(error,expr1,(abs,expr2))  ->   [Error error ; Catch((secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
 
-        | Put_ISWIM(signal,value)               ->   [Constant value ; Put(signal)]
+        | Put_ISWIM(signal,value)               ->   [Constant value ; Signal signal ; Put]
 
-        | Get_ISWIM(signal,id_thread)           ->   [Constant id_thread ;Get(signal)]
+        | Get_ISWIM(signal,id_thread)           ->   [Constant id_thread ; Signal signal ; Get]
 
 
     (* Donne une chaîne de caractères contenant un message d'erreur par rapport à l'identifiant de l'erreur *)
@@ -268,31 +269,30 @@ module SECDCv3Machine =
       match error with
           0  ->  "ERREUR : Etrange..."                                           (* StrangeEnd            *)
 
-        | 1   ->   "ERREUR : Format de la machine invalide :/"                   (* UnknowState           *)
-        | 2   ->   "ERREUR : Format de la liste bloqué invalide"                 (* UnknowStuckState      *)
-        | 3   ->   "ERREUR : Format de la liste d'attente invalide"              (* UnknowWaitState       *) 
-        | 4   ->   "ERREUR : Format de l'environnement invalide"                 (* UnknowEnvState        *)
-        | 5   ->   "ERREUR : Format de la pile invalide"                         (* UnknowStackState      *)
-        | 6   ->   "ERREUR : Format du dépôt invalide"                           (* UnknowDumpState       *)
-        | 7   ->   "ERREUR : Format du gestionnaire invalide"                    (* UnknowHandlerState    *)
+        | 1   ->   "ERREUR : Format de la liste bloqué invalide"                 (* UnknowStuckState      *)
+        | 2   ->   "ERREUR : Format de la liste d'attente invalide"              (* UnknowWaitState       *) 
+        | 3   ->   "ERREUR : Format de l'environnement invalide"                 (* UnknowEnvState        *)
+        | 4   ->   "ERREUR : Format de la pile invalide"                         (* UnknowStackState      *)
+        | 5   ->   "ERREUR : Format du dépôt invalide"                           (* UnknowDumpState       *)
+        | 6   ->   "ERREUR : Format du gestionnaire invalide"                    (* UnknowHandlerState    *)
 
-        | 8   ->   "ERREUR : Signal non initialisé"                              (* SignalNotInit         *)
-        | 9   ->   "ERREUR : Signal déjà initialisé"                             (* SignalAlreadyInit     *)
-        
+        | 7   ->   "ERREUR : Signal non initialisé"                              (* SignalNotInit         *)
+        | 8   ->   "ERREUR : Signal déjà initialisé"                             (* SignalAlreadyInit     *)
+        | 9   ->   "ERREUR : Le signal n'a pas été partagé"                      (* SignalNotShared       *)
+
         | 10  ->   "ERREUR : Aucune substitution possible"                       (* NoSubPossible         *)
 
         | 11  ->   "ERREUR : Le format du spawn est invalide"                    (* EndSpawnNotFound      *)
 
         | 12  ->   "ERREUR : Ce ne sont pas tous des constantes"                 (* NotAllConstants       *)
+        | 13  ->   "ERREUR : Division par zero"                                  (* DivZero               *)
         | 14  ->   "ERREUR : Nombre d'opérande insuffisant"                      (* InsufficientOperandNb *)
-        | 15  ->   "ERREUR : Format de l'opérateur invalid"                      (* OpFormatError         *)
-        | 16  ->   "ERREUR : Résultat impossible"                                (* ImpossibleResult      *)
 
-        | 17  ->   "ERREUR : Aucune valeurs partagées"                           (* NoSharedValues        *)
-        | 18  ->   "ERREUR : Le signal n'a pas été partagé"                      (* SignalNotShared       *)
-        | 20  ->   "ERREUR : Le thread n'est pas trouvé"                         (* ThreadSharedNotFound  *)
-        | 21  ->   "ERREUR : Le pointeur n'existe pas"                           (* PointerNotExist       *)
-
+        
+        | 15  ->   "ERREUR : Le thread n'est pas trouvé"                         (* ThreadSharedNotFound  *)
+        | 16  ->   "ERREUR : Le pointeur n'existe pas"                           (* PointerNotExist       *)
+        | 17  ->   "Fin d'un itérateur"                                          (* EndIt                 *)
+ 
         | _   ->   "ERREUR : Cette erreur n'existe pas "
 
 
@@ -307,6 +307,8 @@ module SECDCv3Machine =
         | Variable var::t                    ->   var^" "^(string_of_control_string t)
       
         | Ap::t                              ->   "ap "^(string_of_control_string t)
+
+        | Signal signal::t                   ->   signal^" "^(string_of_control_string t)
       
         | Pair(abs,expr_list)::t             ->   "("^abs^",("^(string_of_control_string expr_list)^")) "^(string_of_control_string t)
       
@@ -316,24 +318,21 @@ module SECDCv3Machine =
 
         | Espawn::t                          ->   "espawn "^(string_of_control_string t)
 
-        | Present(signal,expr1,expr2)::t     ->    "present "^signal^" in "^(string_of_control_string expr1)
-                                                  ^(string_of_control_string expr2)^(string_of_control_string t)
+        | Present(expr1,expr2)::t            ->    "present in "^(string_of_control_string expr1)^(string_of_control_string expr2)^(string_of_control_string t)
 
-        | Emit signal::t                     ->   "emit "^signal^" "^(string_of_control_string t)
+        | Emit::t                            ->   "emit "^(string_of_control_string t)
 
-        | Signal(signal,expr)::t             ->   "signal "^signal^" in "^(string_of_control_string expr)^(string_of_control_string t)
+        | InitSignal::t                      ->   "init "^(string_of_control_string t)
 
-        | Throw(error)::t                    ->   (error_message error)^" "^(string_of_control_string t)
+        | Throw::t                           ->   "throw "^(string_of_control_string t)
 
-        | Catch(error,expr1,(abs,expr2))::t  ->    "try "^(string_of_control_string expr1)
-                                                  ^"catch "^(error_message error)
-                                                  ^" in ("^abs^" , "^(string_of_control_string expr2)^")"^(string_of_control_string t) 
+        | Catch(expr1,(abs,expr2))::t        ->    "try "^(string_of_control_string expr1)^"catch ("^abs^" , "^(string_of_control_string expr2)^")"^(string_of_control_string t) 
 
         | Error error::t                     ->   (error_message error)^" "^(string_of_control_string t)
 
-        | Put signal::t                      ->   signal^" put "^(string_of_control_string t)
+        | Put::t                             ->   "put "^(string_of_control_string t)
        
-        | Get signal::t                      ->   signal^" get "^(string_of_control_string t)
+        | Get::t                             ->   "get "^(string_of_control_string t)
 
 
     (* Convertit un environnement en chaîne de caractères *)
@@ -351,11 +350,13 @@ module SECDCv3Machine =
       match stack with
           []                                ->   ""
 
-        | Unit::t                           ->   "Unit "^(string_of_stack t)
+        | Stack_signal signal::t            ->   signal^" "^(string_of_stack t)
 
         | Stack_const b::t                  ->   (string_of_int b)^" "^(string_of_stack t)
 
         | Stack_error e::t                  ->   "Erreur "^(string_of_int e)^" "^(string_of_stack t)
+
+        | Stack_throw e::t                  ->   "Erreur levé "^(string_of_int e)^" "^(string_of_stack t)
 
         | (Closure(control_string,env))::t  ->   "["^(string_of_control_string control_string)^" , {"^(string_of_environment env)^"}]"^(string_of_stack t)
         
@@ -367,18 +368,14 @@ module SECDCv3Machine =
 
         | Save(stack,env,control_string,dump)               ->    "("^(string_of_stack stack)^" , "^(string_of_environment env)^" , "
                                                                  ^(string_of_control_string control_string)^" , "^(string_of_dump dump)^")"
-
-        | SaveSignal(signal,stack,env,control_string,dump)  ->    "("^signal^" , "^(string_of_stack stack)^" , "^(string_of_environment env)^" , "
-                                                                 ^(string_of_control_string control_string)^" , "^(string_of_dump dump)^")"
         
 
       
     (* Convertit un thread en chaîne de caractères *)
     let rec string_of_thread thread =
       match thread with
-        Thread(id,stack,env,control_string,dump)  ->    "("^(string_of_int id)^" , "^(string_of_stack stack)^" , "
-                                                       ^(string_of_environment env)^" , "^(string_of_control_string control_string)^" , "
-                                                       ^(string_of_dump dump)^")"
+        Thread(id,stack,env,control_string,dump)  ->    "("^(string_of_int id)^" , "^(string_of_stack stack)^" , "^(string_of_environment env)
+                                                       ^" , "^(string_of_control_string control_string)^" , "^(string_of_dump dump)^")"
 
 
     (* Convertit la liste des éléments en attente en chaîne de caractères *)
@@ -413,9 +410,9 @@ module SECDCv3Machine =
     (* Convertit une liste de signaux courant en chaîne de caractères *)
     let rec string_of_cs cs_list =
       match cs_list with
-          []                               ->   ""
+          []                          ->    ""
 
-        | (id_thread,values,init)::t       ->    "("^(string_of_int id_thread)^",{"^(concat_secd_list(map string_of_int values))^"},"^(string_of_bool init)^") "^(string_of_cs t)
+        | (id_thread,values)::t       ->    "("^(string_of_int id_thread)^",{"^(concat_secd_list(map string_of_int values))^"}) "^(string_of_cs t)
 
 
     (* Convertit la liste des signaux courant liés à leurs threads en chaîne de caractères *)
@@ -480,11 +477,11 @@ module SECDCv3Machine =
                                        ^"\n"
 
 
-    (* Convertit une machine SECD en chaîne de caractères *)
+    (* Convertit une machine SECD concurrente version 3 en chaîne de caractères *)
     let rec string_of_secdMachine machine =
       match machine with
         Machine(id,stack,env,control_string,dump,thread_list,signals,handler,identifier_producer)  ->    
-                                        "\n   ID      : "^(string_of_int id)
+                                        "\n    ID     : "^(string_of_int id)
                                        ^"\n   STACK   : "^(string_of_stack stack)
                                        ^"\n   ENV     : "^(string_of_environment env)
                                        ^"\n   CONTROL : "^(string_of_control_string control_string)
@@ -493,11 +490,11 @@ module SECDCv3Machine =
                                        ^"\n   SIGNALS : "^(string_of_signals signals)
                                        ^"\n   HANDLER : "^(string_of_handler handler)
                                        ^"\n   IP      : "^(string_of_int identifier_producer)
-                                       ^"\n\n"
+                                       ^"\n"
 
 
-    (* Affiche la machine SECD concurrente version 3 *)
-    let afficherSECDCv3 machine = printf "MachineSECDCv3 : %s\n" (string_of_secdMachine machine)
+    (* Affiche la machine SECD concurrente version 4 *)
+    let afficherSECDCv4 machine = printf "MachineSECDCv4 : %s\n" (string_of_secdMachine machine)
 
 
 
@@ -518,77 +515,34 @@ module SECDCv3Machine =
         | EnvClos(var,(control_string,env))::t  ->   if (equal x var) then  Closure(control_string,env) else substitution x t
 
         | EnvVar(var,control_string)::t         ->   if (equal x var) 
-                                                      then 
-                                                        begin
-                                                          match control_string with
-                                                              [Constant b]  ->   Stack_const b 
+                                                      then  match control_string with
+                                                                [Constant b]  ->   Stack_const b 
                                                             
-                                                            | [Error e]     ->   Stack_error e
+                                                              | [Error e]     ->   Stack_error e
 
-                                                            | _             ->   raise UnknowEnvState
-                                                        end
+                                                              | _             ->   raise UnknowEnvState
+                
                                                       else substitution x t
-        
-
-
-    (* Convertit une liste d'élément de la pile contenant des constantes en liste d'entier *)
-    let rec convert_stack_element_to_int_list stack nbrOperande =
-      match (stack,nbrOperande) with
-          (_,0)                       ->   []
-
-        | (Stack_const b::t,nbr)      ->   b::(convert_stack_element_to_int_list t (nbr - 1)) 
-
-        | (_,nbr)                     ->   if nbr = 0 then raise NotAllConstants else raise OpFormatError
-
-
-    (* Retire un nombre n d'élément de la pile *)
-    let rec remove_elements stack nbrOperand =
-      match (stack,nbrOperand) with
-          (stack,0)   ->   stack
-
-        | (h::t,nbr)  ->   if nbr > 0 then remove_elements t (nbr - 1) else raise InsufficientOperandNb
-
-        | ([],_)      ->   raise InsufficientOperandNb
-
-
-    
-    (* Retourne la liste des signaux courant par rapport à un identifiant d'un thread *)
-    let give_signals signals signal=
-      let rec aux current_signals =
-        match current_signals with
-            []                     ->   []
-  
-          | CS(signal1,threads,_)::t     ->   if (signal = signal1) then threads else aux t
-        in
-      match signals with
-          ([],_)                   ->   []
-  
-        | (current_signals,_)      ->   aux current_signals
 
 
     (* Vérifie si c'est un init *)
-    let isInit signals id signal =
-      let rec aux threads =
-        match threads with
-            []               ->   false
+    let rec isInit current_signals id signal =
+      match current_signals with
+          []                  ->   false
 
-          | (id1,_,init)::t  ->   if (id = id1) then init else aux t
-      in
-      let temp = (give_signals signals signal) in  aux temp
+        | CS(signal1,_,_)::t  ->   if (signal = signal1) then true else (isInit t id signal)
+
 
 
     (* Vérifie si c'est une émission *)
-    let isEmit signals signal =
-      let rec aux current_signals =
-        match current_signals with
-            []                     ->   false
+    let rec isEmit current_signals signal =
+      match current_signals with
+          []                     ->   false
 
-          | CS(signal1,_,emit)::t  ->   if (signal = signal1) then emit else aux t
-      in
-      match signals with
-        (cs,_)                     ->   aux cs 
+        | CS(signal1,_,emit)::t  ->   if (signal = signal1) then emit else (isEmit t signal)
 
-      
+
+
     (* Ajoute une  fermeture à l'environnement *)
     let rec add_env env varToRep stack_element =
       match stack_element with
@@ -629,59 +583,41 @@ module SECDCv3Machine =
 
 
     (* Ajoute un signal initialisé dans l'environnement *)
-    let add_init_signal signals id signal = 
+    let rec add_init_signal current_signals id signal = 
       let rec aux1 threads =
         match threads with
-            (id1,values,init)::t                  ->   if (id = id1) then append [(id,values,true)] t else append [(id1,values,init)] (aux1 t)
+            (id1,values)::t            ->   if (id = id1) then raise SignalAlreadyInit else append [(id1,values)] (aux1 t)
 
-          | []                                    ->   [(id,[],true)]
+          | []                         ->   [(id,[])]
       in
-      let rec aux current_signals =
-        match current_signals with
-            CS(signal1,threads,emit)::t           ->   if (signal = signal1) then (append [CS(signal,(aux1 threads),emit)] t) else (append [CS(signal1,threads,emit)] (aux t))
-          
-          | []                                    ->   [CS(signal,[(id,[],true)],false)]
-        in
-      if (isInit signals id signal)
-        then raise SignalAlreadyInit
-        else match signals with
-                ([],shared_signals)               ->   ([CS(signal,[(id,[],true)],false)],shared_signals)
-              
-              | (current_signals,shared_signals)  ->   ((aux current_signals),shared_signals)
-
-
-    (* Retire la partie du spawn de la chaîne de contrôle *)
-    let rec remove_spawn control_string =
-      match control_string with
-          []         ->   raise EndSpawnNotFound
-
-        | Espawn::t  ->   t
-
-        | h::t       ->   remove_spawn t
-
-
-    (* Récupère la partie du spawn de la chaîne de contrôle *)
-    let rec recover_spawn control_string =
-      match control_string with
-          []         ->   raise EndSpawnNotFound
+      match current_signals with
+          CS(signal1,threads,emit)::t  ->   if (signal = signal1) then (append [CS(signal,(aux1 threads),emit)] t) else (append [CS(signal1,threads,emit)] (add_init_signal t id signal))
         
-        | Espawn::t  ->   []
+        | []                           ->   [CS(signal,[(id,[])],false)]
         
-        | h::t       ->   h::(recover_spawn t)
+
+    (* Récupère la chaîne de contrôle du nouveau thread et la chaîne amputée de cette partie *)
+    let rec spawn control_string =
+      match control_string with
+          []         ->   ([],[])
+        
+        | Espawn::t  ->   ([], t)
+
+        | h::t       ->   let (new_spawn,rest) = spawn t in (append [h] new_spawn , rest)
 
  
     (* Dans le cas où le signal attendu n'est pas emit on applique le second choix*)
     let end_of_the_moment_thread thread_list =
       let rec aux stuck =
         match stuck with
-            []                                                          ->   []
+            []                                                                   ->   []
 
-          | (signal,Thread(id,s,e,((Present(signal1,c1,c2))::c),d))::t  ->   (Thread( id , s , e , (append c2 c) , d ))::(aux t)
+          | (signal,Thread(id,Stack_signal si::s,e,((Present(c1,c2))::c),d))::t  ->   (Thread( id , s , e , (append c2 c) , d ))::(aux t)
 
-          | _                                                           ->   raise UnknowStuckState
+          | _                                                                    ->   raise UnknowStuckState
       in
       match thread_list with
-        (wait,stuck)                                                    ->   ((aux stuck),[]) 
+        (_,stuck)                                                                ->   ((aux stuck),[]) 
 
 
     (* Remet à zero les signaux en vidant la liste des valeurs et en mettant l'émission à faux *)
@@ -690,7 +626,7 @@ module SECDCv3Machine =
         match thread_list with
             []                            ->   []
 
-          | (thread,_,init)::t            ->   (thread,[],init)::(aux t)
+          | (thread,_)::t                 ->   (thread,[])::(aux t)
       in
       match current_signals with
           []                              ->   []
@@ -704,7 +640,7 @@ module SECDCv3Machine =
         match thread_list with
             []                             ->   []
 
-          | (thread,values,_)::t           ->   (thread,(map (fun x -> (x,[])) values),[])::(aux t)
+          | (thread,values)::t             ->   (thread,(map (fun x -> (x,[])) values),[])::(aux t)
       in
       match current_signals with
           []                               ->   []
@@ -743,102 +679,36 @@ module SECDCv3Machine =
     
 
     (* Mets vrai pour l'émission du signal dans liste de signaux *)
-    let rec emit_signal signals id signal =
-      let rec aux current_signals =
-        if isInit signals id signal
-          then match current_signals with
+    let rec emit_signal current_signals id signal =
+      if isInit current_signals id signal
+        then match current_signals with
 
-                  CS(signal1,threads,emit)::t  ->   if (signal = signal1) then (append [CS(signal1,threads,true)]  t) else (append [CS(signal1,threads,emit)]  (aux t))
+                CS(signal1,threads,emit)::t  ->   if (signal = signal1) then (append [CS(signal1,threads,true)]  t) else (append [CS(signal1,threads,emit)]  (emit_signal t id signal))
                 
-                | []                           ->   raise SignalNotInit  
+              | []                           ->   raise SignalNotInit  
 
-          else raise SignalNotInit
-        in
-        match signals with
-            ([],shared_signals)                ->   raise SignalNotInit
-              
-          | (current_signals,shared_signals)   ->   ((aux current_signals),shared_signals)
-
-
-    (* Donne la pile avec le calcul fait *)
-    let calculate operator stack environment = 
-      let operand_number = getOperandNb operator in
-      let result = calcul operator (rev (convert_stack_element_to_int_list stack operand_number)) in
-      match result with
-          Abs(abs,expr)  ->   Closure((secdLanguage_of_exprISWIM (Abs(abs,expr))),environment)::(remove_elements stack operand_number) 
-
-        | Const b        ->   Stack_const b::(remove_elements stack operand_number) 
-
-        | _              ->   raise ImpossibleResult
-
-
-    (* Mets à faux l'initilisation du signal dans la liste des signaux *)
-    let remove_init_signal signals id signal =
-      let rec aux1 threads =
-        match threads with
-            (id1,values,init)::t            ->   if (id = id1) then (append [(id1,values,false)]  t) else (append [(id1,values,init)]  (aux1 t))
-
-          | []                              ->   raise SignalNotInit
-        in
-      let rec aux current_signals  =
-        match current_signals with
-            CS(signal1,threads,emit)::t     ->   if (signal = signal1) then (append [CS(signal1,(aux1 threads),emit)]  t) else (append [CS(signal1,threads,emit)] (aux t))
-          
-          | []                              ->   raise SignalNotInit
-      in
-      match signals with
-          ([],shared_signals)               ->   raise SignalNotInit
-              
-        | (current_signals,shared_signals)  ->   ((aux current_signals),shared_signals)
+        else raise SignalNotInit
 
     
     (* Ajoute un élément dans la liste des variables liés au signal et à l'id du thread courant *)
-    let put si signal id b = 
+    let rec put current_signals signal id b = 
       let rec aux1 signals =
         match signals with
-          (id1,values,true)::t     ->   if (id = id1) then (append [(id1,(append values [b]),true)] t) else (append [(id1,values,true)]  (aux1 t))
+          (id1,values)::t                ->   if (id = id1) then (append [(id1,(append values [b]))] t) else (append [(id1,values)]  (aux1 t))
 
-        | (id1,values,false)::t    ->   if (id = id1) then raise SignalNotInit else (append [(id1,values,false)]  (aux1 t))
-
-        | []                       ->   raise SignalNotInit
+        | []                             ->   raise SignalNotInit
       in
-      let rec aux current_signal =
-        match current_signal with
-            CS(signal1,threads,emit)::t  ->   if (signal = signal1) then (append [CS(signal1,(aux1 threads),emit)]  t) else (append [CS(signal1,threads,emit)] (aux t))
+      match current_signals with
+            CS(signal1,threads,emit)::t  ->   if (signal = signal1) then (append [CS(signal1,(aux1 threads),emit)]  t) else (append [CS(signal1,threads,emit)] (put t signal id b))
 
           | []                           ->   raise SignalNotInit
-      in
-      match si with
-          ([],_)                         ->   raise SignalNotInit
-
-        | (cs,ssi)                       ->   ((aux cs),ssi)
-
-
-    (* Copie l'état d'un signal pour un thread donné  pour un nouveau thread*)
-    let clone id_current_thread id_new_thread signals =
-      let rec aux1 threads =
-        match threads with
-            []                          ->   []
-
-          | (id,values,init)::t         ->   if (id = id_current_thread) then  append [(id,values,init);(id_new_thread,values,init)] t else append [(id,values,init)] (aux1 t)
-      in
-      let rec aux current_signals =
-        match current_signals with
-            CS(signal,threads,emit)::t  ->   CS(signal,(aux1 threads),emit)::(aux t)
-
-          | []                          ->   []
-      in
-      match signals with
-          ([],ssi)                      ->   ([],ssi)
-
-        | (cs,ssi)                      ->   ((aux cs),ssi)
 
 
     (* Vérifie si c'est la première fois que l'on pioche dans une liste de valeurs *)
     let rec first_get id_thread values =
       match values with
           []                     ->   true
-          
+
         | (_,pointers)::t        ->   if (mem id_thread pointers) then false else first_get id_thread t
 
     
@@ -859,7 +729,7 @@ module SECDCv3Machine =
 
     (* Retourne la valeur présent dans la liste de valeurs partagés lié au signal et à l'identifant donné 
        qui est la suivante de celle pointé part le pointeurs lié à ton thread *)    
-    let get signals id_thread signal my_thread =
+    let rec get shared_signals id signal my_thread =
       let rec aux3 values =
         match values with
             []                       ->   raise UnknowSSIState
@@ -881,13 +751,14 @@ module SECDCv3Machine =
       let rec aux1 threads =
         match threads with 
           
-            (id,values,end_list)::t  ->   if (id = id_thread) 
+            (id1,values,end_list)::t  ->   if (id1 = id) 
                                             then if(mem my_thread end_list)
-                                                    then (Unit,append [(id,values,end_list)] t)
+                                                    then raise EndIt
                                                     else if(first_get my_thread values) 
                                                             then  match values with 
-                                                                      (value,pointers)::t1  ->   (Stack_const value,append [(id,append [(value,pointers)] (aux3 t1),end_list)] t) 
-                                                                    | []                    ->   (Unit,append [(id,[],append [my_thread] end_list)] t)
+                                                                      (value,pointers)::t1  ->   (Stack_const value,append [(id,append [(value,pointers)] (aux3 t1),end_list)] t)
+                                                                      
+                                                                    | []                    ->   raise EndIt
                                                             else let (res,new_values,end_it)   =   aux2 values in 
                                                                                                         if end_it 
                                                                                                           then (res,append [(id,new_values,append [my_thread] end_list)] t)
@@ -897,198 +768,218 @@ module SECDCv3Machine =
 
           | [] -> raise ThreadSharedNotFound
       in
-      let rec aux shared_signals = 
-        match shared_signals with
-            []                       ->   raise SignalNotShared
+      match shared_signals with
+          []                       ->   raise SignalNotShared
 
-          | SSI(signal1,threads)::t  ->   if (signal1 = signal) 
-                                            then let (res,new_threads)  =   aux1 threads in (res,(append [SSI(signal1,new_threads)]       t))  
-                                            else let (res,new_ssi)      =   aux t        in (res,(append [SSI(signal1,threads)    ] new_ssi)) 
-      in
-      match signals with
-          (cs,[])                     ->   raise NoSharedValues
-
-        | (cs,ssi)                    ->   let (res,new_ssi) = aux ssi in (res,(cs,new_ssi))
+        | SSI(signal1,threads)::t  ->   if (signal1 = signal) 
+                                            then let (res,new_threads)  =   aux1 threads                    in (res,(append [SSI(signal1,new_threads)]       t))  
+                                            else let (res,new_ssi)      =   get t id signal my_thread       in (res,(append [SSI(signal1,    threads)] new_ssi)) 
 
 
 
 
 
 
+                                            
 
 
 
-        
-    (**** Machine SECD concurrente version 3 ****)
+    (**** Machine SECD concurrente version 4 ****)
 
-    (* Applique les règles de la machine SECD concurrente version 3 en affichant les étapes *)
-    let transitionSECDCv3 machine =
+    (* Applique les règles de la machine SECD concurrente version 4 en affichant les étapes *)
+    let transitionSECDCv4 machine =
       match machine with
 
           (* Constante *)
-        | Machine(id,s,e,Constant b::c,d,tl,si,h,ip)                          ->   Machine( id , Stack_const b::s , e , c , d , tl , si , h , ip )
+        | Machine(id,s,e,Constant b::c,d,tl,si,h,ip)                          ->    Machine( id , Stack_const b::s , e , c , d , tl , si , h , ip ) 
 
 
           (* Substitution *)
         | Machine(id,s,e,Variable x::c,d,tl,si,h,ip)                          
-          ->    begin 
+          ->    begin
                   try   Machine( id , (substitution x e)::s , e , c , d , tl , si , h , ip ) 
-                  with  NoSubPossible  ->  Machine( id , s , e , Throw 10::c , d , tl , si , h , ip )
+                  with  NoSubPossible  -> Machine( id , Stack_throw 10::s , e , c , d , tl , si , h , ip )
                 end
-
-
-          (* Erreur *)
-        | Machine(id,s,e,Error error::c,d,tl,si,h,ip)                         ->   Machine( id , Stack_error error::s , e , c , d , tl , si , h , ip )
 
 
           (* Opération *)
         | Machine(id,s,e,Prim op::c,d,tl,si,h,ip)                             
-          ->    begin
-                  try     Machine( id , (calculate op s e) , e , c , d , tl , si , h , ip )
-                  with    NotAllConstants        ->   Machine( id , s , e , Throw 12::c , d , tl , si , h , ip )
+          ->    begin 
+                  match (s,op) with 
+                      (Stack_const b::s,Add1)                  ->   Machine( id , Stack_const(b+1)::s , e , c , d , tl , si , h , ip )
 
-                        | OpFormatError          ->   Machine( id , s , e , Throw 15::c , d , tl , si , h , ip )
+                    | (Stack_const b::s,Sub1)                  ->   Machine( id , Stack_const(b-1)::s , e , c , d , tl , si , h , ip )
 
-                        | InsufficientOperandNb  ->   Machine( id , s , e , Throw 14::c , d , tl , si , h , ip )
+                    | (Stack_const 0::s,IsZero)                ->   Machine( id , Closure([Pair("x",[Pair("y",[Variable "x"])])],e)::s , e , c , d , tl , si , h , ip )
+
+                    | (Stack_const b::s,IsZero)                ->   Machine( id , Closure([Pair("x",[Pair("y",[Variable "y"])])],e)::s , e , c , d , tl , si , h , ip )
+
+                    | (Stack_const b::Stack_const b1::s,Add)   ->   Machine( id , Stack_const(b1+b)::s , e , c , d , tl , si , h , ip )  
+
+                    | (Stack_const b::Stack_const b1::s,Sub)   ->   Machine( id , Stack_const(b1-b)::s , e , c , d , tl , si , h , ip )
+            
+                    | (Stack_const b::Stack_const b1::s,Mult)  ->   Machine( id , Stack_const(b1*b)::s , e , c , d , tl , si , h , ip )
+            
+                    | (Stack_const 0::Stack_const b1::s,Div)   ->   Machine( id , Stack_throw 13::s , e , c , d , tl , si , h , ip )
+
+                    | (Stack_const b::Stack_const b1::s,Div)   ->   Machine( id , Stack_const(b1/b)::s , e , c , d , tl , si , h , ip )
+
+                    | (Stack_throw 22::s,HasNext)              ->   Machine( id , Stack_const 0::s , e , c , d , tl , si , h , ip )  
+                    
+                    | (Stack_const b::s,_)                     ->   Machine( id , Stack_throw 14::s , e , c , d , tl , si , h , ip )
+
+                    | (_,_)                                    ->   Machine( id , Stack_throw 12::s , e , c , d , tl , si , h , ip ) 
                 end
 
 
           (* Abstraction *)
-        | Machine(id,s,e,Pair(abs,c1)::c,d,tl,si,h,ip)                        ->   Machine( id , Closure([Pair(abs,c1)],e)::s , e , c , d , tl , si , h , ip )
+        | Machine(id,s,e,Pair(abs,c1)::c,d,tl,si,h,ip)                        ->    Machine( id, Closure([Pair(abs,c1)],e)::s , e , c , d , tl , si , h , ip )  
         
 
-          (* Erreur levée *)
-        | Machine(id,s,e,Throw error::c,d,tl,si,SaveHandler(id_error,(id1,s1,e1,Pair(abs,c2)::c1,d1,tl1,si1,h,ip1)),ip)                     
-          ->    if (id_error = error) then  Machine( id1 , s1 , e1 , Pair(abs,c2)::Error error::Ap::c1, d1 , tl1 , si1 , h , ip1 )
-                                      else  Machine( id , s , e , Throw error::c , d , tl , si , h , ip )
+          (* Application *)
+        | Machine(id,v::Closure([Pair(abs,c1)],e1)::s,e,Ap::c,d,tl,si,h,ip)   ->    Machine( id , [] , (add_env e1 abs v) , c1 , Save(s,e,c,d) , tl , si , h , ip )
 
 
-          (* Erreur levée non gérée *)
-        | Machine(id,s,e,Throw error::c,tl,si,d,Vide_H,ip) -> Machine( id , [] , [] , [Throw error] , Vide_D , ([],[]) , ([],[]) , Vide_H , ip )
+          (* Récupération de sauvegarde *)
+        | Machine(id,v::s,e,[],Save(s1,e1,c,d),tl,si,h,ip)                    ->    Machine( id , v::s1 , e1 , c , d , tl , si , h , ip )
+
+
+          (* Erreur *)
+        | Machine(id,s,e,Error error::c,d,tl,si,h,ip)                         ->    Machine( id , Stack_error error::s , e , c , d , tl , si , h , ip )
+
+
+          (* Lève une erreur *)
+        | Machine(id,Stack_error error::s,e,Throw::c,d,tl,si,h,ip)            ->    Machine( id , Stack_throw error::s , e , c , d , tl , si , h , ip ) 
+
+
+          (* Propagation *)
+        | Machine(id,Stack_throw error::s,e,_::c,d,tl,si,h,ip)                ->    Machine( id , Stack_throw error::s , e , c , d , tl , si , h , ip ) 
+
+        
+          (* gestion d'erreur *)
+        | Machine(id,Stack_throw er::s,e,[],d,tl,si,h,ip)                  
+          ->    begin
+                  match h with
+                      Vide_H  ->    Machine(id,[Stack_throw er],e,[],Vide_D,([],[]),([],[]),Vide_H,ip)
+
+                    | SaveHandler(er1,(id1,s1,e1,Pair(abs,c1)::c,d1,tl1,si1,h1,ip1))  
+                      ->    if (er == er1) 
+                              then Machine( id1 , [] , (add_env e1 abs (Stack_error er)) , c1 , Save(s1,e1,c,d1) , tl1 , si1 , h1 , ip1 ) 
+                              else Machine( id , Stack_throw er::s , e , [] , d , tl , si , h1 , ip )
+
+                    | _       ->    raise UnknowHandlerState 
+                end
+
+
+          (* Création gestionnaire d'erreur *)
+        | Machine(id,Stack_error error::s,e,Catch(c1,(abs,c2))::c,d,tl,si,h,ip)            
+          ->    Machine( id , s , e , (append c1 c) , d , tl , si , SaveHandler(error,(id,s,e,(append [Pair(abs,c2)] c),d,tl,si,h,ip)) , ip )
         
 
-          (* Gestion des erreurs *)
-        | Machine(id,s,e,Catch(error,c1,(abs,c2))::c,d,tl,si,h,ip)            
-          ->    Machine( id , Unit::s , e , (append c1 c) , d , tl , si , SaveHandler(error,(id,s,e,(append [Pair(abs,c2)] c),d,tl,si,h,ip)) , ip )
+          (* Signal *)
+        | Machine(id,s,e,Signal signal::c,d,tl,si,h,ip)                       ->    Machine( id , Stack_signal signal::s , e , c , d , tl , si , h , ip ) 
 
 
-          (* Création d'un thread *)
+          (* Création de thread *)
         | Machine(id,s,e,Bspawn::c,d,(w,st),si,h,ip)                          
           ->    begin 
-                  try   Machine( id , Unit::s , e , (remove_spawn c) , d , (append w [Thread(ip,s,e,(recover_spawn c),d)],st) , (clone id ip si) , h , (ip+1) )
-                  with  EndSpawnNotFound  ->   Machine( id , s , e , Throw 11::c , d , (w,st) , si , h , ip )
+                  try   let (c1,c2) = spawn c in Machine( id , s , e , c2 , d , (append w [Thread(ip,s,e,c1,d)],st) , si , h , (ip+1) )
+                  with  EndSpawnNotFound  ->     Machine( id , Stack_throw 11::s , e , c , d , (w,st) , si , h , ip )
                 end
 
 
-          (* Ajout d'une valeur *)
-        | Machine(id,Stack_const b::s,e,Put signal::c,d,tl,si,h,ip)           
+          (* Ajoute une valeur *)
+        | Machine(id,Stack_signal signal::Stack_const b::s,e,Put::c,d,tl,(cs,ssi),h,ip)           
           ->    begin
-                  try   Machine( id , Unit::s , e , c , d , tl , (put si signal id b) , h , ip )
-                  with  SignalNotInit  ->   Machine( id , s , e , Throw 8::c , d , tl , si , h , ip ) 
+                  try   Machine( id , s , e , c , d , tl , ((put cs signal id b),ssi) , h , ip )
+                  with  SignalNotInit  ->   Machine( id , Stack_throw 7::s , e , c , d , tl , (cs,ssi) , h , ip ) 
                 end
 
 
-          (* Prise d'une valeur *)
-        | Machine(id,Stack_const b::s,e,Get signal::c,d,tl,si,h,ip)           
+          (* Prend une valeur *)
+        | Machine(id,Stack_signal signal::Stack_const b::s,e,Get::c,d,tl,(cs,ssi),h,ip)          
           ->    begin
-                  try   let (res,new_si) = get si b signal id in Machine( id , res::s , e , c , d , tl , new_si , h , ip )
-                  with    NoSharedValues        ->   Machine( id , s , e , Throw 17::c , d , tl , si , h , ip ) 
+                  try   let (res,new_ssi) = get ssi b signal id in 
+                          Machine( id , res::s , e , c , d , tl , (cs,new_ssi) , h , ip )
+                          
+                  with    SignalNotShared       ->   Machine( id , Stack_throw 9::s , e , c , d , tl , (cs,ssi) , h , ip ) 
 
-                        | SignalNotShared       ->   Machine( id , s , e , Throw 18::c , d , tl , si , h , ip )
+                        | ThreadSharedNotFound  ->   Machine( id , Stack_throw 15::s , e , c , d , tl , (cs,ssi) , h , ip )
 
-                        | ThreadSharedNotFound  ->   Machine( id , s , e , Throw 19::c , d , tl , si , h , ip )
+                        | PointerNotExist       ->   Machine( id , Stack_throw 16::s , e , c , d , tl , (cs,ssi) , h , ip )
 
-                        | PointerNotExist       ->   Machine( id , s , e , Throw 21::c , d , tl , si , h , ip )
+                        | EndIt                 ->   Machine( id , Stack_throw 17::s , e , c , d , tl , (cs,ssi) , h , ip )
                 end
-                   
-                
-          (* Application *)
-        | Machine(id,v::Closure([Pair(abs,c1)],e1)::s,e,Ap::c,d,tl,si,h,ip)   ->   Machine( id , [] , (add_env e1 abs v) , c1 , Save(s,e,c,d) , tl , si , h , ip )
-
-
-          (* Application neutre droite *)
-        | Machine(id,v::Unit::s,e,Ap::c,d,tl,si,h,ip)                         ->   Machine( id , v::s , e , c , d , tl , si , h , ip )
-              
-
-          (* Application neutre gauche *)       
-        | Machine(id,Unit::v::s,e,Ap::c,d,tl,si,h,ip)                         ->   Machine( id , v::s , e , c , d , tl , si , h , ip )   
-         
-
-          (* Récupération sauvegarde *)
-        | Machine(id,v::s,e,[],Save(s1,e1,c,d),tl,si,h,ip)                    ->   Machine( id , v::s1 , e1 , c , d , tl , si , h , ip )
-
-
-          (* Récupération sauvegarde signal *)                             
-        | Machine(id,v::s,e,[],SaveSignal(signal,s1,e1,c,d),tl,si,h,ip)       
-          ->    begin
-                  try   Machine( id , v::s1 , e1 , c , d , tl , (remove_init_signal si id signal ) , h , ip )
-                  with  SignalNotInit  ->   Machine( id , s , e , Throw 8::c , d , tl , si , h , ip )
-                end
-
+                                          
 
           (* Initialisation d'un signal *)
-        | Machine(id,s,e,Signal(signal,c1)::c,d,tl,si,h,ip)                   
+        | Machine(id,Stack_signal signal::s,e,InitSignal::c,d,tl,(cs,ssi),h,ip)                   
           ->    begin
-                  try   Machine( id , [] , e , c1 , SaveSignal(signal,s,e,c,d) , tl , (add_init_signal si id signal) , h , ip )
-                  with  SignalAlreadyInit  ->   Machine( id , s , e , Throw 9::c , d , tl , si , h , ip )
+                  try   Machine( id , s , e , c, d , tl , ((add_init_signal cs id signal),ssi) , h , ip )
+                  with  SignalAlreadyInit ->  Machine( id , Stack_throw 8::s , e , c , d , tl , (cs,ssi) , h , ip )
                 end
 
 
-          (* Test de présence *)
-        | Machine(id,s,e,Present(signal,c1,c2)::c,d,tl,si,h,ip)               
-          ->    if (isInit si id signal)
-                  then if (isEmit si signal)
-                          then Machine( id , Unit::s , e , (append c1 c) , d , tl , si , h , ip )
+          (* Présence d'un signal *)
+        | Machine(id,Stack_signal signal::s,e,Present(c1,c2)::c,d,tl,(cs,ssi),h,ip)               
+            ->    if (isInit cs id signal)
+                    then if (isEmit cs signal)
+                            then Machine( id , s , e , (append c1 c) , d , tl , (cs,ssi) , h , ip )
 
-                          else match tl with
-                                  ([],st)                          ->   Machine( ip , [] , [] , [] , Vide_D , ([],(append st [(signal,Thread(id,s,e,Present(signal,c1,c2)::c,d))])) , si , h , (ip+1) )
+                            else match tl with
+                                    ([],st)                          
+                                    ->    Machine( ip , [] , [] , [] , Vide_D , ([],(append st [(signal,Thread(id,Stack_signal signal::s,e,Present(c1,c2)::c,d))])) , (cs,ssi) , h , (ip+1) )
 
-                                | (Thread(id1,s1,e1,c3,d1)::w,st)  ->   Machine( id1 , s1 , e1 , c3 , d1 , (w,(append st [(signal,Thread(id,s,e,Present(signal,c1,c2)::c,d))])) , si , h , ip )
+                                  | (Thread(id1,s1,e1,c3,d1)::w,st)  
+                                    ->    Machine( id1 , s1 , e1 , c3 , d1 , (w,(append st [(signal,Thread(id,Stack_signal signal::s,e,Present(c1,c2)::c,d))])) , (cs,ssi) , h , ip )
 
-                  else Machine( id , s , e , Throw 8::c , d , tl , si , h , ip )
+                    else Machine( id , Stack_throw 7::s , e , c , d , tl , (cs,ssi) , h , ip )
 
 
-          (* Émission d'un signal *)
-        | Machine(id,s,e,Emit signal::c,d,tl,si,h,ip)                         
+          (* Émission *)
+        | Machine(id,Stack_signal signal::s,e,Emit::c,d,tl,(cs,ssi),h,ip)                         
           ->    begin 
-                  try   Machine( id , Unit::s , e , c , d , (check_thread_list signal tl) , (emit_signal si id signal) , h , ip)
-                  with  SignalNotInit  ->   Machine( id , s , e , Throw 8::c , d , tl , si , h , ip ) 
+                  try   Machine( id , s , e , c , d , (check_thread_list signal tl) , ((emit_signal cs id signal),ssi) , h , ip)
+                  with  SignalNotInit  ->   Machine( id , Stack_throw 7::s , e , c , d , tl , (cs,ssi) , h , ip ) 
                 end
 
 
-          (* Récupération dans la file d'attente *)                         
-        | Machine(id,s,e,[],Vide_D,(Thread(id1,s1,e1,c,d)::w,st),si,h,ip)     ->   Machine( id1 , s1 , e1 , c , d , (w,st) , si , h , ip )
+          (* Récupération d'un thread *)                         
+        | Machine(id,s,e,[],Vide_D,(Thread(id1,s1,e1,c,d)::w,st),si,h,ip)     ->    Machine( id1 , s1 , e1 , c , d , (w,st) , si , h , ip )
 
 
-          (* Fin d'un instant logique ou fin de fonctionnement *)
+          (* Fin d'un instant logique *)
         | Machine(id,s,e,[],Vide_D,([],st),si,h,ip)                           
-          ->    begin
-                  match st with
-                      []          ->   Machine(id , s , [] , [] , Vide_D , ([],[]) , ([],[]) , Vide_H , ip)
+          ->    Machine( id , s , e , [] , Vide_D , (end_of_the_moment_thread ([],st)) , (end_of_the_moment_signals si) , h , ip )
 
-                    | _           ->   Machine( id , s , e , [] , Vide_D , (end_of_the_moment_thread ([],st)) , (end_of_the_moment_signals si) , h , ip )
-                end
 
+          (* Application neutre *)  
+        | Machine(id,s,e,Ap::c,d,tl,si,h,ip)                                  ->    Machine( id , s , e , c , d , tl , si , h , ip )
+
+          (* Récupération de sauvegarde neutre *)
+        | Machine(id,s,e,[],Save(s1,e1,c,d),tl,si,h,ip)                    ->    Machine( id , s1 , e1 , c , d , tl , si , h , ip )
+         
 
           (* Je ne connais pas cette état ... *)
-        | _                                                                       ->   raise StrangeEnd
+        | _                                                                       ->    raise StrangeEnd
   
 
-    (* Applique les règles de la machine SECD concurrente version 3 en affichant les étapes *)
-    let rec machineSECDCv3 machine afficher= 
+     (* Applique les règles de la machine SECD concurrente version 4 en affichant ou non les étapes *)
+     let rec machineSECDCv4 machine afficher =
       match machine with
-          Machine(id,Stack_const b::s,e,[],Vide_D,([],[]),si,h,ip)                ->   [Constant b]
+          Machine(i,[Stack_const b],e,[],Vide_D,([],[]),si,h,ip)               ->   [Constant b]
         
-        | Machine(id,Closure([Pair(abs,c)],e1)::s,e,[],Vide_D,([],[]),si,h,ip)    ->   [Pair(abs,c)]
+        | Machine(i,[Closure([Pair(abs,c)],e1)],e,[],Vide_D,([],[]),si,h,ip)   ->   [Pair(abs,c)]
 
-        | Machine(id,Stack_error erreur::s,e,[],Vide_D,([],[]),si,h,ip)           ->   [Error erreur]
-
-        | Machine(id,[],e,[Throw erreur],Vide_D,([],[]),si,h,ip)                  ->   [Throw erreur]
-
-        | machine                                                                 ->   if (afficher) then (afficherSECDCv3 machine) else printf ""; machineSECDCv3 (transitionSECDCv3 machine) afficher
-
+        | Machine(i,[Stack_error erreur],e,[],Vide_D,([],[]),si,h,ip)          ->   [Variable (error_message erreur)]
         
+        | Machine(i,[Stack_throw erreur],e,[],Vide_D,([],[]),si,h,ip)          ->   [Variable ("Erreur levé : "^(error_message erreur))]
+
+        | machine                                                              ->   if (afficher) then (afficherSECDCv4 machine) else printf ""; machineSECDCv4 (transitionSECDCv4 machine) afficher
+      
+  
+
     (* Lance et affiche le résultat de l'expression *)
-    let lancerSECDCv3 expression afficher = printf "Le résultat est %s \n" (string_of_control_string (machineSECDCv3 (Machine(0,[],[],(secdLanguage_of_exprISWIM expression),Vide_D,([],[]),([],[]),Vide_H,1)) afficher ))
+    let lancerSECDCv4 expression afficher = printf "Le résultat est %s \n" (string_of_control_string (machineSECDCv4 (Machine(0,[],[],(secdLanguage_of_exprISWIM expression),Vide_D,([],[]),([],[]),Vide_H,1)) afficher))
     
   end

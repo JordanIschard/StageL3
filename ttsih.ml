@@ -210,7 +210,7 @@ module MachineTTSIH =
 
         | Put_ISWIM(signal,value)               ->   [Constant value ; Variable signal ; Put]
 
-        | Get_ISWIM(signal,id_thread,neutral)   ->   [Variable signal ; Constant id_thread ; Constant neutral ; Get]
+        | Get_ISWIM(signal,id_thread,neutral)   ->   [Variable signal ; Variable id_thread ; Constant neutral ; Get]
 
         | Wait                                  ->   [Constant(-1) ; Pair("",[]) ; Pair("",[]) ; Present]
 
@@ -647,8 +647,9 @@ module MachineTTSIH =
 
     (**** Machine TTSI ****)
 
-    let compute machine =
+    let transition machine =
       match machine with
+
           (* Constante *)
         | Machine(Thread(id,s,e,Constant b::c,d),tl,si,ip,h)                    ->   Machine( Thread( id , Stack_const b::s , e , c , d ) , tl , si , ip , h )
 
@@ -698,7 +699,7 @@ module MachineTTSIH =
 
           (* Création de thread *)
         | Machine(Thread(id,Closure([Pair(_,c1)],_)::s,e,Spawn::c,d),tl,si,ip,h)
-          ->    Machine( Thread( id , s , e , c , d ) , (append tl [Thread(ip,s,e,c1,d)]) , si , (ip+1) , h )
+          ->    Machine( Thread( id , Stack_const ip::s , e , c , d ) , (append tl [Thread(ip,s,e,c1,d)]) , si , (ip+1) , h )
               
 
           (* Ajout d'une valeur *)
@@ -754,7 +755,7 @@ module MachineTTSIH =
         
 
           (* Je ne connais pas cette état ... *)
-        | _                                                                       ->    raise StrangeEnd
+        | _                                                                     ->    raise StrangeEnd
 
 
     (* Applique les règles de la machine TTSIH en affichant ou non les étapes *)
@@ -764,11 +765,10 @@ module MachineTTSIH =
 
         | Machine(Thread(id,resultat,[],[Throw],Empty),[],[],ip,h)  ->   printf "ERROR : %s \n" (string_of_stack resultat)
 
-        | machine                                                   ->   if afficher then afficherTTSIH machine else printf ""; machineTTSIH (compute machine) afficher 
+        | machine                                                   ->   if afficher then afficherTTSIH machine else printf ""; machineTTSIH (transition machine) afficher 
       
-  
 
     (* Lance et affiche le résultat de l'expression *)
-    let startTTSIH expression afficher = machineTTSIH (Machine(Thread(0,[],[],(secdLanguage_of_exprISWIM expression),Empty),[],[(-1,(false,[],[],[]))],1,None)) afficher
+    let startTTSIH expression afficher = machineTTSIH (Machine(Thread(0,[],[EnvVar("main",[Constant 0])],(secdLanguage_of_exprISWIM expression),Empty),[],[(-1,(false,[],[],[]))],1,None)) afficher
     
   end

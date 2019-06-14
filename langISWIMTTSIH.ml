@@ -28,7 +28,7 @@ module ISWIM =
       | Present_ISWIM of string * exprISWIM * exprISWIM
       | Signal_ISWIM
       | Put_ISWIM of string * int
-      | Get_ISWIM of string * int * int
+      | Get_ISWIM of string * string * int
       | Wait
       | Catch_ISWIM of exprISWIM * (string * exprISWIM)
       | Throw_ISWIM
