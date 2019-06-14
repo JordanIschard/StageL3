@@ -1,17 +1,17 @@
 open Printf ;;
 open Lambda.LambdaCalcul ;;
-open Cc.CCMachine ;;
-open Scc.SCCMachine ;;
-open Ck.CKMachine ;;
-open Cek.CEKMachine ;;
-open Secd.SECDMachine ;;
-open SecdCv1.SECDCv1Machine;;
-open SecdCv2.SECDCv2Machine;;
-open SecdCv3.SECDCv3Machine;;
-open SecdCv4.SECDCv4Machine;;
-open Tts.MachineTTS;;
-open Ttsi.MachineTTSI ;;
-open Ttsih.MachineTTSIH ;;
+open Machine_cc.CCMachine ;;
+open Machine_scc.SCCMachine ;;
+open Machine_ck.CKMachine ;;
+open Machine_cek.CEKMachine ;;
+open Machine_secd.SECDMachine ;;
+open Machine_secdCv1.SECDCv1Machine;;
+open Machine_secdCv2.SECDCv2Machine;;
+open Machine_secdCv3.SECDCv3Machine;;
+open Machine_secdCv4.SECDCv4Machine;;
+open Machine_tts.MachineTTS;;
+open Machine_ttsi.MachineTTSI ;;
+open Machine_ttsih.MachineTTSIH ;;
 
 
 (* Test *)

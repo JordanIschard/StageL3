@@ -1,9 +1,8 @@
 open String ;;
 open Printf ;;
 open List ;;
-open Cc.CCMachine ;;
-open Scc.SCCMachine ;;
-open Ck.CKMachine ;;
+open Machine_cc.CCMachine ;;
+open Machine_ck.CKMachine ;;
 open LangISWIM.ISWIM ;;
 
 

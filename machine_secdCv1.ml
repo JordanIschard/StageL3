@@ -1,8 +1,8 @@
 open String ;;
 open Printf ;;
 open List ;;
-open Cc.CCMachine ;;
-open Cek.CEKMachine ;;
+open Machine_cc.CCMachine ;;
+open Machine_cek.CEKMachine ;;
 open LangISWIMCv1.ISWIM ;;
 
 

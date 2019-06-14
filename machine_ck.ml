@@ -1,8 +1,7 @@
 open String ;;
 open Printf ;;
 open List ;;
-open Cc.CCMachine ;;
-open Scc.SCCMachine ;;
+open Machine_cc.CCMachine ;;
 open LangISWIM.ISWIM ;;
 
 (* Module qui implémente la machine CK *)
