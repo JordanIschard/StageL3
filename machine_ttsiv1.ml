@@ -1,7 +1,7 @@
 open String ;;
 open Printf ;;
 open List ;;
-open Lang_ttsi.ISWIM ;;
+open Lang_ttsiv1.ISWIM ;;
 
 
 module MachineTTSI =
@@ -695,6 +695,6 @@ module MachineTTSI =
   
 
     (* Lance et affiche le résultat de l'expression *)
-    let startTTSI expression afficher = machineTTSI (MachineTTSI(Thread(0,[],[EnvVar("main",[Constant 0])],(secdLanguage_of_exprISWIM expression),Empty),[],[(-1,(false,[],[],[]))],1)) afficher
+    let startTTSIv1 expression afficher = machineTTSI (MachineTTSI(Thread(0,[],[EnvVar("main",[Constant 0])],(secdLanguage_of_exprISWIM expression),Empty),[],[(-1,(false,[],[],[]))],1)) afficher
     
   end

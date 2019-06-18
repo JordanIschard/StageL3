@@ -2023,6 +2023,169 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
  Un exemple de fonctionnement de la machine TTS se trouve dans les \hyperref[TTSI]{Annexes}.
 \newpage
 	
+	\section{Preuve du déterminise}
+	
+	Notre machine a besoin d'être déterministe. En effet, il faut pouvoir savoir exactement ce qu'il se passe dans la machine. Si on a plusieurs sortie possible pour une même entrée, la machine abstraite ne serait pas utilisable. Avec les différentes explications sur la machine TTSI on peut avoir l'intution quelle est déterministe. Cependant il faut le prouver.
+	\medbreak
+	
+	Pour cela on va faire une preuve par induction. Avant tout, je vais reprendre les différents point de la machine et montrer qu'il ne peuvent pas avoir d'incidence sur le déterminisime de la machine. Tout cela afin de réduire notre preuve aux règles et plus sur la structure.
+	\bigbreak
+	
+	Reprenons la machine dans son entièreté : 
+	\begin{enumerate}
+		\item $T$ : le thread courant est de la forme $\langle I,S,E,C,D \rangle$. En enlevant $I$ on retrouve notre machine SECD. La machine SECD étant déterministe, sa structure ne peut pas provoquer de non déterminisme de notre machine. $T$ est vérifié.
+		
+		\item $TL$ : la file d'attente est ,comme son nom l'indique, une file (une FIFO). Ce qui veut dire que l'on va prendre toujours au "début" de notre file et ajouter à la "fin". Ce qui revient à avoir un seul ordre possible dans le traitement des threads. Avoir un non déterminisme ici reviendrait à prendre un thread au hasard à chaque fois dans notre file or par la définition de file c'est impossible. L'ordre de traitement est créé lors de la création des threads et peut être uniquement modifier par la commande $present$. En effet si un signal n'est pas émis on va mettre le thread dans la file de threads bloqués du signal qu'il attend. On va donc l'enlever de $TL$ et le remettre plus tard à l'intérieur. La file d'attente est vérifiée.
+		
+		\item $SI$ : On va d'abord s'intéresser à $SI$ puis à ce qui la compose. C'est une liste que l'on ne vide pas. En effet =, quand on initialise un signal, il est initialisé pour toute la durée  du fonctionnement de la machine. On a vu que l'on avait besoin de les mettre dans un ordre précis pour pouvoir initialiser (pour créer leurs identifiants on les mets dans l'ordre croissant). On a une sorte de file où l'on ne prend jamais. $SI$ est composé $\langle s,\langle emit,CS,SSI,TL\rangle\rangle$. $TL$ 
+	\end{enumerate}
+	\bigbreak
+	
+	Prenons maintenant toute les formes que peut prendre la chaîne de contrôle qui sont traités par notre machine :
+	\begin{itemize}
+		\item[-] \underline{$b~C$} 
+		\item[-] $...~\langle X,C'\rangle~C''~ap~...~X~C$ avec $C'' \twoheadrightarrow_{TTSI} V$
+		\item[-] \underline{$\langle X,C'\rangle~C$}
+		\item[-] \underline{$ap~C$}
+		\item[-] $\langle X,C'\rangle~C''~ap~C$ avec $C'' \twoheadrightarrow_{TTSI} V$
+		\item[-] $C_{n}...C_{0}~prim_{o^{n}}~C$ avec $C_{n}...C_{0} \twoheadrightarrow_{TTSI} b_{n}...b_{0}$
+		\item[-] $\langle X,C'\rangle~spawn~C$
+		\item[-] $\langle X',C''\rangle~\langle X,C'\rangle~s~present~C$
+		\item[-] \underline{$init~C$}
+		\item[-] $s~b~n~get~C$ avec un signal $s$ et un entier $n$
+		\item[-] $b~put~C$
+	\end{itemize}
+	Les cas soulignés sont les seuls cas que l'on peut faire durant la première transition car ils ne nécéssitent pas plusieurs éléments.
+	\bigbreak
+	
+	
+	On va commencer la preuve par induction et plus précisement une preuve par récurrence :
+	\smallbreak
+	\textbf{Hypothèse :} La machine TTSI est déterministe.
+	\bigbreak
+	
+	
+	\textbf{Initialisation :}  On teste le déterminisme de la machine pour la première transition de la machine. À l'état 0 on a la machine TTSI de la forme $\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTSI},\emptyset\rangle,\emptyset,\emptyset,1\rangle$. 
+	On a 4 possibilités pour la chaîne de contrôle :
+	\smallbreak
+	\begin{enumerate}
+		\item $b~C$ : On va utiliser la règle \textbf{Constante ou Signal}
+		\smallbreak
+		\item $\langle X,C'\rangle~C$ : On va utiliser la règle \textbf{Abstraction}
+		\smallbreak
+		\item $ap~C$ : On va utiliser la règle \textbf{Application neutre}
+		\smallbreak
+		\item $init~C$ : On va utiliser la règle \textbf{Initialisation signal}
+	\end{enumerate}
+	Tous les autres éléments et commandes ne sont pas possible et provoque une erreur. La machine TTSI est déterministe à l'état 1.
+	\bigbreak
+	
+	 
+	\textbf{Hérédité :} On suppose que l'hypothèse est vrai au rang n, c'est-à-dire que l'on a n transition déterministe. Montrons que l'hypothèse est vrai au rang n+1. Le but est de montrer que pour chaque cas que notre machine peut supporter il y a q'une seule règle qui puisse s'appliquer. En priorité, ce qui va impacter le choix d'une transition se sera la chaîne de contrôle, on va donc voir tous les éléments que la chaîne peut avoir en tête pour la transition n+1. 
+	%%% 21 cas traité
+	%%% 13 via CDC 
+	%%% 1 via Fin d'un instant logique
+	%%% 2 via D
+	%%% 1 via TL
+	%%% 4 via FIN
+	\bigbreak
+	
+	
+	Au total 21 cas sont traités par la machine. Voici les cas :
+	\medbreak
+	
+	\begin{enumerate}
+		\item[\textbf{1} -] $b$ : on a une constante, une règle est applicable \textbf{Constante}.
+		\medbreak
+		
+		\item[-] $X$ : on a une variable, deux cas sont possibles :
+		\begin{enumerate}
+			\item[\textbf{2} -] Il y a une substitution possible dans l'environnement $E$, une règle est applicable \textbf{Substitution}.
+			\item[\textbf{x} -] Il n'y a pas de substitution possible dans l'environnement $E$, aucune règle est applicable : c'est une \textbf{erreur}.
+		\end{enumerate}
+		\medbreak
+		
+		\item[-] $prim_{o^{n}}$ : on a la commande qui gère les opérations, deux cas sont possibles :
+		\begin{enumerate}
+			\item[\textbf{3} -] il y a assez de constantes consécutives dans la pile $S$, une règle est applicable \textbf{Opération}.
+			\item[\textbf{x} -] il n'y a pas assez de constantes consécutives dans la pile $S$, aucune règle est applicable : c'est une \textbf{erreur}.	
+		\end{enumerate}
+		\medbreak
+		
+		\item[\textbf{4} -] $\langle X,C'\rangle$ : on a une abstraction, une règle est applicable \textbf{Abstraction}.
+		\medbreak
+		
+		\item[-] $ap$ : on a la commande qui gère l'application, deux cas sont possibles :
+		\begin{enumerate}
+			\item[\textbf{5} -] soit il y a $V~\langle\langle X,C'\rangle,E'\rangle$ dans la pile $S$, une règle est applicable \textbf{Application}.
+			\item[\textbf{6} -] soit il y a rien de spécifique dans la pile $S$, une règle est applicable \textbf{Application neutre}.
+		\end{enumerate}
+		\medbreak
+		
+		\item[-] $spawn$ : on a la commande qui gère la création de thread, deux cas sont possibles : 
+		\begin{enumerate}
+			\item[\textbf{7} -] si on a $\langle\langle X,C'\rangle,E'\rangle$ dans la pile $S$, une règle est applicable \textbf{Création thread}.
+			\item[\textbf{x} -] sinon on a aucune règle est applicable : c'est une \textbf{erreur}. 
+		\end{enumerate}
+		\medbreak
+		
+		\item[-] $put$ : on a la commande qui gère l'ajout dans un signal, deux cas sont possibles :
+		\begin{enumerate}
+			\item[\textbf{8} -] si on a $s~b$ en tête dans la pile $S$, une règle est applicable \textbf{Ajouter dans un signal}.
+			\item[\textbf{x} -] sinon on a aucune règle est applicable : c'est une \textbf{erreur}.
+		\end{enumerate}
+		\medbreak
+		
+		\item[-] $get$ : on a la commande qui gère la prise de valeur, deux cas sont possibles :
+		\begin{enumerate}
+			\item[\textbf{9} -] si on a $s~b~n$ en tête dans la pile $S$, une règle est applicable \textbf{Prendre une valeur partagée}.
+			\item[\textbf{x} -] sinon on a aucune règle est applicable : c'est une \textbf{erreur}.
+		\end{enumerate}
+		\medbreak
+		
+		\item[\textbf{10} -] $init$ : on a la commande qui gère l'initialisation d'un signal, une règle est applicable \textbf{Initialisation signal}.
+		\medbreak
+		
+		\item[-] $present$ : on a la commande qui gère la présence d'un signal, deux cas sont possibles :
+		\begin{enumerate}
+			\item[-] si on a $\langle\langle X',C''\rangle,E''\rangle~\langle\langle X,C'\rangle,E'\rangle~s$ en tête dans la pile $S$, deux cas sont possibles : 
+			\begin{enumerate}
+				\item[\textbf{11} -] soit on teste un signal émis tel que $SI = \{...,\langle s,\langle true,CS,SSI,TL\rangle\rangle,...\}$, une règle est applicable \textbf{Présence du signal}
+				\item[-] soit on teste un signal non émis tel que $SI = \{...,\langle s,\langle false,CS,SSI,TL\rangle\rangle,...\}$, le cas se divise alors encore en deux :
+				\begin{enumerate}
+					\item[\textbf{12} -] soit on met en attente ce thread et on prend un nouveau thread dans $TL$, une règle est applicable \textbf{Thread bloqué remplacé}.
+					\item[\textbf{13} -] soit on met en attente ce thread et $TL$ est vide, une règle est applicable \textbf{Thread bloqué non remplacé}.
+				\end{enumerate}
+			\end{enumerate}
+			\item[\textbf{x} -] sinon on a aucune règle est applicable : c'est une \textbf{erreur}.
+		\end{enumerate}
+		\medbreak
+		
+		\item[-] $\epsilon$ : la chaîne de contrôle est vide, deux cas sont possibles :
+		\begin{enumerate}
+			\item[-] le dépôt $D$ contient une sauvegarde, deux cas sont possibles :
+			\begin{enumerate}
+				\item[\textbf{14} -] on a un élément dans la pile $S$, une règle est applicable \textbf{Récupération de sauvegarde}.
+				\item[\textbf{15} -] on a rien dans la pile $S$, une règle est applicable \textbf{Récupération de sauvegarde neutre}.  
+			\end{enumerate}
+			\item[-] le dépôt $D$ est vide, deux cas sont possibles :
+			\begin{enumerate}
+				\item[\textbf{16} -] on a un élément dans la file d'attente $TL$, une règle est applicable \textbf{Récupération dans la file d'attente}.
+				\item[-] on a la file d'attente $TL$ vide, deux cas sont possibles :
+				\begin{enumerate}
+					\item[\textbf{17} -] au moins un signal contient un ou plusieurs threads bloqués, une règle est applicable \textbf{Fin d'instant logique}.
+					\item[-] aucun signal ne contient de threads bloqués, c'est la \textbf{fin de fonctionnement de la machine}. 4 fin sont possibles :
+					\begin{enumerate}
+						\item[\textbf{18} -] la tête de pile $S$ est une \textbf{constante}.
+						\item[\textbf{19} -] la tête de pile $S$ est une \textbf{fonction}.
+						\item[\textbf{20} -] la tête de pile $S$ est \textbf{vide}.
+						\item[\textbf{21} -] on a un état inconnu qui est une \textbf{erreur}.
+					\end{enumerate}	  
+				\end{enumerate}
+			\end{enumerate}
+		\end{enumerate}
+	\end{enumerate}
+	\newpage
 	
 	
 	
