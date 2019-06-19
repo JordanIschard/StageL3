@@ -642,7 +642,7 @@ module MachineTTSI =
 
           (* Création d'un thread *)
         | MachineTTSI(Thread(id,Closure([Pair(_,c1)],_)::s,e,Spawn::c,d),tl,si,ip)
-          ->    MachineTTSI( Thread( id , Stack_const ip::s , e , c , d ) , (append tl [Thread(ip,s,e,c1,d)]) , si , (ip+1) )
+          ->    MachineTTSI( Thread( id , Stack_const ip::s , e , c , d ) , (append tl [Thread(ip,[],e,c1,Empty)]) , si , (ip+1) )
               
 
           (* Ajout d'une valeur *)

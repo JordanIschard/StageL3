@@ -12,6 +12,7 @@ open Machine_secdCv4.SECDCv4Machine;;
 open Machine_tts.MachineTTS;;
 open Machine_ttsiv1.MachineTTSI ;;
 open Machine_ttsiv2.MachineTTSI ;;
+open Machine_ttsiv3.MachineTTSI ;;
 open Machine_ttsih.MachineTTSIH ;;
 
 
@@ -513,6 +514,45 @@ let expression37 = let open Lang_ttsiv2.ISWIM in (App(Abs("s",App(App(Spawn_ISWI
 
 
 printf "\n\n\n\n\nTest de la MachineTTSI version 2\n\n" ;;
+
+printf "On teste l'expression ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) \n" ;;
+startTTSIv2 expression34 false ;;
+printf "\n" ;;
+
+printf "On teste l'expression  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) \n" ;;
+startTTSIv2 expression35 false;;
+printf "\n" ;;
+
+printf "On teste l'expression  ( ( lam s.( lam id.( Spawn( get s id 0 ) Spawn( put( s 3 ) ) ) put( s 4 ) ) init ) \n" ;;
+startTTSIv2 expression36 false;;
+printf "\n" ;;
+
+printf "On teste l'expression  ( ( lam s.( Spawn( get s main 0 ) Spawn( put( s 3 ) ) put( s 4 ) ) init ) \n" ;;
+startTTSIv2 expression37 false;;
+printf "\n" ;;
+
+
+
+
+
+(**** Partie pour la machine TTSI version 3 ****)
+
+(*  Correspond à l'expression suivante : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) *)
+let expression34 = let open Lang_ttsiv2.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
+
+(*  Correspond à l'expression suivante :  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) *)
+let expression35 = let open Lang_ttsiv2.ISWIM in (App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1));;
+
+(*  Correspond à l'expression suivante : ( ( lam s.( lam id.( Spawn( get s id 0 ) Spawn( put( s 3 ) ) ) put( s 4 ) ) init ) *)
+let expression36 = let open Lang_ttsiv2.ISWIM in (App(Abs("s",App(App(Abs("id",Spawn_ISWIM(App(Wait,Get_ISWIM("s","id",0)))),Spawn_ISWIM(Put_ISWIM("s",3))),Put_ISWIM("s",4))),Signal_ISWIM));;
+
+(*  Correspond à l'expression suivante : ( ( lam s.( Spawn( get s main 0 ) Spawn( put( s 3 ) ) put( s 4 ) ) init ) *)
+let expression37 = let open Lang_ttsiv2.ISWIM in (App(Abs("s",App(App(Spawn_ISWIM(App(Wait,Get_ISWIM("s","main",0))),Spawn_ISWIM(Put_ISWIM("s",3))),Put_ISWIM("s",4))),Signal_ISWIM));;
+
+
+
+
+printf "\n\n\n\n\nTest de la MachineTTSI version 3\n\n" ;;
 
 printf "On teste l'expression ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) \n" ;;
 startTTSIv2 expression34 false ;;
