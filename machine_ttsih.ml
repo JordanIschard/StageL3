@@ -84,6 +84,7 @@ module MachineTTSIH =
 
 
 
+
     (**** Thread list ****)
 
     (* type intermédiaire représentant un thread, comprenant son identifiant, sa pile , son environnement, sa chaîne de contrôle et son dépôt *)
@@ -129,11 +130,13 @@ module MachineTTSIH =
     
 
     (**** Handler ****)
+
+
+    type h = Handler of id_thread * (thread * thread_list * signals * identifier_producer * h list)
+
     
     (* Ce type représente le gestionnaire des erreurs *)
-    type handler = 
-        None
-      | Handler of thread * thread_list * signals * identifier_producer * handler
+    type handler = h list
 
 
 
@@ -162,12 +165,14 @@ module MachineTTSIH =
     exception InsufficientOperandNb            (* Le nombre d'opérande est insuffisante par rapport au nombre requis                *)
     exception DivZero
 
+    exception NoHandler
     exception ThreadSharedNotFound             (* L'identifiant de thread lié à un signal n'existe pas                              *)
 
     exception UnknowStackState                 (* Le format de la pile est invalide et/ou inconnu                                   *)
     exception UnknowEnvState                   (* Le format de l'environnement est invalide et/ou inconnu                           *)
     exception UnknowStuckState                 (* Le format de la liste d'élément bloqués est invalide et/ou inconnu                *)
     exception UnknowSignalState                (* Le format de la liste de signaux partagés est invalide                         *)
+    exception UnknowHandlerState
 
 
 
@@ -367,15 +372,15 @@ module MachineTTSIH =
     (* Convertit le gestionnaire d'erreur en chaîne de caractères *)
     let rec string_of_handler handler = 
       match handler with
-          None -> "Vide"
+          [] -> "Vide"
 
-        | Handler(thread,thread_list,signals,identifier_producer,handler)  ->    
+        | Handler(id,(thread,thread_list,signals,identifier_producer,handler))::t  ->    
                                          "\n     THREAD  : "^(string_of_thread thread)
                                         ^"\n     THREADS : "^(string_of_thread_list thread_list)
                                         ^"\n     SIGNALS : "^(string_of_signals signals)
                                         ^"\n     IP      : "^(string_of_int identifier_producer)
                                         ^"\n     HANDLER : "^(string_of_handler handler)
-                                        ^"\n"
+                                        ^"\n"^(string_of_handler t)
 
 
     (* Convertit une machine TTSIH en chaîne de caractères *)
@@ -640,9 +645,29 @@ module MachineTTSIH =
         | (_,_)                                    ->   raise NotAllConstants       
 
 
+    let rec existHandler id h =
+      match h with 
+          [] -> false
+
+        | Handler(id1,_)::t ->  if (id = id1) then true else existHandler id t 
 
 
+    let rec takeHandler id h er =
+      match h with
+          [] -> raise NoHandler
 
+        | Handler(id,(Thread(id1,Closure([Pair(abs,c2)],e2)::s1,e1,c1,d1),tl1,si1,ip1,h1))::t 
+          -> if (id = id1) then  Machine( Thread( id1 , [] , (add_env e2 abs (Stack_error er)) , c2 , Save(s1,e1,c1,d1) ) , tl1 , si1 , ip1 , h1 )
+                           else  takeHandler id t er
+                  
+        | _ -> raise UnknowHandlerState
+
+    let rec add_handler h id machine =
+      match h with 
+          [] -> [Handler(id,machine)]
+
+        | Handler(id1,machine1)::t -> if (id1 = id) then append [Handler(id,machine)] t else append [Handler(id1,machine)] (add_handler t id machine) 
+    
         
 
     (**** Machine TTSI ****)
@@ -675,18 +700,15 @@ module MachineTTSIH =
           ->    Machine( Thread( id , [] , (add_env e1 abs v) , c1 , Save(s,e,c,d) ) , tl , si , ip , h )
 
 
-          (* Erreur levée et non traitée *)
-        | Machine(Thread(id,Stack_error er::s,e,Throw::c,d),tl,si,ip,None)      ->    Machine( Thread( id , [Stack_error er] , [] , [Throw] , Empty ) , [] , [] , ip , None )
-
-
-          (* Erreur levée et traitée *)
-        | Machine(Thread(id,Stack_error er::s,e,Throw::c,d),tl,si,ip,Handler(Thread(id1,Closure([Pair(abs,c2)],e2)::s1,e1,c1,d1),tl1,si1,ip1,h1))      
-          ->   Machine( Thread( id1 , [] , (add_env e2 abs (Stack_error er)) , c2 , Save(s1,e1,c1,d1) ) , tl1 , si1 , ip1 , h1 )
+          (* Erreur levée*)
+        | Machine(Thread(id,Stack_error er::s,e,Throw::c,d),tl,si,ip,h)      ->    
+          if (existHandler id h)  then takeHandler id h er
+                                  else Machine( Thread( id , [Stack_error er] , [] , [Throw] , Empty ) , [] , [] , ip , [] )
 
 
           (* Création d'un gestionnaire d'erreur *)
         | Machine(Thread(id,Closure([Pair(abs2,c2)],e2)::Closure([Pair(abs1,c1)],e1)::s,e,Catch::c,d),tl,si,ip,h)
-          ->   Machine( Thread( id , s , e , (append c1 c) , d ) , tl , si , ip , Handler( Thread( id , Closure([Pair(abs2,c2)],e2)::s , e , c , d ) , tl , si , ip , h ) )
+          ->   let h1 = add_handler h id (Thread( id , Closure([Pair(abs2,c2)],e2)::s , e , c , d ) , tl , si , ip , h ) in Machine( Thread( id , s , e , (append c1 c) , d ) , tl , si , ip , h1 )
 
 
           (* Récupération de sauvegarde *)
@@ -769,6 +791,6 @@ module MachineTTSIH =
       
 
     (* Lance et affiche le résultat de l'expression *)
-    let startTTSIH expression afficher = machineTTSIH (Machine(Thread(0,[],[EnvVar("main",[Constant 0])],(secdLanguage_of_exprISWIM expression),Empty),[],[(-1,(false,[],[],[]))],1,None)) afficher
+    let startTTSIH expression afficher = machineTTSIH (Machine(Thread(0,[],[EnvVar("main",[Constant 0])],(secdLanguage_of_exprISWIM expression),Empty),[],[(-1,(false,[],[],[]))],1,[])) afficher
     
   end

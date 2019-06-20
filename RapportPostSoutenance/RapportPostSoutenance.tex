@@ -2175,12 +2175,12 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 				\begin{enumerate}
 					\item[\textbf{17} -] au moins un signal contient un ou plusieurs threads bloqués, une règle est applicable \textbf{Fin d'instant logique}.
 					\item[-] aucun signal ne contient de threads bloqués, c'est la \textbf{fin de fonctionnement de la machine}. 4 fin sont possibles :
-					\begin{enumerate}
+					\begin{itemize}
 						\item[\textbf{18} -] la tête de pile $S$ est une \textbf{constante}.
 						\item[\textbf{19} -] la tête de pile $S$ est une \textbf{fonction}.
 						\item[\textbf{20} -] la tête de pile $S$ est \textbf{vide}.
 						\item[\textbf{21} -] on a un état inconnu qui est une \textbf{erreur}.
-					\end{enumerate}	  
+					\end{itemize}	   	
 				\end{enumerate}
 			\end{enumerate}
 		\end{enumerate}
@@ -2232,8 +2232,15 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	\medbreak
 	
-	On peut se demander ce qu'on doit sauvegarder avec la structure de gestion d'erreur. En effet, il faudrait pouvoir revenir au moment où le try...catch est traité. On crée $H$ le gestionnaire d'erreur. On ne peut pas limiter le gestionnaire d'erreur $H$ à un thread précis car les threads communiquent entre eux. Donc le gestionnaire va être un élément à part entière de la machine. On aura donc $\langle T,TL,SI,H,IP\rangle$.
-	\newpage
+	\paragraph{Comment garder le catch dans la machine ?} 
+	On stocke un traitement d'erreur pour un thread. Donc on pourrait dire que $T = \langle I,S,E,C,D\rangle$ devient $T = \langle I,S,E,C,D,H\rangle$. Cela permettrait de garder le gestionnaire privé, c'est-à-dire que ça porté d'action serai restreinte au thread qui l'a créé. Ce procédé évitera l'utilisation d'un gestionnaire pour un thread autre que celui qui l'a créé. On garde donc la forme de $T$ tel que $T = \langle I,S,E,C,D,H \rangle$ avec $I$ l'identifiant du thread, $S$ la pile d'exécution, $E$ l'environnement, $C$ la chaîne de contrôle, $D$ le dépôt et $H$ le gestionnaire d'erreur.
+	
+	\paragraph{Que garder dans le gestionnaire ?} 
+	Le problème reste de savoir quoi stocker dans notre handler. On doit pouvoir retourner au moment où le choix entre la première et la seconde possibilité a été faite. Si des threads ont été créé où que des valeurs ont été partagées ou encore que des signaux ont été émis ou initialisé, alors il faut les effacer. Pour ça, on va devoir stocker la machine TTSIH entièrement dans H.
+	\smallbreak
+	On aura donc : $H = \langle\langle I',S',E',\langle X,C''\rangle~C',D',H'\rangle TL',SI',IP'\rangle$. 
+	
+ 	\newpage 
 	
 	
 	
@@ -2242,12 +2249,12 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	Ces deux commandes ajoutées engrangent énormément de changements. On va donc devoir redéfinir nos règles. 
 	\bigbreak
 	
-	\textbf{\textit{Soit $\langle T,TL,SI,IP,H\rangle$ avec :}}
+	\textbf{\textit{Soit $\langle T,TL,SI,IP\rangle$ avec :}}
 	
 	\begin{itemize}
 		\item[] $TL =$ \textbf{une file de thread telle que :} $\forall$ $tl \in TL~|~tl = T$ avec :
 		\begin{itemize}
-			\item[] $T = \langle I,S,E,C,D\rangle$ \textbf{le thread courant avec :}
+			\item[] $T = \langle I,S,E,C,D,H\rangle$ \textbf{le thread courant avec :}
 			\begin{itemize}
 				\item[] $b,s,n$ = une constante ou un identifiant de signal (un entier)
 				\item[] $V = b$	
@@ -2283,6 +2290,10 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 				\begin{itemize}
 					\item[|] $\langle S,E,C,D\rangle$~~~~~~~~~~~~~~~~(une sauvegarde liée à une abstraction)
 				\end{itemize}
+				\item[] $H = \emptyset$
+				\begin{itemize}
+					\item[|] $\langle T,TL,SI,IP,H\rangle$
+				\end{itemize}
 			\end{itemize}	
 		\end{itemize}
 		
@@ -2305,10 +2316,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\end{itemize}
 		\item[]
 		\item[] $IP =$ un entier servant à attribuer l'identifiant à un nouveau thread 
-		\item[] $H = \emptyset$
-		\begin{itemize}
-			\item[|] $\langle T,TL,SI,IP,H\rangle$
-		\end{itemize}
+	
 	\end{itemize}
 	\bigbreak
 	
@@ -2370,16 +2378,16 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	\textbf{On va définir une règle afin de simplifier les règles futures :} 
 	\begin{itemize}
-		\item[] Dans tous les cas :
+		\item[] Si la règle utilisée est ni \textbf{Lever une erreur et la gérer} ni \textbf{Lever une erreur et arrêter la machine} ni \textbf{Créer un gestionnaire d'erreur}  :
 		\item[] \begin{center}
-			$\dfrac{\langle S,E,C,D\rangle \longrightarrow_{TTSIH} \langle S',E',C',D'\rangle}{\langle\langle I,S,E,C,D\rangle,TL,SI,IP,H\rangle \longrightarrow_{TTSIH} \langle\langle I,S',E',C',D'\rangle,TL,SI,IP,H\rangle}$
+			$\dfrac{\langle S,E,C,D\rangle \longrightarrow_{TTSIH} \langle S',E',C',D'\rangle}{\langle\langle I,S,E,C,D,H\rangle,TL,SI,IP\rangle \longrightarrow_{TTSIH} \langle\langle I,S',E',C',D',H\rangle,TL,SI,IP\rangle}$
 		\end{center}
 		\item[]
 		\item[]
-		\item[] Si la règle utilisée n'est ni \textbf{Thread bloqué non remplacé} ni \textbf{Création thread} :
+		\item[] Si la règle utilisée est ni \textbf{Thread bloqué non remplacé} ni \textbf{Création thread} :
 		\smallbreak 
 		\item[] \begin{center}
-			$\dfrac{\langle\langle S,E,C,D\rangle,TL,SI\rangle \longrightarrow_{TTSIH} \langle\langle S',E',C',D'\rangle,TL',SI'\rangle}{\langle\langle I,S,E,C,D\rangle,TL,SI,IP,H\rangle \longrightarrow_{TTSIH} \langle\langle I,S',E',C',D'\rangle,TL',SI',IP,H\rangle}$ 
+			$\dfrac{\langle\langle I,S,E,C,D\rangle,TL,SI\rangle \longrightarrow_{TTSIH} \langle\langle I',S',E',C',D'\rangle,TL',SI'\rangle}{\langle\langle I,S,E,C,D,H\rangle,TL,SI,IP\rangle \longrightarrow_{TTSIH} \langle\langle I',S',E',C',D',H\rangle,TL',SI'\rangle}$ 
 		\end{center}
 	\end{itemize}
 	\newpage
@@ -2440,9 +2448,9 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\begin{itemize}
 			\item[]  \textbf{Création thread :} On crée un nouveau thread.
 			\smallbreak 
-			$\langle\langle I,\langle\langle X,C'\rangle, E\rangle~S,E,spawn~C,D\rangle,TL,SI,IP,H\rangle 
+			$\langle\langle I,\langle\langle X,C'\rangle, E\rangle~S,E,spawn~C,D,H\rangle,TL,SI,IP\rangle 
 			\longrightarrow_{TTSIH} 
-			\langle\langle I,S,E,C,D\rangle,TL~\langle IP,S,E,C',D\rangle,SI,IP+1,H\rangle$
+			\langle\langle I,IP~S,E,C,D,H\rangle,TL~\langle IP,\epsilon,E,C',\emptyset,\emptyset\rangle,SI,IP+1\rangle$
 			\item[]
 			
 			\item[] \textbf{Ajouter dans un signal :} On ajoute une constante dans une liste de valeurs d'un signal et on met à vrai le booléen $emit$
@@ -2490,9 +2498,9 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			
 			\item[] \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal, il n'est pas émis donc on met ce thread dans la liste de threads bloqués.
 			\smallbreak 
-			$\langle\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,C,D\rangle,\emptyset,SI,IP,H\rangle 
+			$\langle\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,C,D,H\rangle,\emptyset,SI,IP\rangle 
 			\longrightarrow_{TTSIH} 
-			\langle\langle IP,\emptyset,\epsilon,\emptyset,\emptyset\rangle,\emptyset,SI',IP+1,H\rangle$
+			\langle\langle IP,\emptyset,\epsilon,\emptyset,\emptyset,H\rangle,\emptyset,SI',IP+1\rangle$
 			\\avec $SI(s) = \langle faux,CS,SSI,ST\rangle$
 			\\et $SI'(s) = \langle faux,CS,SSI,ST~\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,present~C,D\rangle\rangle$
 			\item[]
@@ -2525,23 +2533,23 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			
 			\item[] \textbf{Lever une erreur et la gérer :} On a la commande throw, on regarde si on peut gérer l'erreur. On le peut donc on prend la sauvegarde dans le gestionnaire d'erreur
 			\smallbreak
-			$\langle\langle e~S,E,throw~C,D\rangle,TL,SI,IP,\langle \langle S',E',\langle X,C''\rangle~C',D'\rangle,TL',SI',IP',H\rangle\rangle 
+			$\langle\langle I, e~S,E,throw~C,D,\langle \langle I',S',E',\langle X,C''\rangle~C',D',H\rangle,TL',SI',IP'\rangle\rangle,TL,SI,IP\rangle 
 			\\\longrightarrow_{TTSIH} 
-			\langle\langle \epsilon,E'[X \leftarrow e],C'',\langle S',E',C',D\rangle\rangle,TL',SI',IP',H\rangle $
+			\langle\langle I',\epsilon,E'[X \leftarrow e],C'',\langle S',E',C',D\rangle,H\rangle,TL',SI',IP'\rangle $
 			\item[]
 			
 			\item[] \textbf{Lever une erreur et arrêter la machine :} On a la commande throw, on regarde si on peut gérer l'erreur. On ne le peut pas donc on arrête la machine
 			\smallbreak
-			$\langle\langle e~S,E,throw~C,D\rangle,TL,SI,IP,\emptyset\rangle 
+			$\langle\langle I,e~S,E,throw~C,D,\emptyset\rangle,TL,SI,IP\rangle 
 			\longrightarrow_{TTSIH} 
-			\langle\langle e,E,throw,\emptyset\rangle,\emptyset,\emptyset,IP,\emptyset\rangle $
+			\langle\langle I,e,E,throw,\emptyset,\emptyset\rangle,\emptyset,\emptyset,IP\rangle $
 			\item[]
 			
 			\item[] \textbf{Créer un gestionnaire d'erreur :} On a la commande catch, 
 			\smallbreak
-			$\langle\langle \langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~S,E,catch~C,D\rangle,TL,SI,IP,H\rangle 
+			$\langle\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~S,E,catch~C,D,H\rangle,TL,SI,IP\rangle 
 			\\\longrightarrow_{TTSIH} 
-			\langle\langle S,E,C'~C,D\rangle,TL,SI,IP,\langle \langle S,E,\langle X,C''\rangle~C,D\rangle,TL,SI,IP,H\rangle\rangle $
+			\langle\langle I,S,E,C'~C,D,\langle \langle S,E,\langle X,C''\rangle~C,D,H\rangle,TL,SI,IP\rangle\rangle,TL,SI,IP\rangle $
 			\item[]
 		\end{itemize}
 		\item[] \textbf{Partie commune :} Quand on ajoute des règles dans une machine déjà existante, le plus délicat est de ne pas avoir de conflits dans les règles. Pour cela, on définit des règles exprès pour faire la liaison entre ce qui existait et ce que l'on ajoute. 

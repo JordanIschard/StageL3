@@ -25,7 +25,7 @@ module MachineTTSI =
         Constant of int                                         (* constante b                    *)
       | Variable of variable                                    (* variable X                     *)
       | Pair of variable * c list                               (* abstraction                    *)
-
+      
       | Prim of operateur                                       (* opérateur                      *)
       | Ap                                                      (* application                    *)
       | Spawn                                                   (* création thread                *)

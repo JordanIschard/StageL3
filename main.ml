@@ -9,7 +9,8 @@ open Machine_secdCv1.SECDCv1Machine;;
 open Machine_secdCv2.SECDCv2Machine;;
 open Machine_secdCv3.SECDCv3Machine;;
 open Machine_secdCv4.SECDCv4Machine;;
-open Machine_tts.MachineTTS;;
+open Machine_ttsv1.MachineTTS;;
+open Machine_ttsv2.MachineTTS;;
 open Machine_ttsiv1.MachineTTSI ;;
 open Machine_ttsiv2.MachineTTSI ;;
 open Machine_ttsiv3.MachineTTSI ;;
@@ -328,6 +329,7 @@ printf "\n" ;;
 
 
 (**** Partie pour la machine SECD Concurrente V3 ****)
+(* Elle *)
 
 (*  Correspond à l'expression suivante : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) *)
 let expression22 = let open Lang_secdCv3.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
@@ -422,7 +424,8 @@ Printf.printf "\n" ;;
 
 
 
-(**** Partie pour la machine TTS ****)
+(**** Partie pour la machine TTS version 1 ****)
+(* Variante de la machine SECD avec concurrence *)
 
 (*  Correspond à l'expression suivante : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) *)
 let expression31 = let open Lang_tts.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
@@ -438,26 +441,62 @@ let expression33 = let open Lang_tts.ISWIM in (App(App(Abs("s",Abs("s1",App(App(
 
 
 
-printf "\n\n\n\n\nTest de la MachineTTS\n\n" ;;
+printf "\n\n\n\n\nTest de la MachineTTS version 1\n\n" ;;
 
 printf "On teste pour : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) \n" ;;
-startTTS expression31 false ;;
+startTTSv1 expression31 false ;;
 printf "\n" ;;
                   
 printf "On teste l'expression  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) \n" ;;
-startTTS expression32 false;;
+startTTSv1 expression32 false;;
 printf "\n" ;;
                   
 printf "On teste l'expression  ( ( (lam s.lam s1.( ( Spawn( Present s in 6 9 ) Spawn( Present s1 in 3 5 ) ) Spawn( emit s ) )) init ) init ) \n" ;;
-startTTS expression33 false;;
+startTTSv1 expression33 false;;
 printf "\n" ;;
 
+
+
+
+
+
+(**** Partie pour la machine TTS version 2 ****)
+(* Version qui modifie règle de la création de thread en ne donnant plus S et D  *)
+
+(*  Correspond à l'expression suivante : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) *)
+let expression31 = let open Lang_tts.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
+
+(*  Correspond à l'expression suivante :  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) *)
+let expression32 = let open Lang_tts.ISWIM in (App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1));;
+
+(* Correspond à l'expression suivante : ( ( (lam s.lam s1.( ( Spawn( Present s in 6 9 ) Spawn( Present s1 in 3 5 ) ) Spawn( emit s ) )) init ) init ) *)
+let expression33 = let open Lang_tts.ISWIM in (App(App(Abs("s",Abs("s1",App(App(Spawn_ISWIM(Present_ISWIM("s",Const 6,Const 9)) , Spawn_ISWIM(Present_ISWIM("s1",Const 3,Const 5))), 
+                                                  Spawn_ISWIM(Emit_ISWIM("s"))))), Signal_ISWIM), Signal_ISWIM));;
+
+
+
+
+
+printf "\n\n\n\n\nTest de la MachineTTS version 2\n\n" ;;
+
+printf "On teste pour : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) \n" ;;
+startTTSv2 expression31 false ;;
+printf "\n" ;;
+                  
+printf "On teste l'expression  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) \n" ;;
+startTTSv2 expression32 false;;
+printf "\n" ;;
+                  
+printf "On teste l'expression  ( ( (lam s.lam s1.( ( Spawn( Present s in 6 9 ) Spawn( Present s1 in 3 5 ) ) Spawn( emit s ) )) init ) init ) \n" ;;
+startTTSv2 expression33 false;;
+printf "\n" ;;
 
 
 
 
 
 (**** Partie pour la machine TTSI version 1 ****)
+(* Première version de la machine TTSI qui est une amélioration de la machine TTS avec l'ajout de valeurs partagées *)
 
 (*  Correspond à l'expression suivante : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) *)
 let expression34 = let open Lang_ttsiv1.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
@@ -497,6 +536,7 @@ printf "\n" ;;
 
 
 (**** Partie pour la machine TTSI version 2 ****)
+(* Version qui modifie la règle de création de thread en retournant l'identifiant du thread créer ainsi que l'émission qui a été rajouté *)
 
 (*  Correspond à l'expression suivante : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) *)
 let expression34 = let open Lang_ttsiv2.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
@@ -536,6 +576,7 @@ printf "\n" ;;
 
 
 (**** Partie pour la machine TTSI version 3 ****)
+(* Version qui modifie la règle de la création de thread en retournant l'identifiant du thread créer et en ne donnant plus S et D ainsi que l'émission qui a été rajouté *)
 
 (*  Correspond à l'expression suivante : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) *)
 let expression34 = let open Lang_ttsiv2.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
@@ -555,19 +596,19 @@ let expression37 = let open Lang_ttsiv2.ISWIM in (App(Abs("s",App(App(Spawn_ISWI
 printf "\n\n\n\n\nTest de la MachineTTSI version 3\n\n" ;;
 
 printf "On teste l'expression ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) \n" ;;
-startTTSIv2 expression34 false ;;
+startTTSIv3 expression34 false ;;
 printf "\n" ;;
 
 printf "On teste l'expression  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) \n" ;;
-startTTSIv2 expression35 false;;
+startTTSIv3 expression35 false;;
 printf "\n" ;;
 
 printf "On teste l'expression  ( ( lam s.( lam id.( Spawn( get s id 0 ) Spawn( put( s 3 ) ) ) put( s 4 ) ) init ) \n" ;;
-startTTSIv2 expression36 false;;
+startTTSIv3 expression36 false;;
 printf "\n" ;;
 
 printf "On teste l'expression  ( ( lam s.( Spawn( get s main 0 ) Spawn( put( s 3 ) ) put( s 4 ) ) init ) \n" ;;
-startTTSIv2 expression37 false;;
+startTTSIv3 expression37 false;;
 printf "\n" ;;
 
 
@@ -575,6 +616,7 @@ printf "\n" ;;
 
 
 (**** Partie pour la machine TTSIH ****)
+(* Variante de la machine TTSI version 1 avec l'ajout de la gestion d'erreur ( en cours ) *)
 
 (*  Correspond à l'expression suivante : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) *)
 let expression34 = let open Lang_ttsih.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
