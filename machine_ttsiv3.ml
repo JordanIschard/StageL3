@@ -149,6 +149,7 @@ module MachineTTSI =
     exception DivZero
 
     exception SignalNotInit
+    exception SignalAlreadyEmit
     exception ThreadSharedNotFound             (* L'identifiant de thread lié à un signal n'existe pas                              *)
 
     exception UnknowStackState                 (* Le format de la pile est invalide et/ou inconnu                                   *)
@@ -438,7 +439,7 @@ module MachineTTSI =
       match si with 
           [] -> raise SignalNotInit
 
-        | (id_s,(emit,cs,ssi,tl))::t -> if (id_s = s) then (tl,append [(id_s,(true,cs,ssi,[]))] t) 
+        | (id_s,(emit,cs,ssi,tl))::t -> if (id_s = s) then if emit then raise SignalAlreadyEmit else (tl,append [(id_s,(true,cs,ssi,[]))] t) 
                                                       else let (st,new_si) = emit_signal t s in (st,append [(id_s,(emit,cs,ssi,tl))] new_si)
 
 
@@ -452,7 +453,11 @@ module MachineTTSI =
       in
       let emit data =
         match data with
-          (emit,cs,ssi,tl)   ->   (tl,(true,(add cs),ssi,[]))
+            (false,cs,ssi,tl)   ->   (tl,(true,(add cs),ssi,[]))
+        
+          | (true,cs,ssi,[])    ->   ([],(true,(add cs),ssi,[]))
+
+          | _                   ->   raise UnknowStuckState
       in
       match si with
           []                 ->   raise UnknowSignalState

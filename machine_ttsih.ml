@@ -82,13 +82,22 @@ module MachineTTSIH =
       | Save of stack * environment * control_string * dump          (* (s,e,c,d)            *)
 
 
+    
+  
+    (**** Handler ****)
+
+    (* type représentant le gestionnaire d'erreur *)
+    type handler = 
+        None
+      | Handler of id_thread * stack * environment * control_string * dump * handler
 
 
 
     (**** Thread list ****)
 
     (* type intermédiaire représentant un thread, comprenant son identifiant, sa pile , son environnement, sa chaîne de contrôle et son dépôt *)
-    type thread = Thread of id_thread * stack * environment * control_string * dump
+    type thread = Thread of id_thread * stack * environment * control_string * dump * handler
+
 
     (* Ce type représente la file d'attente de la machineTTSI , c'est-à-dire, 
        la file contenant les threads qui doivent être traité dans l'instant courant *)
@@ -129,14 +138,7 @@ module MachineTTSIH =
 
     
 
-    (**** Handler ****)
 
-
-    type h = Handler of id_thread * (thread * thread_list * signals * identifier_producer * h list)
-
-    
-    (* Ce type représente le gestionnaire des erreurs *)
-    type handler = h list
 
 
 
@@ -145,7 +147,7 @@ module MachineTTSIH =
     (**** MachineTTSI ****)
 
     (* Ce type représente la structure de la machineTTSI *)
-    type ttsi = Machine of thread * thread_list * signals * identifier_producer * handler
+    type ttsi = Machine of thread * thread_list * signals * identifier_producer
 
 
 
@@ -160,6 +162,7 @@ module MachineTTSIH =
 
     exception NoSubPossible                    (* Aucune substitution possible pour cette variable dans l'environnement             *)
     exception StrangeEnd                       (* Même moi je ne sais pas ce qu'il sait passé ...                                   *)
+    exception ErrorNotFound
 
     exception NotAllConstants                  (* Tous les éléments de la pile prisent pour l'opérateurs ne sont pas des constantes *)
     exception InsufficientOperandNb            (* Le nombre d'opérande est insuffisante par rapport au nombre requis                *)
@@ -171,7 +174,7 @@ module MachineTTSIH =
     exception UnknowStackState                 (* Le format de la pile est invalide et/ou inconnu                                   *)
     exception UnknowEnvState                   (* Le format de l'environnement est invalide et/ou inconnu                           *)
     exception UnknowStuckState                 (* Le format de la liste d'élément bloqués est invalide et/ou inconnu                *)
-    exception UnknowSignalState                (* Le format de la liste de signaux partagés est invalide                         *)
+    exception UnknowSignalState                (* Le format de la liste de signaux partagés est invalide                            *)
     exception UnknowHandlerState
 
 
@@ -292,16 +295,30 @@ module MachineTTSIH =
 
         | Save(stack,env,control,dump)               ->    "("^(string_of_stack stack)^" , "^(string_of_environment env)^" , "^(string_of_control_string control)^" , "^(string_of_dump dump)^")"
         
+    (* Convertit le gestionnaire d'erreur en chaîne de caractères *)
+    let rec string_of_handler handler = 
+      match handler with
+          None -> "Vide"
+
+        | Handler(id,stack,env,control_string,dump,handler)  ->    
+                                                 "\n     ID      : "^(string_of_int id)
+                                                ^"\n     STACK   : "^(string_of_stack stack)
+                                                ^"\n     ENV     : "^(string_of_environment env)
+                                                ^"\n     CONTROL : "^(string_of_control_string control_string)
+                                                ^"\n     DUMP    : "^(string_of_dump dump)
+                                                ^"\n     HANDLER : "^(string_of_handler handler)
+                                              
       
     (* Convertit un thread en chaîne de caractères *)
     let rec string_of_thread thread =
       match thread with
-        Thread(id,stack,env,control_string,dump)  ->    
-                                        "\n     ID      : "^(string_of_int id)
-                                       ^"\n     STACK   : "^(string_of_stack stack)
-                                       ^"\n     ENV     : "^(string_of_environment env)
-                                       ^"\n     CONTROL : "^(string_of_control_string control_string)
-                                       ^"\n     DUMP    : "^(string_of_dump dump)
+        Thread(id,stack,env,control_string,dump,handler)  ->    
+                                                 "\n     ID      : "^(string_of_int id)
+                                                ^"\n     STACK   : "^(string_of_stack stack)
+                                                ^"\n     ENV     : "^(string_of_environment env)
+                                                ^"\n     CONTROL : "^(string_of_control_string control_string)
+                                                ^"\n     DUMP    : "^(string_of_dump dump)
+                                                ^"\n     HANDLER : "^(string_of_handler handler)
                                       
 
     (* Convertit la liste des threads en chaîne de caractères *)
@@ -309,19 +326,21 @@ module MachineTTSIH =
       match thread_list with
           []         ->   ""
 
-        | [Thread(id,stack,env,control_string,dump)]    ->    
+        | [Thread(id,stack,env,control_string,dump,handler)]    ->    
                                                        "\n   [ ID      : "^(string_of_int id)
                                                       ^"\n     STACK   : "^(string_of_stack stack)
                                                       ^"\n     ENV     : "^(string_of_environment env)
                                                       ^"\n     CONTROL : "^(string_of_control_string control_string)
-                                                      ^"\n     DUMP    : "^(string_of_dump dump)^"]\n"
+                                                      ^"\n     DUMP    : "^(string_of_dump dump)
+                                                      ^"\n     HANDLER : "^(string_of_handler handler)^"]\n"
 
-        | Thread(id,stack,env,control_string,dump) ::t  ->    " 
+        | Thread(id,stack,env,control_string,dump,handler) ::t  ->    " 
                                                         \n   [ ID      : "^(string_of_int id)
                                                       ^"\n     STACK   : "^(string_of_stack stack)
                                                       ^"\n     ENV     : "^(string_of_environment env)
                                                       ^"\n     CONTROL : "^(string_of_control_string control_string)
-                                                      ^"\n     DUMP    : "^(string_of_dump dump)^"]"
+                                                      ^"\n     DUMP    : "^(string_of_dump dump)
+                                                      ^"\n     HANDLER : "^(string_of_handler handler)^"]"
                                                       ^(string_of_thread_list t)
 
     
@@ -368,30 +387,16 @@ module MachineTTSIH =
 
         | si::t  ->   "\n"^(string_of_si si)^(string_of_signals t)
 
-    
-    (* Convertit le gestionnaire d'erreur en chaîne de caractères *)
-    let rec string_of_handler handler = 
-      match handler with
-          [] -> "Vide"
-
-        | Handler(id,(thread,thread_list,signals,identifier_producer,handler))::t  ->    
-                                         "\n     THREAD  : "^(string_of_thread thread)
-                                        ^"\n     THREADS : "^(string_of_thread_list thread_list)
-                                        ^"\n     SIGNALS : "^(string_of_signals signals)
-                                        ^"\n     IP      : "^(string_of_int identifier_producer)
-                                        ^"\n     HANDLER : "^(string_of_handler handler)
-                                        ^"\n"^(string_of_handler t)
 
 
     (* Convertit une machine TTSIH en chaîne de caractères *)
     let string_of_machineTTSIH machineTTSIH =
       match machineTTSIH with
-        Machine(thread,thread_list,signals,identifier_producer,handler)  ->    
+        Machine(thread,thread_list,signals,identifier_producer)  ->    
                                         "\n   THREAD  : "^(string_of_thread thread)
                                        ^"\n   THREADS : "^(string_of_thread_list thread_list)
                                        ^"\n   SIGNALS : "^(string_of_signals signals)
                                        ^"\n   IP      : "^(string_of_int identifier_producer)
-                                       ^"\n   HANDLER : "^(string_of_handler handler)
                                        ^"\n"
 
 
@@ -408,6 +413,21 @@ module MachineTTSIH =
 
 
     (**** Fonctions utiles ****)
+
+    let message_of_error er =
+      match er with  
+          0 -> "Pas de substitution disponible"                  (* NoSubPossible         = Aucune substitution possible pour cette variable dans l'environnement             *)
+        | 1 -> "Fin brutale de la machine"                       (* StrangeEnd            = Même moi je ne sais pas ce qu'il sait passé ...                                   *)
+  
+        | 2 -> "Les opérandes ne sont pas tous des constantes"   (* NotAllConstants       = Tous les éléments de la pile prisent pour l'opérateurs ne sont pas des constantes *)
+        | 3 -> "Nombre d'opérande insuffisant"                   (* InsufficientOperandNb = Le nombre d'opérande est insuffisante par rapport au nombre requis                *)
+        | 4 -> "Division par zero"                               (* DivZero               = On tente de diviser par zero                                                      *)
+  
+        | 5 -> "Ce thread n'a pas ajouté dans ce signal"         (* ThreadSharedNotFound  = L'identifiant de thread lié à un signal n'existe pas                              *)
+
+        | 6 -> "L'erreur n'existe pas"                           (* ErrorNotFound         = L'erreur n'existe pas                                                             *)
+
+        | _ -> raise ErrorNotFound
 
 
     (* Substitue une variable à sa  fermeture liée *)
@@ -595,7 +615,7 @@ module MachineTTSIH =
       match tl with
           [] -> []
 
-        | Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d)::t -> append [Thread(id,s,e,append c2 c,d)] (other_choice t)
+        | Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d,h)::t -> append [Thread(id,s,e,append c2 c,d,h)] (other_choice t)
 
         | _ -> raise UnknowStuckState
     
@@ -645,28 +665,7 @@ module MachineTTSIH =
         | (_,_)                                    ->   raise NotAllConstants       
 
 
-    let rec existHandler id h =
-      match h with 
-          [] -> false
 
-        | Handler(id1,_)::t ->  if (id = id1) then true else existHandler id t 
-
-
-    let rec takeHandler id h er =
-      match h with
-          [] -> raise NoHandler
-
-        | Handler(id,(Thread(id1,Closure([Pair(abs,c2)],e2)::s1,e1,c1,d1),tl1,si1,ip1,h1))::t 
-          -> if (id = id1) then  Machine( Thread( id1 , [] , (add_env e2 abs (Stack_error er)) , c2 , Save(s1,e1,c1,d1) ) , tl1 , si1 , ip1 , h1 )
-                           else  takeHandler id t er
-                  
-        | _ -> raise UnknowHandlerState
-
-    let rec add_handler h id machine =
-      match h with 
-          [] -> [Handler(id,machine)]
-
-        | Handler(id1,machine1)::t -> if (id1 = id) then append [Handler(id,machine)] t else append [Handler(id1,machine)] (add_handler t id machine) 
     
         
 
@@ -676,104 +675,119 @@ module MachineTTSIH =
       match machine with
 
           (* Constante *)
-        | Machine(Thread(id,s,e,Constant b::c,d),tl,si,ip,h)                    ->   Machine( Thread( id , Stack_const b::s , e , c , d ) , tl , si , ip , h )
+        | Machine(Thread(id,s,e,Constant b::c,d,h),tl,si,ip)                    ->   Machine( Thread( id , Stack_const b::s , e , c , d , h ) , tl , si , ip )
 
 
           (* Erreur *)
-        | Machine(Thread(id,s,e,Error er::c,d),tl,si,ip,h)                      ->   Machine( Thread( id , Stack_error er::s , e , c , d ) , tl , si , ip , h )
+        | Machine(Thread(id,s,e,Error er::c,d,h),tl,si,ip)                      ->   Machine( Thread( id , Stack_error er::s , e , c , d , h ) , tl , si , ip )
 
 
           (* Substitution *)
-        | Machine(Thread(id,s,e,Variable x::c,d),tl,si,ip,h)                    ->   Machine( Thread( id , (substitution x e)::s , e , c , d ) , tl , si , ip , h )
+        | Machine(Thread(id,s,e,Variable x::c,d,h),tl,si,ip)                    
+          ->  begin 
+                try                       Machine( Thread( id , (substitution x e)::s , e , c , d , h ) , tl , si , ip )
+                with  NoSubPossible  ->   Machine( Thread( id , Stack_error 0::s , e , Throw::c , d , h ) , tl , si , ip )
+              end
 
 
           (* Opération *)
-        | Machine(Thread(id,s,e,Prim op::c,d),tl,si,ip,h)                       ->   Machine( Thread( id , (compute s e op) , e , c , d ) , tl , si , ip , h )                        
-
+        | Machine(Thread(id,s,e,Prim op::c,d,h),tl,si,ip)                       
+          ->  begin
+                try                              Machine( Thread( id , (compute s e op) , e , c , d , h ) , tl , si , ip )                        
+                with  InsufficientOperandNb  ->  Machine( Thread( id , Stack_error 3::s , e , Throw::c , d , h ) , tl , si , ip )
+                    | NotAllConstants        ->  Machine( Thread( id , Stack_error 2::s , e , Throw::c , d , h ) , tl , si , ip )
+                    | DivZero                ->  Machine( Thread( id , Stack_error 4::s , e , Throw::c , d , h ) , tl , si , ip )
+              end
 
           (* Abstraction *)
-        | Machine(Thread(id,s,e,Pair(abs,c1)::c,d),tl,si,ip,h)                  ->   Machine( Thread( id , Closure([Pair(abs,c1)],e)::s , e , c , d ) , tl , si , ip , h )
+        | Machine(Thread(id,s,e,Pair(abs,c1)::c,d,h),tl,si,ip)                  ->   Machine( Thread( id , Closure([Pair(abs,c1)],e)::s , e , c , d , h ) , tl , si , ip )
         
 
           (* Application *)
-        | Machine(Thread(id,v::Closure([Pair(abs,c1)],e1)::s,e,Ap::c,d),tl,si,ip,h)   
-          ->    Machine( Thread( id , [] , (add_env e1 abs v) , c1 , Save(s,e,c,d) ) , tl , si , ip , h )
+        | Machine(Thread(id,v::Closure([Pair(abs,c1)],e1)::s,e,Ap::c,d,h),tl,si,ip)   
+          ->    Machine( Thread( id , [] , (add_env e1 abs v) , c1 , Save(s,e,c,d) , h ) , tl , si , ip )
 
 
-          (* Erreur levée*)
-        | Machine(Thread(id,Stack_error er::s,e,Throw::c,d),tl,si,ip,h)      ->    
-          if (existHandler id h)  then takeHandler id h er
-                                  else Machine( Thread( id , [Stack_error er] , [] , [Throw] , Empty ) , [] , [] , ip , [] )
+          (* Erreur levée et non traitrée *)
+        | Machine(Thread(id,Stack_error er::s,e,Throw::c,d,None),tl,si,ip)      ->   Machine( Thread( id , [Stack_error er] , [] , [Throw] , Empty , None ) , [] , [] , ip )
+
+
+        (* Erreur levée et traitée *)
+        | Machine(Thread(id,Stack_error er::s,e,Throw::c,d,Handler(id1,Closure([Pair(abs,c2)],e2)::s1,e1,c1,d1,h)),tl,si,ip)  
+          ->   Machine( Thread( id1 , [] , (add_env e2 abs (Stack_error er)) , c2 , Save(s1,e1,c1,d1) , h ) , tl , si , ip )
 
 
           (* Création d'un gestionnaire d'erreur *)
-        | Machine(Thread(id,Closure([Pair(abs2,c2)],e2)::Closure([Pair(abs1,c1)],e1)::s,e,Catch::c,d),tl,si,ip,h)
-          ->   let h1 = add_handler h id (Thread( id , Closure([Pair(abs2,c2)],e2)::s , e , c , d ) , tl , si , ip , h ) in Machine( Thread( id , s , e , (append c1 c) , d ) , tl , si , ip , h1 )
+        | Machine(Thread(id,Closure([Pair(abs2,c2)],e2)::Closure([Pair(abs1,c1)],e1)::s,e,Catch::c,d,h),tl,si,ip)
+          ->   Machine( Thread( id , s , e , (append c1 c) , d , Handler( id , Closure([Pair(abs2,c2)],e2)::s , e , c , d , h ) ) , tl , si , ip )
 
 
           (* Récupération de sauvegarde *)
-        | Machine(Thread(id,v::s,e,[],Save(s1,e1,c,d)),tl,si,ip,h)              ->    Machine( Thread( id , v::s1 , e1 , c , d ) , tl , si , ip , h )
+        | Machine(Thread(id,v::s,e,[],Save(s1,e1,c,d),h),tl,si,ip)              ->    Machine( Thread( id , v::s1 , e1 , c , d , h ) , tl , si , ip )
         
 
           (* Récupération de sauvegarde neutre *)
-        | Machine(Thread(id,s,e,[],Save(s1,e1,c,d)),tl,si,ip,h)                 ->    Machine( Thread( id , s1 , e1 , c , d ) , tl , si , ip , h )
+        | Machine(Thread(id,s,e,[],Save(s1,e1,c,d),h),tl,si,ip)                 ->    Machine( Thread( id , s1 , e1 , c , d , h ) , tl , si , ip )
 
 
           (* Création de thread *)
-        | Machine(Thread(id,Closure([Pair(_,c1)],_)::s,e,Spawn::c,d),tl,si,ip,h)
-          ->    Machine( Thread( id , Stack_const ip::s , e , c , d ) , (append tl [Thread(ip,s,e,c1,d)]) , si , (ip+1) , h )
+        | Machine(Thread(id,Closure([Pair(_,c1)],_)::s,e,Spawn::c,d,h),tl,si,ip)
+          ->    Machine( Thread( id , Stack_const ip::s , e , c , d , h ) , (append tl [Thread(ip,[],e,c1,Empty,None)]) , si , (ip+1) )
               
 
           (* Ajout d'une valeur *)
-        | Machine(Thread(id,Stack_const signal::Stack_const b::s,e,Put::c,d),tl,si,ip,h)   
-          ->    let (st,new_si) = put si signal b id in Machine( Thread( id , s , e , c , d ) , (append tl st) , new_si , ip , h )
+        | Machine(Thread(id,Stack_const signal::Stack_const b::s,e,Put::c,d,h),tl,si,ip)   
+          ->    let (st,new_si) = put si signal b id in Machine( Thread( id , s , e , c , d , h ) , (append tl st) , new_si , ip )
 
 
           (* Prise d'une valeur *)
-        | Machine(Thread(id,Stack_const n::Stack_const b::Stack_const signal::s,e,Get::c,d),tl,si,ip,h)          
-          ->    let (res,new_si) = get si b n signal id in Machine( Thread(id , res::s , e , c , d ) , tl , new_si , ip , h )
-                                          
+        | Machine(Thread(id,Stack_const n::Stack_const b::Stack_const signal::s,e,Get::c,d,h),tl,si,ip)          
+          ->  begin
+                try   let (res,new_si) = get si b n signal id in Machine( Thread(id , res::s , e , c , d , h ) , tl , new_si , ip )
+                with  ThreadSharedNotFound ->  Machine( Thread( id , Stack_error 5::s , e , Throw::c , d , h ) , tl , si , ip )                   
+              end
+
 
           (* Initialisation *)
-        | Machine(Thread(id,s,e,InitSignal::c,d),tl,si,ip,h)                   
-          ->    let (signal,new_si) = init_signal si in Machine( Thread( id , signal::s , e , c , d ) , tl , new_si , ip , h )
+        | Machine(Thread(id,s,e,InitSignal::c,d,h),tl,si,ip)                   
+          ->    let (signal,new_si) = init_signal si in Machine( Thread( id , signal::s , e , c , d , h ) , tl , new_si , ip )
 
 
           (* Test de présence *)
-        | Machine(Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d),tl,si,ip,h)               
+        | Machine(Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d,h),tl,si,ip)               
           ->    if (isEmit si signal)
-                  then Machine( Thread( id , s , e , (append c1 c) , d ) , tl , si , ip , h )
-                  else let st = Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d) in
+                  then Machine( Thread( id , s , e , (append c1 c) , d , h ) , tl , si , ip )
+                  else let st = Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d,h) in
                       begin 
                         match tl with
-                            []                            ->   Machine( Thread( ip , [] , [] , [] , Empty ) , [] , (add_stuck si signal st) , ip+1 , h )
+                            []                               ->   Machine( Thread( ip , [] , [] , [] , Empty , h ) , [] , (add_stuck si signal st) , ip+1 )
 
-                          | Thread(id1,s1,e1,c3,d1)::tl1  ->   Machine( Thread( id1 , s1 , e1 , c3 , d1 ) , tl1 , (add_stuck si signal st) , ip , h )
+                          | Thread(id1,s1,e1,c3,d1,h1)::tl1  ->   Machine( Thread( id1 , s1 , e1 , c3 , d1 , h1 ) , tl1 , (add_stuck si signal st) , ip )
                       end
 
 
           (* Récupération dans la file d'attente *)                         
-        | Machine(Thread(id,s,e,[],Empty),Thread(id1,s1,e1,c,d)::tl,si,ip,h)    ->    Machine( Thread( id1 , s1 , e1 , c , d ) , tl , si , ip , h )
+        | Machine(Thread(id,s,e,[],Empty,h),Thread(id1,s1,e1,c,d,h1)::tl,si,ip)    ->    Machine( Thread( id1 , s1 , e1 , c , d , h1 ) , tl , si , ip )
 
 
           (* Fin d'un instant logique ou fin de fonctionnement *)
-        | Machine(Thread(id,s,e,[],Empty),[],si,ip,h)                           
+        | Machine(Thread(id,s,e,[],Empty,h),[],si,ip)                           
           ->   if (isEnd si)
                   then match s with
             
-                        | Stack_const b::s1             ->   Machine( Thread( id , [Stack_const b] , [] , [] , Empty ) , [] , [] , ip , h )
+                        | Stack_const b::s1             ->   Machine( Thread( id , [Stack_const b] , [] , [] , Empty , None ) , [] , [] , ip )
             
-                        | Closure([Pair(x,c)],env)::s1  ->   Machine( Thread( id , [Closure([Pair(x,c)],env)] , [] , [] , Empty ) , [] , [] , ip , h )
+                        | Closure([Pair(x,c)],env)::s1  ->   Machine( Thread( id , [Closure([Pair(x,c)],env)] , [] , [] , Empty , None ) , [] , [] , ip )
 
-                        | []                            ->   Machine( Thread( id , [] , [] , [] , Empty ) , [] , [] , ip , h )
+                        | []                            ->   Machine( Thread( id , [] , [] , [] , Empty , None ) , [] , [] , ip )
             
                         | _                             ->   raise UnknowStackState
 
-                  else  let (tl,new_si) = next_moment si in Machine( Thread( id , s , e , [] , Empty ) , tl , new_si , ip , h )
+                  else  let (tl,new_si) = next_moment si in Machine( Thread( id , s , e , [] , Empty , h ) , tl , new_si , ip )
 
 
           (* Application neutre *)  
-        | Machine(Thread(id,s,e,Ap::c,d),tl,si,ip,h)                            ->    Machine( Thread( id , s , e , c , d ) , tl , si , ip , h )
+        | Machine(Thread(id,s,e,Ap::c,d,h),tl,si,ip)                            ->    Machine( Thread( id , s , e , c , d , h ) , tl , si , ip )
         
 
           (* Je ne connais pas cette état ... *)
@@ -783,14 +797,14 @@ module MachineTTSIH =
     (* Applique les règles de la machine TTSIH en affichant ou non les étapes *)
     let rec machineTTSIH machine afficher =
       match machine with
-          Machine(Thread(id,resultat,[],[],Empty),[],[],ip,h)       ->   printf "Le résultat est %s \n" (string_of_stack resultat)
+          Machine(Thread(id,resultat,[],[],Empty,h),[],[],ip)               ->   printf "Le résultat est %s \n" (string_of_stack resultat)
 
-        | Machine(Thread(id,resultat,[],[Throw],Empty),[],[],ip,h)  ->   printf "ERROR : %s \n" (string_of_stack resultat)
+        | Machine(Thread(id,[Stack_error er],[],[Throw],Empty,h),[],[],ip)  ->   printf "ERROR : %s \n" (message_of_error er)
 
-        | machine                                                   ->   if afficher then afficherTTSIH machine else printf ""; machineTTSIH (transition machine) afficher 
+        | machine                                                           ->   if afficher then afficherTTSIH machine else printf ""; machineTTSIH (transition machine) afficher 
       
 
     (* Lance et affiche le résultat de l'expression *)
-    let startTTSIH expression afficher = machineTTSIH (Machine(Thread(0,[],[EnvVar("main",[Constant 0])],(secdLanguage_of_exprISWIM expression),Empty),[],[(-1,(false,[],[],[]))],1,[])) afficher
+    let startTTSIH expression afficher = machineTTSIH (Machine(Thread(0,[],[EnvVar("main",[Constant 0])],(secdLanguage_of_exprISWIM expression),Empty,None),[],[(-1,(false,[],[],[]))],1)) afficher
     
   end
