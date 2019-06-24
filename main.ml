@@ -14,7 +14,7 @@ open Machine_ttsv2.MachineTTS;;
 open Machine_ttsiv1.MachineTTSI ;;
 open Machine_ttsiv2.MachineTTSI ;;
 open Machine_ttsiv3.MachineTTSI ;;
-open Machine_ttsih.MachineTTSIH ;;
+open Machine_ttsihv1.MachineTTSIH ;;
 
 
 (* Test *)
@@ -619,16 +619,16 @@ printf "\n" ;;
 (* Variante de la machine TTSI version 1 avec l'ajout de la gestion d'erreur ( en cours ) *)
 
 (*  Correspond à l'expression suivante : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) *)
-let expression34 = let open Lang_ttsih.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
+let expression34 = let open Lang_ttsihv1.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
 
 (*  Correspond à l'expression suivante :  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) *)
-let expression35 = let open Lang_ttsih.ISWIM in (App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1));;
+let expression35 = let open Lang_ttsihv1.ISWIM in (App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1));;
 
 (*  Correspond à l'expression suivante : ( ( lam s.( lam id.( Spawn( get s id 0 ) Spawn( put( s 3 ) ) ) put( s 4 ) ) init ) *)
-let expression36 = let open Lang_ttsih.ISWIM in (App(Abs("s",App(App(Abs("id",Spawn_ISWIM(App(Wait,Get_ISWIM("s","id",0)))),Spawn_ISWIM(Put_ISWIM("s",3))),Put_ISWIM("s",4))),Signal_ISWIM));;
+let expression36 = let open Lang_ttsihv1.ISWIM in (App(Abs("s",App(App(Abs("id",Spawn_ISWIM(App(Wait,Get_ISWIM("s","id",0)))),Spawn_ISWIM(Put_ISWIM("s",3))),Put_ISWIM("s",4))),Signal_ISWIM));;
 
 (*  Correspond à l'expression suivante : ( ( lam s.( Spawn( get s main 0 ) Spawn( put( s 3 ) ) put( s 4 ) ) init ) *)
-let expression37 = let open Lang_ttsih.ISWIM in (App(Abs("s",App(App(Spawn_ISWIM(App(Wait,Get_ISWIM("s","main",0))),Spawn_ISWIM(Put_ISWIM("s",3))),Put_ISWIM("s",4))),Signal_ISWIM));;
+let expression37 = let open Lang_ttsihv1.ISWIM in (App(Abs("s",App(App(Spawn_ISWIM(App(Wait,Get_ISWIM("s","main",0))),Spawn_ISWIM(Put_ISWIM("s",3))),Put_ISWIM("s",4))),Signal_ISWIM));;
 
 
 
