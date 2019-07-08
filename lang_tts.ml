@@ -19,14 +19,17 @@ module ISWIM =
 
     type exprISWIM = 
         Var of string 
+      | Const of int
+      
       | Abs of string * exprISWIM 
       | App of exprISWIM * exprISWIM
       | Op of operateur * exprISWIM list
-      | Const of int
-      | Spawn_ISWIM of exprISWIM
-      | Present_ISWIM of string * exprISWIM * exprISWIM
-      | Emit_ISWIM of string
-      | Signal_ISWIM
+
+      
+      | Spawn of exprISWIM
+      | Present of string * exprISWIM * exprISWIM
+      | Emit of string
+      | Signal
 
 
 

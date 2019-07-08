@@ -24,20 +24,26 @@ module ISWIM =
     | Pattern of int * pat list                         (* on filtre avec un pattern *)
 
     type exprISWIM = 
+
         Var of string 
+      | Const of int
+      
       | Abs of string * exprISWIM 
       | App of exprISWIM * exprISWIM
       | Op of operateur * exprISWIM list
-      | Const of int
+      
       | Spawn of exprISWIM
       | Present of string * exprISWIM * exprISWIM
       | Signal
-      | Put of string * int
-      | Get of string * string * int
       | Emit of string 
       | Wait
+
+      | Put of string * int
+      | Get of string * string * int
+
       | Rec of string * exprISWIM
       | If of exprISWIM * exprISWIM * exprISWIM
+
       | Build of int * int * exprISWIM list
       | Match of string * ( pat * exprISWIM ) list
 

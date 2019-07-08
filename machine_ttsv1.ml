@@ -157,23 +157,23 @@ module MachineTTS =
     (* Convertit le langage ISWIM en langage SECD *)
     let rec secdLanguage_of_exprISWIM expression =
       match expression with
-          Const const                           ->   [Constant const]
+          Lang_tts.ISWIM.Const const                     ->   [Constant const]
           
-        | Var var                               ->   [Variable var]
+        | Lang_tts.ISWIM.Var var                         ->   [Variable var]
             
-        | App(expr1,expr2)                      ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
+        | Lang_tts.ISWIM.App(expr1,expr2)                ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
             
-        | Op(op,liste_expr)                     ->   append (flatten(map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
+        | Lang_tts.ISWIM.Op(op,liste_expr)               ->   append (flatten(map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
             
-        | Abs(abs,expr)                         ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
+        | Lang_tts.ISWIM.Abs(abs,expr)                   ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
 
-        | Spawn_ISWIM expr                      ->   [Pair("",(secdLanguage_of_exprISWIM expr)) ; Spawn]
+        | Lang_tts.ISWIM.Spawn expr                      ->   [Pair("",(secdLanguage_of_exprISWIM expr)) ; Spawn]
 
-        | Present_ISWIM (signal,expr1,expr2)    ->   [Variable signal ; Pair("",(secdLanguage_of_exprISWIM expr1)) ; Pair("",(secdLanguage_of_exprISWIM expr2)) ; Present]
+        | Lang_tts.ISWIM.Present (signal,expr1,expr2)    ->   [Variable signal ; Pair("",(secdLanguage_of_exprISWIM expr1)) ; Pair("",(secdLanguage_of_exprISWIM expr2)) ; Present]
 
-        | Emit_ISWIM signal                     ->   [Variable signal ; Emit]
+        | Lang_tts.ISWIM.Emit signal                     ->   [Variable signal ; Emit]
 
-        | Signal_ISWIM                          ->   [InitSignal]
+        | Lang_tts.ISWIM.Signal                          ->   [InitSignal]
 
 
     (* Convertit la chaîne de contrôle en une chaîne de caractères *)

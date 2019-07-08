@@ -19,20 +19,26 @@ module ISWIM =
       | Egal
 
     type exprISWIM = 
+
         Var of string 
-      | Abs of string * exprISWIM 
+      | Const of int
       | Error of int 
+
+      | Abs of string * exprISWIM 
       | App of exprISWIM * exprISWIM
       | Op of operateur * exprISWIM list
-      | Const of int
+      
       | Spawn of exprISWIM
       | Present of string * exprISWIM * exprISWIM
       | Signal
+      | Wait
+
       | Put of string * int
       | Get of string * string * int
-      | Wait
+      
       | Catch of exprISWIM * (string * exprISWIM)
       | Throw
+      
       | If of exprISWIM * exprISWIM * exprISWIM
       | Rec of string * exprISWIM
 

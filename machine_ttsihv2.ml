@@ -191,7 +191,7 @@ module MachineTTSIH =
       match string_list with
           []    ->   "" 
 
-        | [h]     ->   h
+        | [h]   ->   h
         
         | h::t  ->   h^";"^(string_of_string_list t)
 
@@ -203,15 +203,15 @@ module MachineTTSIH =
     (* Convertit le langage ISWIM en langage SECD *)
     let rec secdLanguage_of_exprISWIM expression =
       match expression with
-          Lang_ttsih.ISWIM.Const const                           ->   [Constant const]
+          Lang_ttsih.ISWIM.Const const                     ->   [Constant const]
           
-        | Lang_ttsih.ISWIM.Var var                               ->   [Variable var]
+        | Lang_ttsih.ISWIM.Var var                         ->   [Variable var]
             
-        | Lang_ttsih.ISWIM.App(expr1,expr2)                      ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
+        | Lang_ttsih.ISWIM.App(expr1,expr2)                ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
             
-        | Lang_ttsih.ISWIM.Op(op,liste_expr)                     ->   append (flatten(map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
+        | Lang_ttsih.ISWIM.Op(op,liste_expr)               ->   append (flatten(map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
             
-        | Lang_ttsih.ISWIM.Abs(abs,expr)                         ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
+        | Lang_ttsih.ISWIM.Abs(abs,expr)                   ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
 
         | Lang_ttsih.ISWIM.Spawn expr                      ->   [Pair("",(secdLanguage_of_exprISWIM expr)) ; Spawn]
 
@@ -223,7 +223,7 @@ module MachineTTSIH =
 
         | Lang_ttsih.ISWIM.Get(signal,id_thread,neutral)   ->   [Variable signal ; Variable id_thread ; Constant neutral ; Get]
 
-        | Lang_ttsih.ISWIM.Wait                                  ->   [Constant(-1) ; Pair("",[]) ; Pair("",[]) ; Present]
+        | Lang_ttsih.ISWIM.Wait                            ->   [Constant(-1) ; Pair("",[]) ; Pair("",[]) ; Present]
 
         | Lang_ttsih.ISWIM.Catch(expr1,(var,expr2))        ->   [Pair(var,(secdLanguage_of_exprISWIM expr2));Pair("",(secdLanguage_of_exprISWIM expr1));Catch]
 
@@ -231,9 +231,9 @@ module MachineTTSIH =
 
         | Lang_ttsih.ISWIM.Error error                     ->   [Error error]
 
-        | Lang_ttsih.ISWIM.Rec(f,t)                              ->   [Pair(f,(secdLanguage_of_exprISWIM t)) ; Fix]
+        | Lang_ttsih.ISWIM.Rec(f,t)                        ->   [Pair(f,(secdLanguage_of_exprISWIM t)) ; Fix]
 
-        | Lang_ttsih.ISWIM.If(expr1,expr2,expr3)                 ->   (append ( append [ Pair("v",[Pair("t",[Pair("f1",[ Variable "v" ; Variable "t" ; Ap ; Variable "f1" ; Ap])])])]   (secdLanguage_of_exprISWIM expr1) )  [Ap ; Pair("",(secdLanguage_of_exprISWIM expr2)) ; Ap ; Pair("",(secdLanguage_of_exprISWIM expr3)) ; Ap])
+        | Lang_ttsih.ISWIM.If(expr1,expr2,expr3)           ->   (append ( append [ Pair("v",[Pair("t",[Pair("f1",[ Variable "v" ; Variable "t" ; Ap ; Variable "f1" ; Ap])])])]   (secdLanguage_of_exprISWIM expr1) )  [Ap ; Pair("",(secdLanguage_of_exprISWIM expr2)) ; Ap ; Pair("",(secdLanguage_of_exprISWIM expr3)) ; Ap])
     
     
     (* Convertit la chaîne de contrôle en une chaîne de caractères *)
