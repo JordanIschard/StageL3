@@ -16,12 +16,10 @@ module ISWIM =
       | Sub
       | Mult
       | Div 
-      | Egal
 
     type exprISWIM = 
         Var of string 
       | Abs of string * exprISWIM 
-      | Error_ISWIM of int 
       | App of exprISWIM * exprISWIM
       | Op of operateur * exprISWIM list
       | Const of int
@@ -30,11 +28,10 @@ module ISWIM =
       | Signal_ISWIM
       | Put_ISWIM of string * int
       | Get_ISWIM of string * string * int
+      | Emit_ISWIM of string 
       | Wait
-      | Catch_ISWIM of exprISWIM * (string * exprISWIM)
-      | Throw_ISWIM
-      | If of exprISWIM * exprISWIM * exprISWIM
       | Rec of string * exprISWIM
+      | If of exprISWIM * exprISWIM * exprISWIM
 
 
 
@@ -55,6 +52,5 @@ module ISWIM =
 
         | Div        ->   "/"
 
-        | Egal       ->   "="
 
   end

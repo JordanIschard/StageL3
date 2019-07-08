@@ -2498,7 +2498,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			
 			\item[] \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal, il n'est pas émis donc on met ce thread dans la liste de threads bloqués.
 			\smallbreak 
-			$\langle\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,C,D,H\rangle,\emptyset,SI,IP\rangle 
+			$\langle\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,present~C,D,H\rangle,\emptyset,SI,IP\rangle 
 			\longrightarrow_{TTSIH} 
 			\langle\langle IP,\emptyset,\epsilon,\emptyset,\emptyset,H\rangle,\emptyset,SI',IP+1\rangle$
 			\\avec $SI(s) = \langle faux,CS,SSI,ST\rangle$
@@ -2609,6 +2609,361 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\newpage
 	
 	
+	
+		\textbf{\textit{Soit $\langle T,TL,SI,IP\rangle$ avec :}}
+	
+	\begin{itemize}
+		\item[] $TL =$ \textbf{une file de thread telle que :} $\forall$ $tl \in TL~|~tl = T$ avec :
+		\begin{itemize}
+			\item[] $T = \langle I,S,E,C,D,L\rangle$ \textbf{le thread courant avec :}
+			\begin{itemize}
+				\item[] $b,s,n$ = une constante ou un identifiant de signal (un entier)
+				\item[] $V = b$	
+				\begin{itemize}
+					\item[|] $\langle\langle X,C' \rangle E\rangle$
+					\item[|] $[c,param_{1},...,param_{n}]$ avec n le nombre de paramètre pour le constructeur $c$
+				\end{itemize}
+				\item[] $I =$ un entier représentant l'identifiant du thread
+				\item[] $S =  \emptyset$ 
+				\begin{itemize}
+					\item[|] $V~S$
+					\item[|] $[c,var_{1}/pattern_{1},...,var_{n}/pattern_{n}]~S$ avec n le nombre de paramètre pour le constructeur $c$
+				\end{itemize}
+				\item[] $E = \{...,\langle X,V\rangle,...\}$
+				\item[] $C = \epsilon$
+				\begin{itemize}
+					\item[|] $b~C$~~~~~~~~~~~~~~~~~~~~~~~~~~ (une constante ou un signal)
+					\item[|] $X~C$~~~~~~~~~~~~~~~~~~~~~~~~~~(une variable)
+					\item[|] $\langle X,C'\rangle~C$~~~~~~~~~~~~~~~~~~~(une abstraction)
+					\item[|] $ap~C$~~~~~~~~~~~~~~~~~~~~~~~~~(une application)
+					\item[|] $prim_{o^{n}}~C$~~~~~~~~~~~~~~~~~~~(un opérateur)
+					\item[|] $spawn~C$~~~~~~~~~~~~~~~~~~~(créer d'un nouveau thread)
+					\item[|] $present~C$~~~~~~~~~~~~~~~~~~(le test de présence d'un signal)
+					\item[|] $init~C$~~~~~~~~~~~~~~~~~~~~~~~(initialise un signal)
+					\item[|] $put~C$~~~~~~~~~~~~~~~~~~~~~~~~(insère une valeur dans un signal)
+					\item[|] $get~C$~~~~~~~~~~~~~~~~~~~~~~~~(prend une valeurs dans un signal)
+					\item[|] $build~C$~~~~~~~~~~~~~~~~~~~~~~(construit un type)
+					\item[|] $compare~C$~~~~~~~~~~~~~~~~~~(compare deux types)
+					\item[|] $destruct~C$~~~~~~~~~~~~~~~~~~(décompose un type par rapport à un pattern)
+				\end{itemize}
+				\item[] $D = \emptyset$
+				\begin{itemize}
+					\item[|] $\langle S,E,C,D\rangle$~~~~~~~~~~~~~~~~(une sauvegarde liée à une abstraction)
+				\end{itemize}
+				\item[] $L = \{...,\langle constructeur,nombre de parametre\rangle,...\}$
+			\end{itemize}	
+		\end{itemize}
+		
+		\item[]
+		\item[] \textbf{$SI =$ une liste de signaux telle que :} $\forall~si \in SI~:~si = \langle s,\langle emit,CS,SSI,TL\rangle\rangle$ avec :
+		\begin{itemize}
+			\item[] - \textbf{un identifiant de signal :} $s$
+			\item[] - \textbf{un booléen représentant l'émission du signal :} $emit$
+			\item[] - \textbf{un identifiant de thread :} $I$
+			\item[] - \textbf{une liste des signaux courants telle que :} $\forall~cs \in CS~:~cs = \langle I,CL\rangle$ avec 
+			\begin{itemize}
+				\item[] - \textbf{une liste de constantes telle que :} $\forall~cl \in CL~:~cl = b$
+			\end{itemize}
+			
+			\item[] - \textbf{la liste des signaux partagés telle que :} $\forall~ssi \in SSI~:~ssi = \langle I,\langle CI,IL\rangle\rangle$ avec 
+			\begin{itemize}
+				\item[] - \textbf{une liste d'identifiant de threads telle que :} $\forall~il \in IL~:~il = I$
+				\item[] - \textbf{une liste de constante avec itérateur telle que :} $\forall~ci \in CI~:~ci = \langle b, IL\rangle$
+			\end{itemize}
+		\end{itemize}
+		\item[]
+		\item[] $IP =$ un entier servant à attribuer l'identifiant à un nouveau thread 
+	\end{itemize}
+	\bigbreak
+	
+	\newpage
+	
+	
+	
+	\textbf{\textit{Une suite de fonctions ont été écrites afin de simplifier la lecture des règles. Les voici :}}
+	\smallbreak
+	\begin{itemize}
+		\item[] - $\iota(SI)$ une fonction qui prend l'identifiant du dernier signal créé, l'incrémente pour en créer un nouveau et retourne l'identifiant du signal créé avec la liste mise à jour.
+		\begin{ex} $\empty$ \smallbreak 
+			\begin{itemize}
+				\item[] Si on initialise pour la première fois alors $\iota(\{\}) = (0 ,\{\langle 0,\langle false,\{\},\{\},\{\}\rangle\rangle\})$
+				\item[] sinon $\iota(\{...,\langle s,data\rangle\}) = (s+1 ,\{...,\langle s,data\rangle,\langle s+1,\langle false,\{\},\{\},\{\}\rangle\rangle\})$ avec $data = \langle emit,CS,SSI,ST\rangle$
+			\end{itemize}
+		\end{ex}
+		\item[]
+		
+		\item[] - $SI(s)$ une fonction qui retourne le 2nd élément du couple $\langle s,data\rangle$ avec $data = \langle emit,CS,SSI,ST\rangle$.
+		\begin{ex}
+			$SI(s) = \langle emit,CS,SSI,ST\rangle$
+		\end{ex}
+		\item[]  
+		
+		\item[] - $\tau(SI)$ une fonction qui prend la liste signaux, met les liste de valeurs courantes dans la liste des valeurs partagés si il est émis, prend en compte l'absence des signaux non émis et retourne le couple $\langle TL,SI \rangle$ avec une liste de threads $TL$ et $SI$ la liste des signaux modifiés 
+		\begin{ex}
+			$\tau(SI) = \forall~si \in SI$ : 
+			\begin{itemize}
+				\item[] - $\langle true,CS,SSI,\{\}\rangle~\rightarrow~\langle false,\{\},CS',\{\}\rangle$ en mettant en place la possibilité d'itérer
+				\item[] - $\langle false,CS,SSI,ST\rangle~\rightarrow~\langle false,\{\},\{\},\{\}\rangle$ et 
+				\\$\forall~st \in ST~:~\langle I,\langle\langle X',C''\rangle, E\rangle~\langle\langle X,C'\rangle, E\rangle~s~S,E,present~C,D\rangle~\rightarrow~\langle I,S,E,C''~C,D\rangle$ et on l'ajoute dans une liste temporaire $TL$.
+			\end{itemize}
+		\end{ex}
+		\item[]
+		
+		
+		\item[] - $\gamma(id,id',\langle CI,IL\rangle)$ une fonction qui retourne la constante lié à $id'$ et décale l'itérateur lié à l'identifiant de thread $id$.
+		\begin{ex}
+			Trois cas sont possibles :
+			\begin{enumerate}
+				\item Première fois que l'on prend : $\langle id',\langle\{\langle b,\emptyset\rangle,\langle n,IL\rangle,...\},IL\rangle\rangle \rightarrow \langle id',\langle\{\langle b,\emptyset\rangle,\langle n,IL~id\rangle,...\},IL\rangle\rangle$ et on retourne $b$
+				\item On a déjà pris : $\langle id',\langle\{...,\langle b,\{...,id,...\}\rangle,\langle n,IL\rangle,...\},IL\rangle\rangle \rightarrow \langle id',\langle\{...,\langle b,\{...\}\rangle,\langle n,IL~id\rangle,...\},IL\rangle\rangle$ et on retourne $b$
+				\item On prend le dernier : $\langle id',\langle\{...,\langle b,\{...,id,...\}\rangle\},IL\rangle\rangle \rightarrow \langle id',\langle\{...,\langle b,\{...\}\rangle\},IL~id\rangle\rangle$ et on retourne $b$
+			\end{enumerate}
+		\end{ex}
+		\item[] 
+		
+		\item[] - $SI[(s,i) \leftarrow b]$ est une fonction qui met dans la liste de valeurs ,de s pour le thread i, b et met à vrai le booléen représentant l'émission $emit$.
+		\begin{ex}
+			Pour $SI(s) = \langle emit,CS,SSI,ST\rangle$ on change $SI$ telle que $SI(s) = \langle true,CS,SSI',ST\rangle$\\ avec $SSI' = \gamma(id,i,SSI)$ avec $id$ l'identifiant du thread courant.
+		\end{ex}
+		\item[] 
+		
+		\item[] - $SSI(i)$ une fonction qui retourne le couple lié à un signal et un thread dans la liste des signaux partagés.
+		\begin{ex}
+			$SSI(i) = \langle CI,IL\rangle$
+		\end{ex}
+	\end{itemize}
+	\bigbreak
+	
+	
+	\textbf{On va définir une règle afin de simplifier les règles futures :} 
+	\begin{itemize}
+		\item[] Dans tous les cas :
+		\item[] \begin{center}
+			$\dfrac{\langle S,E,C,D,L\rangle \longrightarrow_{TTSI} \langle S',E',C',D',L'\rangle}{\langle\langle I,S,E,C,D,L\rangle,TL,SI,IP\rangle \longrightarrow_{TTSI} \langle\langle I,S',E',C',D',L'\rangle,TL,SI,IP\rangle}$
+		\end{center}
+		\item[]
+		\item[] Si la règle utilisée n'est pas \textbf{Construction de type} :
+		\item[] \begin{center}
+			$\dfrac{\langle S,E,C,D\rangle \longrightarrow_{TTSI} \langle S',E',C',D'\rangle}{\langle\langle I,S,E,C,D\rangle,TL,SI,IP\rangle \longrightarrow_{TTSI} \langle\langle I,S',E',C',D'\rangle,TL,SI,IP\rangle}$
+		\end{center}
+		\item[]
+		\item[]
+		\item[] Si la règle utilisée n'est ni \textbf{Thread bloqué non remplacé} ni \textbf{Création thread} :
+		\smallbreak 
+		\item[] \begin{center}
+			$\dfrac{\langle\langle S,E,C,D,L\rangle,TL,SI\rangle \longrightarrow_{TTSI} \langle\langle S',E',C',D',L'\rangle,TL',SI'\rangle}{\langle\langle I,S,E,C,D,L\rangle,TL,SI,IP\rangle \longrightarrow_{TTSI} \langle\langle I,S',E',C',D',L'\rangle,TL',SI',IP\rangle}$ 
+		\end{center}
+	\end{itemize}
+	\newpage
+	
+	\textbf{\textit{Les éléments étant expliqués, voici les nouvelles règles de la machine :}}
+	\smallbreak
+	\begin{enumerate}
+		\item[] \textbf{Partie de base de la machine SECD :} On veut garder le fonctionnement de la machine SECD de base donc il faut garder ces règles.	
+		\item[]
+		\begin{itemize}
+			\item[] \textbf{Constante ou Signal :} On a une constante, on la déplace dans la pile.
+			\smallbreak
+			$\langle S,E,n~C,D\rangle 
+			\longrightarrow_{TTSI} 
+			\langle n~S,E,C,D\rangle$ avec $n =$ une constante $b$ ou un identifiant de signal $s$
+			\item[]
+			
+			\item[] \textbf{Substitution :} On a une variable, on substitue la variable par sa valeur liée dans l'environnement via la fonction $E$.
+			\smallbreak
+			$\langle S,E,X~C,D\rangle
+			\longrightarrow_{TTSI} 
+			\langle V~S,E,C,D\rangle$ avec $E(X) = V$
+			\item[]
+			
+			\item[] \textbf{Opération :} On a un opérateur et le nombre de constantes nécessaires dans la pile, \\via la fonction $\delta$ on retourne le résultat dans la pile.
+			\smallbreak
+			$\langle b_{n},...,b_{1}~S,E,prim_{o^{n}}~C,D\rangle
+			\longrightarrow_{TTSI} 
+			\langle V~S,E,C,D\rangle$ avec $\delta(o^{n}~b_{1}...b_{n}) = V$
+			\item[]
+			
+			\item[]  \textbf{Abstraction :} On a une abstraction, on crée une fermeture comportant l'abstraction et l'environnement courant et on met la fermeture dans la pile.
+			\smallbreak
+			$\langle S,E,\langle X,C'\rangle~C,D\rangle
+			\longrightarrow_{TTSI} 
+			\langle \langle\langle X,C'\rangle,E\rangle~S,E,C,D\rangle$
+			\item[]
+			
+			\item[]  \textbf{Application :} On a une application, on sauvegarde dans le dépôt, on remplace la chaîne de contrôle et l'environnement par ceux présents dans la fermeture et on ajoute une substitution  dans le nouvel environnement.
+			\smallbreak
+			$\langle V~\langle\langle X,C'\rangle,E'\rangle~S,E,ap~C,D\rangle
+			\longrightarrow_{TTSI} 
+			\langle \emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle$
+			\item[] 
+			
+			\item[] \textbf{Récupération de sauvegarde :}  On n'a rien mais le dépôt comporte une sauvegarde donc on prend celle-ci.
+			\smallbreak  
+			$\langle V~S,E,\epsilon,\langle S',E',C,D\rangle\rangle
+			\longrightarrow_{TTSI} 
+			\langle V~S',E',C,D\rangle$
+		\end{itemize}
+		\item[]
+		
+		
+		
+		\item[] \textbf{Partie pour la concurrence :} Cette partie ajoute la concurrence dans notre machine. 
+		\item[]
+		\begin{itemize}
+			\item[]  \textbf{Création thread :} On crée un nouveau thread.
+			\smallbreak 
+			$\langle\langle I,\langle\langle X,C'\rangle, E\rangle~S,E,spawn~C,D\rangle,TL,SI,IP\rangle 
+			\longrightarrow_{TTSI} 
+			\langle\langle I,IP~S,E,C,D\rangle,TL~\langle IP,S,E,C',D\rangle,SI,IP+1\rangle$
+			\item[]
+			
+			\item[] \textbf{Ajouter dans un signal :} On ajoute une constante dans une liste de valeurs d'un signal et on met à vrai le booléen $emit$
+			\smallbreak
+			$\langle\langle I,s~b~S,E,put~C,D\rangle,TL,SI\rangle
+			\longrightarrow_{TTSI} 
+			\langle\langle I,S,E,C,D\rangle,TL,SI~[(s,I) \leftarrow b]\rangle$ 
+			\item[]
+			
+			\item[] \textbf{Prendre une valeur partagée :} On prend dans la liste de valeurs d'un signal partagé lié à un thread et on décale l'itérateur.
+			\smallbreak
+			$\langle\langle I,s~b~n~\langle\langle X,C'\rangle,E'\rangle~S,E,get~C,D\rangle,TL,SI\rangle 
+			\longrightarrow_{TTSI} 
+			\langle\langle I,\emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle,TL,SI\rangle$
+			\\ si pour $SI(s) = \langle emit,CS,SSI\rangle$ et $SSI(b) = \langle CI,IL\rangle$ on a $I \notin IL$ alors $\gamma(I,b,SSI(b)) = V$ sinon $n = V$
+			\item[]
+			
+			\item[] \textbf{Initialisation signal :} On initialise le signal via la fonction $\iota$.
+			\smallbreak 
+			$\langle\langle I,S,E,init~C,D\rangle,TL,SI\rangle 
+			\longrightarrow_{TTSI}
+			\langle\langle I,s~S,E,C,D\rangle,TL,SI'\rangle$
+			avec $\iota(SI) = (s,SI')$
+			\item[]	
+			
+			\item[] \textbf{Présence du signal :} On teste la présence d'un signal, via la fonction $SI$ on sait qu'il est émis donc on prend le premier choix.
+			\smallbreak
+			$\langle\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,present~C,D\rangle,TL,SI\rangle 
+			\longrightarrow_{TTSI} 
+			\langle\langle I,S,E,C'~C,D\rangle,TL,SI\rangle$ 
+			\\avec $SI(s) = \langle vraie,CS,SSI,TL\rangle$
+			\item[] \newpage
+			
+			
+			
+			
+			\item[] \textbf{ Thread bloqué remplacé :} On teste la présence d'un signal, il n'est pas émis et il y a un thread dans la file d'attente donc on met le thread courant dans la liste de threads bloqués et on prend le thread en tête de la file.
+			\smallbreak
+			$\langle\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,present~C,D\rangle,\langle I',S',E',C''',D'\rangle~TL,SI\rangle 
+			\\\longrightarrow_{TTSI} 
+			\langle\langle I',S',E',C''',D'\rangle,TL,SI'\rangle$ 
+			\\avec $SI(s) = \langle faux,CS,SSI,ST\rangle$
+			\\et $SI'(s) = \langle faux,CS,SSI,ST~\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,present~C,D\rangle\rangle$
+			\item[]	
+			
+			\item[] \textbf{Thread bloqué non remplacé :} On teste la présence d'un signal, il n'est pas émis donc on met ce thread dans la liste de threads bloqués.
+			\smallbreak 
+			$\langle\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,C,D\rangle,\emptyset,SI,IP\rangle 
+			\longrightarrow_{TTSI} 
+			\langle\langle IP,\emptyset,\epsilon,\emptyset,\emptyset\rangle,\emptyset,SI',IP+1\rangle$
+			\\avec $SI(s) = \langle faux,CS,SSI,ST\rangle$
+			\\et $SI'(s) = \langle faux,CS,SSI,ST~\langle I,\langle\langle X',C''\rangle,E\rangle~\langle\langle X,C'\rangle,E\rangle~s~S,E,present~C,D\rangle\rangle$
+			\item[]
+			
+			\item[] \textbf{Récupération dans la file d'attente :} On n'a plus rien à traiter et on n'a aucune sauvegarde, du coup on change le thread courant par le thread en tête de la file d'attente.
+			\smallbreak
+			$\langle\langle I,S,E,\epsilon,\emptyset\rangle,\langle I',S',E',C,D\rangle~TL,SI\rangle 
+			\longrightarrow_{TTSI} 
+			\langle\langle I',S',E',C,D\rangle,TL,SI\rangle$
+			\item[]
+			
+			\item[] \textbf{Fin d'instant logique :} On n'a plus rien à traiter, on n'a aucune sauvegarde et on n'a plus rien dans la file d'attente, c'est la fin d'un instant logique.
+			\smallbreak
+			$\langle\langle I,S,E,\epsilon,\emptyset \rangle ,\emptyset,SI\rangle 
+			\longrightarrow_{TTSI} 
+			\langle\langle I,S,E,\epsilon,\emptyset\rangle,TL,SI'\rangle$
+			avec $\tau(SI)$ = ($SI',TL$) 
+			\item[]
+			
+		\end{itemize}
+		\item[] \textbf{Partie pour les types :}
+		\item[]
+		\begin{itemize}
+			\item[] \textbf{Construction de type :}
+			\smallbreak
+			$\langle b~V^{n}~...~V^{1}~S,E,build~C,D,\{...,\langle b,n\rangle,...\}\rangle
+			\longrightarrow_{TTSI} 
+			\langle [b,V^{1},...,V^{n}]~S,E,C,D,\{...,\langle b,n\rangle,...\}\rangle$
+			\item[]
+			\item[] \textbf{Comparer deux types :}
+			\smallbreak
+			$\langle [c',...]~[c,...]~S,E,compare~C,D,L\rangle
+			\longrightarrow_{TTSI} 
+			\langle \langle bool,E\rangle~S,E,C,D,L\rangle$ 
+			\\si $c'=c$ alors $bool = \langle x,\langle y,x\rangle\rangle$ sinon $bool = \langle x,\langle y,y\rangle\rangle$ 
+			\\ avec $[c',...]$ un type et $[c,...]$ un pattern
+			\item[]
+			\item[] \textbf{Décomposer un type via pattern :}
+			\smallbreak
+			$\langle [c',...]~[c,...]~S,E,destruct~C,D\rangle
+			\\\longrightarrow_{TTSI} 
+			 \langle res_{n}~var/pattern_{n},E,destruct,\langle ...\langle res_{1}~var/pattern_{1},E,destruct,\langle S,E,C,D\rangle\rangle...\rangle\rangle$ 
+			\\ avec $[c',...]$ un type et $[c,...]$ un pattern
+			\item[]
+			\item[] \textbf{Décomposer un type via variable :}
+			\smallbreak
+			$\langle res~var~S,E,destruct~C,D\rangle
+			\longrightarrow_{TTSI}$ 
+			\\ si $C = \epsilon$ alors $\langle S,E~\langle var,res\rangle,destruct,D\rangle$ sinon $\langle S,E~\langle var,res\rangle,C,D\rangle$
+			\item[]
+			\item[] \textbf{Décomposition finie :}
+			\smallbreak
+			$\langle \epsilon,E,destruct,\langle S,E',C,D \rangle\rangle
+			\longrightarrow_{TTSI} \langle S,E'\cup E,C,D\rangle$ 
+			\item[]
+		\end{itemize}
+		\item[] \textbf{Partie commune :} Quand on ajoute des règles dans une machine déjà existante, le plus délicat est de ne pas avoir de conflits dans les règles. Pour cela, on définit des règles exprès pour faire la liaison entre ce qui existait et ce que l'on ajoute. 
+		\item[]
+		\begin{itemize}
+			\item[] \textbf{Application neutre :} On a une application sur rien, cela revient juste à ne rien faire.
+			\smallbreak 
+			$\langle S,E,ap~C,D\rangle
+			\longrightarrow_{TTSI} 
+			\langle S,E,C,D\rangle$
+			\item[]
+			\item[] \textbf{Récupération de sauvegarde avec pile vide :}  On n'a rien mais le dépôt comporte une sauvegarde donc on prend celle-ci.
+			\smallbreak  
+			$\langle \emptyset,E,\epsilon,\langle S',E',C,D\rangle\rangle
+			\longrightarrow_{TTSI} 
+			\langle S',E',C,D\rangle$
+		\end{itemize}
+		
+		\item[]
+	\end{enumerate}
+	\bigbreak
+	\bigbreak
+	
+	
+	\textbf{\textit{la machine TTSI peut s'arrêter dans 4 états différents:}}
+	\smallbreak
+	\begin{itemize}
+		\item[] - Soit on a une \textbf{constante} telle que 
+		$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTSI},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
+		\twoheadrightarrow_{TTSI} 
+		\langle\langle I,b~S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
+		\item[] 
+		\item[] - Soit on a une \textbf{fonction} telle que
+		$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTSI},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
+		\twoheadrightarrow_{TTSI} 
+		\langle\langle I,\langle\langle X,C\rangle,E\rangle~S,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
+		\item[] 
+		\item[] - Soit on a \textbf{rien} telle que  
+		$\langle\langle 0,\emptyset,\emptyset,\textlbrackdbl M\textrbrackdbl_{TTSI},\emptyset\rangle,\emptyset,\emptyset,1\rangle 
+		\twoheadrightarrow_{TTSI} 
+		\langle\langle I,\epsilon,E,\epsilon,\emptyset\rangle,\emptyset,SI,IP\rangle$;
+		\item[]
+		\item[] - Sinon on a un \textbf{état inconnu} : on a une \textbf{erreur} 
+	\end{itemize}
+	\bigbreak
 	
 	
 	

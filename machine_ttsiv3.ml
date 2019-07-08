@@ -1,7 +1,7 @@
 open String ;;
 open Printf ;;
 open List ;;
-open Lang_ttsiv2.ISWIM ;;
+open Lang_ttsiv3.ISWIM ;;
 
 
 module MachineTTSI =
@@ -34,6 +34,7 @@ module MachineTTSI =
       | Put                                                     (* place dans un signal           *)
       | Get                                                     (* prends dans un signal          *)
       | Present                                                 (* test de présence d'un signal   *)
+      | Fix
       
      
 
@@ -49,6 +50,7 @@ module MachineTTSI =
     type e =   
         EnvClos of (variable * (control_string * e list))     (* (X,(C,Env))            *)
       | EnvVar  of (variable * control_string)                (* (X,V) V une constante  *)
+      | EnvRec  of (variable * control_string)                (* (X,C) une récursion    *)
 
     (* Ce type représente l'environnement de la machineTTSI SECD, c'est notre liste de substitution *)
     type environment = e list
@@ -204,6 +206,11 @@ module MachineTTSI =
 
         | Wait                                  ->   [Constant(-1) ; Pair("",[]) ; Pair("",[]) ; Present]
 
+        | Rec(f,t)                              ->   [Pair(f,(secdLanguage_of_exprISWIM t)) ; Fix]
+
+        | If(expr1,expr2,expr3)                 ->   (append ( append [ Pair("v",[Pair("t",[Pair("f1",[ Variable "v" ; Variable "t" ; Ap ; Variable "f1" ; Ap])])])]   (secdLanguage_of_exprISWIM expr1) )  [Ap ; Pair("",(secdLanguage_of_exprISWIM expr2)) ; Ap ; Pair("",(secdLanguage_of_exprISWIM expr3)) ; Ap])
+    
+
 
     (* Convertit la chaîne de contrôle en une chaîne de caractères *)
     let rec string_of_control_string expression =
@@ -233,19 +240,25 @@ module MachineTTSI =
        
         | Get::t                             ->   "get "^(string_of_control_string t)
 
+        | Fix::t                             ->   "fix "^(string_of_control_string t)
+
 
     (* Convertit un environnement en chaîne de caractères *)
     let rec string_of_environment environment =
       match environment with
           []                                      ->   ""
+            
+        | [(EnvClos(var,(control_string,env)))]   ->   " Closure : ["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_environment env)^"]]"
 
-        | [(EnvClos(var,(control_string,env)))]   ->   "["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_environment env)^"]]"
+        | [(EnvVar(var,control_string))]          ->   " Var : ["^var^" , "^(string_of_control_string control_string) ^"]"
 
-        | [(EnvVar(var,control_string))]          ->   "["^var^" , "^(string_of_control_string control_string) ^"]"
+        | [(EnvRec(var,control_string))]          ->   " Rec : ["^var^" , "^(string_of_control_string control_string) ^"]"
 
-        | (EnvClos(var,(control_string,env)))::t  ->   "["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_environment env)^"]] , "^(string_of_environment t)
+        | (EnvClos(var,(control_string,env)))::t  ->   " Closure : ["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_environment env)^"]] , "^(string_of_environment t)
 
-        | (EnvVar(var,control_string))::t         ->   "["^var^" , "^(string_of_control_string control_string) ^"] , "^(string_of_environment t)
+        | (EnvVar(var,control_string))::t         ->   " Var : ["^var^" , "^(string_of_control_string control_string) ^"] , "^(string_of_environment t)
+
+        | (EnvRec(var,control_string))::t         ->   " Rec : ["^var^" , "^(string_of_control_string control_string) ^"] , "^(string_of_environment t)
 
 
     (* Convertit une pile en chaîne de caractères *)
@@ -380,33 +393,44 @@ module MachineTTSI =
                                                                 [Constant b]  ->   Stack_const b 
 
                                                               | _             ->   raise UnknowEnvState
-                
+
                                                       else substitution x t
+
+        | EnvRec(var,control_string)::t         ->   if (equal x var) then Closure(control_string,[EnvRec(var,control_string)]) else substitution x t
 
                                                       
     (* Ajoute une  fermeture à l'environnement *)
-    let rec add_env env varToRep stack_element =
+    let rec add_env env varToRep stack_element recursion =
       match stack_element with
-          Stack_const(b)                ->    begin
+          Stack_const b                 ->    begin
                                                 match env with
                                                     [] -> [EnvVar(varToRep,[Constant b])]
 
                                                   | EnvClos(var1,closure)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Constant b])] t 
-                                                                                                         else append [EnvClos(var1,closure)] (add_env t varToRep stack_element)
+                                                                                                         else append [EnvClos(var1,closure)] (add_env t varToRep stack_element recursion)
 
                                                   | EnvVar(var1,control_string)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Constant b])] t 
-                                                                                                               else append [EnvVar(var1,control_string)] (add_env t varToRep stack_element)
+                                                                                                               else append [EnvVar(var1,control_string)] (add_env t varToRep stack_element recursion)
+
+                                                  | EnvRec(var1,control_string)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Constant b])] t 
+                                                                                                               else append [EnvRec(var1,control_string)] (add_env t varToRep stack_element recursion)
                                               end
 
-      | Closure(control_string,env1)  ->   begin
+        | Closure(control_string,env1)  ->   begin
                                               match env with
-                                                    [] -> [EnvClos(varToRep,(control_string,env1))]
+                                                    [] -> if recursion then [EnvRec(varToRep,control_string)] else [EnvClos(varToRep,(control_string,env1))]
 
-                                                  | EnvClos(var1,closure)::t -> if (equal var1 varToRep) then append [EnvClos(varToRep,(control_string,env1))] t 
-                                                                                                         else append [EnvClos(var1,closure)] (add_env t varToRep stack_element)
+                                                  | EnvClos(var1,closure)::t -> if (equal var1 varToRep) then if recursion then append [EnvRec(varToRep,control_string)] t 
+                                                                                                                           else append [EnvClos(varToRep,(control_string,env1))] t 
+                                                                                                         else append [EnvClos(var1,closure)] (add_env t varToRep stack_element recursion)
 
-                                                  | EnvVar(var1,control_string1)::t -> if (equal var1 varToRep) then append [EnvClos(varToRep,(control_string,env1))] t 
-                                                                                                                else append [EnvVar(var1,control_string)] (add_env t varToRep stack_element)
+                                                  | EnvVar(var1,control_string)::t -> if (equal var1 varToRep) then if recursion then append [EnvRec(varToRep,control_string)] t 
+                                                                                                                                  else append [EnvClos(varToRep,(control_string,env1))] t 
+                                                                                                                else append [EnvVar(var1,control_string)] (add_env t varToRep stack_element recursion)
+
+                                                  | EnvRec(var1,control_string)::t -> if (equal var1 varToRep) then if recursion then append [EnvRec(varToRep,control_string)] t 
+                                                                                                                                 else append [EnvClos(varToRep,(control_string,env1))] t  
+                                                                                                               else append [EnvRec(var1,control_string)] (add_env t varToRep stack_element recursion)
                                               end
 
                 
@@ -634,7 +658,7 @@ module MachineTTSI =
 
           (* Application *)
         | MachineTTSI(Thread(id,v::Closure([Pair(abs,c1)],e1)::s,e,Ap::c,d),tl,si,ip)   
-          ->    MachineTTSI( Thread( id , [] , (add_env e1 abs v) , c1 , Save(s,e,c,d) ) , tl , si , ip )
+          ->    MachineTTSI( Thread( id , [] , (add_env e1 abs v false) , c1 , Save(s,e,c,d) ) , tl , si , ip )
 
 
           (* Récupération d'une sauvegarde *)
@@ -669,7 +693,12 @@ module MachineTTSI =
         | MachineTTSI(Thread(id,Stack_const signal::s,e,Emit::c,d),tl,si,ip)                   
           ->    let (st,new_si) = emit_signal si signal in MachineTTSI( Thread( id , s , e , c , d ) , append tl st , new_si , ip )
 
+        
+          (* Récursion *)
+        | MachineTTSI(Thread(id,Closure([Pair(f,[Pair(x,t)])],e1)::s,e,Fix::c,d),tl,si,ip) 
+          -> MachineTTSI(Thread( id , Closure([Pair(x,t)],(add_env e1 f (Closure([Pair(x,t)],e1)) true))::s , e , c , d ) , tl , si , ip )
 
+          
           (* Test de présence *)
         | MachineTTSI(Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d),tl,si,ip)               
           ->    if (isEmit si signal)
