@@ -20,30 +20,30 @@ module ISWIM =
 
     (* pattern utilisé pour faire du filtrage *)
     type pat = 
-      Pattern_var of string                                (* on filtre avec une variable *)
-    | Pattern_ISWIM of int * pat list                  (* on filtre avec un pattern *)
+      Variable of string                                (* on filtre avec une variable *)
+    | Pattern of int * pat list                         (* on filtre avec un pattern *)
 
     type exprISWIM = 
-        Var_ISWIM of string 
+        Var of string 
       | Abs of string * exprISWIM 
       | App of exprISWIM * exprISWIM
       | Op of operateur * exprISWIM list
       | Const of int
-      | Spawn_ISWIM of exprISWIM
-      | Present_ISWIM of string * exprISWIM * exprISWIM
-      | Signal_ISWIM
-      | Put_ISWIM of string * int
-      | Get_ISWIM of string * string * int
-      | Emit_ISWIM of string 
+      | Spawn of exprISWIM
+      | Present of string * exprISWIM * exprISWIM
+      | Signal
+      | Put of string * int
+      | Get of string * string * int
+      | Emit of string 
       | Wait
       | Rec of string * exprISWIM
       | If of exprISWIM * exprISWIM * exprISWIM
-      | Build_ISWIM of int * exprISWIM list
+      | Build of int * int * exprISWIM list
       | Match of string * ( pat * exprISWIM ) list
 
-    let vraie = Abs("x",Abs("y",App(Var_ISWIM "x",Const 1)))
+    let vraie = Abs("x",Abs("y",App(Var "x",Const 1)))
 
-    let faux = Abs("x",Abs("y",App(Var_ISWIM "y",Const 1)))
+    let faux = Abs("x",Abs("y",App(Var "y",Const 1)))
 
       exception DivByZero
       exception InvalidOpFormat

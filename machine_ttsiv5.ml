@@ -540,21 +540,13 @@ module MachineTTSI =
 
 
     (* Décompose un type par rapport à un pattern *)
-    let rec destruct d values vars env = 
+    let rec destruct values vars env = 
       match (values,vars) with
-       | ([],[])             ->   d
+       | ([],[])             ->   env
 
-       | (value::t1,var::t)  ->   let new_d = destruct d t1 t env in Save([value;P(var)],env,[Destruct],new_d) 
+       | (value::t1,Var var::t)  ->   destruct t1 t (add env var value false)
 
        | (_,_)               ->   raise FormatDestructInvalid
-
-
-    (* Union de deux environnements *)
-    let rec union env1 env2 = 
-      match env1 with
-        | []    ->   env2
-
-        | h::t  ->   if mem h env2 then union t env2 else union t (h::env2)
 
 
     (* Créer un type *)
@@ -701,23 +693,8 @@ module MachineTTSI =
                                                                                       Machine(Thread(i,res::s,e,c,d),tl,si,ip)
 
           (* Décomposition d'un type via un pattern *)
-        | Machine(Thread(i,s,e,Destruct::c,d),tl,si,ip) 
-          ->  begin match s with
-                      | [] ->   begin match (c,d) with 
-                                        | ([],Save(s1,e1,c1,d1))  ->   let new_e = union e e1 in Machine(Thread(i,s1,new_e,c1,d1),tl,si,ip)
-
-                                        | ([],Empty)              ->   raise DestructNotApply
-
-                                        | (_,_)                   ->   Machine(Thread(i,s,e,c,d),tl,si,ip) 
-                                end
-                      | v::P(Var x)::s1                         ->   Machine(Thread(i,s1,(add e x v false),Destruct::c,d),tl,si,ip)
-
-                      | Type(id1,values)::P(Pat(id,elems))::s1  ->   let new_d = destruct (Save(s1,e,Destruct::c,d)) values elems e in 
-                                                                       Machine(Thread(i,[],[],[],new_d),tl,si,ip)
-
-                      | _                                       ->   Machine(Thread(i,s,e,c,d),tl,si,ip)
-              end
-
+        | Machine(Thread(i,Type(_,values)::P(Pat(_,vars))::s,e,Destruct::c,d),tl,si,ip) 
+          ->  let new_e = destruct values vars e in Machine(Thread(i,s,new_e,c,d),tl,si,ip)
 
           (* Pattern *)
         | Machine(Thread(i,s,e,Pattern p::c,d),tl,si,ip)                       ->   Machine(Thread(i,P p::s,e,c,d),tl,si,ip)
@@ -749,7 +726,7 @@ module MachineTTSI =
   
 
     (* Lance et affiche le résultat de l'expression *)
-    let startTTSIv4 expression afficher = machine (Machine(Thread(0,[],[(false,"main",Const 0)],(convert_to_machine_language expression),Empty),[],[(Signal(-1,(false,[],[],[])))],1)) afficher
+    let startTTSIv5 expression afficher = machine (Machine(Thread(0,[],[(false,"main",Const 0)],(convert_to_machine_language expression),Empty),[],[(Signal(-1,(false,[],[],[])))],1)) afficher
     
 
   end

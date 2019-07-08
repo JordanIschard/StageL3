@@ -1,7 +1,7 @@
 open String ;;
 open Printf ;;
 open List ;;
-open Lang_ttsiv2.ISWIM ;;
+open Lang_ttsi.ISWIM ;;
 
 
 module MachineTTSI =
@@ -156,6 +156,7 @@ module MachineTTSI =
     exception UnknowStuckState                 (* Le format de la liste d'élément bloqués est invalide et/ou inconnu                *)
     exception UnknowSignalState                   (* Le format de la liste de signaux partagés est invalide                         *)
 
+    exception BadVersion
 
 
 
@@ -179,29 +180,31 @@ module MachineTTSI =
     (* Convertit le langage ISWIM en langage SECD *)
     let rec secdLanguage_of_exprISWIM expression =
       match expression with
-          Const const                           ->   [Constant const]
+          Lang_ttsi.ISWIM.Const const                           ->   [Constant const]
           
-        | Var var                               ->   [Variable var]
+        | Lang_ttsi.ISWIM.Var var                               ->   [Variable var]
             
-        | App(expr1,expr2)                      ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
+        | Lang_ttsi.ISWIM.App(expr1,expr2)                      ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
             
-        | Op(op,liste_expr)                     ->   append (flatten(map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
+        | Lang_ttsi.ISWIM.Op(op,liste_expr)                     ->   append (flatten(map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
             
-        | Abs(abs,expr)                         ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
+        | Lang_ttsi.ISWIM.Abs(abs,expr)                         ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
 
-        | Spawn_ISWIM expr                      ->   [Pair("",(secdLanguage_of_exprISWIM expr)) ; Spawn]
+        | Lang_ttsi.ISWIM.Spawn expr                      ->   [Pair("",(secdLanguage_of_exprISWIM expr)) ; Spawn]
 
-        | Present_ISWIM (signal,expr1,expr2)    ->   [Variable signal ; Pair("",(secdLanguage_of_exprISWIM expr1)) ; Pair("",(secdLanguage_of_exprISWIM expr2)) ; Present]
+        | Lang_ttsi.ISWIM.Present (signal,expr1,expr2)    ->   [Variable signal ; Pair("",(secdLanguage_of_exprISWIM expr1)) ; Pair("",(secdLanguage_of_exprISWIM expr2)) ; Present]
 
-        | Signal_ISWIM                          ->   [Init]
+        | Lang_ttsi.ISWIM.Signal                          ->   [Init]
 
-        | Emit_ISWIM(signal)                    ->   [Variable signal; Emit] 
+        | Lang_ttsi.ISWIM.Emit signal                    ->   [Variable signal; Emit] 
 
-        | Put_ISWIM(signal,value)               ->   [Constant value ; Variable signal ; Put]
+        | Lang_ttsi.ISWIM.Put(signal,value)               ->   [Constant value ; Variable signal ; Put]
 
-        | Get_ISWIM(signal,id_thread,neutral)   ->   [Variable signal ; Variable id_thread ; Constant neutral ; Get]
+        | Lang_ttsi.ISWIM.Get(signal,id_thread,neutral)   ->   [Variable signal ; Variable id_thread ; Constant neutral ; Get]
 
-        | Wait                                  ->   [Constant(-1) ; Pair("",[]) ; Pair("",[]) ; Present]
+        | Lang_ttsi.ISWIM.Wait                            ->   [Constant(-1) ; Pair("",[]) ; Pair("",[]) ; Present]
+
+        | _ -> raise BadVersion
 
 
     (* Convertit la chaîne de contrôle en une chaîne de caractères *)

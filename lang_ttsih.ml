@@ -21,18 +21,18 @@ module ISWIM =
     type exprISWIM = 
         Var of string 
       | Abs of string * exprISWIM 
-      | Error_ISWIM of int 
+      | Error of int 
       | App of exprISWIM * exprISWIM
       | Op of operateur * exprISWIM list
       | Const of int
-      | Spawn_ISWIM of exprISWIM
-      | Present_ISWIM of string * exprISWIM * exprISWIM
-      | Signal_ISWIM
-      | Put_ISWIM of string * int
-      | Get_ISWIM of string * string * int
+      | Spawn of exprISWIM
+      | Present of string * exprISWIM * exprISWIM
+      | Signal
+      | Put of string * int
+      | Get of string * string * int
       | Wait
-      | Catch_ISWIM of exprISWIM * (string * exprISWIM)
-      | Throw_ISWIM
+      | Catch of exprISWIM * (string * exprISWIM)
+      | Throw
       | If of exprISWIM * exprISWIM * exprISWIM
       | Rec of string * exprISWIM
 
