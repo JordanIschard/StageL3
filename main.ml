@@ -634,6 +634,12 @@ let expression37 = let open Lang_ttsiv4.ISWIM in (App(Abs("s",App(App(Spawn_ISWI
 (*  Correspond à l'expression suivante : ( Rec(f, lam n.( if ( = n 0 ) 0 ( + n ( f ( - n 1 ) ) ) ) ) 4 ) *)
 let expression38 = let open Lang_ttsiv4.ISWIM in App(Rec("f",Abs("n",If(Op(Egal,[Var_ISWIM "n" ; Const 0]),Const 0,Op(Add,[Var_ISWIM "n" ; App(Var_ISWIM "f",Op(Sub,[Var_ISWIM "n" ; Const 1]))])))),Const 4);;
 
+let expression39 = let open Lang_ttsiv4.ISWIM in App( Abs("arbre",Match("arbre",[(Pattern_ISWIM(0,[Pattern_var "a";Pattern_var "i";Pattern_var "a1"]),Abs("x",Abs("y",App(Var_ISWIM "y",Const 1))));(Pattern_ISWIM(1,[Pattern_var "i"]),Abs("x",Abs("y",App(Var_ISWIM "x",Const 1))))])), Build_ISWIM(0,[Build_ISWIM(1,[Const 1]);Const 3;Build_ISWIM(1,[Const 4])]));;
+
+let expression40 = let open Lang_ttsiv4.ISWIM in App( Abs("arbre",Match("arbre",[(Pattern_ISWIM(0,[Pattern_var "a";Pattern_var "i";Pattern_var "a1"]),Abs("x",Abs("y",App(Var_ISWIM "y",Const 1))));(Pattern_ISWIM(1,[Pattern_var "i"]),Abs("x",Abs("y",App(Var_ISWIM "x",Const 1))))])), Build_ISWIM(1,[Const 1]));;
+
+let expression41 = let open Lang_ttsiv4.ISWIM in App( Abs("arbre",Match("arbre",[(Pattern_ISWIM(0,[Pattern_ISWIM(1,[Pattern_var "i2"]);Pattern_var "i";Pattern_var "a1"]),Op(Add,[Var_ISWIM "i2";Var_ISWIM "i"]));(Pattern_ISWIM(1,[Pattern_var "i"]),Var_ISWIM "i")])), Build_ISWIM(0,[Build_ISWIM(1,[Const 1]);Const 3;Build_ISWIM(1,[Const 4])]));;
+
 
 printf "\n\n\n\n\nTest de la MachineTTSIv4\n\n" ;;
 
@@ -660,6 +666,18 @@ printf "\n" ;;
 
 printf "On teste l'expression  ( Rec(f, lam n.( if ( = n 0 ) 0 ( + n ( f ( - n 1 ) ) ) ) ) 4 ) \n" ;;
 startTTSIv4 expression38 false;;
+printf "\n" ;;
+
+printf "On teste l'expression  ( Rec(f, lam n.( if ( = n 0 ) 0 ( + n ( f ( - n 1 ) ) ) ) ) 4 ) \n" ;;
+startTTSIv4 expression39 false;;
+printf "\n" ;;
+
+printf "On teste l'expression  ( Rec(f, lam n.( if ( = n 0 ) 0 ( + n ( f ( - n 1 ) ) ) ) ) 4 ) \n" ;;
+startTTSIv4 expression40 false;;
+printf "\n" ;;
+
+printf "On teste l'expression  ( Rec(f, lam n.( if ( = n 0 ) 0 ( + n ( f ( - n 1 ) ) ) ) ) 4 ) \n" ;;
+startTTSIv4 expression41 true;;
 printf "\n" ;;
 
 

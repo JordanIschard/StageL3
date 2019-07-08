@@ -123,6 +123,7 @@ module MachineTTSI =
     exception FormatCreateInvalid
     exception InvalidElemCompared
     exception FormatDestructInvalid
+    exception DestructNotApply
 
 
 
@@ -146,7 +147,7 @@ module MachineTTSI =
                                         (append [Abstraction("v",[Abstraction("t",[Abstraction("f1",[Variable "v";Variable "t";Ap;Variable "f1";Ap])])])]   
                                                 (append [Variable variable] 
                                                         [Pattern(convert_of_pattern pattern);Compare])) 
-                                        [Ap;Abstraction("",append [Variable variable;Pattern(convert_of_pattern pattern);Destruct] (convert_to_machine_language expr)) ; Ap ; Abstraction("",(convert_of_match variable t)) ; Ap])
+                                        [Ap;Abstraction("",append [Pattern(convert_of_pattern pattern);Variable variable;Destruct] (convert_to_machine_language expr)) ; Ap ; Abstraction("",(convert_of_match variable t)) ; Ap])
       in
       match expression with
         | Var_ISWIM variable                    ->  [Variable variable]
@@ -180,7 +181,7 @@ module MachineTTSI =
         | If (expr1,expr2,expr3)                ->  (append (append [ Abstraction("v",[Abstraction("t",[Abstraction("f1",[Variable "v";Variable "t";Ap;Variable "f1";Ap])])])]   
                                                     (convert_to_machine_language expr1)) [Ap;Abstraction("",(convert_to_machine_language expr2)) ; Ap ; Abstraction("",(convert_to_machine_language expr3)) ; Ap])
 
-        | Build_ISWIM const                     ->  [Constant const;Build]
+        | Build_ISWIM (const,expr_list)         ->  append (flatten (map convert_to_machine_language expr_list)) [Constant const;Build]
 
         | Match (variable,patterns)             ->  convert_of_match variable patterns
 
@@ -551,9 +552,9 @@ module MachineTTSI =
         match (s,nbrParam) with
           | (new_stack,0)  -> ([],new_stack)
 
-          | (Const c::t,nbr) -> let (res,new_s) = aux t (nbr-1) in (Const c::res,new_s)
+          | (Const c::t,nbr) -> let (res,new_s) = aux t (nbr-1) in (append res [Const c],new_s)
 
-          | (Type(c,v)::t,nbr) -> let (res,new_s) = aux t (nbr-1) in (Type(c,v)::res,new_s)
+          | (Type(c,v)::t,nbr) -> let (res,new_s) = aux t (nbr-1) in (append res [Type(c,v)],new_s)
 
           | ([],nbr) -> if (nbr = 0) then ([],[]) else raise NotEnoughElem  
 
@@ -571,10 +572,10 @@ module MachineTTSI =
     (* Compare deux types *)
     let rec compare t1 t2 env =
       match (t1,t2) with
-        | (Type(c,v),Type(c1,v1))  ->   if c = c1 then Closure(("x",[Abstraction("y",[Variable "x";Constant 1;Ap])]),env)
+        | (Type(c,v),P(Pat(c1,v1)))     ->   if c = c1 then Closure(("x",[Abstraction("y",[Variable "x";Constant 1;Ap])]),env)
                                                   else Closure(("x",[Abstraction("y",[Variable "y";Constant 1;Ap])]),env)
 
-        | (_,_)                    ->   raise InvalidElemCompared
+        | (_,_)                         ->   raise InvalidElemCompared
 
 
     (* Décompose un type par rapport à un pattern *)
@@ -590,7 +591,7 @@ module MachineTTSI =
     (* Union de deux environnements *)
     let rec union env1 env2 = 
       match env1 with
-        | []    ->   []
+        | []    ->   env2
 
         | h::t  ->   if mem h env2 then union t env2 else union t (h::env2)
 
@@ -669,6 +670,8 @@ module MachineTTSI =
       
                   | Closure((x,c),env)::s1  ->   Machine(Thread(i,[Closure((x,c),env)],[],[],Empty,[]),[],[],ip)
 
+                  | Type(c,v)::s1           ->   Machine(Thread(i,[Type(c,v)],[],[],Empty,[]),[],[],ip)
+
                   | []                      ->   Machine(Thread(i,[],[],[],Empty,[]),[],[],ip)
       
                   | _                       ->   raise UnknowStackState
@@ -711,23 +714,24 @@ module MachineTTSI =
                                                                                   Machine(Thread(i,res::s,e,c,d,l),tl,si,ip)
 
         
-          (* *)
-        | Machine(Thread(i,Type(id1,values)::P(Pat(id,elems))::s,e,Destruct::c,d,l),tl,si,ip)
-          -> let new_d = destruct (Save(s,e,c,d,l)) values elems e l in Machine(Thread(i,[],[],[],new_d,l),tl,si,ip) 
+        | Machine(Thread(i,s,e,Destruct::c,d,l),tl,si,ip) 
+          ->  begin match s with
+                      | [] ->   begin match (c,d) with 
+                                        | ([],Save(s1,e1,c1,d1,l1)) -> let new_e = union e e1 in Machine(Thread(i,s1,new_e,c1,d1,l1),tl,si,ip)
 
+                                        | ([],Empty) -> raise DestructNotApply
 
-          (* *)                                                                       
-        | Machine(Thread(i,v::P(Var x)::s,e,[Destruct],d,l),tl,si,ip)       ->   Machine(Thread(i,s,(add e x v false),[Destruct],d,l),tl,si,ip)         
+                                        | (_,_)  -> Machine(Thread(i,s,e,c,d,l),tl,si,ip) 
+                                end
+                      | v::P(Var x)::s1      ->   Machine(Thread(i,s1,(add e x v false),Destruct::c,d,l),tl,si,ip)
 
+                      | Type(id1,values)::P(Pat(id,elems))::s1 -> let new_d = destruct (Save(s1,e,Destruct::c,d,l)) values elems e l in Machine(Thread(i,[],[],[],new_d,l),tl,si,ip)
 
-          (* *)                                                                       
-        | Machine(Thread(i,v::P(Var x)::s,e,Destruct::c,d,l),tl,si,ip)      ->   Machine(Thread(i,s,(add e x v false),c,d,l),tl,si,ip)         
-
+                      | s1 -> Machine(Thread(i,s1,e,c,d,l),tl,si,ip)
+              end
 
           (*  *)
-        | Machine(Thread(i,[],e,[Destruct],Save(s,e1,c,d,l1),l),tl,si,ip)   ->   Machine(Thread(i,s,(union e e1),c,d,l1),tl,si,ip)
-
-
+        | Machine(Thread(i,s,e,Pattern p::c,d,l),tl,si,ip)                  ->   Machine(Thread(i,P p::s,e,c,d,l),tl,si,ip)
 
         (*** Partie commune ***)
 
@@ -750,7 +754,7 @@ module MachineTTSI =
   
 
     (* Lance et affiche le résultat de l'expression *)
-    let startTTSIv4 expression afficher = machine (Machine(Thread(0,[],[(false,"main",Const 0)],(convert_to_machine_language expression),Empty,[]),[],[(Signal(-1,(false,[],[],[])))],1)) afficher
+    let startTTSIv4 expression afficher = machine (Machine(Thread(0,[],[(false,"main",Const 0)],(convert_to_machine_language expression),Empty,[Builder(0,3);Builder(1,1)]),[],[(Signal(-1,(false,[],[],[])))],1)) afficher
     
 
   end

@@ -38,9 +38,12 @@ module ISWIM =
       | Wait
       | Rec of string * exprISWIM
       | If of exprISWIM * exprISWIM * exprISWIM
-      | Build_ISWIM of int 
+      | Build_ISWIM of int * exprISWIM list
       | Match of string * ( pat * exprISWIM ) list
 
+    let vraie = Abs("x",Abs("y",App(Var_ISWIM "x",Const 1)))
+
+    let faux = Abs("x",Abs("y",App(Var_ISWIM "y",Const 1)))
 
       exception DivByZero
       exception InvalidOpFormat
@@ -90,7 +93,7 @@ module ISWIM =
 
         | (Sub1,[n])      ->   Const (n-1)
 
-        | (IsZero,[n])    ->   if n=0 then Abs("x",Abs("y",App(Var_ISWIM "x",Const 1))) else Abs("x",Abs("y",App(Var_ISWIM "y",Const 1)))
+        | (IsZero,[n])    ->   if n=0 then vraie else faux
 
         | (Add,[n;m])     ->   Const (n+m)
 
@@ -100,7 +103,7 @@ module ISWIM =
 
         | (Div,[n;m])     ->   if m = 0 then raise DivByZero else Const (n/m)
 
-        | (Egal,[n;m])    ->   if n = m then Abs("x",Abs("y",App(Var_ISWIM "x",Const 1))) else Abs("x",Abs("y",App(Var_ISWIM "y",Const 1)))
+        | (Egal,[n;m])    ->   if n = m then vraie else faux
 
         | _               ->   raise InvalidOpFormat
 
