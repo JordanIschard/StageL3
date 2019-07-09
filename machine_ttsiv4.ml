@@ -260,7 +260,7 @@ module MachineTTSI =
     (* convertit le dépôt en chaîne de caractères *)
     let rec string_of_dump dump =
       match dump with
-        | Empty            ->   "Vide"
+        | Empty          ->   "Vide"
 
         | Save(s,e,c,d)  ->   "<"^(string_of_stack s)^","^(string_of_environment e)^","^(string_of_control c)^","^(string_of_dump d)^">"
 
@@ -376,7 +376,7 @@ module MachineTTSI =
 
         | (Const b::t,n)  ->   if n = 0 then ([],Const b::t) else let (elem,stack) = split_for_compute t (n-1) in (append elem [b],stack)
 
-        | (h::_,_)        ->   printf "%s" (string_of_stack [h]) ;raise NotAllConstant
+        | (h::_,_)        ->   raise NotAllConstant
 
 
     (* Calcul *)
@@ -560,15 +560,15 @@ module MachineTTSI =
     (* Créer un type *)
     let rec create s nbr = 
       match (s,nbr) with
-        | ([],0)  -> ([],[])
+        | ([],0)              ->   ([],[])
 
-        | (s,0)   -> ([],s)
+        | (s,0)               ->   ([],s)
         
-        | (Const c::t,nbr) -> let (res,new_s) = create t (nbr-1) in (append res [Const c],new_s)
+        | (Const c::t,nbr)    ->   let (res,new_s) = create t (nbr-1) in (append res [Const c],new_s)
 
-        | (Type(x,c)::t,nbr) -> let (res,new_s) = create t (nbr-1) in (append res [Type(x,c)],new_s)
+        | (Type(x,c)::t,nbr)  ->   let (res,new_s) = create t (nbr-1) in (append res [Type(x,c)],new_s)
 
-        | _  -> raise NotEnoughElem
+        | _                   ->   raise NotEnoughElem
 
 
 

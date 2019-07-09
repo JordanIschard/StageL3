@@ -498,10 +498,10 @@ let expression34 = let open Lang_ttsi.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",
 let expression35 = let open Lang_ttsi.ISWIM in (App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1));;
 
 (*  Correspond à l'expression suivante : ( ( lam s.( lam id.( Spawn( get s id 0 ) Spawn( put( s 3 ) ) ) put( s 4 ) ) init ) *)
-let expression36 = let open Lang_ttsi.ISWIM in (App(Abs("s",App(App(Abs("id",Spawn(App(Wait,Get("s","id",0)))),Spawn(Put("s",3))),Put("s",4))),Signal));;
+let expression36 = let open Lang_ttsi.ISWIM in (App(Abs("s",App(App(Abs("id",Spawn(App(Wait,App(Abs("x",Var "x"),Get("s","id",0))))),Spawn(Put("s",3))),Put("s",4))),Signal));;
 
 (*  Correspond à l'expression suivante : ( ( lam s.( Spawn( get s main 0 ) Spawn( put( s 3 ) ) put( s 4 ) ) init ) *)
-let expression37 = let open Lang_ttsi.ISWIM in (App(Abs("s",App(App(Spawn(App(Wait,Get("s","main",0))),Spawn(Put("s",3))),Put("s",4))),Signal));;
+let expression37 = let open Lang_ttsi.ISWIM in (App(Abs("s",App(App(Spawn(App(Wait,App(Abs("x",Var"x"),Get("s","main",0)))),Spawn(Put("s",3))),Put("s",4))),Signal));;
 
 (*  Correspond à l'expression suivante : ( Rec(f, lam n.( if ( = n 0 ) 0 ( + n ( f ( - n 1 ) ) ) ) ) 4 ) *)
 let expression38 = let open Lang_ttsi.ISWIM in App(Rec("f",Abs("n",If(Op(Egal,[Var "n" ; Const 0]),Const 0,Op(Add,[Var "n" ; App(Var "f",Op(Sub,[Var "n" ; Const 1]))])))),Const 4);;
