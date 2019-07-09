@@ -328,6 +328,7 @@ module MachineTTSI =
                                  ^"\nSI :  ["^(string_of_signals si)^"]"
                                  ^"\nIP :  "^(string_of_int ip)
 
+                                 
     (* Affiche la machine *)
     let print_machine machine = Printf.printf "Machine : \n%s\n\n" (string_of_machine machine)
 
@@ -642,6 +643,7 @@ module MachineTTSI =
           (* Ajoute une valeur dans un signal *)
         | Machine(Thread(i,Const n::Const b::s,e,Put::c,d),tl,si,ip)           ->   let (st,new_si) = put_value si i n b in  Machine(Thread(i,s,e,c,d),append tl st,new_si,ip)
 
+
           (* Prend une valeur dans un signal *)
         | Machine(Thread(i,Const b::Const j::Const n::Closure((x,c1),e1)::s,e,Get::c,d),tl,si,ip)
           -> let (new_si,res) = get_value si i b j n in Machine(Thread(i,[],(add e1 x (Const res) false),c1,Save(s,e,c,d)),tl,new_si,ip)
@@ -665,12 +667,15 @@ module MachineTTSI =
           (* Création d'un type *)
         | Machine(Thread(i,Const id::Const nbr::s,e,Build::c,d),tl,si,ip)      ->   let (res,new_s) = create s nbr in Machine(Thread(i,Type(id,res)::new_s,e,c,d),tl,si,ip)
 
+
           (* Comparer deux types *)
         | Machine(Thread(i,t2::t1::s,e,Compare::c,d),tl,si,ip)                 ->   let res = compare t1 t2 e in Machine(Thread(i,res::s,e,c,d),tl,si,ip)
+
 
           (* Décomposition d'un type via un pattern *)
         | Machine(Thread(i,Type(_,values)::P(Pat(_,vars))::s,e,Destruct::c,d),tl,si,ip) 
           ->  let new_e = destruct values vars e in Machine(Thread(i,s,new_e,c,d),tl,si,ip)
+
 
           (* Pattern *)
         | Machine(Thread(i,s,e,Pattern p::c,d),tl,si,ip)                       ->   Machine(Thread(i,P p::s,e,c,d),tl,si,ip)
