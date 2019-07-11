@@ -25,6 +25,7 @@ module MachineTTSI =
     type pattern = 
       | Var of variable                                 (* on filtre avec une variable *)
       | Pat of identifier * pattern list                (* on filtre avec un pattern *)
+      | Neutral
 
     (* élément accepté par la chaîne de contrôle *)
     type element = 
@@ -192,6 +193,7 @@ module MachineTTSI =
       match pattern with
         | Var variable                   ->  variable^" "      
         | Pat (identifier,pattern_list)  ->  "["^(string_of_int identifier)^","^(string_of_list (map string_of_pattern pattern_list))^"] "
+        | Neutral                        ->  "_ "
         
 
     (* Convertit la chaîne de contrôle en chaîne de caractères *)
@@ -711,6 +713,8 @@ module MachineTTSI =
                                         | (_,_)                   ->   Machine(Thread(i,s,e,c,d),tl,si,ip) 
                                 end
                       | v::P(Var x)::s1                         ->   Machine(Thread(i,s1,(add e x v false),Destruct::c,d),tl,si,ip)
+
+                      | v::P Neutral::s1                        ->   Machine(Thread(i,s1,e,c,d),tl,si,ip)
 
                       | Type(id1,values)::P(Pat(id,elems))::s1  ->   let new_d = destruct (Save(s1,e,Destruct::c,d)) values elems e in 
                                                                        Machine(Thread(i,[],[],[],new_d),tl,si,ip)
