@@ -24,6 +24,7 @@ module ISWIM =
     type pat = 
       | Variable of string                        (* on filtre avec une variable *)
       | Pattern of int * pat list                 (* on filtre avec un pattern *)
+      | Neutral
 
 
     (* Expression du langage *)

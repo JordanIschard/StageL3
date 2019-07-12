@@ -24,26 +24,27 @@ module MachineTTSI =
     (* pattern utilisé pour faire du filtrage *)
     type pattern = 
       | Var of variable                                 (* on filtre avec une variable *)
-      | Pat of identifier * pattern list                (* on filtre avec un pattern *)
+      | Pat of identifier * pattern list                (* on filtre avec un pattern   *)
       | Neutral
 
     (* élément accepté par la chaîne de contrôle *)
     type element = 
-      | Constant of int                              (* une constante *)
-      | Variable of variable                         (* une variable  *)
+      | Constant of int                              (* une constante   *)
+      | Variable of variable                         (* une variable    *)
       | Abstraction of ( variable * element list )   (* une abstraction *)
-      | Pattern of pattern
-      | Ap                                           (* commande : appliquer *)
-      | Prim of operateur                            (* commande : calculer *)
-      | Spawn                                        (* commande : créer un thread *)
-      | Present                                      (* commande : tester la présence d'un signal *)
-      | Init                                         (* commande : initialiser un signal *) 
-      | Emit                                         (* commande : émettre un signal *)
-      | Put                                          (* commande : ajouter une valeur à partager *)
-      | Get                                          (* commande : prendre une valeur partager *)
-      | Fix                                          (* commande : récurrence *)
-      | Build                                        (* commande : construire un type *)
-      | Compare                                      (* commande : comparer deux types *)
+      | Pattern of pattern                           (* un pattern      *)
+
+      | Ap                                           (* commande : appliquer                        *)
+      | Prim of operateur                            (* commande : calculer                         *)
+      | Spawn                                        (* commande : créer un thread                  *)
+      | Present                                      (* commande : tester la présence d'un signal   *)
+      | Init                                         (* commande : initialiser un signal            *) 
+      | Emit                                         (* commande : émettre un signal                *)
+      | Put                                          (* commande : ajouter une valeur à partager    *)
+      | Get                                          (* commande : prendre une valeur partager      *)
+      | Fix                                          (* commande : récurrence                       *)
+      | Build                                        (* commande : construire un type               *)
+      | Compare                                      (* commande : comparer deux types              *)
       | Destruct                                     (* commande : Décompose un type via un pattern *)  
       
     type control = element list
@@ -52,8 +53,8 @@ module MachineTTSI =
     type value =                                         
       | Const of int                                                            (* une constante *)
       | Closure of ((variable * control) * ( (bool * variable * value) list ))  (* une fermeture *)
-      | Type of (identifier * value list)                                       (* un type *)
-      | P of pattern                                                            (* un pattern *)
+      | Type of (identifier * value list)                                       (* un type       *)
+      | P of pattern                                                            (* un pattern    *)
 
     (* pile d'exécution *)
     type stack  = value list 
@@ -132,6 +133,8 @@ module MachineTTSI =
           | Lang_ttsi.ISWIM.Variable variable         ->  Var variable
 
           | Lang_ttsi.ISWIM.Pattern (id,pat_list)     ->  Pat(id,map convert_of_pattern pat_list)
+
+          | Lang_ttsi.ISWIM.Neutral                   ->  Neutral
       in
       let rec convert_of_match variable patterns = 
         match patterns with

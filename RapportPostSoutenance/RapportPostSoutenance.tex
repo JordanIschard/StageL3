@@ -2612,7 +2612,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	\subsection{Description informelle du langage}
 	
-	\paragraph{Récursion } La récursion existe déjà dans les $\lambda$-calculs cependant on le perd avec le typage. En effet, on va voir ça à travers un exemple.
+	\paragraph{Récursion } La récursion existe déjà dans les $\lambda$-calculs cependant on la perd avec le typage. En effet, on va voir ça à travers un exemple.
 	
 	\begin{ex}
 		Si on prend $fun~x \rightarrow fun~y \rightarrow x~y$ et que l'on tente de le typer. On va avoir :
@@ -2620,13 +2620,13 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\begin{itemize}
 			\item[-] $fun~x \rightarrow fun~y \rightarrow~x~y$
 			\item[-] $~~~'a~~\rightarrow ~~~'b~~~\rightarrow~'c$
-			\item[] Or $x$ est une fonction du coup on aurai :
+			\item[] Or $x$ est une fonction du coup on aurait :
 			\item[-] $'a~=~'a~~\rightarrow ~~~'b~~~\rightarrow~'c$
 		\end{itemize} 
 		Ce n'est pas possible. D'où l'impossibilité d'avoir une récurrence innée. 
 	\end{ex}
 
-	Pour ajouter la récursivité il va donc falloir indiquer à la machine que la fonction sur laquelle on va travailler est récursive. On peut voir cet indicateur en ocaml par exemple via le mot-clé $rec$. Pour notre machine, on crée la commande $fix$. Cette commande va se situer juste après une abstraction pour indiquer que celle-ci est récursive. L'abstraction devra être de la forme $\langle f,\langle x,t\rangle\rangle$ avec $f$ le nom de la fonction récursive, le premier paramètre $x$ et le reste de la fonction (avec potentiellement d'autre paramètres) $t$. Notre but c'est que la fonction garde l'information de la récursion pour ça on sait que lorsqu'une abstraction passe de la chaîne de contrôle à la pile d'exécution, elle devient une fermeture qui est un couple contenant une abstraction et un environnement. C'est dans cette environnement que l'on va stocker l'information.
+	Pour ajouter la récursivité il va donc falloir indiquer à la machine que la fonction sur laquelle on va travailler est récursive. On peut voir cet indicateur en ocaml par exemple via le mot-clé $rec$. Pour notre machine, on crée la commande $fix$. Cette commande va se situer juste après une abstraction pour indiquer que celle-ci est récursive. L'abstraction devra être de la forme $\langle f,\langle x,t\rangle\rangle$ avec $f$ le nom de la fonction récursive, le premier paramètre $x$ et le reste de la fonction (avec potentiellement d'autre paramètres) $t$. Notre but c'est que la fonction garde l'information de la récursion, pour ça on sait que lorsqu'une abstraction passe de la chaîne de contrôle à la pile d'exécution, elle devient une fermeture qui est un couple contenant une abstraction et un environnement. C'est dans cette environnement que l'on va stocker l'information.
 	
 	\begin{ex}
 		Si on se focalise sur la machine SECD de base on peut voir un prototype de règle sur l'exemple suivant :
@@ -2645,16 +2645,16 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	Personnellement pour gérer son implantation il m'a fallu mettre un booléen représentant la récursion pour contourner la définition récursive de l'élément $A$. Un problème vient se greffer à la récursion. 
 	\medbreak
 	
-	En effet notre machine fonctionne par appel par valeur, c'est-à-dire que l'on va d'abord évaluer les paramètres avant la fonction. Or la conditionnelle en $\lambda$-calcul s'écrit comme une fonction qui prend trois paramètres ($\lambda vtf.(v~t~f)$). Si on veut faire une fonction simple tel que $let~fact~n~=~if~(n=0)~then~1~else~n*fact~(n-1)~;;$ on va toujours évaluer la récursion avant la condition. Pour palier à cela on va retarder artificiellement l'évaluation des paramètres en les encapsulants dans des abstractions. 
+	En effet notre machine fonctionne par l'appel par valeur, c'est-à-dire que l'on va d'abord évaluer les paramètres avant la fonction. Or la conditionnelle en $\lambda$-calcul s'écrit comme une fonction qui prend trois paramètres ($\lambda vtf.(v~t~f)$). Si on veut faire une fonction simple tel que $let~fact~n~=~if~(n=0)~then~1~else~n*fact~(n-1)~;;$ on va toujours évaluer la récursion avant la condition. Pour palier à cela on va retarder artificiellement l'évaluation des paramètres en les encapsulants dans des abstractions. 
 	\medbreak
 	
 	On aura donc $\lambda vtf.(v~t~f)~p^{v}~\lambda x.(p^{t})~\lambda x.(p^{f})$ avec $x$ une variable quelconque. La représentation des booléens changera un peu et donnera cela : $true~=~\lambda xy.(x~a)$ et $false~=~\lambda xy.(y~a)$ avec $a$ une variable quelconque.
 	\bigbreak
 	
 	
-	\paragraph{Type } Les types sont extrêmement important dans la programmation fonctionnelle. Ils nous permettent de définir des structures complexes et nous donnent la possibilités de travailler avec. Tout d'abord il faut savoir comment on va représenter un type dans notre machine, puis comment le créer et enfin comment l'utiliser.
+	\paragraph{Type } Les types sont extrêmement important dans la programmation fonctionnelle. Ils nous permettent de définir des structures complexes et nous donnent la possibilités de travailler avec. Tout d'abord il faut savoir comment on va représenter un type dans notre machine ensuite comment le créer et enfin comment l'utiliser.
 	
-		\subparagraph{Structure d'un type} Les types sont des structures composées de plusieurs paramètres qui sont lié via un constructeur.
+		\subparagraph{Structure d'un type} Les types sont des structures composées de plusieurs paramètres qui sont liés via un constructeur.
 		
 		\begin{ex}
 			$type~tree~=~Node~of~tree~*~int~*~tree~|~Leaf~of~int~;;$
@@ -2662,7 +2662,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			Ici $Node$ et $Leaf$ sont deux constructeurs pour le type $tree$.
 		\end{ex}
 	
-	Ce qui est intéressant à savoir c'est que lorsque l'on arrive au niveau de la machine abstraite dans la procédure, le langage est déjà vérifié syntaxiquement et sémantiquement. Cela peut paraître anodin mais cela fait toute la différence. Quand notre chaîne de contrôle est donné à la machine on n'a plus à se préoccuper des types en eux-même car on sait déjà que si la chaîne de contrôle est donné à la machine, les types sont déjà vérifiés. Les types deviennent alors seulement deux informations : le constructeur qu'il l'a créé et les paramètres qui le composent. Pour stocker cela on va utiliser un tableau qui aura comme première élément l'identifiant du constructeur et le reste les éléments du type. On aura donc un type de la forme : $[c,V_{1},...,V_{n}]$ avec $n$ le nombre de paramètre pour le constructeur $c$.
+	Ce qui est intéressant à savoir c'est que lorsque l'on arrive au niveau de la machine abstraite dans la procédure, le langage est déjà vérifié syntaxiquement et sémantiquement. Cela peut paraître anodin mais cela fait toute la différence. Quand notre chaîne de contrôle est donnée à la machine on n'a plus à se préoccuper des types en eux-même car on sait déjà que si la chaîne de contrôle est donnée à la machine, les types sont déjà vérifiés. Les types deviennent alors seulement deux informations : le constructeur qu'il l'a créé et les paramètres qui le composent. Pour stocker cela on va utiliser un tableau qui aura comme première élément l'identifiant du constructeur et le reste les éléments du type. On aura donc un type de la forme : $[c,V_{1},...,V_{n}]$ avec $n$ le nombre de paramètre pour le constructeur $c$.
 		
 		\subparagraph{Création d'un type } Prenons un exemple pour créer un type.
 		
@@ -2672,7 +2672,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			$let~arbre~=~Node(Leaf(1),2,Leaf(3))~;;$
 			\medbreak
 			
-			En prenant en compte que la machine garde en mémoire que l'identifiant de constructeur (ici on va garder leurs noms pour pour que l'exemple soit plus clair) et le nombre de paramètre, on aurait:
+			En prenant en compte que la machine garde en mémoire uniquement l'identifiant de constructeur (ici on va garder leurs noms pour pour que l'exemple soit plus clair) et le nombre de paramètre, on aurait:
 			\smallbreak
 			$let~arbre~=~Node~3~(Leaf~1~1)~2~(Leaf~1~3)$
 			\medbreak 
@@ -2714,7 +2714,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\bigbreak
 	
 	
-	La conditionnelle existe déjà en $\lambda$-calcul du coup on peut encore descendre d'un niveau d'écriture, ce qui donne la forme qui suit.
+	La conditionnelle existe déjà en $\lambda$-calcul du coup on peut encore descendre d'un niveau d'écriture, ce qui donne la forme qui suit :
 	\begin{enumerate}
 		\item $\lambda vtf.(v~t~f)~(elem~=~pattern^{1})$
 		\item $~~~~~~~~~~~~~~~~~~ \lambda x.(decomposer~elem~pattern^{1}~;~processus^{1})$
@@ -2732,7 +2732,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	\subparagraph{Pattern } Le filtre fonctionne avec un pattern. Ce pattern est soit une variable, soit un type contenant des variables. Du coup on aura un pattern tel que : $pattern~=~[c,X_{1},...,X_{n}]$ avec le nombre de paramètre $n$ et l'identifiant de constructeur $c$ ou $pattern~=~X$.
 	
-	\subparagraph{Comparaison de deux types } Pouvoir comparer deux types est la base pour pouvoir faire du filtrage. Ici la comparaison ne sera trop difficile car on va comparer leurs identifiants de constructeurs pour savoir si c'est le même type. Pour cela on va ajouter une commande $compare$ qui va indiquer la volonté de comparer les deux types en tête de la pile d'exécution. Le résultat sera retourné par dans la pile sous la forme de booléen écrit en $\lambda$-calcul. La règle sera donc de la forme :
+	\subparagraph{Comparaison de deux types } Pouvoir comparer deux types est la base pour le filtrage. Ici la comparaison ne sera trop difficile car on va comparer leurs identifiants de constructeurs pour savoir si c'est le même type. Pour cela on va ajouter une commande $compare$ qui va indiquer la volonté de comparer les deux types en tête de la pile d'exécution. Le résultat sera retourné dans la pile sous la forme de booléen écrit en $\lambda$-calcul. La règle sera donc de la forme :
 	\smallbreak
 	\begin{enumerate}
 		\item[] $\langle [c',V^{1}...V^{n}]~[c,X^{1}...X^{n}]~S,E,compare~C,D\rangle
@@ -2745,7 +2745,70 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\langle \langle true,E\rangle~S,E,C,D\rangle$ 
 	\end{enumerate}
 
-	\subparagraph{Décomposition d'un type } 
+	\subparagraph{Décomposition d'un type }  Lorsque le filtrage a été fait il faut que l'on décompose le type via un pattern pour pouvoir utiliser les éléments du type. Pour cela, on peut voir la décomposition de deux façons :
+	\begin{itemize}
+		\item[-] On fait une décomposition récursive car on prend en compte les patterns imbriqués;
+		\item[-] On fait une décomposition en prenant en compte qu'un pattern contient uniquement des variables.
+	\end{itemize}
+	\medbreak
+	
+	La première version est plus lourde à implanter et plus complexe à définir mais si cela vous intéresse, une version implantée en Ocaml comporte cette règle qui est la suivante : 
+	\smallbreak
+	
+	\begin{itemize}
+		\item[] $\langle S,E,destruct~C,D\rangle \longrightarrow_{TTSI}$
+		\item[] si $S = \epsilon$ alors si $D = \langle S',E',C',D\rangle$ 
+		\item[] $\quad\quad\quad\quad\quad\quad\quad\quad$ alors $\langle S',E \cup E',C',D\rangle$ 
+		\item[] $\quad\quad\quad\quad\quad\quad\quad~~$ sinon si $C \neq \epsilon$ alors $\langle S,E,C,D\rangle$
+		\item[] $\quad\quad\quad~$ sinon si $S = [c,V^{1}...V^{n}]~[c,X^{1}...X^{n}]~S'$ 
+		\item[] $\quad\quad\quad\quad\quad\quad\quad\quad$ alors $\langle \epsilon,\emptyset,\epsilon,\langle V^{1}~X^{1},E,destruct,\langle...\langle V^{n}~X^{n},E,destruct,\langle S',E,destruct~C,D\rangle\rangle...\rangle\rangle\rangle$
+		\item[] $\quad\quad\quad\quad\quad\quad\quad\quad$ sinon si $S = V~X~S'$ 
+		\item[] $\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad$ alors $\langle S',E~[X \leftarrow V],destruct~C,D\rangle$ 
+		\item[] $\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad$ sinon si $S = V~\_~S$ 
+		\item[] $\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad$ alors $\langle S',E,destruct~C,D\rangle$ 
+		\item[] $\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad$ sinon $\langle S,E,C,D\rangle$ 
+	\end{itemize}
+	\medbreak
+	
+	On peut remarquer que la machine comprend qu'elle est dans une sous décomposition en voyant qu'il n'y que la commande $destruct$ dans la chaîne de contrôle. En effet si on prend l'exemple de l'Ocaml je prends en compte que le destruct fait référence à la flèche $\rightarrow$ or cette flèche est toujours suivie sinon elle provoque une erreur. Du coup la commande $destruct$ ne peut fatalement pas être le dernière élément de la chaîne de contrôle normalement.
+	\bigbreak
+	
+	La seconde version est , pour ça part, beaucoup plus légère que la première. En effet, on part du principe que la machine ne traite que des patterns contenant uniquement des variables. Cela ne veut pas dire que le langage ne supporte pas les patterns imbriqués mais seulement que le pattern sera convertit pour ne pas inclure de pattern imbriqué. Prenons un exemple :
+	
+	\begin{ex}
+		Si on prend le type $tree$ et $arbre~=~Node(Leaf(1),2,Leaf(3))$. 
+		On va créer le filtrage suivant : 
+		\smallbreak
+		\begin{enumerate}
+			\item $match~arbre~with$
+			\item $\quad Node(Leaf(a),b,c)~\rightarrow~processus$
+		\end{enumerate}
+		\bigbreak
+		
+		Par rapport à ce que l'on a vu plus haut on peut écrire le match sous la forme suivante :
+		\smallbreak
+		\begin{enumerate}
+			\item $\lambda vtf.(v~t~f)~(arbre~=~Node(Leaf(a),b,c))$
+			\item $~~~~~~~~~~~~~~~~~~ \lambda x.(decomposer~arbre~Node(Leaf(a),b,c)~;~processus)$
+			\item $~~~~~~~~~~~~~~~~~~ \lambda x.(erreur)$
+		\end{enumerate}
+		\bigbreak
+		
+		
+		Maintenant il faut que l'on décompose le pattern pour avoir seulement des variables. Ce qui donne :
+		\smallbreak
+		\begin{enumerate}
+			\item $\lambda vtf.(v~t~f)~(arbre~=~Node(Leaf(a),b,c))$
+			\item $~~~~~~~~~~~~~~~~~~~~~~~~~\lambda x.(decomposer~Leaf(1)~Leaf(a)~;~decomposer~Node(Leaf(1),2,Leaf(3))~Node(\_,b,c)~;~processus)$
+			\item $~~~~~~~~~~~~~~~~~~ \lambda x.(erreur)$
+		\end{enumerate} 
+		\smallbreak
+		Deux décompositions vont se faire et permettre de ne pas faire une règle aussi complexe que la première version.
+	\end{ex}
+	\bigbreak
+	
+	
+	C'est la seconde version qui sera définit dans la sémantique.
 	
 	\subsection{Sémantique de la machine abstraite}
 	
@@ -2765,7 +2828,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 				\begin{itemize}
 					\item[|] $\langle\langle X,C' \rangle E\rangle$
 					\item[|] $[c,V_{1},...,V_{n}]$ avec $n$ le nombre de paramètre pour le constructeur $c$
-					\item[|] $[c,X^{1},...,X^{n}]$ avec $n$ le nombre de paramètre pour le constructeur $c$
+					\item[|] $[c,X_{1},...,X_{n}]$ avec $n$ le nombre de paramètre pour le constructeur $c$
 				\end{itemize}
 				\item[] $I =$ un entier représentant l'identifiant du thread
 				\item[] $S =  \emptyset$ 
@@ -2778,7 +2841,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 					\item[|] $b~C$~~~~~~~~~~~~~~~~~~~~~~~~~~ (une constante ou un signal)
 					\item[|] $X~C$~~~~~~~~~~~~~~~~~~~~~~~~~~(une variable)
 					\item[|] $\langle X,C'\rangle~C$~~~~~~~~~~~~~~~~~~~(une abstraction)
-					\item[|] $[c,X^{1},...,X^{n}]~C$~~~~~~~~~~(un pattern)
+					\item[|] $[c,X_{1},...,X_{n}]~C$~~~~~~~~~~(un pattern)
 					\item[|] $ap~C$~~~~~~~~~~~~~~~~~~~~~~~~~(une application)
 					\item[|] $prim_{o^{n}}~C$~~~~~~~~~~~~~~~~~~~(un opérateur)
 					\item[|] $spawn~C$~~~~~~~~~~~~~~~~~~~(créer d'un nouveau thread)
@@ -3028,36 +3091,36 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\begin{itemize}
 			\item[] \textbf{Pattern :} On a un pattern, on le met dans la pile.
 			\smallbreak
-			$\langle S,E,[c,X^{1}...X^{n}]~C,D\rangle
-			\longrightarrow_{TTSI} \langle [c,X^{1}...X^{n}]~S,E,C,D\rangle$ 
+			$\langle S,E,[c,X_{1}...X_{n}]~C,D\rangle
+			\longrightarrow_{TTSI} \langle [c,X_{1}...X_{n}]~S,E,C,D\rangle$ 
 			\item[]
 			\item[] \textbf{Construction de type :} On a la commande qui nous dit que l'on veut construire un type, on a le nombre de paramètre indiqué ainsi que le numéro de constructeur.
 			\smallbreak
-			$\langle n~b~V^{n}~...~V^{1}~S,E,build~C,D,\rangle
+			$\langle n~b~V_{n}~...~V_{1}~S,E,build~C,D,\rangle
 			\longrightarrow_{TTSI} 
-			\langle [b,V^{1},...,V^{n}]~S,E,C,D,\rangle$
+			\langle [b,V_{1},...,V_{n}]~S,E,C,D,\rangle$
 			\item[]
 			\item[] \textbf{Comparer deux types :} On a deux types en tête de la pile et on a la commande compare, on compare leurs constructeurs et on retourne un booléen. 
 			\smallbreak
-			$\langle [c',V^{1}...V^{n}]~[c,X^{1}...X^{n}]~S,E,compare~C,D\rangle
+			$\langle [c',V_{1}...V_{n}]~[c,X_{1}...X_{n}]~S,E,compare~C,D\rangle
 			\longrightarrow_{TTSI} 
 			\langle \langle bool,E\rangle~S,E,C,D\rangle$ 
 			\\ si $c'=c$ alors $bool = true$ sinon $bool = false$ 
 			\item[]
 			\item[] \textbf{Comparaison neutre :} On a un type et une variable en tête de la pile et on a la commande compare, on retourne vraie. 
 			\smallbreak
-			$\langle [c',V^{1}...V^{n}]~X~S,E,compare~C,D\rangle
+			$\langle [c',V_{1}...V_{n}]~X~S,E,compare~C,D\rangle
 			\longrightarrow_{TTSI} 
 			\langle \langle true,E\rangle~S,E,C,D\rangle$ 
 			\item[]
 			\item[] \textbf{Décomposition pattern :} On a un type et un pattern et on a la commande destruct, on décompose le type via le pattern et on met dans l'environnement chaque couple $(X,V)$.
 			\smallbreak
-			$\langle [c,V^{1}...V^{n}]~[c,X^{1}...X^{n}]~S,E,destruct~C,D\rangle
-			\longrightarrow_{TTSI} \langle S,E~[X^{1} \leftarrow V^{1}]...[X^{n} \leftarrow V^{n}],C,D\rangle$ 
+			$\langle [c,V_{1}...V_{n}]~[c,X_{1}...X_{n}]~S,E,destruct~C,D\rangle
+			\longrightarrow_{TTSI} \langle S,E~[X_{1} \leftarrow V_{1}]...[X_{n} \leftarrow V_{n}],C,D\rangle$ 
 			\item[]
 			\item[] \textbf{Décomposition neutre :} On a un type et la variable "\_" et on a la commande destruct, on fait rien.
 			\smallbreak
-			$\langle [c,V^{1}...V^{n}]~[\_]~S,E,destruct~C,D\rangle
+			$\langle [c,V_{1}...V_{n}]~[\_]~S,E,destruct~C,D\rangle
 			\longrightarrow_{TTSI} \langle S,E,C,D\rangle$ 
 			\item[]
 		\end{itemize}

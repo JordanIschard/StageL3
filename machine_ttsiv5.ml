@@ -135,6 +135,8 @@ module MachineTTSI =
           | Lang_ttsi.ISWIM.Variable variable         ->  Var variable
 
           | Lang_ttsi.ISWIM.Pattern (id,pat_list)     ->  Pat(id,map convert_of_pattern pat_list)
+
+          | Lang_ttsi.ISWIM.Neutral                   ->  Neutral
       in
 
       (* Convertit un match en conditionnelle *)
