@@ -134,6 +134,7 @@ module MachineTTS =
     exception UnknowStuckState                 (* Le format de la liste d'élément bloqués est invalide et/ou inconnu                *)
     exception UnknowSignalState                   (* Le format de la liste de signaux partagés est invalide                         *)
 
+    exception BadVersion
 
 
 
@@ -174,6 +175,8 @@ module MachineTTS =
         | Lang_tts.ISWIM.Emit signal                     ->   [Variable signal ; Emit]
 
         | Lang_tts.ISWIM.Signal                          ->   [InitSignal]
+
+        | _                                              ->   raise BadVersion
 
 
     (* Convertit la chaîne de contrôle en une chaîne de caractères *)

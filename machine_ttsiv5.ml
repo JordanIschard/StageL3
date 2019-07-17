@@ -33,13 +33,13 @@ module MachineTTSI =
       | Variable of variable                         (* une variable    *)
       | Abstraction of variable * element list       (* une abstraction *)
       | Pattern of pattern                           (* un pattern      *)
+      | Neutral
 
       | Ap                                           (* commande : appliquer                        *)
       | Prim of operateur                            (* commande : calculer                         *)
       | Spawn                                        (* commande : créer un thread                  *)
       | Present                                      (* commande : tester la présence d'un signal   *)
       | Init                                         (* commande : initialiser un signal            *) 
-      | Emit                                         (* commande : émettre un signal                *)
       | Put                                          (* commande : ajouter une valeur à partager    *)
       | Get                                          (* commande : prendre une valeur partager      *)
       | Fix                                          (* commande : récurrence                       *)
@@ -56,6 +56,7 @@ module MachineTTSI =
       | Closure of ((variable * control) * ( (bool * variable * value) list ))  (* une fermeture *)
       | Type of identifier * value list                                         (* un type       *)
       | P of pattern                                                            (* un pattern    *)
+      | Neutral
 
     (* Représentation de la pile d'exécution *)
     type stack  = value list 
@@ -119,6 +120,7 @@ module MachineTTSI =
     exception FormatCreateInvalid            (* Le nombre de paramètres est invalide                      *)
     exception InvalidElemCompared            (* Les éléments comparés ne sont pas deux types              *)
     exception FormatDestructInvalid          (* Le destruct n'est pas appliquée sur un type et un pattern *)
+    exception PutInvalid
 
 
 
@@ -149,32 +151,47 @@ module MachineTTSI =
                                    (convert_to_machine_language expr)) ; Ap ; Abstraction("",(convert_of_match variable t)) ; Ap])
       in
       match expression with
+
+          (* X *)                                                   (* [X] *)
         | Lang_ttsi.ISWIM.Var variable                          ->  [Variable variable]
 
+          (* Abs(X,C) *)                                            (* [Abstraction(X,C)] *)
         | Lang_ttsi.ISWIM.Abs (variable,expr)                   ->  [Abstraction (variable,convert_to_machine_language expr)]
 
+          (* App(C,C') *)                                           (* [ C ; C' ; Ap ] *)
         | Lang_ttsi.ISWIM.App (expr1,expr2)                     ->  append (convert_to_machine_language expr1) (append (convert_to_machine_language expr2) [Ap])
 
+          (* Op(op,C) *)                                            (* [ [C] ; Prim op ] *)
         | Lang_ttsi.ISWIM.Op (op,expr_list)                     ->  append (flatten (map convert_to_machine_language expr_list)) [Prim op]
 
+          (* b *)                                                   (* [b] *)
         | Lang_ttsi.ISWIM.Const const                           ->  [Constant const]
 
+          (* Spawn(C) *)                                            (* [Abstraction("",C) ; Spawn ] *)
         | Lang_ttsi.ISWIM.Spawn expr                            ->  [Abstraction ("",convert_to_machine_language expr);Spawn]
 
+          (* Present(X,C,C') *)                                     (* [ X ; Abstraction("",C) ; Abstraction("",C') ; Present ] *)
         | Lang_ttsi.ISWIM.Present (variable,expr1,expr2)        ->  [Variable variable;Abstraction("",convert_to_machine_language expr1);Abstraction("",convert_to_machine_language expr2);Present]
 
+          (* Signal *)                                              (* [Init] *)
         | Lang_ttsi.ISWIM.Signal                                ->  [Init]
 
+          (* Put(X,b) *)                                            (* [ b ; X ; Put ] *)
         | Lang_ttsi.ISWIM.Put (variable,const)                  ->  [Constant const;Variable variable;Put]
 
+          (* Get(X,X',b) *)                                         (* [ b ; X ; X' ; Get ] *)
         | Lang_ttsi.ISWIM.Get (var1,var2,const)                 ->  [Constant const;Variable var1;Variable var2;Get]
 
-        | Lang_ttsi.ISWIM.Emit (variable)                       ->  [Variable variable;Emit]
+          (* Emit(X) *)                                             (* [ Neutral ; X ; Put ] *)
+        | Lang_ttsi.ISWIM.Emit (variable)                       ->  [Neutral;Variable variable;Put]
 
+          (* Wait *)                                                (* [ -1 ; Abstraction("",_) ; Abstraction("",_) ; Present ] *)
         | Lang_ttsi.ISWIM.Wait                                  ->  [Constant(-1);Abstraction("",[]);Abstraction("",[]);Present]
 
+          (* Rec(X,C) *)                                            (* [ Abstraction(X,C) ; Fix ] *)
         | Lang_ttsi.ISWIM.Rec (variable,expr)                   ->  [Abstraction(variable,convert_to_machine_language expr);Fix]
 
+          (* if(C,C',C'') *)                                         
         | Lang_ttsi.ISWIM.If (expr1,expr2,expr3)                ->  (append (append [ Abstraction("v",[Abstraction("t",[Abstraction("f1",[Variable "v";Variable "t";Ap;Variable "f1";Ap])])])]   
                                                                     (convert_to_machine_language expr1)) [Ap;Abstraction("",(convert_to_machine_language expr2)) ; Ap ; Abstraction("",(convert_to_machine_language expr3)) ; Ap])
 
@@ -217,14 +234,14 @@ module MachineTTSI =
         | Prim op                              ->   (string_of_operateur op)
         | Spawn                                ->   "SPAWN"
         | Present                              ->   "PRESENT"
-        | Init                                 ->   "INIT"        
-        | Emit                                 ->   "EMIT"
+        | Init                                 ->   "INIT" 
         | Put                                  ->   "PUT"        
         | Get                                  ->   "GET"        
         | Fix                                  ->   "FIX"        
         | Build                                ->   "BUILD"        
         | Compare                              ->   "COMPARE"        
         | Destruct                             ->   "DESTRUCT"
+        | Neutral                              ->   "neutral"
 
     
     (* Convertit la chaîne de contrôle en chaîne de caractères *)
@@ -251,6 +268,8 @@ module MachineTTSI =
         | Type (identifier,values)          ->   "["^(string_of_int identifier)^","^(string_of_a_list string_of_value values " ")^"] "
 
         | P pattern                         ->   (string_of_pattern pattern)^" "
+
+        | Neutral                           ->   "neutral "
 
 
     (* Convertit la pile d'execution en chaîne de caractères *)
@@ -396,14 +415,6 @@ module MachineTTSI =
         | Signal(id,data)::t  ->   let (new_id,new_si) = init t in (new_id,Signal(id,data)::new_si)
 
 
-    (* Emet un signal *)
-    let rec emit si id =
-      match si with
-        | []                           ->   raise SignalNotFound 
-
-        | Signal(id1,(e,cv,sv,st))::t  ->   if id = id1 then (st,Signal(id1,(true,cv,sv,[]))::t) else let (tl,new_si) = emit t id in (tl,Signal(id1,(true,cv,sv,[]))::new_si)
-
-
     (* Vérifie si un signal est émis ou non *)
     let rec is_emit si id =
       match si with
@@ -432,16 +443,10 @@ module MachineTTSI =
 
     (* Transforme les valeurs courantes en valeurs partagées *)
     let rec shared cv =
-      let rec aux values =
-        match values with
-         | []    ->   []
-
-         | h::t  ->   (h,[])::(aux t)
-      in
       match cv with 
         | []              ->   []
 
-        | (id,values)::t  ->   (id,(aux values))::(shared t)
+        | (id,values)::t  ->   (id,(map (fun x -> (x,[])) values))::(shared t)
 
 
     (* Applique les modification nécessaire pour passer à l'instant suivant *)
@@ -454,16 +459,22 @@ module MachineTTSI =
 
     (* Ajoute une valeur dans les informations d'un signal, plus spécifiquement dans la liste de valeurs courantes *)
     let rec put_value si id signal value = 
-      let rec put_in_cv cv =
+      let rec put_in_cv cv b =
         match cv with
-          | []               ->   [(id,[value])]
+          | []               ->   [(id,[b])]
 
-          | (id1,values)::t  ->   if id = id1 then (id1,value::values)::t else (id1,values)::(put_in_cv t)
+          | (id1,values)::t  ->   if id = id1 then (id1,b::values)::t else (id1,values)::(put_in_cv t b)
       in
       match si with
         | []                              ->   raise SignalNotFound
 
-        | Signal(id1,(emit,cv,sv,st))::t  ->   if signal = id1 then let new_cv = put_in_cv cv in (st,Signal(id1,(true,new_cv,sv,[]))::t)
+        | Signal(id1,(emit,cv,sv,st))::t  ->   if signal = id1 then match value with 
+                                                                      | Const b -> let new_cv = put_in_cv cv b in (st,Signal(id1,(true,new_cv,sv,[]))::t)
+
+                                                                      | Neutral -> (st,Signal(id1,(true,cv,sv,[]))::t)
+
+                                                                      | _       -> raise PutInvalid
+
                                                                else let (tl,new_si) = put_value t id signal value in (tl,Signal(id1,(emit,cv,sv,st))::new_si)
 
 
@@ -607,10 +618,6 @@ module MachineTTSI =
         | Machine(Thread(i,s,e,Init::c,d),tl,si,ip)                            ->   let (id,new_si) = init si in Machine(Thread(i,Const id::s,e,c,d),tl,new_si,ip)
 
 
-          (* Emission d'un signal *)
-        | Machine(Thread(i,Const n::s,e,Emit::c,d),tl,si,ip)                   ->   let (st,new_si) = emit si n in Machine(Thread(i,s,e,c,d),append tl st,new_si,ip)
-
-
           (* Teste de présence *)
         | Machine(Thread(i,Closure((_,c2),e2)::Closure((_,c1),e1)::Const n::s,e,Present::c,d),tl,si,ip)
           -> if is_emit si n
@@ -639,13 +646,8 @@ module MachineTTSI =
                                                                                                                                       else  Machine(Thread(i,s,e,[],Empty),tl,new_si,ip)
 
 
-
-            
-
-        (*** Partie pour le partage de valeurs ***)
-
           (* Ajoute une valeur dans un signal *)
-        | Machine(Thread(i,Const n::Const b::s,e,Put::c,d),tl,si,ip)           ->   let (st,new_si) = put_value si i n b in  Machine(Thread(i,s,e,c,d),append tl st,new_si,ip)
+        | Machine(Thread(i,Const n::value::s,e,Put::c,d),tl,si,ip)             ->   let (st,new_si) = put_value si i n value in  Machine(Thread(i,s,e,c,d),append tl st,new_si,ip)
 
 
           (* Prend une valeur dans un signal *)
@@ -696,6 +698,10 @@ module MachineTTSI =
 
           (* Application neutre *)
         | Machine(Thread(i,s,e,Ap::c,d),tl,si,ip)                              ->   Machine(Thread(i,s,e,c,d),tl,si,ip)
+
+
+          (* Neutre *)
+        | Machine(Thread(i,s,e,Neutral::c,d),tl,si,ip)                         ->   Machine(Thread(i,Neutral::s,e,c,d),tl,si,ip)
 
 
           (* Récupération sauvegarde avec pile vide *)

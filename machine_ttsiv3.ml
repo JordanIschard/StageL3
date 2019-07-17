@@ -4,137 +4,86 @@ open List ;;
 open Lang_ttsi.ISWIM ;;
 
 
+(****** Ce module implante une 4ème version de la machine abstraite TTSI. On a ajouté les types. *****)
 module MachineTTSI =
   struct
 
     (**** Types ****)
 
-    (* Petits types très pratique pour ne pas se mélanger dans la compréhension des types suivants *)
-    type id_signal  =   int
-    type variable   =   string
-    type id_thread  =   int
-    type emit       =   bool
+    (* identifiant *)
+    type identifier = int 
 
+    (* liste d'identifiants *)
+    type identifiers = int list
 
+    (* booléen représentant l'émission d'un signal *)
+    type emit = bool 
 
+    (* variable applicable *)
+    type variable = string
 
-    (**** Control string ****)
+    (* élément accepté par la chaîne de contrôle *)
+    type element = 
+      | Constant of int                              (* une constante   *)
+      | Variable of variable                         (* une variable    *)
+      | Abstraction of variable * element list       (* une abstraction *)
+      | Neutral
 
-    (* type intermédiaire qui va servir à représenter la chaîne de contrôle *)
-    type c =
-        Constant of int                                         (* constante b                    *)
-      | Variable of variable                                    (* variable X                     *)
-      | Pair of variable * c list                               (* abstraction                    *)
-
-      | Prim of operateur                                       (* opérateur                      *)
-      | Ap                                                      (* application                    *)
-      | Spawn                                                   (* création thread                *)
-      | Init                                                    (* initialise un signal           *)
-      | Emit                                                    (* émet un signal                 *)
-      | Put                                                     (* place dans un signal           *)
-      | Get                                                     (* prends dans un signal          *)
-      | Present                                                 (* test de présence d'un signal   *)
-      | Fix
+      | Ap                                           (* commande : appliquer                        *)
+      | Prim of operateur                            (* commande : calculer                         *)
+      | Spawn                                        (* commande : créer un thread                  *)
+      | Present                                      (* commande : tester la présence d'un signal   *)
+      | Init                                         (* commande : initialiser un signal            *) 
+      | Put                                          (* commande : ajouter une valeur à partager    *)
+      | Get                                          (* commande : prendre une valeur partager      *)
+      | Fix                                          (* commande : récurrence                       *)
       
-     
-
-    (* Ce type représente la chaîne de contrôle de la machineTTSI SECD, c'est notre entrée *)
-    type control_string = c list   
-
-
+    (* Représentation de la chaîne de contrôle *)
+    type control = element list
     
+    (* élément accepté dans la pile d'exécution *)
+    type value =                                         
+      | Const of int                                                            (* une constante *)
+      | Closure of ((variable * control) * ( (bool * variable * value) list ))  (* une fermeture *)
+      | Neutral
 
-    (**** Environment ****)
+    (* Représentation de la pile d'exécution *)
+    type stack  = value list 
 
-    (* type intermédiaire qui va servir à représenter l'environnement *)
-    type e =   
-        EnvClos of (variable * (control_string * e list))     (* (X,(C,Env))            *)
-      | EnvVar  of (variable * control_string)                (* (X,V) V une constante  *)
-      | EnvRec  of (variable * control_string)                (* (X,C) une récursion    *)
+    (* Représentation de l'environnement, liste où l'on stocke les substitution *)
+    type environment = (bool * variable * value) list 
 
-    (* Ce type représente l'environnement de la machineTTSI SECD, c'est notre liste de substitution *)
-    type environment = e list
+    (* Représentation du dépôt, zone où l'on stocke la sauvegarde du thread courant *)
+    type dump = 
+      | Empty
+      | Save of stack * environment * control * dump
 
+    (* thread *)
+    type thread = Thread of identifier * stack * environment * control * dump
 
-
-
-    (**** Stack ****)
-
-    (* type intermédiaire contenant une fermeture qui lie une abstraction à un environnement ou une constante ou encore un signal *)
-    type s =  
-        Stack_const of int                                    (* constante            *)
-      | Closure of (control_string * environment)             (* fermeture (C,Env)    *)
-
-    
-    (* Ce type représente la pile de la machineTTSI SECD, c'est la où la machineTTSI travaille *)
-    type stack = s list
-
-
-
-
-    (**** Dump ****)
-
-    (* Ce type représente le dépôt de la machineTTSI SECD, c'est-à-dire, l'endroit où l'on sauvegarde l'état 
-       de la machineTTSI SECD pour travailler sur une autre partie de la chaîne de contrôle *)
-    type dump =
-        Empty                                                        (* le dépôt est vide    *)
-      | Save of stack * environment * control_string * dump          (* (s,e,c,d)            *)
-
-
-
-
-    (**** Thread list ****)
-
-    (* type intermédiaire représentant un thread, comprenant son identifiant, sa pile , son environnement, sa chaîne de contrôle et son dépôt *)
-    type thread = Thread of id_thread * stack * environment * control_string * dump
-
-    (* Ce type représente la file d'attente de la machineTTSI , c'est-à-dire, 
-       la file contenant les threads qui doivent être traité dans l'instant courant *)
+    (* liste de threads *)
     type thread_list = thread list
 
+    (* liste des threads bloqués *)
+    type stuck = thread_list
 
+    (* liste des valeurs courantes rangées par identifiant *)
+    type current_values = (identifier * int list) list 
 
+    (* liste des valeurs partagées rangées par identifiant *)
+    type shared_values = (identifier * (int * identifiers ) list ) list
 
-    (**** Signals ****)
+    (* un signal *)
+    type signal = Signal of identifier * (emit * current_values * shared_values * stuck )
 
-    (* type intermédiaire représentant la liste des valeurs courante d'un signal par rapport à un identifiant de thread *)
-    type cs = (id_thread * int list) list 
-   
-    (* type intermédiaire représentant la liste des valeurs partagées *)
-    type ci = (int * (id_thread list)) list
+    (* liste de signaux *)
+    type signal_list = signal list
 
-    (* type intermédiaire représentant la liste de valeurs partagées par rapport à un identifiant de thread *)
-    type ssi = (id_thread * ci * id_thread list ) list
-   
-    (* type intermédiaire représentant toute les informations liées à un signal *)
-    type data = bool * cs * ssi * thread_list
-   
-    (* type intermédiaire représentant un signal *)
-    type si = id_signal * data
-   
-    (* Ce type représente la liste des signaux de la machineTTSI *)
-    type signals = si list
-   
-    
+    (* créateur d'identifiants *)
+    type identifier_producer = int 
 
-
-    (**** Identifier producer ****)
-
-    (* Ce type représente un producteur d'identifiant de la machineTTSI, c'est-à-dire,
-       un entier qui va donné un identifiant unique à chaque thread et s'incrémenter *)
-    type identifier_producer = int
-
-
-    
-
-    (**** MachineTTSI ****)
-
-    (* Ce type représente la structure de la machineTTSI *)
-    type ttsi = MachineTTSI of thread * thread_list * signals * identifier_producer 
-
-
-
-
+    (* machine *)
+    type machine = Machine of thread * thread_list * signal_list * identifier_producer
 
 
 
@@ -143,236 +92,215 @@ module MachineTTSI =
 
     (**** Exception ****)
 
-    exception NoSubPossible                    (* Aucune substitution possible pour cette variable dans l'environnement             *)
-    exception StrangeEnd                       (* Même moi je ne sais pas ce qu'il sait passé ...                                   *)
 
-    exception NotAllConstants                  (* Tous les éléments de la pile prisent pour l'opérateurs ne sont pas des constantes *)
-    exception InsufficientOperandNb            (* Le nombre d'opérande est insuffisante par rapport au nombre requis                *)
-    exception DivZero
-
-    exception SignalNotInit
-    exception SignalAlreadyEmit
-    exception ThreadSharedNotFound             (* L'identifiant de thread lié à un signal n'existe pas                              *)
-
-    exception UnknowStackState                 (* Le format de la pile est invalide et/ou inconnu                                   *)
-    exception UnknowEnvState                   (* Le format de l'environnement est invalide et/ou inconnu                           *)
-    exception UnknowStuckState                 (* Le format de la liste d'élément bloqués est invalide et/ou inconnu                *)
-    exception UnknowSignalState                   (* Le format de la liste de signaux partagés est invalide                         *)
-
+    exception NoSubPossible                  (* Aucune substitution trouvée dans l'environnement          *)
+    exception Strange                        (* Aucune règle ne concorde avec l'état de la machine        *)
+    exception NotEnoughElem                  (* Pas assez d'éléments dans la pile d'exécution             *)
+    exception InvalidResult                  (* Le résultat de prim est incohérent                        *)
+    exception NotAllConstant                 (* Tous les éléments ne sont pas des constantes              *)
+    exception SignalNotFound                 (* Le signal voulu n'est pas trouvé dans la liste            *)
+    exception InvalidFormatStuck             (* Le format du thread bloqués est invalide                  *)
+    exception ThreadNotFound                 (* L'id de thread voulu n'est pas trouvé dans la liste       *)
+    exception NoValueToGet                   (* Aucune valeurs n'est partagées dans la liste              *)
+    exception IteratorNotFound               (* L'itérateur n'est pas trouvé                              *)
+    exception ElemNotFound                   (* L'élément n'est pas trouvé dans la liste                  *)
+    exception UnknowStackState               (* La tête de la pile d'exécution n'est pas traitable        *)
+    exception FormatRecInvalid               (* La récursion est appliqué sur un format invalide          *)
+    exception PutInvalid
     exception BadVersion
 
 
 
+
+
+    (**** Convertir ****)
+
+    (* Convertit le langage ISWIM en langage machine *)
+    let rec convert_to_machine_language expression = 
+
+      match expression with
+
+          (* X *)                                                   (* [X] *)
+        | Lang_ttsi.ISWIM.Var variable                          ->  [Variable variable]
+
+          (* Abs(X,C) *)                                            (* [Abstraction(X,C)] *)
+        | Lang_ttsi.ISWIM.Abs (variable,expr)                   ->  [Abstraction (variable,convert_to_machine_language expr)]
+
+          (* App(C,C') *)                                           (* [ C ; C' ; Ap ] *)
+        | Lang_ttsi.ISWIM.App (expr1,expr2)                     ->  append (convert_to_machine_language expr1) (append (convert_to_machine_language expr2) [Ap])
+
+          (* Op(op,C) *)                                            (* [ [C] ; Prim op ] *)
+        | Lang_ttsi.ISWIM.Op (op,expr_list)                     ->  append (flatten (map convert_to_machine_language expr_list)) [Prim op]
+
+          (* b *)                                                   (* [b] *)
+        | Lang_ttsi.ISWIM.Const const                           ->  [Constant const]
+
+          (* Spawn(C) *)                                            (* [Abstraction("",C) ; Spawn ] *)
+        | Lang_ttsi.ISWIM.Spawn expr                            ->  [Abstraction ("",convert_to_machine_language expr);Spawn]
+
+          (* Present(X,C,C') *)                                     (* [ X ; Abstraction("",C) ; Abstraction("",C') ; Present ] *)
+        | Lang_ttsi.ISWIM.Present (variable,expr1,expr2)        ->  [Variable variable;Abstraction("",convert_to_machine_language expr1);Abstraction("",convert_to_machine_language expr2);Present]
+
+          (* Signal *)                                              (* [Init] *)
+        | Lang_ttsi.ISWIM.Signal                                ->  [Init]
+
+          (* Put(X,b) *)                                            (* [ b ; X ; Put ] *)
+        | Lang_ttsi.ISWIM.Put (variable,const)                  ->  [Constant const;Variable variable;Put]
+
+          (* Get(X,X',b) *)                                         (* [ b ; X ; X' ; Get ] *)
+        | Lang_ttsi.ISWIM.Get (var1,var2,const)                 ->  [Constant const;Variable var1;Variable var2;Get]
+
+          (* Emit(X) *)                                             (* [ Neutral ; X ; Put ] *)
+        | Lang_ttsi.ISWIM.Emit (variable)                       ->  [Neutral;Variable variable;Put]
+
+          (* Wait *)                                                (* [ -1 ; Abstraction("",_) ; Abstraction("",_) ; Present ] *)
+        | Lang_ttsi.ISWIM.Wait                                  ->  [Constant(-1);Abstraction("",[]);Abstraction("",[]);Present]
+
+          (* Rec(X,C) *)                                            (* [ Abstraction(X,C) ; Fix ] *)
+        | Lang_ttsi.ISWIM.Rec (variable,expr)                   ->  [Abstraction(variable,convert_to_machine_language expr);Fix]
+
+          (* if(C,C',C'') *)                                         
+        | Lang_ttsi.ISWIM.If (expr1,expr2,expr3)                ->  (append (append [ Abstraction("v",[Abstraction("t",[Abstraction("f1",[Variable "v";Variable "t";Ap;Variable "f1";Ap])])])]   
+                                                                    (convert_to_machine_language expr1)) [Ap;Abstraction("",(convert_to_machine_language expr2)) ; Ap ; Abstraction("",(convert_to_machine_language expr3)) ; Ap])
+
+        | _                                                     ->  raise BadVersion
+
+
     (**** Affichage ****)
 
-    (* Concatène une liste de chaîne de caractères en une seule chaîne de caractères *)
-    let rec string_of_string_list string_list =
-      match string_list with
-          []    ->   "" 
 
-        | [h]   ->   h
-        
-        | h::t  ->   h^";"^(string_of_string_list t)
+    (* Convertit une liste en chaîne de caractère *)
+    let rec string_of_a_list string_of_a l inter =
+      match l with
+        | []    ->   ""
+        | [h]   ->   (string_of_a h)
+        | h::t  ->   (string_of_a h)^inter^(string_of_a_list string_of_a t inter)
+    
+
+    (* Convertit un élément de la chaîne de contrôle en chaîne de caractères *)
+    let rec string_of_element elem =
+      match elem with                           
+        | Constant const                       ->   (string_of_int const)
+        | Variable variable                    ->   variable
+        | Abstraction (variable,control_list)  ->   "<"^variable^","^(string_of_a_list string_of_element control_list " ")^">"
+        | Neutral                              ->   "neutral"
+
+        | Ap                                   ->   "AP" 
+        | Prim op                              ->   (string_of_operateur op)
+        | Spawn                                ->   "SPAWN"
+        | Present                              ->   "PRESENT"
+        | Init                                 ->   "INIT" 
+        | Put                                  ->   "PUT"        
+        | Get                                  ->   "GET"        
+        | Fix                                  ->   "FIX"        
 
     
-    (* Convertit une liste d'entier en une chaîne de caractères *)
-    let string_of_int_list int_list = string_of_string_list (map string_of_int int_list)
+    (* Convertit la chaîne de contrôle en chaîne de caractères *)
+    let string_of_control control = string_of_a_list string_of_element control " "
 
 
-    (* Convertit le langage ISWIM en langage SECD *)
-    let rec secdLanguage_of_exprISWIM expression =
-      match expression with
-          Lang_ttsi.ISWIM.Const const                     ->   [Constant const]
-          
-        | Lang_ttsi.ISWIM.Var var                         ->   [Variable var]
-            
-        | Lang_ttsi.ISWIM.App(expr1,expr2)                ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
-            
-        | Lang_ttsi.ISWIM.Op(op,liste_expr)               ->   append (flatten(map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
-            
-        | Lang_ttsi.ISWIM.Abs(abs,expr)                   ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
+    (* Convertit l'état d'une substitution, soit normale soit récursive *)
+    let string_of_rec recursion = if recursion then "Rec" else ""
 
-        | Lang_ttsi.ISWIM.Spawn expr                      ->   [Pair("",(secdLanguage_of_exprISWIM expr)) ; Spawn]
 
-        | Lang_ttsi.ISWIM.Present (signal,expr1,expr2)    ->   [Variable signal ; Pair("",(secdLanguage_of_exprISWIM expr1)) ; Pair("",(secdLanguage_of_exprISWIM expr2)) ; Present]
+    (* Convertit les valeurs en chaîne de caractères *)
+    let rec string_of_value value = 
 
-        | Lang_ttsi.ISWIM.Signal                          ->   [Init]
+      (* Convertit l'environnement stocké dans une fermeture en chaîne de caractères *)
+      let rec aux env =
+        match env with
+          | (r,variable,value)              ->   (string_of_rec r)^"("^variable^","^(string_of_value value)^")"
+      in
+      match value with  
+        | Const const                       ->   (string_of_int const)^" "
 
-        | Lang_ttsi.ISWIM.Emit signal                     ->   [Variable signal; Emit] 
+        | Closure ((variable,control),env)  ->   "<<"^variable^","^(string_of_control control)^"> "^(string_of_a_list aux env ",")^"> "
 
-        | Lang_ttsi.ISWIM.Put(signal,value)               ->   [Constant value ; Variable signal ; Put]
+        | Neutral                           ->   "neutral "
 
-        | Lang_ttsi.ISWIM.Get(signal,id_thread,neutral)   ->   [Variable signal ; Variable id_thread ; Constant neutral ; Get]
 
-        | Lang_ttsi.ISWIM.Wait                            ->   [Constant(-1) ; Pair("",[]) ; Pair("",[]) ; Present]
-
-        | Lang_ttsi.ISWIM.Rec(f,t)                        ->   [Pair(f,(secdLanguage_of_exprISWIM t)) ; Fix]
-
-        | Lang_ttsi.ISWIM.If(expr1,expr2,expr3)           ->   (append ( append [ Pair("v",[Pair("t",[Pair("f1",[ Variable "v" ; Variable "t" ; Ap ; Variable "f1" ; Ap])])])]   (secdLanguage_of_exprISWIM expr1) )  [Ap ; Pair("",(secdLanguage_of_exprISWIM expr2)) ; Ap ; Pair("",(secdLanguage_of_exprISWIM expr3)) ; Ap])
+    (* Convertit la pile d'execution en chaîne de caractères *)
+    let string_of_stack stack = string_of_a_list string_of_value stack " "
+      
     
-        | _                                               ->   raise BadVersion
+    (* Convertit les éléments de l'environnement en chaîne de caractères *)
+    let string_of_elem_env elem = 
+      match elem with
+        | (r,variable,value)   ->   (string_of_rec r)^"("^variable^","^(string_of_value value)^")"
 
 
-    (* Convertit la chaîne de contrôle en une chaîne de caractères *)
-    let rec string_of_control_string expression =
-      match expression with
-
-          []                                 ->   ""
-      
-        | Constant const::t                  ->   (string_of_int const)^" "^(string_of_control_string t)
-      
-        | Variable var::t                    ->   var^" "^(string_of_control_string t)
-      
-        | Ap::t                              ->   "ap "^(string_of_control_string t)
-      
-        | Pair(abs,expr_list)::t             ->   "<"^abs^", "^(string_of_control_string expr_list)^"> "^(string_of_control_string t)
-      
-        | Prim(op)::t                        ->   "prim "^(string_of_operateur op)^" "^(string_of_control_string t)
-
-        | Spawn::t                           ->   "spawn "^(string_of_control_string t)
-
-        | Present::t                         ->   "present "^(string_of_control_string t)
-
-        | Init::t                            ->   "init "^(string_of_control_string t)
-
-        | Emit::t                            ->   "emit "^(string_of_control_string t)
-
-        | Put::t                             ->   "put "^(string_of_control_string t)
-       
-        | Get::t                             ->   "get "^(string_of_control_string t)
-
-        | Fix::t                             ->   "fix "^(string_of_control_string t)
+    (* Convertit l'environnement en chaîne de caractères *)
+    let string_of_environment environment = string_of_a_list string_of_elem_env environment ","
 
 
-    (* Convertit un environnement en chaîne de caractères *)
-    let rec string_of_environment environment =
-      match environment with
-          []                                      ->   ""
-            
-        | [(EnvClos(var,(control_string,env)))]   ->   " Closure : ["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_environment env)^"]]"
-
-        | [(EnvVar(var,control_string))]          ->   " Var : ["^var^" , "^(string_of_control_string control_string) ^"]"
-
-        | [(EnvRec(var,control_string))]          ->   " Rec : ["^var^" , "^(string_of_control_string control_string) ^"]"
-
-        | (EnvClos(var,(control_string,env)))::t  ->   " Closure : ["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_environment env)^"]] , "^(string_of_environment t)
-
-        | (EnvVar(var,control_string))::t         ->   " Var : ["^var^" , "^(string_of_control_string control_string) ^"] , "^(string_of_environment t)
-
-        | (EnvRec(var,control_string))::t         ->   " Rec : ["^var^" , "^(string_of_control_string control_string) ^"] , "^(string_of_environment t)
-
-
-    (* Convertit une pile en chaîne de caractères *)
-    let rec string_of_stack stack =
-      match stack with
-          []                                ->   ""
-
-        | Stack_const b::t                  ->   (string_of_int b)^" "^(string_of_stack t)
-
-        | (Closure(control_string,env))::t  ->   "["^(string_of_control_string control_string)^" , {"^(string_of_environment env)^"}]"^(string_of_stack t)
-        
-
-    (* Convertit la sauvegarde en chaîne de caractères *)
+    (* Convertit le dépôt en chaîne de caractères *)
     let rec string_of_dump dump =
-      match dump with 
-          Empty                                      ->   ""
+      match dump with
+        | Empty            ->   "Vide"
 
-        | Save(stack,env,control,dump)               ->    "("^(string_of_stack stack)^" , "^(string_of_environment env)^" , "^(string_of_control_string control)^" , "^(string_of_dump dump)^")"
-        
-      
-    (* Convertit un thread en chaîne de caractères *)
-    let rec string_of_thread thread =
-      match thread with
-        Thread(id,stack,env,control_string,dump)  ->    
-                                        "\n     ID      : "^(string_of_int id)
-                                       ^"\n     STACK   : "^(string_of_stack stack)
-                                       ^"\n     ENV     : "^(string_of_environment env)
-                                       ^"\n     CONTROL : "^(string_of_control_string control_string)
-                                       ^"\n     DUMP    : "^(string_of_dump dump)
-                                      
+        | Save(s,e,c,d)    ->   "<"^(string_of_stack s)^","^(string_of_environment e)^","^(string_of_control c)^","^(string_of_dump d)^">"
 
-    (* Convertit la liste des threads en chaîne de caractères *)
-    let rec string_of_thread_list thread_list =
-      match thread_list with
-          []         ->   ""
 
-        | [Thread(id,stack,env,control_string,dump)]    ->    
-                                                       "\n   [ ID      : "^(string_of_int id)
-                                                      ^"\n     STACK   : "^(string_of_stack stack)
-                                                      ^"\n     ENV     : "^(string_of_environment env)
-                                                      ^"\n     CONTROL : "^(string_of_control_string control_string)
-                                                      ^"\n     DUMP    : "^(string_of_dump dump)^"]\n"
-
-        | Thread(id,stack,env,control_string,dump) ::t  ->    " 
-                                                        \n   [ ID      : "^(string_of_int id)
-                                                      ^"\n     STACK   : "^(string_of_stack stack)
-                                                      ^"\n     ENV     : "^(string_of_environment env)
-                                                      ^"\n     CONTROL : "^(string_of_control_string control_string)
-                                                      ^"\n     DUMP    : "^(string_of_dump dump)^"]"
-                                                      ^(string_of_thread_list t)
-
+    (* Convertit le thread en chaîne de caractères *)
+    let string_of_thread t = 
+      match t with
+        | Thread(i,s,e,c,d)    ->   "\n  ID :   "^(string_of_int i)
+                                   ^"\n  S  :   "^(string_of_stack s)
+                                   ^"\n  E  :   "^(string_of_environment e)
+                                   ^"\n  C  :   "^(string_of_control c)
+                                   ^"\n  D  :   "^(string_of_dump d) 
     
-    (* Convertit la file d'attente en chaîne de caractères *)
-    let rec string_of_cs cs =
-      match cs with
-          []              ->   ""
-
-        | (id,values)::t  ->   "("^(string_of_int id)^" , {"^(string_of_int_list values)^"}) "^(string_of_cs t)
-        
-
-    (* Convertit une liste de valeurs avec pointeurs en chaîne de caractères *)
-    let rec string_of_ci ci =
-      match ci with
-          []                  ->   ""
-
-        | (value,id_list)::t  ->   "("^(string_of_int value)^" , {"^(string_of_int_list id_list)^"}) "^(string_of_ci t)
-
-
-    (* Convertit la liste des signaux partagés en chaîne de caractères *)
-    let rec string_of_ssi ssi = 
-      match ssi with
-          []                               ->   ""
-
-        | (id_thread,ci,thread_list)::t    ->   " ("^(string_of_int id_thread)^",["^(string_of_ci ci)^"],{"^(string_of_int_list thread_list)^"}) "^(string_of_ssi t)
-
-
-    (* Convertit toutes les informations sur un signal en chaîne de caractères *)
-    let string_of_data data =
-      match data with
-        (emit,cs,ssi,tl)  ->  (string_of_bool emit)^" , "^(string_of_cs cs)^" , "^(string_of_ssi ssi)^" , "^(string_of_thread_list tl) 
     
 
-    (* Convertit un signal en chaîne de caractères *)
-    let string_of_si si =
+    (* Convertit la liste de thread en chaîne de caractères *)
+    let string_of_thread_list tl = string_of_a_list string_of_thread tl ","
+
+
+    (* Convertit une valeur courante en chaîne de caractères *)
+    let string_of_cv cv =
+      match cv with
+        | (id,int_list)   ->   "("^(string_of_int id)^","^(string_of_a_list string_of_int int_list ";")^")"
+
+
+    (* Convertit la liste des valeurs en chaîne de caractères *)
+    let string_of_cv_list cv_list = string_of_a_list string_of_cv cv_list " , " 
+
+
+    (* Convertit une valeur partagée en chaîne de caractères *)
+    let string_of_sv sv =
+      let aux values =
+        match values with
+          | (value,identifiers)   ->   "("^(string_of_int value)^",{"^(string_of_a_list string_of_int identifiers ",")^"})"
+      in
+      match sv with
+        | (id,values)             ->   "("^(string_of_int id)^",{"^(string_of_a_list aux values ";")^"})"
+
+    
+    (* Convertit la liste des valeurs partagées en chaîne de caractères *)
+    let string_of_sv_list sv_list = string_of_a_list string_of_sv sv_list " , "
+        
+
+    (* convertit un signal en chaîne de caractères *)
+    let string_of_signal si =
       match si with
-        (id_signal,data)  ->  "     ("^(string_of_int id_signal)^" : "^(string_of_data data)^")"
+        | Signal(id,(emit,cv,sv,stuck))  ->   "<"^(string_of_int id)^",<"^(string_of_bool emit)^",{"^(string_of_cv_list cv)^"},{"^(string_of_sv_list sv)^"},{"^(string_of_thread_list stuck)^"}>>"
 
 
-    (* Convertit la liste de tous les signaux en chaîne de caractères *)
-    let rec string_of_signals signals =
-      match signals with
-          []     ->   ""      
-
-        | si::t  ->   "\n"^(string_of_si si)^(string_of_signals t)
+    (* convertit la liste des signaux en chaîne de caractères *)
+    let string_of_signals si = string_of_a_list string_of_signal si " , "
 
 
-    (* Convertit une machine TTSI en chaîne de caractères *)
-    let rec string_of_machineTTSI machineTTSI =
-      match machineTTSI with
-        MachineTTSI(thread,thread_list,signals,identifier_producer)  ->    
-                                        "\n   THREAD  : "^(string_of_thread thread)
-                                       ^"\n   THREADS : "^(string_of_thread_list thread_list)
-                                       ^"\n   SIGNALS : "^(string_of_signals signals)
-                                       ^"\n   IP      : "^(string_of_int identifier_producer)
-                                       ^"\n"
+    (* convertit la machine en chaîne de caractères *)
+    let string_of_machine machine =
+      match machine with
+        Machine(t,tl,si,ip)  ->     "T  :  "^(string_of_thread t)
+                                 ^"\nTL :  ["^(string_of_thread_list tl)^"]"
+                                 ^"\nSI :  ["^(string_of_signals si)^"]"
+                                 ^"\nIP :  "^(string_of_int ip)
 
-
-    (* Affiche la machine TTSI *)
-    let afficherTTSI machineTTSI = printf "MachineTTSI : %s\n" (string_of_machineTTSI machineTTSI)
-
-
-
-
+                                 
+    (* Affiche la machine *)
+    let print_machine machine = Printf.printf "Machine : \n%s\n\n" (string_of_machine machine)
 
 
 
@@ -382,375 +310,305 @@ module MachineTTSI =
     (**** Fonctions utiles ****)
 
 
-    (* Substitue une variable à sa  fermeture liée *)
-    let rec substitution x env =
+    (* Ajoute une substitution dans l'environnement *)
+    let rec add env x value recursion =
       match env with
-          []                                    ->   raise NoSubPossible
+        | []                 ->   [(recursion,x,value)]
 
-        | EnvClos(var,(control_string,env))::t  ->   if (equal x var) then  Closure(control_string,env) else substitution x t
-
-        | EnvVar(var,control_string)::t         ->   if (equal x var) 
-                                                      then  match control_string with
-                                                                [Constant b]  ->   Stack_const b 
-
-                                                              | _             ->   raise UnknowEnvState
-
-                                                      else substitution x t
-
-        | EnvRec(var,control_string)::t         ->   if (equal x var) then Closure(control_string,[EnvRec(var,control_string)]) else substitution x t
-
-                                                      
-    (* Ajoute une  fermeture à l'environnement *)
-    let rec add_env env varToRep stack_element recursion =
-      match stack_element with
-          Stack_const b                 ->    begin
-                                                match env with
-                                                    [] -> [EnvVar(varToRep,[Constant b])]
-
-                                                  | EnvClos(var1,closure)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Constant b])] t 
-                                                                                                         else append [EnvClos(var1,closure)] (add_env t varToRep stack_element recursion)
-
-                                                  | EnvVar(var1,control_string)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Constant b])] t 
-                                                                                                               else append [EnvVar(var1,control_string)] (add_env t varToRep stack_element recursion)
-
-                                                  | EnvRec(var1,control_string)::t -> if (equal var1 varToRep) then append [EnvVar(varToRep,[Constant b])] t 
-                                                                                                               else append [EnvRec(var1,control_string)] (add_env t varToRep stack_element recursion)
-                                              end
-
-        | Closure(control_string,env1)  ->   begin
-                                              match env with
-                                                    [] -> if recursion then [EnvRec(varToRep,control_string)] else [EnvClos(varToRep,(control_string,env1))]
-
-                                                  | EnvClos(var1,closure)::t -> if (equal var1 varToRep) then if recursion then append [EnvRec(varToRep,control_string)] t 
-                                                                                                                           else append [EnvClos(varToRep,(control_string,env1))] t 
-                                                                                                         else append [EnvClos(var1,closure)] (add_env t varToRep stack_element recursion)
-
-                                                  | EnvVar(var1,control_string)::t -> if (equal var1 varToRep) then if recursion then append [EnvRec(varToRep,control_string)] t 
-                                                                                                                                  else append [EnvClos(varToRep,(control_string,env1))] t 
-                                                                                                                else append [EnvVar(var1,control_string)] (add_env t varToRep stack_element recursion)
-
-                                                  | EnvRec(var1,control_string)::t -> if (equal var1 varToRep) then if recursion then append [EnvRec(varToRep,control_string)] t 
-                                                                                                                                 else append [EnvClos(varToRep,(control_string,env1))] t  
-                                                                                                               else append [EnvRec(var1,control_string)] (add_env t varToRep stack_element recursion)
-                                              end
-
-                
-    (* Vérifie si le signal est émit *)
-    let rec isEmit si signal = 
-      let aux data =
-        match data with
-            (true,_,_,_)  ->   true
-
-          | _             ->   false
-      in
-      match si with
-          []              ->   false
-
-        | (id_s,data)::t  ->   if (id_s = signal) then (aux data) else (isEmit t signal)
+        | (r,var,value1)::t  ->   if var = x then (recursion,var,value)::t else append [(r,var,value1)] (add t x value recursion)
 
 
+    (* Substitue une variable par un élément de l'environnement *)
+    let rec substitution e x = 
+      match e with
+        | []                                ->   raise NoSubPossible
+
+        | (true,var,Closure((x1,c),e1))::t  ->   if x = var then Closure((x1,c),(add e1 var (Closure((x1,c),e1)) true)) else substitution t x
+
+        | (false,var,value)::t              ->   if x = var then value else substitution t x
+
+        | _                                 ->   raise FormatRecInvalid
+
+
+    (* Sépare la pile d'exécution en 2 partie : la 1ère est la partie utilisée pour le calcul *)
+    let rec split_for_compute l nbr =
+      match (l,nbr) with
+        | ([],n)          ->   if n = 0 then ([],[]) else raise NotEnoughElem
+
+        | (h,0)           ->   ([],h)
+
+        | (Const b::t,n)  ->   if n = 0 then ([],Const b::t) else let (elem,stack) = split_for_compute t (n-1) in (append elem [b],stack)
+
+        | (h::_,_)        ->   raise NotAllConstant
+
+
+    (* Calcul *)
+    let compute stack op env = let (operands,stack1) = split_for_compute stack (nbr_operande op) in 
+      match (calculer op operands) with 
+        | Const b   ->   Const b::stack1
+
+        | Abs(x,c)  ->   Closure((x,convert_to_machine_language c),env)::stack1
+
+        | _         ->   raise InvalidResult
+
+    
     (* Initialise un signal *)
-    let rec init_signal si = 
+    let rec init si = 
       match si with
-          []              ->   (Stack_const 0,[(0,(false,[],[],[]))])     
-        
-        | [(id_s,data)]   ->   (Stack_const (id_s+1), append [(id_s,data)] [(id_s+1,(false,[],[],[]))])
+        | []                  ->   (0,[Signal(0,(false,[],[],[]))])
 
-        | (id_s,data)::t  ->   let (res,new_si) = init_signal t in (res, append [(id_s,data)] new_si)
-    
-    
-    (* Émet un signal *)
-    let rec emit_signal si s = 
-      match si with 
-          [] -> raise SignalNotInit
+        | [Signal(id,data)]   ->   (id+1,[Signal(id,data);Signal(id+1,(false,[],[],[]))])  
 
-        | (id_s,(emit,cs,ssi,tl))::t -> if (id_s = s) then if emit then raise SignalAlreadyEmit else (tl,append [(id_s,(true,cs,ssi,[]))] t) 
-                                                      else let (st,new_si) = emit_signal t s in (st,append [(id_s,(emit,cs,ssi,tl))] new_si)
+        | Signal(id,data)::t  ->   let (new_id,new_si) = init t in (new_id,Signal(id,data)::new_si)
 
 
-    (* Ajoute une constante dans un signal *)
-    let rec put si signal b id = 
-      let rec add cs =
-        match cs with
-            []               ->   [(id,[b])]
-          
-          | (id1,values)::t  ->   if (id = id1) then (id1,(append values [b]))::t else (id1,values)::(add t) 
-      in
-      let emit data =
-        match data with
-            (false,cs,ssi,tl)   ->   (tl,(true,(add cs),ssi,[]))
-        
-          | (true,cs,ssi,[])    ->   ([],(true,(add cs),ssi,[]))
-
-          | _                   ->   raise UnknowStuckState
-      in
+    (* Vérifie si un signal est émis ou non *)
+    let rec is_emit si id =
       match si with
-          []                 ->   raise UnknowSignalState
+        | []                        ->   raise SignalNotFound
 
-        | (id_s,data)::t     ->   if (id_s = signal) then let (tl,new_data) = emit data in (tl, append [(id_s,new_data)] t) 
-                                                     else let (tl,new_si) = put t signal b id in (tl,append [(id_s,data)] new_si) 
-
-
-    (* Vérifie si on prend pour la première fois *)
-    let rec first_get ci my_id = 
-      match ci with 
-          [] -> true
-          
-        | (_,id_list)::t -> if (mem my_id id_list) then false else (first_get t my_id)
+        | Signal(id1,(e,_,_,_))::t  ->   if id = id1 then e else is_emit t id
 
 
-    (* Prend une valeurs dans la liste des valeurs partagées d'un signal *)
-    let rec get si id_thread neutral signal my_id = 
-      let rec remove id_list =
-        match id_list with
-            []    ->    raise UnknowSignalState
+    (* Bloque un thread qui attend un signal *)
+    let rec stuck thread n si = 
+      match si with
+        | []                             ->   raise SignalNotFound
 
-          | h::t  ->   if (my_id = h) then t else append [h] (remove t)
-      in
-      let rec aux2 ci =
-        if( first_get ci my_id)
-        then 
-          match ci with
-              []                                ->   (Stack_const neutral,[],false) 
-            
-            | [(value,[])]                      ->   (Stack_const value,[(value,[])],true)
+        | Signal(id,(emit,cv,sv,st))::t  ->   if id = n then Signal(id,(emit,cv,sv,append st [thread]))::t else Signal(id,(emit,cv,sv,st))::(stuck thread n t)
 
-            | (value,[])::(value1,id_list1)::t  ->   (Stack_const value,append [(value,[]);(value1,append [my_id] id_list1)] t,false)
 
-            | _                                 ->   raise UnknowSignalState
-        else
-          match ci with
-              []                                     ->   raise UnknowSignalState
+    (* Prend le choix du teste de présence indiquant la non émission du signal attendu *)
+    let rec snd_choice st =
+      match st with
+        | []                                                         ->   []
 
-            | [(value,id_list)]                      ->   if (mem my_id id_list) 
-                                                            then (Stack_const value,[(value,remove id_list)],true) 
-                                                            else raise UnknowSignalState
+        | Thread(i,Closure((_,c2),e2)::_::_::s,e,Present::c,d)::t    ->   Thread(i,[],e2,c2,Save(s,e,c,d))::(snd_choice t)
 
-            | (value,id_list)::(value1,id_list1)::t  ->   if (mem my_id id_list) 
-                                                            then (Stack_const value,append [(value,remove id_list);(value1,append [my_id] id_list1)] t,false)
-                                                            else let (res,new_ci,isEnd) = aux2 (append [(value1,id_list1)] t) in (res,append [(value,remove id_list)] new_ci,isEnd)
-      in
-      let rec aux1 ssi =
-        match ssi with
-            []                    ->   raise ThreadSharedNotFound
+        | _                                                          ->   raise InvalidFormatStuck
 
-          | (id1,ci,end_list)::t  ->   if (id1 = id_thread) 
-                                        then if (mem my_id end_list)
-                                                then (Stack_const neutral,append [(id1,ci,end_list)] t)
-                                                else let (res,new_ci,isEnd) = aux2 ci in if isEnd 
-                                                                                            then (res,append [id1,new_ci,append [my_id] end_list] t)
-                                                                                            else (res,append [id1,new_ci,end_list] t)
-                                        else let (res,new_ssi) = aux1 t in (res,append [(id1,ci,end_list)] new_ssi)
-      in
-      let aux data =
-        match data with
-          (emit,cs,ssi,tl)        ->   let (res,new_ssi) = aux1 ssi in (res,(emit,cs,new_ssi,tl))
+
+    (* Transforme les valeurs courantes en valeurs partagées *)
+    let rec shared cv =
+      match cv with 
+        | []              ->   []
+
+        | (id,values)::t  ->   (id,(map (fun x -> (x,[])) values))::(shared t)
+
+
+    (* Applique les modification nécessaire pour passer à l'instant suivant *)
+    let rec new_instant si =
+      match si with
+        | []                             ->   ([],[])
+        
+        | Signal(id,(emit,cv,sv,st))::t  ->   let (tl,new_si) = new_instant t in let new_sv = if emit then shared cv else [] in (append (snd_choice st) tl,Signal(id,(false,[],new_sv,[]))::new_si) 
+
+
+    (* Ajoute une valeur dans les informations d'un signal, plus spécifiquement dans la liste de valeurs courantes *)
+    let rec put_value si id signal value = 
+      let rec put_in_cv cv b =
+        match cv with
+          | []               ->   [(id,[b])]
+
+          | (id1,values)::t  ->   if id = id1 then (id1,b::values)::t else (id1,values)::(put_in_cv t b)
       in
       match si with
-          []              ->   raise UnknowSignalState
+        | []                              ->   raise SignalNotFound
 
-        | (id_s,data)::t  ->   if (signal = id_s) 
-                                then let (res,new_data) = aux data in (res,append [(id_s,new_data)] t) 
-                                else let (res,new_si) = get t id_thread neutral signal my_id in (res,append [(id_s,data)] new_si)
+        | Signal(id1,(emit,cv,sv,st))::t  ->   if signal = id1 then match value with 
+                                                                      | Const b -> let new_cv = put_in_cv cv b in (st,Signal(id1,(true,new_cv,sv,[]))::t)
+
+                                                                      | Neutral -> (st,Signal(id1,(true,cv,sv,[]))::t)
+
+                                                                      | _       -> raise PutInvalid
+
+                                                               else let (tl,new_si) = put_value t id signal value in (tl,Signal(id1,(emit,cv,sv,st))::new_si)
 
 
-    (* Vérifie si la liste de thread bloqué de chaque signal est vide *)
-    let rec isEnd si = 
+    (* Vérifie si c'est la première prise de valeur du thread *)
+    let rec first_get values id =
+      match values with
+        | []              ->   true
+
+        | (_,id_list)::t  ->   if mem id id_list then false else first_get t id
+
+
+    (* Retire un élément d'une liste *)
+    let rec remove elem l =
+      match l with
+        | []    ->   raise ElemNotFound
+
+        | h::t  ->   if elem = h then t else h::(remove elem t)
+
+
+    (* Prend une valeur dans les informations d'un signal, spécifiquement sa liste de valeurs partagées *)
+    let rec get_value si my_id id_thread s neutral =
+
+      (* Prend une valeur dans la liste et déplace l'itérateur *)
+      let rec get_in_values values = 
+        match values with
+          | []                             ->   raise NoValueToGet
+
+          | [(v,id_list)]                  ->   if mem my_id id_list then ([(v,id_list)],neutral) else raise IteratorNotFound
+
+          | (v,id_list)::(v1,id_list1)::t  ->   if mem my_id id_list then ((v,(remove my_id id_list))::(v1,my_id::id_list1)::t,v)
+                                                                     else let (new_values,res) = get_in_values ((v1,id_list1)::t) in ((v,id_list)::new_values,res) 
+      in
+      (* Test si c'est la 1ère fois que l'on prend dans la liste de valeurs. Si oui on prend le 1ère élément sinon on cherche dans la liste *)
+      let test values = if (first_get values my_id)
+          then match values with
+              | []              ->   raise NoValueToGet
+
+              | (v,id_list)::t  ->   ((v,my_id::id_list)::t,v)
+          else get_in_values values 
+      in
+      (* Prend une valeur dans une liste de variable par rapport à un identifiant de thread *)
+      let rec get_in_sv sv =
+        match sv with 
+          | []              ->   raise ThreadNotFound
+
+          | (id,values)::t  ->   if id = id_thread  then let (new_values,res) = test values in ((id,new_values)::t,res) 
+                                                    else let (new_sv,res) = get_in_sv t in ((id,values)::new_sv,res)
+      in
       match si with
-          []                            ->   true
+        | []                             ->   raise SignalNotFound
 
-        | (signal,(emit,cs,ssi,[]))::t  ->   isEnd t
-
-        | _                             ->   false 
-
-
-    (* Ajoute un thread dans la liste des threads bloqués d'un signal *)
-    let rec add_stuck si signal st =
-      let aux data =
-        match data with
-          (emit,cs,ssi,tl) -> (emit,cs,ssi,(append tl [st]))
-      in
-      match si with 
-          [] -> raise UnknowSignalState
-
-        | (id_s,data)::t -> if (id_s = signal) then (append [(id_s,aux data)] t) else (append [(id_s,data)] (add_stuck t signal st))
-    
-
-    (* Applique le second choix sur un thread bloqué *)
-    let rec other_choice tl =
-      match tl with
-          [] -> []
-
-        | Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d)::t -> append [Thread(id,s,e,append c2 c,d)] (other_choice t)
-
-        | _ -> raise UnknowStuckState
-    
-    
-    (* Applique tout les changements nécessaires pour changer d'instant logique *)
-    let rec next_moment signals =
-      let rec aux1 cs =
-        match cs with
-            [] -> []
-
-          | (id,values)::t -> append [(id,(map (fun x -> (x,[])) values),[])] (aux1 t)
-      in
-      let rec aux si =
-        match si with
-            (false,_,_,tl) -> ((other_choice tl) , (false,[],[],[]))
-
-          | (true,cs,_,tl) -> ((other_choice tl) , (false,[],(aux1 cs),[]))
-      in
-      match signals with
-          [] -> ([],[])
-
-        | (si,data)::t -> let (tl,new_signals) = next_moment t in let (tl1,new_data) = aux data in (append tl1 tl , append [(si,new_data)] new_signals)
+        | Signal(id,(emit,cv,sv,st))::t  ->   if id = s then let (new_sv,res) = get_in_sv sv in (Signal(id,(emit,cv,new_sv,st))::t,res)
+                                                        else let (new_si,res) = get_value t my_id id_thread s neutral in (Signal(id,(emit,cv,sv,st))::new_si,res)
 
 
-    let compute stack env op =
-      match (stack,op) with 
-          (Stack_const b::s,Add1)                  ->   Stack_const(b+1)::s
+    (* Vérifie si une liste est vide *)
+    let isEmpty l = 
+      match l with
+        | [] -> true
 
-        | (Stack_const b::s,Sub1)                  ->   Stack_const(b-1)::s
-
-        | (Stack_const 0::s,IsZero)                ->   Closure([Pair("x",[Pair("y",[Variable "x"])])],env)::s
-
-        | (Stack_const b::s,IsZero)                ->   Closure([Pair("x",[Pair("y",[Variable "y"])])],env)::s
-
-        | (Stack_const b::Stack_const b1::s,Add)   ->   Stack_const(b1+b)::s
-
-        | (Stack_const b::Stack_const b1::s,Sub)   ->   Stack_const(b1-b)::s
-
-        | (Stack_const b::Stack_const b1::s,Mult)  ->   Stack_const(b1*b)::s
-
-        | (Stack_const 0::Stack_const b1::s,Div)   ->   raise DivZero
-
-        | (Stack_const b::Stack_const b1::s,Div)   ->   Stack_const(b1/b)::s
-        
-        | (Stack_const b::s,_)                     ->   raise InsufficientOperandNb
-
-        | (_,_)                                    ->   raise NotAllConstants       
+        | _  -> false
 
 
 
 
+    (**** Machine ****)
 
-        
-
-    (**** Machine TTSI ****)
-
+    (* Applique une transition pour un état de la machine *)
     let transition machine =
       match machine with
 
+        (*** Partie de base de la machine SECD ***)
+
           (* Constante *)
-        | MachineTTSI(Thread(id,s,e,Constant b::c,d),tl,si,ip)                    ->    MachineTTSI( Thread( id , Stack_const b::s , e , c , d ) , tl , si , ip )
+        | Machine(Thread(i,s,e,Constant b::c,d),tl,si,ip)                      ->   Machine(Thread(i,Const b::s,e,c,d),tl,si,ip) 
 
 
           (* Substitution *)
-        | MachineTTSI(Thread(id,s,e,Variable x::c,d),tl,si,ip)                    ->   MachineTTSI( Thread( id , (substitution x e)::s , e , c , d ) , tl , si , ip )
-
-
-          (* Opération *)
-        | MachineTTSI(Thread(id,s,e,Prim op::c,d),tl,si,ip)                       ->   MachineTTSI( Thread( id , (compute s e op) , e , c , d ) , tl , si , ip )                        
+        | Machine(Thread(i,s,e,Variable x::c,d),tl,si,ip)                      ->   Machine(Thread(i,(substitution e x)::s,e,c,d),tl,si,ip) 
 
 
           (* Abstraction *)
-        | MachineTTSI(Thread(id,s,e,Pair(abs,c1)::c,d),tl,si,ip)                  ->    MachineTTSI( Thread( id, Closure([Pair(abs,c1)],e)::s , e , c , d ) , tl , si , ip )
-        
+        | Machine(Thread(i,s,e,Abstraction(x,c1)::c,d),tl,si,ip)               ->   Machine(Thread(i,Closure((x,c1),e)::s,e,c,d),tl,si,ip) 
+
 
           (* Application *)
-        | MachineTTSI(Thread(id,v::Closure([Pair(abs,c1)],e1)::s,e,Ap::c,d),tl,si,ip)   
-          ->    MachineTTSI( Thread( id , [] , (add_env e1 abs v false) , c1 , Save(s,e,c,d) ) , tl , si , ip )
+        | Machine(Thread(i,v::Closure((x,c1),e1)::s,e,Ap::c,d),tl,si,ip)       ->   Machine(Thread(i,[],(add e1 x v false),c1,Save(s,e,c,d)),tl,si,ip)
 
 
-          (* Récupération d'une sauvegarde *)
-        | MachineTTSI(Thread(id,v::s,e,[],Save(s1,e1,c,d)),tl,si,ip)              ->    MachineTTSI( Thread( id , v::s1 , e1 , c , d ) , tl , si , ip )
-        
-
-          (* Récupération d'une sauvegarde neutre *)
-        | MachineTTSI(Thread(id,s,e,[],Save(s1,e1,c,d)),tl,si,ip)                 ->    MachineTTSI( Thread( id , s1 , e1 , c , d ) , tl , si , ip )
+          (* Operation *)
+        | Machine(Thread(i,s,e,Prim op::c,d),tl,si,ip)                         ->   Machine(Thread(i,(compute s op e),e,c,d),tl,si,ip)
 
 
-          (* Création d'un thread *)
-        | MachineTTSI(Thread(id,Closure([Pair(_,c1)],_)::s,e,Spawn::c,d),tl,si,ip)
-          ->    MachineTTSI( Thread( id , Stack_const ip::s , e , c , d ) , (append tl [Thread(ip,[],e,c1,Empty)]) , si , (ip+1) )
-              
-
-          (* Ajout d'une valeur *)
-        | MachineTTSI(Thread(id,Stack_const signal::Stack_const b::s,e,Put::c,d),tl,si,ip)   
-          ->    let (st,new_si) = put si signal b id in MachineTTSI( Thread( id , s , e , c , d ) , (append tl st) , new_si , ip )
+          (* Récupération de sauvegarde *)
+        | Machine(Thread(i,v::s,e,[],Save(s1,e1,c,d)),tl,si,ip)                ->   Machine(Thread(i,v::s1,e1,c,d),tl,si,ip)
 
 
-          (* Prise d'une valeur *)
-        | MachineTTSI(Thread(id,Stack_const n::Stack_const b::Stack_const signal::s,e,Get::c,d),tl,si,ip)          
-          ->    let (res,new_si) = get si b n signal id in MachineTTSI( Thread(id , res::s , e , c , d ) , tl , new_si , ip )
-                                          
+
+
+
+        (*** Partie pour la concurrence ***)
+
+          (* Création thread *)
+        | Machine(Thread(i,Closure((_,c1),e1)::s,e,Spawn::c,d),tl,si,ip)       ->   Machine(Thread(i,Const ip::s,e,c,d),append tl [Thread(ip,[],e1,c1,Empty)],si,ip+1)
+
 
           (* Initialisation d'un signal *)
-        | MachineTTSI(Thread(id,s,e,Init::c,d),tl,si,ip)                   
-          ->    let (signal,new_si) = init_signal si in MachineTTSI( Thread( id , signal::s , e , c , d ) , tl , new_si , ip )
+        | Machine(Thread(i,s,e,Init::c,d),tl,si,ip)                            ->   let (id,new_si) = init si in Machine(Thread(i,Const id::s,e,c,d),tl,new_si,ip)
 
-        
-         (* Émission d'un signal *)
-        | MachineTTSI(Thread(id,Stack_const signal::s,e,Emit::c,d),tl,si,ip)                   
-          ->    let (st,new_si) = emit_signal si signal in MachineTTSI( Thread( id , s , e , c , d ) , append tl st , new_si , ip )
 
+          (* Teste de présence *)
+        | Machine(Thread(i,Closure((_,c2),e2)::Closure((_,c1),e1)::Const n::s,e,Present::c,d),tl,si,ip)
+          -> if is_emit si n
+
+                   (* Présence d'un signal *)
+              then Machine(Thread(i,[],e1,c1,Save(s,e,c,d)),tl,si,ip)
+    
+              else let new_si = stuck (Thread(i,Closure(("",c2),e2)::Closure(("",c1),e1)::Const n::s,e,Present::c,d)) n si in
+              begin
+                match tl with
+
+                    (* Thread bloqué non remplacé *)
+                  | []                         ->   Machine(Thread(ip,[],[],[],Empty),[],new_si,ip+1)
+                    
+                    (* Thread bloqué remplacé *)
+                  | Thread(i1,s1,e1,c1,d1)::t  ->   Machine(Thread(i1,s1,e1,c1,d1),t,new_si,ip)
+              end
+
+
+          (* Récupération dans la file d'attente *)
+        | Machine(Thread(i,s,e,[],Empty),Thread(i1,s1,e1,c,d)::tl,si,ip)       ->   Machine(Thread(i1,s1,e1,c,d),tl,si,ip)
+
+
+          (* Fin d'un instant logique *)
+        | Machine(Thread(i,s,e,[],Empty),[],si,ip)                             ->   let (tl,new_si) = new_instant si in if isEmpty tl then  Machine(Thread(i,s,[],[],Empty),[],[],ip)
+                                                                                                                                      else  Machine(Thread(i,s,e,[],Empty),tl,new_si,ip)
+
+
+          (* Ajoute une valeur dans un signal *)
+        | Machine(Thread(i,Const n::value::s,e,Put::c,d),tl,si,ip)             ->   let (st,new_si) = put_value si i n value in  Machine(Thread(i,s,e,c,d),append tl st,new_si,ip)
+
+
+          (* Prend une valeur dans un signal *)
+        | Machine(Thread(i,Const b::Const j::Const n::Closure((x,c1),e1)::s,e,Get::c,d),tl,si,ip)
+          -> let (new_si,res) = get_value si i b j n in Machine(Thread(i,[],(add e1 x (Const res) false),c1,Save(s,e,c,d)),tl,new_si,ip)
+
+
+
+
+
+        (*** Partie pour la récursion ***)
         
           (* Récursion *)
-        | MachineTTSI(Thread(id,Closure([Pair(f,[Pair(x,t)])],e1)::s,e,Fix::c,d),tl,si,ip) 
-          -> MachineTTSI(Thread( id , Closure([Pair(x,t)],(add_env e1 f (Closure([Pair(x,t)],e1)) true))::s , e , c , d ) , tl , si , ip )
-
-          
-          (* Test de présence *)
-        | MachineTTSI(Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d),tl,si,ip)               
-          ->    if (isEmit si signal)
-                  then MachineTTSI( Thread( id , s , e , (append c1 c) , d ) , tl , si , ip )
-                  else let st = Thread(id,Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d) in
-                      begin 
-                        match tl with
-                            []                            ->   MachineTTSI( Thread( ip , [] , [] , [] , Empty ) , [] , (add_stuck si signal st) , ip+1 )
-
-                          | Thread(id1,s1,e1,c3,d1)::tl1  ->   MachineTTSI( Thread( id1 , s1 , e1 , c3 , d1 ) , tl1 , (add_stuck si signal st) , ip )
-                      end
+        | Machine(Thread(i,Closure((f,[Abstraction(x,t)]),e1)::s,e,Fix::c,d),tl,si,ip) 
+          -> Machine(Thread(i,Closure((x,t),(add e1 f (Closure((x,t),e1)) true))::s,e,c,d),tl,si,ip)
 
 
-          (* Récupération dans la file d'attente *)                         
-        | MachineTTSI(Thread(id,s,e,[],Empty),Thread(id1,s1,e1,c,d)::tl,si,ip)    ->    MachineTTSI( Thread( id1 , s1 , e1 , c , d ) , tl , si , ip )
 
 
-          (* Fin d'un instant logique ou fin de fonctionnement de la machine *)
-        | MachineTTSI(Thread(id,s,e,[],Empty),[],si,ip)                           
-          ->   if (isEnd si)
-                  then match s with
-            
-                        | Stack_const b::s1             ->   MachineTTSI( Thread( id , [Stack_const b] , [] , [] , Empty ) , [] , [] , ip )
-            
-                        | Closure([Pair(x,c)],env)::s1  ->   MachineTTSI( Thread( id , [Closure([Pair(x,c)],env)] , [] , [] , Empty ) , [] , [] , ip )
 
-                        | []                            ->   MachineTTSI( Thread( id , [] , [] , [] , Empty ) , [] , [] , ip )
-            
-                        | _                             ->   raise UnknowStackState
+        (*** Partie commune ***)
 
-                  else  let (tl,new_si) = next_moment si in MachineTTSI( Thread( id , s , e , [] , Empty ) , tl , new_si , ip )
+          (* Application neutre *)
+        | Machine(Thread(i,s,e,Ap::c,d),tl,si,ip)                              ->   Machine(Thread(i,s,e,c,d),tl,si,ip)
 
 
-          (* Application neutre *)  
-        | MachineTTSI(Thread(id,s,e,Ap::c,d),tl,si,ip)                            ->    MachineTTSI( Thread( id , s , e , c , d ) , tl , si , ip )
-        
+          (* Neutre *)
+        | Machine(Thread(i,s,e,Neutral::c,d),tl,si,ip)                         ->   Machine(Thread(i,Neutral::s,e,c,d),tl,si,ip)
 
-          (* Je ne connais pas cette état ... *)
-        | _                                                                       ->    raise StrangeEnd
+
+          (* Récupération sauvegarde avec pile vide *)
+        | Machine(Thread(i,[],e,[],Save(s,e1,c,d)),tl,si,ip)                   ->   Machine(Thread(i,s,e1,c,d),tl,si,ip)
+
+
+        | _                                                                    ->   raise Strange
 
 
     (* Applique les règles de la machine TTSI en affichant ou non les étapes *)
-    let rec machineTTSI machine afficher =
-      match machine with
-          MachineTTSI(Thread(id,resultat,[],[],Empty),[],[],ip)  ->   printf "Le résultat est %s \n" (string_of_stack resultat)
+    let rec machine m afficher =
+      match m with
+        | Machine(Thread(id,resultat,env,[],Empty),[],[],ip)  ->   Printf.printf "Le résultat est %s \n" (string_of_stack resultat)
 
-        | machine                                                ->   if afficher then afficherTTSI machine else printf ""; machineTTSI (transition machine) afficher 
+        | ttsi                                                ->   if afficher then print_machine ttsi else Printf.printf ""; machine (transition ttsi) afficher 
       
-  
 
     (* Lance et affiche le résultat de l'expression *)
-    let startTTSIv3 expression afficher = machineTTSI (MachineTTSI(Thread(0,[],[EnvVar("main",[Constant 0])],(secdLanguage_of_exprISWIM expression),Empty),[],[(-1,(false,[],[],[]))],1)) afficher
+    let startTTSIv3 expression afficher = machine (Machine(Thread(0,[],[(false,"main",Const 0)],(convert_to_machine_language expression),Empty),[],[(Signal(-1,(false,[],[],[])))],1)) afficher
     
+
   end

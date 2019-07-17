@@ -11,6 +11,7 @@ open Machine_secdCv3.SECDCv3Machine;;
 open Machine_secdCv4.SECDCv4Machine;;
 open Machine_ttsv1.MachineTTS;;
 open Machine_ttsv2.MachineTTS;;
+open Machine_ttsv3.MachineTTS;;
 open Machine_ttsiv1.MachineTTSI ;;
 open Machine_ttsiv2.MachineTTSI ;;
 open Machine_ttsiv3.MachineTTSI ;;
@@ -481,6 +482,27 @@ printf "\n" ;;
                   
 printf "On teste l'expression  ( ( (lam s.lam s1.( ( Spawn( Present s in 6 9 ) Spawn( Present s1 in 3 5 ) ) Spawn( emit s ) )) init ) init ) \n" ;;
 startTTSv2 expression33 false;;
+printf "\n" ;;
+
+
+
+
+
+(**** Partie pour la machine TTS version 3 ****)
+
+
+printf "\n\n\n\n\nTest de la MachineTTS version 3\n\n" ;;
+
+printf "On teste l'expresion  ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) \n" ;;
+startTTSv3 expression31 false ;;
+printf "\n" ;;
+                  
+printf "On teste l'expression  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) \n" ;;
+startTTSv3 expression32 false;;
+printf "\n" ;;
+                  
+printf "On teste l'expression  ( ( (lam s.lam s1.( ( Spawn( Present s in 6 9 ) Spawn( Present s1 in 3 5 ) ) Spawn( emit s ) )) init ) init ) \n" ;;
+startTTSv3 expression33 false;;
 printf "\n" ;;
 
 
