@@ -1,11 +1,11 @@
 open String ;;
-open Printf ;;
 open List ;;
 open Lang_ttsi.ISWIM ;;
 
-
-(****** Ce module implante une 4ème version de la machine abstraite TTSI. On a ajouté les types. *****)
-module MachineTTSI =
+(****** Ce module implante une 5ème version de la machine abstraite TTSI. Cette version modifie la règle de décomposition. *****)
+(****** En effet, on prend en compte que les patterns imbriqués n'existent pas à ce niveau                                 *****)
+(****** L'initialisation est limité à un thread                                                                            *****)
+module MachineTTSIH =
   struct
 
     (**** Types ****)
@@ -47,6 +47,8 @@ module MachineTTSI =
       | Build                                        (* commande : construire un type               *)
       | Compare                                      (* commande : comparer deux types              *)
       | Destruct                                     (* commande : Décompose un type via un pattern *)  
+      | Raise                                        (* commande : lève une exception               *)
+      | Catch                                        (* commande : gestion d'exception              *)
       
     (* Représentation de la chaîne de contrôle *)
     type control = element list
@@ -70,8 +72,13 @@ module MachineTTSI =
       | Empty
       | Save of stack * environment * control * dump
 
+
+    type handler =  
+      | Handler of identifier * stack * environment * control * dump * handler
+      | None
+
     (* thread *)
-    type thread = Thread of identifier * stack * environment * control * dump
+    type thread = Thread of identifier * stack * environment * control * dump * handler
 
     (* liste de threads *)
     type thread_list = thread list
@@ -86,7 +93,7 @@ module MachineTTSI =
     type shared_values = (identifier * (int * identifiers ) list ) list
 
     (* un signal *)
-    type signal = Signal of identifier * (emit * current_values * shared_values * stuck )
+    type signal = Signal of identifier * ( identifier list * emit * current_values * shared_values * stuck )
 
     (* liste de signaux *)
     type signal_list = signal list
@@ -121,10 +128,9 @@ module MachineTTSI =
     exception FormatCreateInvalid            (* Le nombre de paramètres est invalide                      *)
     exception InvalidElemCompared            (* Les éléments comparés ne sont pas deux types              *)
     exception FormatDestructInvalid          (* Le destruct n'est pas appliquée sur un type et un pattern *)
-    exception DestructNotApply
     exception PutInvalid
-    exception BadVersion
-
+    exception UnknowSignalState
+    exception SignalNotInit
 
 
 
@@ -202,7 +208,11 @@ module MachineTTSI =
 
         | Lang_ttsi.ISWIM.Match (variable,patterns)             ->  convert_of_match variable patterns
 
-        | _                                                     ->  raise BadVersion
+        | Lang_ttsi.ISWIM.Raise variable                        ->  [Variable variable;Raise] 
+
+        | Lang_ttsi.ISWIM.Catch (expr,(variable,expr1))         ->  [Abstraction("",convert_to_machine_language expr);Abstraction(variable,convert_to_machine_language expr1);Catch]
+
+
 
 
 
@@ -237,7 +247,7 @@ module MachineTTSI =
         | Prim op                              ->   (string_of_operateur op)
         | Spawn                                ->   "SPAWN"
         | Present                              ->   "PRESENT"
-        | Init                                 ->   "INIT"   
+        | Init                                 ->   "INIT" 
         | Put                                  ->   "PUT"        
         | Get                                  ->   "GET"        
         | Fix                                  ->   "FIX"        
@@ -245,6 +255,8 @@ module MachineTTSI =
         | Compare                              ->   "COMPARE"        
         | Destruct                             ->   "DESTRUCT"
         | Neutral                              ->   "neutral"
+        | Raise                                ->   "RAISE"
+        | Catch                                ->   "CATCH"
 
     
     (* Convertit la chaîne de contrôle en chaîne de caractères *)
@@ -297,14 +309,27 @@ module MachineTTSI =
         | Save(s,e,c,d)    ->   "<"^(string_of_stack s)^","^(string_of_environment e)^","^(string_of_control c)^","^(string_of_dump d)^">"
 
 
+    let rec string_of_handler handler = 
+      match handler with
+        | None             ->   "Vide"
+        
+        | Handler(i,s,e,c,d,h) ->    "\n     ID :   "^(string_of_int i)
+                                    ^"\n     S  :   "^(string_of_stack s)
+                                    ^"\n     E  :   "^(string_of_environment e)
+                                    ^"\n     C  :   "^(string_of_control c)
+                                    ^"\n     D  :   "^(string_of_dump d) 
+                                    ^"\n     H  :   "^(string_of_handler h) 
+
+
     (* Convertit le thread en chaîne de caractères *)
     let string_of_thread t = 
       match t with
-        | Thread(i,s,e,c,d)    ->   "\n  ID :   "^(string_of_int i)
+        | Thread(i,s,e,c,d,h)  ->   "\n  ID :   "^(string_of_int i)
                                    ^"\n  S  :   "^(string_of_stack s)
                                    ^"\n  E  :   "^(string_of_environment e)
                                    ^"\n  C  :   "^(string_of_control c)
                                    ^"\n  D  :   "^(string_of_dump d) 
+                                   ^"\n  H  :   "^(string_of_handler h) 
     
     
 
@@ -339,7 +364,8 @@ module MachineTTSI =
     (* convertit un signal en chaîne de caractères *)
     let string_of_signal si =
       match si with
-        | Signal(id,(emit,cv,sv,stuck))  ->   "<"^(string_of_int id)^",<"^(string_of_bool emit)^",{"^(string_of_cv_list cv)^"},{"^(string_of_sv_list sv)^"},{"^(string_of_thread_list stuck)^"}>>"
+        | Signal(id,(init_list,emit,cv,sv,stuck))  ->   "<"^(string_of_int id)^",<"^(string_of_a_list string_of_int init_list ";")^","^(string_of_bool emit)^",{"
+                                                        ^(string_of_cv_list cv)^"},{"^(string_of_sv_list sv)^"},{"^(string_of_thread_list stuck)^"}>>"
 
 
     (* convertit la liste des signaux en chaîne de caractères *)
@@ -407,41 +433,71 @@ module MachineTTSI =
 
         | _         ->   raise InvalidResult
 
-    
-    (* Initialise un signal *)
-    let rec init si = 
+
+
+    let rec is_init si i signal = 
       match si with
-        | []                  ->   (0,[Signal(0,(false,[],[],[]))])
+        | []  -> false
+    
+        | Signal(id,(init_list,_,_,_,_))::t  ->  if id = signal && mem i init_list then true else is_init t i signal
 
-        | [Signal(id,data)]   ->   (id+1,[Signal(id,data);Signal(id+1,(false,[],[],[]))])  
+    let rec first_init si i = 
+      match si with
+        | []  -> true
 
-        | Signal(id,data)::t  ->   let (new_id,new_si) = init t in (new_id,Signal(id,data)::new_si)
+        | Signal(_,(init_list,_,_,_,_))::t  ->  if mem i init_list then false else first_init t i
+        
+        
+    (* Initialise un signal *)
+    let init si i = 
+      let rec aux si = 
+        match si with
+          | [] ->  (0,[Signal(0,([i],false,[],[],[]))])
+
+          | [Signal(id,(init_list,emit,cv,sv,stuck))]  ->   if mem i init_list then (id+1,[Signal(id,(init_list,emit,cv,sv,stuck));Signal(id+1,([i],false,[],[],[]))])
+                                                                               else raise UnknowSignalState
+
+          | Signal(id,(init_list,emit,cv,sv,stuck))::Signal(id1,(init_list1,emit1,cv1,sv1,stuck1))::t 
+            -> if mem i init_list 
+                  then if mem i init_list1 
+                          then  let (res,new_si) = aux (Signal(id1,(init_list1,emit1,cv1,sv1,stuck1))::t ) in (res,Signal(id,(init_list,emit,cv,sv,stuck))::new_si)
+                          else  (id1,Signal(id,(init_list,emit,cv,sv,stuck))::Signal(id1,(append init_list1 [i],emit1,cv1,sv1,stuck1))::t)
+                  else raise UnknowSignalState
+          
+      in
+      if first_init si i 
+        then match si with
+                | [] ->  (0,[Signal(0,([i],false,[],[],[]))]) 
+
+                | Signal(id,(init_list,emit,cv,sv,stuck))::t  ->   (id,Signal(id,(append init_list [i],emit,cv,sv,stuck))::t)
+
+        else aux si 
 
 
     (* Vérifie si un signal est émis ou non *)
     let rec is_emit si id =
       match si with
-        | []                        ->   raise SignalNotFound
+        | []                          ->   raise SignalNotFound
 
-        | Signal(id1,(e,_,_,_))::t  ->   if id = id1 then e else is_emit t id
+        | Signal(id1,(_,e,_,_,_))::t  ->   if id = id1 then e else is_emit t id
 
 
     (* Bloque un thread qui attend un signal *)
     let rec stuck thread n si = 
       match si with
-        | []                             ->   raise SignalNotFound
+        | []                                  ->   raise SignalNotFound
 
-        | Signal(id,(emit,cv,sv,st))::t  ->   if id = n then Signal(id,(emit,cv,sv,append st [thread]))::t else Signal(id,(emit,cv,sv,st))::(stuck thread n t)
+        | Signal(id,(init,emit,cv,sv,st))::t  ->   if id = n then Signal(id,(init,emit,cv,sv,append st [thread]))::t else Signal(id,(init,emit,cv,sv,st))::(stuck thread n t)
 
 
     (* Prend le choix du teste de présence indiquant la non émission du signal attendu *)
     let rec snd_choice st =
       match st with
-        | []                                                         ->   []
+        | []                                                           ->   []
 
-        | Thread(i,Closure((_,c2),e2)::_::_::s,e,Present::c,d)::t    ->   Thread(i,[],e2,c2,Save(s,e,c,d))::(snd_choice t)
+        | Thread(i,Closure((_,c2),e2)::_::_::s,e,Present::c,d,h)::t    ->   Thread(i,[],e2,c2,Save(s,e,c,d),h)::(snd_choice t)
 
-        | _                                                          ->   raise InvalidFormatStuck
+        | _                                                            ->   raise InvalidFormatStuck
 
 
     (* Transforme les valeurs courantes en valeurs partagées *)
@@ -457,7 +513,7 @@ module MachineTTSI =
       match si with
         | []                             ->   ([],[])
         
-        | Signal(id,(emit,cv,sv,st))::t  ->   let (tl,new_si) = new_instant t in let new_sv = if emit then shared cv else [] in (append (snd_choice st) tl,Signal(id,(false,[],new_sv,[]))::new_si) 
+        | Signal(id,(init,emit,cv,sv,st))::t  ->   let (tl,new_si) = new_instant t in let new_sv = if emit then shared cv else [] in (append (snd_choice st) tl,Signal(id,(init,false,[],new_sv,[]))::new_si) 
 
 
     (* Ajoute une valeur dans les informations d'un signal, plus spécifiquement dans la liste de valeurs courantes *)
@@ -471,14 +527,14 @@ module MachineTTSI =
       match si with
         | []                              ->   raise SignalNotFound
 
-        | Signal(id1,(emit,cv,sv,st))::t  ->   if signal = id1 then match value with 
-                                                                      | Const b -> let new_cv = put_in_cv cv b in (st,Signal(id1,(true,new_cv,sv,[]))::t)
+        | Signal(id1,(init,emit,cv,sv,st))::t  ->   if signal = id1 then match value with 
+                                                                          | Const b -> let new_cv = put_in_cv cv b in (st,Signal(id1,(init,true,new_cv,sv,[]))::t)
 
-                                                                      | Neutral -> (st,Signal(id1,(true,cv,sv,[]))::t)
+                                                                          | Neutral -> (st,Signal(id1,(init,true,cv,sv,[]))::t)
 
-                                                                      | _       -> raise PutInvalid
+                                                                          | _       -> raise PutInvalid
 
-                                                               else let (tl,new_si) = put_value t id signal value in (tl,Signal(id1,(emit,cv,sv,st))::new_si)
+                                                                    else let (tl,new_si) = put_value t id signal value in (tl,Signal(id1,(init,emit,cv,sv,st))::new_si)
 
 
     (* Vérifie si c'est la première prise de valeur du thread *)
@@ -529,8 +585,8 @@ module MachineTTSI =
       match si with
         | []                             ->   raise SignalNotFound
 
-        | Signal(id,(emit,cv,sv,st))::t  ->   if id = s then let (new_sv,res) = get_in_sv sv in (Signal(id,(emit,cv,new_sv,st))::t,res)
-                                                        else let (new_si,res) = get_value t my_id id_thread s neutral in (Signal(id,(emit,cv,sv,st))::new_si,res)
+        | Signal(id,(init,emit,cv,sv,st))::t  ->   if id = s then let (new_sv,res) = get_in_sv sv in (Signal(id,(init,emit,cv,new_sv,st))::t,res)
+                                                             else let (new_si,res) = get_value t my_id id_thread s neutral in (Signal(id,(init,emit,cv,sv,st))::new_si,res)
 
 
     (* Vérifie si une liste est vide *)
@@ -551,21 +607,13 @@ module MachineTTSI =
 
 
     (* Décompose un type par rapport à un pattern *)
-    let rec destruct d values vars env = 
+    let rec destruct values vars env = 
       match (values,vars) with
-        | ([],[])             ->   d
-    
-        | (value::t1,var::t)  ->   let new_d = destruct d t1 t env in Save([value;P(var)],env,[Destruct],new_d) 
-    
-        | (_,_)               ->   raise FormatDestructInvalid
-    
-    
-    (* Union de deux environnements *)
-    let rec union env1 env2 = 
-      match env1 with
-        | []    ->   env2
-    
-        | h::t  ->   if mem h env2 then union t env2 else union t (h::env2)
+       | ([],[])                 ->   env
+
+       | (value::t1,Var var::t)  ->   destruct t1 t (add env var value false)
+
+       | (_,_)                   ->   raise FormatDestructInvalid
 
 
     (* Créer un type *)
@@ -593,27 +641,27 @@ module MachineTTSI =
         (*** Partie de base de la machine SECD ***)
 
           (* Constante *)
-        | Machine(Thread(i,s,e,Constant b::c,d),tl,si,ip)                      ->   Machine(Thread(i,Const b::s,e,c,d),tl,si,ip) 
+        | Machine(Thread(i,s,e,Constant b::c,d,h),tl,si,ip)                      ->   Machine(Thread(i,Const b::s,e,c,d,h),tl,si,ip) 
 
 
           (* Substitution *)
-        | Machine(Thread(i,s,e,Variable x::c,d),tl,si,ip)                      ->   Machine(Thread(i,(substitution e x)::s,e,c,d),tl,si,ip) 
+        | Machine(Thread(i,s,e,Variable x::c,d,h),tl,si,ip)                      ->   Machine(Thread(i,(substitution e x)::s,e,c,d,h),tl,si,ip) 
 
 
           (* Abstraction *)
-        | Machine(Thread(i,s,e,Abstraction(x,c1)::c,d),tl,si,ip)               ->   Machine(Thread(i,Closure((x,c1),e)::s,e,c,d),tl,si,ip) 
+        | Machine(Thread(i,s,e,Abstraction(x,c1)::c,d,h),tl,si,ip)               ->   Machine(Thread(i,Closure((x,c1),e)::s,e,c,d,h),tl,si,ip) 
 
 
           (* Application *)
-        | Machine(Thread(i,v::Closure((x,c1),e1)::s,e,Ap::c,d),tl,si,ip)       ->   Machine(Thread(i,[],(add e1 x v false),c1,Save(s,e,c,d)),tl,si,ip)
+        | Machine(Thread(i,v::Closure((x,c1),e1)::s,e,Ap::c,d,h),tl,si,ip)       ->   Machine(Thread(i,[],(add e1 x v false),c1,Save(s,e,c,d),h),tl,si,ip)
 
 
           (* Operation *)
-        | Machine(Thread(i,s,e,Prim op::c,d),tl,si,ip)                         ->   Machine(Thread(i,(compute s op e),e,c,d),tl,si,ip)
+        | Machine(Thread(i,s,e,Prim op::c,d,h),tl,si,ip)                         ->   Machine(Thread(i,(compute s op e),e,c,d,h),tl,si,ip)
 
 
           (* Récupération de sauvegarde *)
-        | Machine(Thread(i,v::s,e,[],Save(s1,e1,c,d)),tl,si,ip)                ->   Machine(Thread(i,v::s1,e1,c,d),tl,si,ip)
+        | Machine(Thread(i,v::s,e,[],Save(s1,e1,c,d),h),tl,si,ip)                ->   Machine(Thread(i,v::s1,e1,c,d,h),tl,si,ip)
 
 
 
@@ -622,48 +670,50 @@ module MachineTTSI =
         (*** Partie pour la concurrence ***)
 
           (* Création thread *)
-        | Machine(Thread(i,Closure((_,c1),e1)::s,e,Spawn::c,d),tl,si,ip)       ->   Machine(Thread(i,Const ip::s,e,c,d),append tl [Thread(ip,[],e1,c1,Empty)],si,ip+1)
+        | Machine(Thread(i,Closure((_,c1),e1)::s,e,Spawn::c,d,h),tl,si,ip)       ->   Machine(Thread(i,Const ip::s,e,c,d,h),append tl [Thread(ip,[],e1,c1,Empty,None)],si,ip+1)
 
 
           (* Initialisation d'un signal *)
-        | Machine(Thread(i,s,e,Init::c,d),tl,si,ip)                            ->   let (id,new_si) = init si in Machine(Thread(i,Const id::s,e,c,d),tl,new_si,ip)
+        | Machine(Thread(i,s,e,Init::c,d,h),tl,si,ip)                            ->   let (id,new_si) = init si i in Machine(Thread(i,Const id::s,e,c,d,h),tl,new_si,ip)
 
 
           (* Teste de présence *)
-        | Machine(Thread(i,Closure((_,c2),e2)::Closure((_,c1),e1)::Const n::s,e,Present::c,d),tl,si,ip)
-          -> if is_emit si n
+        | Machine(Thread(i,Closure((_,c2),e2)::Closure((_,c1),e1)::Const n::s,e,Present::c,d,h),tl,si,ip)
+          -> if is_init si i n
+               then if is_emit si n
 
-                   (* Présence d'un signal *)
-              then Machine(Thread(i,[],e1,c1,Save(s,e,c,d)),tl,si,ip)
-    
-              else let new_si = stuck (Thread(i,Closure(("",c2),e2)::Closure(("",c1),e1)::Const n::s,e,Present::c,d)) n si in
-              begin
-                match tl with
+                          (* Présence d'un signal *)
+                      then Machine(Thread(i,[],e1,c1,Save(s,e,c,d),h),tl,si,ip)
+            
+                      else let new_si = stuck (Thread(i,Closure(("",c2),e2)::Closure(("",c1),e1)::Const n::s,e,Present::c,d,h)) n si in
+                      begin
+                        match tl with
 
-                    (* Thread bloqué non remplacé *)
-                  | []                         ->   Machine(Thread(ip,[],[],[],Empty),[],new_si,ip+1)
-                    
-                    (* Thread bloqué remplacé *)
-                  | Thread(i1,s1,e1,c1,d1)::t  ->   Machine(Thread(i1,s1,e1,c1,d1),t,new_si,ip)
-              end
-
+                            (* Thread bloqué non remplacé *)
+                          | []                            ->   Machine(Thread(ip,[],[],[],Empty,None),[],new_si,ip+1)
+                            
+                            (* Thread bloqué remplacé *)
+                          | Thread(i1,s1,e1,c1,d1,h1)::t  ->   Machine(Thread(i1,s1,e1,c1,d1,h1),t,new_si,ip)
+                      end
+               else raise SignalNotInit
 
           (* Récupération dans la file d'attente *)
-        | Machine(Thread(i,s,e,[],Empty),Thread(i1,s1,e1,c,d)::tl,si,ip)       ->   Machine(Thread(i1,s1,e1,c,d),tl,si,ip)
+        | Machine(Thread(i,s,e,[],Empty,h),Thread(i1,s1,e1,c,d,h1)::tl,si,ip)    ->   Machine(Thread(i1,s1,e1,c,d,h1),tl,si,ip)
 
 
           (* Fin d'un instant logique *)
-        | Machine(Thread(i,s,e,[],Empty),[],si,ip)                             ->   let (tl,new_si) = new_instant si in if isEmpty tl then  Machine(Thread(i,s,[],[],Empty),[],[],ip)
-                                                                                                                                      else  Machine(Thread(i,s,e,[],Empty),tl,new_si,ip)
+        | Machine(Thread(i,s,e,[],Empty,h),[],si,ip)                             ->   let (tl,new_si) = new_instant si in if isEmpty tl then  Machine(Thread(i,s,[],[],Empty,h),[],[],ip)
+                                                                                                                                        else  Machine(Thread(i,s,e,[],Empty,h),tl,new_si,ip)
 
 
           (* Ajoute une valeur dans un signal *)
-        | Machine(Thread(i,Const n::value::s,e,Put::c,d),tl,si,ip)             ->   let (st,new_si) = put_value si i n value in  Machine(Thread(i,s,e,c,d),append tl st,new_si,ip)
+        | Machine(Thread(i,Const n::value::s,e,Put::c,d,h),tl,si,ip)             
+          ->   let (st,new_si) = if is_init si i n then put_value si i n value else raise SignalNotInit in  Machine(Thread(i,s,e,c,d,h),append tl st,new_si,ip)
 
 
           (* Prend une valeur dans un signal *)
-        | Machine(Thread(i,Const b::Const j::Const n::Closure((x,c1),e1)::s,e,Get::c,d),tl,si,ip)
-          -> let (new_si,res) = get_value si i b j n in Machine(Thread(i,[],(add e1 x (Const res) false),c1,Save(s,e,c,d)),tl,new_si,ip)
+        | Machine(Thread(i,Const b::Const j::Const n::Closure((x,c1),e1)::s,e,Get::c,d,h),tl,si,ip)
+          -> let (new_si,res) = if is_init si i j then get_value si i b j n else raise SignalNotInit in Machine(Thread(i,[],(add e1 x (Const res) false),c1,Save(s,e,c,d),h),tl,new_si,ip)
 
 
 
@@ -672,8 +722,8 @@ module MachineTTSI =
         (*** Partie pour la récursion ***)
         
           (* Récursion *)
-        | Machine(Thread(i,Closure((f,[Abstraction(x,t)]),e1)::s,e,Fix::c,d),tl,si,ip) 
-          -> Machine(Thread(i,Closure((x,t),(add e1 f (Closure((x,t),e1)) true))::s,e,c,d),tl,si,ip)
+        | Machine(Thread(i,Closure((f,[Abstraction(x,t)]),e1)::s,e,Fix::c,d,h),tl,si,ip) 
+          -> Machine(Thread(i,Closure((x,t),(add e1 f (Closure((x,t),e1)) true))::s,e,c,d,h),tl,si,ip)
         
 
 
@@ -682,36 +732,44 @@ module MachineTTSI =
         (*** Partie types ***)
         
           (* Création d'un type *)
-        | Machine(Thread(i,Const id::Const nbr::s,e,Build::c,d),tl,si,ip)      ->   let (res,new_s) = create s nbr in Machine(Thread(i,Type(id,res)::new_s,e,c,d),tl,si,ip)
+        | Machine(Thread(i,Const id::Const nbr::s,e,Build::c,d,h),tl,si,ip)      ->   let (res,new_s) = create s nbr in Machine(Thread(i,Type(id,res)::new_s,e,c,d,h),tl,si,ip)
 
 
           (* Comparer deux types *)
-        | Machine(Thread(i,t2::t1::s,e,Compare::c,d),tl,si,ip)                 ->   let res = compare t1 t2 e in Machine(Thread(i,res::s,e,c,d),tl,si,ip)
+        | Machine(Thread(i,t2::t1::s,e,Compare::c,d,h),tl,si,ip)                 ->   let res = compare t1 t2 e in Machine(Thread(i,res::s,e,c,d,h),tl,si,ip)
 
 
           (* Décomposition d'un type via un pattern *)
-        | Machine(Thread(i,s,e,Destruct::c,d),tl,si,ip) 
-        ->  begin match s with
-                    | [] ->   begin match (c,d) with 
-                                      | ([],Save(s1,e1,c1,d1))  ->   let new_e = union e e1 in Machine(Thread(i,s1,new_e,c1,d1),tl,si,ip)
+        | Machine(Thread(i,Type(_,values)::P(Pat(_,vars))::s,e,Destruct::c,d,h),tl,si,ip) 
+          ->  let new_e = destruct values vars e in Machine(Thread(i,s,new_e,c,d,h),tl,si,ip)
 
-                                      | ([],Empty)              ->   raise DestructNotApply
 
-                                      | (_,_)                   ->   Machine(Thread(i,s,e,c,d),tl,si,ip) 
-                              end
-                    | v::P(Var x)::s1                         ->   Machine(Thread(i,s1,(add e x v false),Destruct::c,d),tl,si,ip)
-
-                    | v::P Neutral::s1                        ->   Machine(Thread(i,s1,e,c,d),tl,si,ip)
-
-                    | Type(id1,values)::P(Pat(id,elems))::s1  ->   let new_d = destruct (Save(s1,e,Destruct::c,d)) values elems e in 
-                                                                     Machine(Thread(i,[],[],[],new_d),tl,si,ip)
-
-                    | _                                       ->   Machine(Thread(i,s,e,c,d),tl,si,ip)
-            end
+          (* Décomposition d'un type via un neutre *)
+        | Machine(Thread(i,Type(_,values)::P Neutral::s,e,Destruct::c,d,h),tl,si,ip) 
+          ->  Machine(Thread(i,s,e,c,d,h),tl,si,ip)
 
           (* Pattern *)
-        | Machine(Thread(i,s,e,Pattern p::c,d),tl,si,ip)                       ->   Machine(Thread(i,P p::s,e,c,d),tl,si,ip)
+        | Machine(Thread(i,s,e,Pattern p::c,d,h),tl,si,ip)                       ->   Machine(Thread(i,P p::s,e,c,d,h),tl,si,ip)
+        
 
+
+
+
+        (*** Partie gestion d'exceptions ***)
+
+          (* Création du gestionnaire d'exception *)
+        | Machine(Thread(i,Closure((x,c2),e2)::Closure((x1,c1),e1)::s,e,Catch::c,d,h),tl,si,ip)   
+          ->   Machine(Thread(i,[],e1,c1,Save(s,e,c,d),Handler(i,Closure((x,c2),e2)::s,e,Catch::c,d,h)),tl,si,ip)
+
+        
+          (* exception levée et traitée *)
+        | Machine(Thread(i,Type(id,values)::s,e,Raise::c,d,Handler(i1,Closure((x,c2),e2)::s1,e1,Catch::c1,d1,h)),tl,si,ip)                      
+          ->   Machine(Thread(i1,[],(add e2 x (Type(id,values)) false),c2,Save(s1,e1,c1,d1),h),tl,si,ip)
+
+
+          (* exception levée non traitée *)
+        | Machine(Thread(i,Type(id,values)::s,e,Raise::c,d,h),tl,si,ip)          ->   Machine(Thread(i,[Type(id,values)],e,[],Empty,h),[],[],ip)
+    
 
 
 
@@ -719,30 +777,30 @@ module MachineTTSI =
         (*** Partie commune ***)
 
           (* Application neutre *)
-        | Machine(Thread(i,s,e,Ap::c,d),tl,si,ip)                              ->   Machine(Thread(i,s,e,c,d),tl,si,ip)
+        | Machine(Thread(i,s,e,Ap::c,d,h),tl,si,ip)                              ->   Machine(Thread(i,s,e,c,d,h),tl,si,ip)
 
 
           (* Neutre *)
-        | Machine(Thread(i,s,e,Neutral::c,d),tl,si,ip)                              ->   Machine(Thread(i,Neutral::s,e,c,d),tl,si,ip)
+        | Machine(Thread(i,s,e,Neutral::c,d,h),tl,si,ip)                         ->   Machine(Thread(i,Neutral::s,e,c,d,h),tl,si,ip)
 
 
           (* Récupération sauvegarde avec pile vide *)
-        | Machine(Thread(i,[],e,[],Save(s,e1,c,d)),tl,si,ip)                   ->   Machine(Thread(i,s,e1,c,d),tl,si,ip)
+        | Machine(Thread(i,[],e,[],Save(s,e1,c,d),h),tl,si,ip)                   ->   Machine(Thread(i,s,e1,c,d,h),tl,si,ip)
 
 
-        | _                                                                    ->   raise Strange
+        | _                                                                      ->   raise Strange
 
 
     (* Applique les règles de la machine TTSI en affichant ou non les étapes *)
     let rec machine m afficher =
       match m with
-        | Machine(Thread(id,resultat,env,[],Empty),[],[],ip)  ->   Printf.printf "Le résultat est %s \n" (string_of_stack resultat)
+        | Machine(Thread(id,resultat,env,[],Empty,h),[],[],ip)  ->   Printf.printf "Le résultat est %s \n" (string_of_stack resultat)
 
-        | ttsi                                                ->   if afficher then print_machine ttsi else Printf.printf ""; machine (transition ttsi) afficher 
+        | ttsih                                                  ->   if afficher then print_machine ttsih else Printf.printf ""; machine (transition ttsih) afficher 
       
 
     (* Lance et affiche le résultat de l'expression *)
-    let startTTSIv4 expression afficher = machine (Machine(Thread(0,[],[(false,"main",Const 0)],(convert_to_machine_language expression),Empty),[],[(Signal(-1,(false,[],[],[])))],1)) afficher
+    let startTTSIHv4 expression afficher = machine (Machine(Thread(0,[],[(false,"main",Const 0)],(convert_to_machine_language expression),Empty,None),[],[(Signal(-1,([],false,[],[],[])))],1)) afficher
     
 
   end

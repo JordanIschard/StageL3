@@ -52,6 +52,9 @@ module ISWIM =
       | Build of int * int * expr list          (* Build de la forme : (int,int1,expr_list) avec int l'id du constructeur, int1 le nombre de paramètre et expr_list une liste de taille égal au nombre de paramètre *)
       | Match of string * ( pat * expr ) list   (* Match de la forme : (string,(pattern,expr) list) avec string l'element à matcher, list une liste de filtres composées d'un pattern et une expr *)
 
+      | Catch of expr * (string * expr)
+      | Raise of string
+
 
     (* Vraie en lambda-calcul *)
     let vraie = Abs("x",Abs("y",App(Var "x",Const 1)))

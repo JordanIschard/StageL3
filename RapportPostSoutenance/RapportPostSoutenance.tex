@@ -1318,14 +1318,10 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	
 	\subparagraph{L'initialisation}
-	La base est de pouvoir créer un signal ou plutôt de l'initialiser. Comment fonctionne l'initialisation peut être différents par rapport ce que l'on veut faire. On se focalise sur deux points importants : 
-	\begin{enumerate}
-		\item Le champs d'action de l'initialisation
-		\item La récupération d'identifiant 
-	\end{enumerate}
+	La base est de pouvoir créer un signal ou plutôt de l'initialiser. Comment fonctionne l'initialisation peut être différents par rapport ce que l'on veut faire. On se focalise sur le champs d'action de l'initialisation. 
 	\medbreak
 	
-	Au final on se retrouve avec quatre possibilités de règle pour initialiser un signal :
+	Au final on se retrouve avec trois possibilités de règle pour initialiser un signal :
 	\smallbreak
 	\begin{itemize}
 		\item[-] On initialise un signal pour une partie de la chaîne de contrôle : Cela revient à devoir se focaliser sur une partie de la chaîne de contrôle qui obtient le droit d'emettre. Cela ressemble fortement à une application qui, je le rappelle, la règle suivante : 
@@ -1384,6 +1380,9 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\smallbreak
 		$\langle S,E,Init~C,D,SI~\langle s,emit\rangle\rangle \longrightarrow \langle s+1~S,E,C,D,SI~\langle s,emit\rangle ~\langle s+1,false\rangle \rangle$ 
 	\end{itemize}
+	\medbreak
+	
+	On va utiliser la dernière version dans la machine finale. En effet, les deux premières possibilités ont le grand défaut de donner la possibilité d'avoir plusieurs variable pour un identifiant. Je m'explique. Lorsque l'on va initialiser un signal pour un thread par exemple on va lui retourner un identifiant que l'on va ensuite appliquer à une variable. Si autre thread initialise ce même signal pour lui il peut lui donner un nom de variable qui diffère du thread précédent ce qui peut créer des imcompréhensions. Des versions sont cependant trouvable avec l'implantation des deux premières possibilités, dans l'optique que l'on peut leurs trouver une utilitée que je n'ai moi même pas vu . 
 	\bigbreak
 	
 	
@@ -1394,7 +1393,10 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\smallbreak
 	\textit{Un signal est absent s'il n'est pas émis durant l'instant logique.}
 	\smallbreak
-	On a besoin de déterminer la fin d'un instant logique. Les différents threads vont s'éxécuter à la chaîne, la fin d'un instant sera lorsqu'aucun thread ne s'éxécute. Cependant certains vont tomber dans ce cas où ils devront attendre l'absence d'un signal. Cette contrainte prise en compte, on doit redéfinir la fin d'un instant logique comme la fin ou le blocage de tous les threads de la machine.
+	On a besoin de déterminer la fin d'un instant logique. Les différents threads vont s'éxécuter à la chaîne, la fin d'un instant sera lorsqu'aucun thread ne s'éxécute. Cependant certains vont tomber dans ce cas où ils devront attendre l'absence d'un signal. Cette contrainte prise en compte, on doit redéfinir la fin d'un instant logique.
+	\medbreak
+	
+	\textbf{Fin d'un instant logique :} \textit{la fin ou le blocage de tous les threads de la machine dans l'instant courant.}
 	\medbreak
 	
 	Dans notre machine on va devoir différencier les threads en attente de leurs tour et ceux en attente de l'émission d'un signal. Deux possibilités ont été étudiées :
@@ -3825,6 +3827,101 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\newpage
 	
 	\subsection*{Format de la machine et règle en fonction du champs d'action de l'initialisation}
+	
+	Un signal peut être initialiser pour 3 champs d'actions possibles : 
+	\begin{enumerate}
+		\item la machine 
+		\item le thread courant
+		\item la chaîne de contrôle
+	\end{enumerate}
+	\medbreak
+	
+	Le premier cas a été traité et présenté dans la version officiel. Il reste intéressant de voir les versions alternatives que peut engranger un simple changement de champs d'action. On va d'abord prendre au plus large pour aller au plus restreint, on passe donc à la restriction du thread courant.
+	\bigbreak
+	
+	\paragraph{Initialisation pour le thread courant}	Lorsque l'on va initialiser il va falloir garder en mémoire quel thread l'a fait. Ce point nous contraint à créer des identifiants pour les threads. Pour cela on va ajouter un entier dans notre machine que l'on va nommer \textit{producteur d'identifiant (IP)} et qui , comme son nom l'indique, produira un identifiant pour chaque thread créé. Cela va nous obliger à modifier un peu les threads tels que $T = \langle I,S,E,C,D\rangle$ avec l'identifiant $I$ ainsi que la règle du spawn qui va donner la règle suivant : 
+	\smallbreak
+	$\langle \langle I,\langle\langle X,C'\rangle,E\rangle~S,E,spawn~C,D\rangle,TL,SI,IP \rangle 
+	\longrightarrow 
+	\langle \langle I,IP~S,E,C,D\rangle,TL~\langle IP,\epsilon,E',C',\emptyset\rangle,SI,IP+1 \rangle$ 
+	\medbreak
+	
+	Maintenant on peut différencier nos threads. On va s'en servir pour stocker l'information de l'initialisation. Notre liste $SI$ va contenir des éléments composés de trois informations : 
+	\begin{enumerate}
+		\item L'identifiant du signal $id$ : on va éviter que l'utilisateur contrôle les identifiants, on lui retournera simplement l'identifiant dans la pile d'exécution pour qu'il puisse le lié à une variable
+		\item une liste d'identifiant $IL$ : on va stocker les identifiants des threads pour lesquels ce signal est initialisé
+		\item un booléen $emit$ : il va nous permettre de savoir si un signal est émis
+	\end{enumerate}
+	\medbreak
+	
+	Les signaux vont devoir être différenciable eux aussi. On va utiliser des identifiants pour cela. Comme dit plus haut on ne souhaite pas que l'utilisateur est la main sur les identifiants on va donc devoir les créer. On pourrait simplement reprendre ce qui à été fait pour les threads, c'est-à-dire, utiliser un élément ajouter à la machine qui va nous servir de compteur. Cependant il faudrait un compteur par thread du coup ce n'est pas très efficace.
+	\smallbreak
+	Nos signaux ne sont pas détruit lors du fonctionnement de la machine, ils restent jusqu'à la fin. Avec cela en tête, on peut modifier la liste en file et donc garder un ordre dans les signaux et finalement pouvoir donner un nouvelle identifiant.
+	\medbreak
+	
+	Une difficulté s'ajoute à cela. On va devoir faire une recherche dans notre file, on va prendre les signaux deux par deux et si le premier a été initialisé par notre thread mais pas le second alors le second le devient.
+	\begin{ex}
+		On cherche à initialise un signal pour le thread qui a pour identifiant $I$.
+		\smallbreak
+		\begin{enumerate}
+			\item Pour chaque pair $(\langle s,il,emit\rangle,\langle s',il',emit'\rangle)$ de $SI$ :
+			\item $\quad$Si $I \in il$ et $I \notin il'$ alors : on ajoute $I$ à $il'$ et on retourne $s'$ 
+		\end{enumerate}
+	\end{ex} 
+	\medbreak
+	
+	Quand on initialise un signal on doit savoir si le thread à déjà initialisé un signal auparavant. Car sinon on ne saura pas qu'il faut prendre le premier signal. Du coup il va falloir vérifier préalablement si le thread à déjà initialisé un signal.
+	\begin{ex}
+		On cherche à vérifier si le thread $I$ à déjà initialisé un signal.
+		\smallbreak
+		\begin{enumerate}
+			\item Pour chaque $\langle s,il,emit\rangle$ de $SI$ :
+			\item $\quad$Si $I \in il$ alors : on retourne $false$
+			\item on retourne $true$
+		\end{enumerate}
+	\end{ex}
+	\medbreak
+	
+	Si il n'y a pas de signal dans $SI$ on va créer un premier signal avec l'identifant 0. Si la file est impair alors on peut avoir le cas où le dernière élément de $SI$ contient aussi notre identifiant de thread il va donc falloir créer un nouveau signal en prenant l'identifiant du dernier signal et en l'incrémentant de un.
+	\begin{ex}
+		On cherche à initialise un signal pour le thread qui a pour identifiant $I$.
+		\smallbreak
+		\begin{enumerate}
+			\item Pour chaque $\langle s,il,emit\rangle$ de $SI$ :
+			\item $\quad$Si $I \in il$ et $\langle s,il,emit\rangle$ est le dernier élément 
+			\item $\quad\quad$ alors : on ajoute $\langle s+1,\{I\},false\rangle$ dans la file $SI$ et on retourne $s+1$
+		\end{enumerate}
+	\end{ex}
+	\medbreak
+	\newpage
+	On va donc se retrouver avec la règle suivante : 
+		$\langle \langle I,S,E,init~C,D\rangle,TL,SI,IP \rangle 
+	\longrightarrow 
+	\langle \langle I,id~S,E,C,D\rangle,TL,SI',IP \rangle$ 
+	\smallbreak 
+	avec $initialise~SI$ qui est une fonction qui modifie $SI$ en initialisant un signal pour un thread donné et qui retourne le couple identifiant, nouvelle file de signaux $(id,SI')$.
+	\medbreak
+	 
+	Il est possible que ce ne soit pas encore très clair pour vous du coup je vous renvoie à l'adresse du git comprenant toutes mes implantations ainsi vous pourrez voir comment je l'ai implanté.
+	
+	\paragraph{Initialisation pour une chaîne de contrôle}
+	
+	Limité à une chaîne de contrôle va nous obliger à créer une nouvelle forme de sauvegarde. Je m'explique, on va utiliser une abstraction pour stocker la partie de la chaîne de contrôle pour lequel le signal va être initialisé. On va prendre le principe de la règle d'application qui est la suivante :
+	\smallbreak
+	$\langle \langle\langle X,C'\rangle,E'\rangle~V~S,E,ap~C,D\rangle \longrightarrow_{SECD} \langle \epsilon,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle$
+	\medbreak
+	
+	L'idée est que lorsque l'on va initialiser un signal on va sauvegarder la machine dans le dépôt pour se concentrer sur la chaîne de contrôle pour laquelle notre signal est initialiser. Le problème est de différencier les sauvegardes normales et les sauvegardes pour l'initialisation. Pour cela, on va créer une nouvelle forme de la sauvegarde qui contient l'identifiant de signal tel que :
+	$D = \langle id,\langle S,E,C,D\rangle\rangle$ avec l'identifiant du signal initialisé $id$.
+	\medbreak
+	
+	La règle d'initialisation va donc être un peu et va donner : 
+	\smallbreak
+	$\langle \langle I,\langle\langle X,C'\rangle,E'\rangle~S,E,init~C,D\rangle,TL,SI,IP \rangle 
+	\longrightarrow 
+	\langle \langle I,id,E',C',\langle id,\langle S,E,C,D\rangle\rangle\rangle,TL,SI',IP \rangle$ 
+	\smallbreak 
+	avec $initialise~SI$ qui est une fonction qui modifie $SI$ en initialisant un signal pour un thread donné et qui retourne le couple identifiant, nouvelle file de signaux $(id,SI')$.
 	\newpage
 	
 	\subsection*{Les différentes versions faite pour rendre la machine SECD concurrente}

@@ -19,7 +19,8 @@ open Machine_ttsiv4.MachineTTSI ;;
 open Machine_ttsiv5.MachineTTSI ;;
 open Machine_ttsihv1.MachineTTSIH ;;
 open Machine_ttsihv2.MachineTTSIH ;;
-
+open Machine_ttsihv3.MachineTTSIH ;;
+open Machine_ttsihv4.MachineTTSIH ;;
 
 (* Test *)
 
@@ -783,3 +784,49 @@ printf "On teste l'expression  ( Rec(f, lam n.( if ( = n 0 ) 0 ( + n ( f ( - n 1
 startTTSIHv2 expression47 false;;
 printf "\n" ;;
 
+
+(**** Partie pour la machine TTSIH version 3 ****)
+(*  *)
+
+
+printf "\n\n\n\n\nTest de la MachineTTSIH version 3 \n\n" ;;
+
+
+printf "On teste l'expression  ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) \n" ;;
+startTTSIHv3 expression34 false;;
+printf "\n" ;;
+
+
+printf "On teste l'expression  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) \n" ;;
+startTTSIHv3 expression35 false;;
+printf "\n" ;;
+
+
+printf "On teste l'expression  ( ( lam s.( lam id.( Spawn( (+ (get s id 0) 10) ) Spawn( put( s 3 ) ) ) put( s 4 ) ) init ) \n" ;;
+startTTSIHv3 expression36 true;;
+printf "\n" ;;
+
+
+printf "On teste l'expression  ( ( lam s.( Spawn( lam x.x (get s main 0) ) Spawn( put( s 3 ) ) put( s 4 ) ) init ) \n" ;;
+startTTSIHv3 expression37 false;;
+printf "\n" ;;
+
+
+printf "On teste l'expression  ( Rec(f, lam n.( if ( = n 0 ) 0 ( + n ( f ( - n 1 ) ) ) ) ) 4 ) \n" ;;
+startTTSIHv3 expression38 false;;
+printf "\n" ;;
+
+
+printf "On teste l'expression  ( lam arbre.( match arbre with [ (Pattern(0 [a;i;a1]),false) ; (Pattern(1 [i]),true) ] )  Build(0 3 ( Build(1 1 (1)) 3 Build(1 1 (4)) )) ) \n" ;;
+startTTSIHv3 expression39 false;;
+printf "\n" ;;
+
+
+printf "On teste l'expression  ( lam arbre.( match arbre with [ (Pattern(0 [a;i;a1]),false) ; (Pattern(1 [i]),true) ] )  Build(1 1 (1)) ) \n" ;;
+startTTSIHv3 expression40 false;;
+printf "\n" ;;
+
+
+printf "On teste l'expression  ( lam arbre.( match arbre with [ (Pattern(0 [a;i;a1]),false) ; (Pattern(1 [i]),i) ] )  Build(1 1 (1)) ) \n" ;;
+startTTSIHv3 expression42 false;;
+printf "\n" ;;
