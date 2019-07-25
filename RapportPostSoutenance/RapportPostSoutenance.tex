@@ -73,7 +73,6 @@
 	
 	\chapter{Introduction}
 	
-(À retravailler)
 Le stage a pour intitulé \textit{Programmation réactive synchrone, implantation d’une machine virtuelle}. Il se place dans la thématique
 \textit{Sémantique des systèmes concurrents}. L’objectif de ce stage est de réaliser l’implantation d’une machine virtuelle (type JVM) destinée
 à exécuter un langage réactif synchrone purement fonctionnel encadré par deux maîtres de conférence : Mme Bousdira et Mr Dabrowski.
@@ -89,7 +88,7 @@ possibilité de retracer ma compréhension du $\lambda$-calcul afin qu'à la fin
 que moi ce langage. La première partie regroupe aussi toutes les recherches préliminaires effectuées dans le but de pouvoir cerner complètement le sujet
 du stage et de pouvoir effectuer un travail optimal.
 \smallbreak
-La deuxième partie traite du travail réalisé pour créer la machine abstraite demandée à partir d'une machine abstraite existante. J'y explique les contraintes créées par l'ajout de la concurrence dans une machine abstraite. Pour chaque commande ajoutée, une explication détaillée des changements apportés dans la machine est écrite. Deux sémantiques de la machine abstraite y sont décrites.
+La deuxième partie traite du travail réalisé pour créer la machine abstraite demandée à partir d'une machine déjà existante. J'y explique les contraintes créées par l'ajout de la concurrence dans une machine abstraite pas à pas en prenant chaque point de la concurrence et en montrant comment on va l'appliquer sur notre machine. On commence d'abord par une concurrence basique sans partage de valeurs ensuite on ajoute un partage de valeurs via signaux. On continue avec la récursion et les types avec le filtrage qui leurs est lié. Et enfin un petit point sur les exceptions. Une partie sera consacrée au déterminisme de la machine à travers une preuve par induction.
 \smallbreak
 Pour finir, je résumerai tous ce qui a été fait durant le stage jusqu'au rendu de ce rapport ainsi que les points qui sont à changer, à développer ou encore ce qu'il reste à faire. Un petit mot sera glissé par rapport aux sémantiques intermédiaires créées et leurs implantations en OCaml. Toutes ces implantations sont retrouvables sur mon git : https://github.com/JordanIschard/StageL3.git.
 \smallbreak
@@ -1250,12 +1249,12 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	
 	\subparagraph{Le fonctionnement} 
-	Un petit dessus histoire de ne pas laisser de zone d'ombre dans la fonctionnement de la machine. Les threads sont par définition des machines SECD. Du coup lorsqu'un thread sera exécuté il fonctionnera comme une machine SECD classique avec les ajouts que l'on est entrain d'expliqués et il se finira comme une machine SECD aussi avec un autre état donné dans la sémantique.
+	Un petit point dessus histoire de ne pas laisser de zone d'ombre dans le fonctionnement de la machine. Les threads sont, par définition, des machines SECD. Du coup lorsqu'un thread sera exécuté, il fonctionnera comme une machine SECD classique avec les ajouts que l'on est entrain d'expliquer et il se finira comme une machine SECD aussi avec un autre état expliqué et donné plus tard dans la sémantique.
 	\bigbreak
 	
 	
 	\subparagraph{Le roulement}
-	Quand un thread fini son exécution, on prendre un nouveau thread. On a définit une file de threads. Lorsque le thread courant à fini on va aller chercher le thread en tête de la file etc. Lorsqu'on prend un nouveau thread le thread courant est effacé. On a une règle du style : 
+	Quand un thread fini son exécution, on prend un nouveau thread. On a définit une file de threads. Lorsque le thread courant a fini, on va aller chercher le thread en tête de la file etc. Lorsqu'on prend un nouveau thread, le thread courant est effacé. On aura une règle ressemblant à la suivante : 
 	\smallbreak
 	$\langle \langle S,E,\epsilon,\emptyset\rangle,\langle S',E',C,D\rangle~TL\rangle
 	\longrightarrow 
@@ -1264,20 +1263,20 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	
 	\subparagraph{La création}
-	La création d'un thread va se faire dans la chaîne de contrôle du thread en cours d'exécution. Or un thread est comme définit plus haut de la forme $\langle S,E,C,D\rangle$. Il faut donc savoir quoi mettre dans chaque élément. On va debrieffer rapidement : 
+	La création d'un thread va se faire dans la chaîne de contrôle du thread en cours d'exécution. Or un thread est , comme définit plus haut, de la forme $\langle S,E,C,D\rangle$. Il faut donc savoir quoi mettre dans chaque élément. On va debrieffer rapidement : 
 	\begin{enumerate}
 		\item[-] la pile d'exécution $S$, elle indépendante pour chaque thread et de plus il y a dans la pile d'exécution seulement ce que le thread est entrain de traiter or il est en création donc pas encore actif donc $S$ sera vide.
 		\medbreak
 		
 		\item[-] l'environnement $E$, il contient toutes les substitutions faisable par le thread courant, il y a potentiellement des substitutions que notre thread en cours de création va avoir besoin.
 		\begin{ex}
-			L'exemple le plus concret vient de l'initialisation d'un signal. On va le voir plus tard mais l'initialisation va donner une substitution pour le thread courant. Or un signal est ,dans notre version final, initialisé pour tous le monde donc tout le monde doit pouvoir y accèder. On a donc besoin de l'environnement du thread courant ou un environnement général et un environnement privé. On va se contenter de prendre l'environnement du thread courant dans un premier temps.
+			L'exemple le plus concret vient de l'initialisation d'un signal. On va le voir plus tard mais l'initialisation va donner une substitution pour le thread courant. Or un signal est ,dans notre version final, initialisé pour tout le monde donc tout le monde doit pouvoir y accèder. On a donc besoin de l'environnement du thread courant ou un environnement général et un environnement privé. On va se contenter de prendre l'environnement du thread courant dans un premier temps.
 		\end{ex}
 		\medbreak
 		
 		\item[-] la chaîne de contrôle $C$, on va devoir prendre une portion de la chaîne de contrôle du thread courant pour l'insérer dans le thread en cours de création. 
 		\begin{enumerate}
-			\item La première façon de faire est de délimiter une portion via de mot-clé qu j'ai nommé $bspawn$ et $espawn$. Quand la machine va tomber sur le $bspawn$ elle sait qu'elle va devoir prendre dans la chaîne de contrôle jusqu'à trouver un le mot-clé $espawn$. Cette façon de faire a été utilisé dans les premières versions de la machine cependant elle a un défaut majeur : ce ne sont pas des commandes et on ne travaille pas dans la pile d'exécution mais dans la chaîne de contrôle. C'est décalé par rapport au fonctionnement global de la machine.
+			\item La première façon de faire est de délimiter une portion via deux mot-clé que j'ai nommé $bspawn$ et $espawn$. Quand la machine va tomber sur le $bspawn$ elle sait qu'elle va devoir prendre dans la chaîne de contrôle jusqu'à trouver un le mot-clé $espawn$. Cette façon de faire a été utilisée dans les premières versions de la machine cependant elle a un défaut majeur : ce ne sont pas des commandes et on ne travaille pas dans la pile d'exécution mais dans la chaîne de contrôle. C'est décalée par rapport au fonctionnement global de la machine.
 			\medbreak
 			
 			\item Le seconde façon de faire m'a été proposée par l'un de mes encadrants. On va utiliser les abstractions à notre avantage. La règle de l'abstraction est la suivante : 
@@ -1286,12 +1285,12 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			\longrightarrow_{SECD} 
 			\langle \langle\langle X,C'\rangle,E\rangle$ $S,E,C,D\rangle$
 			\smallbreak
-			On voit que la machine ne tente pas de traiter la chaîne de contrôle $C'$ car elle est "protégée" par l'abtraction. On va utiliser ce principe et l'additionner à une commande que l'on nomme $spawn$ qui va permettre à la machine que la fermeture contenu dans la pile d'exécution va servir pour créer un nouveau thread.
+			On voit que la machine ne tente pas de traiter la chaîne de contrôle $C'$ car elle est "protégée" par l'abstraction. On va utiliser ce principe et l'additionner à une commande que l'on nomme $spawn$. Elle va permettre à la machine de comprendre que la fermeture contenue dans la pile d'exécution va servir à créer un nouveau thread.
 			\medbreak
 			
 		\end{enumerate}
 		
-		\item[-] le dépôt $D$, Il n'y a pas a se poser de quetion pour lui il est vide au départ de chaque thread car il n'a aucune sauvegarde à garder d'une potentielle application.
+		\item[-] le dépôt $D$, Il n'y a pas à se poser de quetions pour lui. Il est vide au départ de chaque thread car il n'a aucune sauvegarde à garder d'une potentielle application.
 	\end{enumerate}
 	\bigbreak
 	
@@ -1310,42 +1309,42 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\item Est-il initialisé ?
 		\item Est-il émis ?
 	\end{enumerate}
-	La forme d'un signal dans notre machine est développée dans la partie \textbf{L'initialisation d'un signal}.
+	La forme d'un signal dans notre machine est développée dans la partie \textbf{L'initialisation}.
 	
 	\subparagraph{Le stockage}
-	Comme pour les threads, on doit se poser la question de la structure que l'on veut mais aussi de si l'on veut un ordre ou non. Plusieurs possibilités ont été explorées et sont directement liées, là aussi, on développe ce point dans la partie \textbf{L'initialisation d'un signal}. Mais dans tous les cas on va devoir créer une liste qui va stocker au moins le fait qu'il est émis, il faudra donc forcément un élément que l'on va nommer $SI$ qui sera une liste prévue pour stocker les signaux.
+	Comme pour les threads, on doit se poser la question de la structure que l'on veut mais aussi de si l'on veut un ordre ou non. Plusieurs possibilités ont été explorées et sont directement liées, là aussi, on développe ce point dans la partie \textbf{L'initialisation}. Mais dans tous les cas on va devoir créer une liste qui va stocker au moins le fait qu'il est émis, il faudra donc forcément un élément que l'on va nommer $SI$ qui sera une liste prévue pour stocker les signaux.
 	\bigbreak 
 	
 	
 	\subparagraph{L'initialisation}
-	La base est de pouvoir créer un signal ou plutôt de l'initialiser. Comment fonctionne l'initialisation peut être différents par rapport ce que l'on veut faire. On se focalise sur le champs d'action de l'initialisation. 
+	La base est de pouvoir créer un signal ou plutôt de l'initialiser. Comment fonctionnement de l'initialisation diffère par rapport au champ d'action proposé ? 
 	\medbreak
 	
-	Au final on se retrouve avec trois possibilités de règle pour initialiser un signal :
+	On se retrouve avec trois possibilités de règle pour initialiser un signal :
 	\smallbreak
 	\begin{itemize}
-		\item[-] On initialise un signal pour une partie de la chaîne de contrôle : Cela revient à devoir se focaliser sur une partie de la chaîne de contrôle qui obtient le droit d'emettre. Cela ressemble fortement à une application qui, je le rappelle, la règle suivante : 
+		\item[-] On initialise un signal pour une partie de la chaîne de contrôle : Cela revient à devoir se focaliser sur une partie de la chaîne de contrôle qui obtient le droit d'émettre. Cela ressemble fortement à une application qui, je le rappelle, à la règle suivante : 
 		\smallbreak
 		$\langle V~\langle\langle X,C'\rangle,E'\rangle~S,E,ap~C,D\rangle
 		\longrightarrow_{SECD} 
 		\langle \emptyset,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle$
 		\smallbreak
-		On va donc devoir créer une forme reconnaissable par la machine. On va s'inspirer des abstraction et créer un couple $\langle s,C\rangle$ avec le signal $s$ et la chaîne de contrôle où le signal $s$ est initialisé $C$. On a pas besoin de créer de fermeture car $\langle s,C\rangle$ car quand on tombera sur ce couple on saura qu'il faut initialiser un signal. On aura donc un règle de la forme : 
+		On va donc devoir créer une forme reconnaissable par la machine. On va s'inspirer des abstractions et créer un couple $\langle s,C\rangle$ avec le signal $s$ et la chaîne de contrôle où le signal $s$ est initialisé pour $C$. Quand on tombera sur ce couple on saura qu'il faut initialiser un signal. On aura donc un règle de la forme : 
 		\smallbreak
 		$\langle S,E,\langle s,C'\rangle~C,D\rangle
 		\longrightarrow 
 		\langle \emptyset,E[init \leftarrow s],C',\langle S,E,C,D\rangle\rangle$
 		\medbreak
 		
-		On remarque l'identifiant du signal est choisie par l'utilisateur. Cette règle fonctionne cependant plusieurs points sont problématique. 
+		On remarque l'identifiant du signal est choisie par l'utilisateur. Cette règle fonctionne cependant plusieurs points sont problématiques. 
 		\begin{enumerate}
 			\item L'identifiant ne devrait pas choisie par l'utilisateur.
 			\item La forme $\langle s,C'\rangle$ ressemble trop à une abstraction et peut être confondu si $s$ à la même forme q'une variable $X$. 
-			\item L'information de l'initialisation est stockée dans l'environnement mais l'émission est général et est donc stockée dans la liste des signaux qui sera de la forme $SI = \{...,s,..;\}$ avec $s$ le signal émit. Stocker à deux endroits des informations sur un élément n'est pas optimal.
+			\item L'information de l'initialisation est stockée dans l'environnement mais l'émission est général et est donc stockée dans la liste des signaux qui sera de la forme $SI = \{...,s,..;\}$ avec $s$ le signal émis. Stocker à deux endroits des informations complémentaires sur un élément n'est pas optimal.
 		\end{enumerate}
 		\medbreak
 		
-		Pour palier au premier problème on devrait pouvoir produire nos identifiant ce qui n'est pas facile car les signaux de sont pas tous réunis dans une liste. Sinon il nous faudrait un producteur d'identifiant. Un identifiant qu'il faudrait récupérer après via une application. Avec ces contraintes ce n'est pas la plus facile des tâches.
+		Pour palier au premier problème on devrait pouvoir produire nos identifiants, ce qui n'est pas facile car les signaux ne sont pas tous réunis dans une liste. Sinon il nous faudrait un producteur d'identifiant. Un identifiant qu'il faudrait récupérer après via une application. Avec ces contraintes ce n'est pas la plus facile des tâches.
 		\medbreak
 		
 		Pour palier au second problème, il faut modifier l'approche en utilisant l'abstraction une nouvelle fois et en créant une commande que l'on va nommer $init$, on dira que la variable $X$ de l'abstraction $\langle X,C\rangle$ sera la variable représentant le signal. On aura un règle de la forme : 
@@ -1358,31 +1357,31 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		Pour palier au troisième problème on peut réunir les informations de l'initialisation et de l'émission dans la liste des signaux. Cependant on va devoir ajouter une façon d'identifier les threads. Voyons cela avec un exemple.
 		\smallbreak
 		\begin{ex}
-			On crée deux threads que l'on va nommer, que l'on va nommer avec beaucoup d'imagination, $t1$ et $t2$.
+			On crée deux threads que l'on va nommer, avec beaucoup d'imagination, $t1$ et $t2$.
 			\smallbreak
-			$t1$ initialise un signal $s$ et va être bloquer par l'attente d'une émission. $t2$ lui va initialiser le signal $s$ aussi. Un problème survient si on ne vérifie qui à initialisé on peut voir la seconde intialisation qui est dans un autre thread comme un problème car le signal est déjà théoriquement initialisé. 
+			$t1$ initialise un signal $s$ et va être bloquer par l'attente d'une émission. $t2$ lui va initialiser le signal $s$ aussi. Un problème survient si on ne vérifie qui a initialisé $s$, on peut voir la seconde intialisation comme un problème car le signal est déjà théoriquement initialisé. 
 		\end{ex}
 		\medbreak
 		
-		Avec cette forme et la contrainte du champs d'action la résolution du problème est compliqué. On ne va pas prendre cette possibilité dans la machine mais cela vous intéresse je mets en Annexe les explications pour pouvoir créer une règle qui fonctionne avec ces contraintes.
+		Avec cette forme et la contrainte du champs d'action la résolution du problème est compliqué. On ne va pas prendre cette possibilité dans la machine mais si cela vous intéresse je mets en \hyperref[init]{Annexe} les explications pour pouvoir créer une règle qui fonctionne avec ces contraintes.
 		\bigbreak
 		
-		\item[-] On initialise un signal pour le thread courant : Je ne vais pas m'étendre sur cette version car elle rejoint de peu la version précédente et comme la version précédente une explication est donnée en Annexe.
+		\item[-] On initialise un signal pour le thread courant : Je ne vais pas m'étendre sur cette version car elle rejoint de peu la version précédente et comme la version précédente une explication est donnée en \hyperref[init]{Annexe}.
 		\bigbreak
 		
 		
-		\item[-] On initialise un signal pour la machine : La contrainte retire pas mal de problème, l'initialisation étant général on peut dire que si un signal dans la liste $SI$ alors il est initialisé. On aura donc $\forall~si \in SI~:~si = \langle s,emit\rangle$ avec l'identifiant $s$ du signal et le booléen représentant l'émission $emit$. Il suffit maintenant que la machine supporte un nouvelle élément : un signal $s$. Ainsi que la commande $init$ On va peut créer la règle suivante : 
+		\item[-] On initialise un signal pour la machine : La contrainte retire pas mal de problèmes, l'initialisation étant général on peut dire que : si un signal est dans la liste $SI$ alors il est initialisé. On aura donc $\forall~si \in SI~:~si = \langle s,emit\rangle$ avec l'identifiant $s$ du signal et le booléen représentant l'émission $emit$. Il suffit maintenant que la machine supporte un nouvelle élément : un signal $s$. Ainsi que la commande $init$ On va peut créer la règle suivante : 
 		\smallbreak
-		$\langle s~S,E,Init~C,D,SI\rangle \longrightarrow \langle S,E,C,D,SI~\langle s,false\rangle \rangle$ 
+		$\langle s~S,E,init~C,D,SI\rangle \longrightarrow \langle S,E,C,D,SI~\langle s,false\rangle \rangle$ 
 		\medbreak
 		
 		On peut aller plus loin en changeant la liste des signaux en file des signaux ce qui nous permet de créer un identifiant de signal facilement et donc éviter que l'utilisateur choisisse l'identifiant. De plus, ce ne sera plus une variable mais une constante que l'on pourra appliquer après. Cela convient plus à la machine. Ce qui nous donne la règle suivante :
 		\smallbreak
-		$\langle S,E,Init~C,D,SI~\langle s,emit\rangle\rangle \longrightarrow \langle s+1~S,E,C,D,SI~\langle s,emit\rangle ~\langle s+1,false\rangle \rangle$ 
+		$\langle S,E,init~C,D,SI~\langle s,emit\rangle\rangle \longrightarrow \langle s+1~S,E,C,D,SI~\langle s,emit\rangle ~\langle s+1,false\rangle \rangle$ 
 	\end{itemize}
 	\medbreak
 	
-	On va utiliser la dernière version dans la machine finale. En effet, les deux premières possibilités ont le grand défaut de donner la possibilité d'avoir plusieurs variable pour un identifiant. Je m'explique. Lorsque l'on va initialiser un signal pour un thread par exemple on va lui retourner un identifiant que l'on va ensuite appliquer à une variable. Si autre thread initialise ce même signal pour lui il peut lui donner un nom de variable qui diffère du thread précédent ce qui peut créer des imcompréhensions. Des versions sont cependant trouvable avec l'implantation des deux premières possibilités, dans l'optique que l'on peut leurs trouver une utilitée que je n'ai moi même pas vu . 
+	On va utiliser la dernière version dans la machine finale. En effet, les deux premières possibilités ont le grand défaut de donner la liberté d'avoir plusieurs variables (dans différents threads) pour un même identifiant. Je m'explique. Lorsque l'on va initialiser un signal pour un thread, on va lui retourner un identifiant que l'on va ensuite appliquer à une variable. Si autre thread initialise ce même signal pour lui il peut lui donner un nom de variable qui diffère du thread précédent ce qui peut créer des imcompréhensions. Des versions sont cependant trouvable avec leurs implantations, dans l'optique de leurs trouver une utilitée que je n'ai moi même pas vu . 
 	\bigbreak
 	
 	
@@ -2297,22 +2296,20 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\smallbreak
 		\begin{itemize}
 			\item[-] $fun~x \rightarrow fun~y \rightarrow~x~y$
-			\item[-] $~~~'a~~\rightarrow ~~~'b~~~\rightarrow~'c$
-			\item[] Or $x$ est une fonction du coup on aurait :
-			\item[-] $'a~=~'a~~\rightarrow ~~~'b~~~\rightarrow~'c$
+			\item[] $~~~'a~~\rightarrow ~~~'b~~~\rightarrow~'c$
 		\end{itemize} 
-		Ce n'est pas possible. D'où l'impossibilité d'avoir une récurrence innée. 
+		 Or $x$ est une fonction du coup on aurait :  $'a~=~'a~~\rightarrow ~~~'b~~~\rightarrow~'c$. Ce n'est pas possible. D'où l'impossibilité d'avoir une récurrence innée. 
 	\end{ex}
 
-	Pour ajouter la récursivité il va donc falloir indiquer à la machine que la fonction sur laquelle on va travailler est récursive. On peut voir cet indicateur en Ocaml par exemple via le mot-clé $rec$. Pour notre machine, on crée la commande $fix$. Cette commande va se situer juste après une abstraction pour indiquer que celle-ci est récursive. L'abstraction devra être de la forme $\langle f,\langle x,t\rangle\rangle$ avec $f$ le nom de la fonction récursive, le premier paramètre $x$ et le reste de la fonction (avec potentiellement d'autre paramètres) $t$. Notre but est de garder l'information de la récursion, pour ça on sait que lorsqu'une abstraction passe de la chaîne de contrôle à la pile d'exécution, elle devient une fermeture qui est un couple contenant une abstraction et un environnement. C'est dans cette environnement que l'on va stocker l'information.
+	Pour ajouter la récursivité il va donc falloir indiquer à la machine que la fonction sur laquelle on va travailler est récursive. On peut voir cet indicateur en Ocaml, par exemple, via le mot-clé $rec$. Pour notre machine, on crée la commande $fix$. Cette commande va se situer juste après une abstraction pour indiquer que celle-ci est récursive. L'abstraction devra être de la forme $\langle f,\langle x,t\rangle\rangle$ avec $f$ le nom de la fonction récursive, le premier paramètre $x$ et le reste de la fonction (avec potentiellement d'autre paramètres) $t$. Notre but est de garder l'information de la récursion, pour ça on sait que lorsqu'une abstraction passe de la chaîne de contrôle à la pile d'exécution, elle devient une fermeture qui est un couple contenant une abstraction et un environnement. C'est dans cette environnement que l'on va stocker l'information.
 	
 	\begin{ex}
-		Si on se focalise sur la machine SECD de base on peut voir un prototype de règle sur l'exemple suivant :
+		Si on se focalise sur la machine SECD de base, on peut voir un prototype de règle sur l'exemple suivant :
 		\smallbreak
 		$\langle \langle\langle f,\langle x,t\rangle\rangle,E'\rangle~S,E,fix~C,D\rangle
 		\longrightarrow \langle \langle \langle x,t\rangle,E'[f \leftarrow A]\rangle~S,E,fix~C,D\rangle$
 		\medbreak
-		Le but maintenant est de savoir quelle forme va prendre $A$. 
+		Le but, maintenant, est de savoir quelle forme va prendre $A$. 
 	\end{ex} 
 
 	$A$ est un élément qui fonctionne récursivement, en effet il va se contenir lui même. 
@@ -2320,22 +2317,22 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	On va avoir $A~=~\langle \langle \langle x,t\rangle,E'[f \leftarrow B]\rangle$ avec $B~=~\langle \langle \langle x,t\rangle,E'[f \leftarrow A]\rangle$
 	\medbreak
 	
-	Personnellement pour gérer son implantation il m'a fallu mettre un booléen représentant la récursion pour contourner la définition récursive de l'élément $A$. Un problème vient se greffer à la récursion. 
+	Personnellement pour gérer son implantation il m'a fallu mettre un booléen représentant la récursion pour contourner la définition récursive de l'élément $A$. Cependant une seconde difficulté vient se greffer à la récursion. 
 	\medbreak
 	
 	En effet notre machine a pour stratégie d'évaluation l'appel par valeur, c'est-à-dire que l'on va d'abord évaluer les paramètres avant la fonction. Or la conditionnelle en $\lambda$-calcul s'écrit comme une fonction qui prend trois paramètres ($\lambda vtf.(v~t~f)$). 
 	\smallbreak
 	\begin{ex}
-		Soit la fonction factorielle tel que:
+		Soit la fonction factorielle telle que:
 		\smallbreak
 		$let~fact~n~=~if~(n=0)~then~1~else~n*fact~(n-1)~;;$
 		\smallbreak
-		Réecris en pseudo $\lambda$-calcul cela donne :
+		Réecrit en pseudo $\lambda$-calcul cela donne :
 		\smallbreak
 		$\lambda fact.n.(\lambda vtf.(v~t~f)~\underline{(n = 0)}~\underline{1}~\underline{(n*fact~(n-1))})$
 		\medbreak
 		
-		Les parties soulignées sont les paramètre de la conditionnelle. Fonctionnant par l'appel par valeur on doit les évaluer en premier. Dedans il y a une récursion qui va évalué etc. On va toujours évaluer la récursion avant la conditionnelle.
+		Les parties soulignées sont les paramètres de la conditionnelle. Fonctionnant par appel par valeur on doit les évaluer en premier. Dedans il y a une récursion qui va être évaluée etc. On va toujours évaluer la récursion avant la conditionnelle.
 	\end{ex}
 	\bigbreak
 	
@@ -2350,7 +2347,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\newpage
 	
 	
-	\paragraph{Type } Les types sont extrêmement important dans la programmation fonctionnelle. Ils nous permettent de définir des structures complexes et nous donnent la possibilités de travailler avec. Tout d'abord il faut savoir comment on va représenter un type dans notre machine ensuite comment le créer et enfin comment l'utiliser.
+	\paragraph{Type } Les types sont extrêmement importants dans la programmation fonctionnelle. Ils nous permettent de définir des structures complexes et nous donnent la possibilités de travailler avec. Tout d'abord il faut savoir comment on va représenter un type dans notre machine ensuite comment le créer et enfin comment l'utiliser.
 	
 		\subparagraph{Structure d'un type} Les types sont des structures composées de plusieurs paramètres qui sont liées via un constructeur.
 		
@@ -2370,7 +2367,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			$let~arbre~=~Node(Leaf(1),2,Leaf(3))~;;$
 			\medbreak
 			
-			En prenant en compte que la machine garde en mémoire uniquement l'identifiant de constructeur (ici on va garder leurs noms pour pour que l'exemple soit plus clair) et le nombre de paramètre, on aurait:
+			En prenant en compte que la machine garde en mémoire uniquement l'identifiant de constructeur (ici on va garder leurs noms pour que l'exemple soit plus clair) et le nombre de paramètre, on aurait:
 			\smallbreak
 			$let~arbre~=~Node~3~(Leaf~1~1)~2~(Leaf~1~3)$
 			\medbreak 
@@ -2379,7 +2376,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			\smallbreak
 			$\lambda arbre.(t)~Node~3~(Leaf~1~1)~2~(Leaf~1~3)$ avec $t$ le reste du programme à exécuter
 			\smallbreak
-			On a l'intution de ce qu'il faut rajouter pour que cela fonctionne.
+			On a l'intuition de ce qu'il faut rajouter pour que cela fonctionne.
 		\end{ex}
 	
 		On va devoir ajouter une commande que l'on va nommer $build$.Elle va indiquer la création d'un type. Cette commande $build$ va avoir besoin de trois informations : l'identifiant de constructeur, le nombre de paramètres et les paramètres. La règle pour une machine SECD serait la suivante :
@@ -2388,7 +2385,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\longrightarrow
 		\langle [b,V^{1},...,V^{n}]~S,E,C,D,\rangle$
 		
-	\paragraph{Filtrage } Les types sont par exemple en Ocaml utilisés via le filtrage. C'est la base pour pouvoir faire des opérations sur un type. La forme du filtrage est la suivante :
+	\paragraph{Filtrage } Les types sont utilisés via le filtrage. C'est la base pour pouvoir faire des opérations sur un type. La forme du filtrage est la suivante :
 	\begin{enumerate}
 		\item $match~elem~with$
 		\item $~|~pattern^{1} \rightarrow processus^{1}$
@@ -2430,7 +2427,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	\subparagraph{Pattern } Le filtre fonctionne avec un pattern. Ce pattern est soit une variable, soit un type contenant des variables. Du coup on aura un pattern tel que : $pattern~=~[c,X_{1},...,X_{n}]$ avec le nombre de paramètre $n$ et l'identifiant de constructeur $c$ ou $pattern~=~X$.
 	
-	\subparagraph{Comparaison de deux types } Pouvoir comparer deux types est la base pour le filtrage. Ici la comparaison ne sera trop difficile car on va comparer leurs identifiants de constructeurs pour savoir si c'est le même type. Pour cela on va ajouter une commande $compare$ qui va indiquer la volonté de comparer les deux types en tête de la pile d'exécution. Le résultat sera retourné dans la pile sous la forme d'un booléen écrit en $\lambda$-calcul. La règle sera donc de la forme :
+	\subparagraph{Comparaison de deux types } Pouvoir comparer deux types est la base pour le filtrage. Ici la comparaison ne sera pas trop difficile car on va comparer leurs identifiants de constructeurs pour savoir si c'est le même type. Pour cela on va ajouter une commande $compare$ qui va indiquer la volonté de comparer le type et le pattern en tête de la pile d'exécution. Le résultat sera retourné dans la pile sous la forme d'un booléen écrit en $\lambda$-calcul. La règle sera donc de la forme :
 	\smallbreak
 	\begin{enumerate}
 		\item[] $\langle [c',V^{1}...V^{n}]~[c,X^{1}...X^{n}]~S,E,compare~C,D\rangle
@@ -2468,10 +2465,10 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\end{itemize}
 	\medbreak
 	
-	On peut remarquer que la machine comprend qu'elle est dans une sous décomposition en voyant qu'il n'y que la commande $destruct$ dans la chaîne de contrôle. En effet si on prend l'exemple de l'Ocaml, je prends en compte que le destruct fait référence à la flèche $\rightarrow$ or cette flèche est toujours suivie sinon elle provoque une erreur. Du coup la commande $destruct$ ne peut fatalement pas être le dernière élément de la chaîne de contrôle normalement.
+	On peut remarquer que la machine comprend qu'elle est dans une sous décomposition en voyant qu'il n'y que la commande $destruct$ dans la chaîne de contrôle. En effet si on prend l'exemple de l'Ocaml, je prends en compte que le $destruct$ fait référence à la flèche $\rightarrow$ or cette flèche est toujours suivie sinon elle provoque une erreur. Du coup la commande $destruct$ ne peut fatalement pas être le dernière élément de la chaîne de contrôle normalement.
 	\bigbreak
 	
-	La seconde version est, pour ça part, beaucoup plus légère que la première. En effet, on part du principe que la machine ne traite que des patterns contenant uniquement des variables. Cela ne veut pas dire que le langage ne supporte pas les patterns imbriqués mais seulement que le pattern sera convertit pour ne pas inclure de pattern imbriqué. Prenons un exemple :
+	La seconde version est, pour ça part, beaucoup plus légère que la première. En effet, on part du principe que la machine ne traite que des patterns contenant uniquement des variables. Cela ne veut pas dire que le langage ne supporte pas les patterns imbriqués mais seulement que le pattern sera convertit pour ne pas inclure de patterns imbriqués. Prenons un exemple :
 	
 	\begin{ex}
 		Si on prend le type $tree$ et $arbre~=~Node(Leaf(1),2,Leaf(3))$. 
@@ -2502,7 +2499,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\end{enumerate} 
 		\bigbreak
 		
-		Deux décompositions vont se faire et permettre de ne pas faire une règle aussi complexe que la première version. On ne connaît potentiellement pas la forme de l'élément quand on fait un match du coup on peut aussi l'écrire sous la forme suivante :
+		Deux décompositions vont se faire et permettre de ne pas faire une règle aussi complexe que la première version. On ne connaît normalement pas la forme de l'élément quand on fait un match du coup on peut aussi l'écrire sous la forme suivante :
 		\smallbreak
 		\begin{enumerate}
 			\item $\lambda vtf.(v~t~f)~(arbre~=~Node(Leaf(a),b,c))$
@@ -2531,9 +2528,6 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\newpage
 	
 	\subsection{Sémantique de la machine abstraite}
-	
-	Pour cette extension de la machine je ne pars pas de la machine TTSIH mais de la machine TTSI car ayant les types d'ajouter on peut voir les erreurs comme un type spécial et les ajouter après. De plus je ne suis pas satisfait de l'implantation des erreurs faite en amont.
-	\bigbreak
 	
 	
 	\textbf{\textit{Soit $\langle T,TL,SI,IP\rangle$ avec :}}
@@ -2924,11 +2918,11 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\medbreak
 	
 	\paragraph{Créer une exception }
-	Ce n'est pas la première fois que ma réflexion ce pose sur les exceptions. En effet avant même la première version de la machine TTSI finie un travail a été fait sur les exceptions. Dans cette version elles été vu comme des erreurs que l'on pouvait lever ou non. Un élément $erreur$ a été créé pour représenter les erreurs dans la machine cependant le gros défaut c'est que l'on pouvait pas créer des erreurs, seules celle reconnaissable par la machine pouvaient être utilisées. Cela nous avançait pas vraiment et de plus on perdait complètement l'idée de création d'exception. Heureusement la dernière version de la machine TTSI ajoute les types. L'idée est de voir les exceptions comme des types. La création est déjà toute faite car on va créer une exception via $build$.
+	Ce n'est pas la première fois que ma réflexion se pose sur les exceptions. En effet avant même la première version de la machine TTSI finie un travail a été fait sur les exceptions. Dans cette version elles été vu comme des erreurs que l'on pouvait lever ou non. Un élément $erreur$ a été créé pour représenter les erreurs dans la machine cependant le gros défaut c'est que l'on pouvait pas créer des erreurs, seules celle reconnaissable par la machine pouvaient être utilisées. Cela nous avançait pas vraiment et de plus on perdait complètement l'idée de création d'exception. Heureusement la dernière version de la machine TTSI ajoute les types. L'idée est de voir les exceptions comme des types. La création est déjà toute faite car on va créer une exception via $build$.
 	\medbreak
 	
 	\paragraph{Lever un exception }
-	La présence d'une exception est-elle toujours signe d'un problème ? Nan par exemple en Ocaml une exception peut être utilisé comme filtre dans un $match$ ou encore en java on peut utiliser une exception sans que la machine soit compromise. Il fait donc la différence entre une exception et une exception levée. Pour cela on va utiliser un mot-clé que l'on va reprendre de l'Ocaml : $raise$. On part du principe que l'on n'utilise pas la propagation des erreurs lorsqu'une exception est levée mais que l'on vérifiera directement si une structure de gestion est présente.
+	La présence d'une exception est-elle toujours signe d'un problème ? Nan par exemple en Ocaml une exception peut être utilisé comme filtre dans un $match$ ou encore en java on peut utiliser une exception sans que la machine soit compromise. Il faut donc faire la différence entre une exception et une exception levée. Pour cela on va utiliser un mot-clé que l'on va reprendre de l'Ocaml : $raise$. On part du principe que l'on n'utilise pas la propagation des erreurs lorsqu'une exception est levée mais que l'on vérifiera directement si une structure de gestion est présente.
 	\medbreak
 	
 	\paragraph{Gérer les exceptions}
@@ -2960,7 +2954,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\medbreak
 	
 	\paragraph{Comment garder le catch dans la machine ?} 
-	Lorsque l'on tombe sur la forme $\langle X,C\rangle~\langle X',C'\rangle~catch$ dans la chaîne de contrôle on sait que l'on va devoir garder la partie de remplacement de côté le temps de voir si on en a la nécessitée. Pour cela on va ajouter un emplacement dans notre thread $T$ qui est pour l'instant de la forme $T = \langle I,S,E,C,D\rangle$. en effet on va ajouter l'élément $H$ qui va garder les informations nécessaire. On aura donc $T = \langle I,S,E,C,D,H\rangle$. L'utilité de mettre le gestionnaire d'exception ici est de le garder privé à chaque thread. Ce qui évite les comportements étranges tels que le thread 2 utilise le gestionnaire d'exception du thread 5.
+	Lorsque l'on tombe sur la forme $\langle X,C\rangle~\langle X',C'\rangle~catch$ dans la chaîne de contrôle on sait que l'on va devoir garder la partie de remplacement de côté le temps de voir si on en a la nécessité. Pour cela on va ajouter un emplacement dans notre thread $T$ qui est pour l'instant de la forme $T = \langle I,S,E,C,D\rangle$. On va ajouter l'élément $H$ qui va garder les informations nécessaires. On aura donc $T = \langle I,S,E,C,D,H\rangle$. L'utilité de mettre le gestionnaire d'exception ici est de le garder privé à chaque thread. Ce qui évite les comportements étranges tels que le thread 2 utilise le gestionnaire d'exception du thread 5.
 	\medbreak
 	
 	\paragraph{Que garder dans le gestionnaire ?} 
@@ -3330,21 +3324,21 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			\longrightarrow_{TTSIH} \langle \langle\langle X',C'\rangle,E' [X \leftarrow \langle\langle X',C'\rangle,E'[X \leftarrow ...]\rangle]\rangle~S,E,C,D\rangle$ 
 			\item[]
 		\end{itemize}\newpage
-		\item[] \textbf{Partie pour les exceptions :}
+		\item[] \textbf{Partie pour les exceptions :} Cette partie ajoute les exceptions et leurs gestions.
 		\item[]
 		\begin{itemize}
-			\item[] \textbf{Erreur levée  gérée :}
+			\item[] \textbf{Erreur levée  gérée :} Une erreur est levée mais le gestionnaire d'exception contient un élément.
 			\smallbreak
 			$\langle\langle I,[e]~S,E,raise~C,D,\langle \langle\langle X,C''\rangle,E''\rangle~S',E',C',D',H\rangle\rangle,TL,SI,IP\rangle$
 			\smallbreak
 			$\longrightarrow_{TTSIH} \langle\langle I,\epsilon,E'' [X \leftarrow [e]],C'',\langle S',E',C',D',H\rangle,H\rangle,TL,SI,IP\rangle$ 
 			\item[]
-			\item[] \textbf{Erreur levée  non gérée :}
+			\item[] \textbf{Erreur levée  non gérée :} Une erreur est levée et le gestionnaire d'exception est vide. Rien ne peut gérer cette exception on a donc une erreur de levée et un arrêt de la machine.
 			\smallbreak
 			$\langle\langle I,[e]~S,E,raise~C,D,\emptyset\rangle,TL,SI,IP\rangle$
 			$\longrightarrow_{TTSIH} \langle\langle I,[e],E,\epsilon,\emptyset,\emptyset\rangle,\emptyset,SI',IP\rangle$ \\avec $SI' = \forall~si \in SI~:~si = \langle s,\langle emit,CS,SSI,TL\rangle\rangle$ devient $si = \langle s,\langle emit,CS,SSI,\emptyset\rangle\rangle$ 
 			\item[]
-			\item[] \textbf{Création gestionnaire :}
+			\item[] \textbf{Création gestionnaire :} On a deux fermetures dans la pile d'exécution et on a la commande $catch$. On crée un nouveau gestionnaire que l'on met dans $H$, on sauvegarde la machine dans le dépôt et on commence à utiliser le contenu protègé.
 			\smallbreak
 			$\langle\langle I,\langle\langle X,C'\rangle,E'\rangle~\langle\langle X',C''\rangle,E''\rangle~S,E,catch~C,D,H\rangle,TL,SI,IP\rangle$
 			\smallbreak
@@ -3408,20 +3402,34 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	\chapter{Conclusion}
 	
-	(À retravailler)
+	
 	Le sujet traitait \textit{la programmation réactive synchrone} à travers un travail d'implantation d'une machine virtuelle. Pour cela, nous sommes repartis de la base en apprenant le langage de programmation $\lambda$-calcul. On a continué notre apprentissage avec le langage de programmation ISWIM. On s'est intéressé aux machines abstraites qui découle de ces langages, c'est-à-dire les machines CC, SCC, CK, CEK et SECD. On sait aussi intéressé à la programmation réactive. De là, nous sommes partis d'une machine existante, la machine SECD, pour créer notre machine fonctionnelle réactive.
-	\begin{itemize}
-		\item[-] Dans un premier temps on a créé une machine abstraite fonctionnelle réactive pure. On a mis les bases de la programmation réactive via l'ajout des threads et des signaux en prenant le principe du langage SL pour connaître l'absence d'un signal. 
-		\item[-]Dans un deuxième temps on a créé une machine abstraite fonctionnelle réactive avec partage de valeurs. Les signaux ne sont plus seulement présents ou absents mais permettent de transférer des données entre chaque thread. On a créé une mémoire partagée découpée grâce au signal qui le contient et au thread qui la mis dans la mémoire.
-		\item[-] Dans un troisième temps un petit mot a été glissé sur la gestion des erreurs. 
-	\end{itemize}
 	\medbreak
 	
-	J'aimerai souligner tout le travail effectué durant le stage qui n'est pas présent dans le rapport ou seulement en Annexe. Beaucoup de versions intermédiaires de notre travail final existe ainsi que leurs implantations en OCaml.
+	Dans un premier temps on a créé une machine abstraite fonctionnelle réactive pure. On a mis les bases de la programmation réactive via l'ajout des threads et des signaux en prenant le principe du langage SL pour connaître l'absence d'un signal. 
+	\medbreak
+		
+	Dans un deuxième temps on a créé une machine abstraite fonctionnelle réactive avec partage de valeurs. Les signaux ne sont plus seulement présents ou absents mais permettent de transférer des données entre chaque thread. On a créé une mémoire partagée découpée grâce au signal qui le contient et au thread qui la mis dans la mémoire.
 	\medbreak
 	
-	Encore beaucoup de travail reste à faire. En effet, il manque une preuve du déterminisme de la machine qui a été effectuée en partie au brouillon. Une implantation avec un système de gestion d'erreur est une prochaine étape à franchir pour que notre machine abstraite fonctionnelle réactive soit entièrement opérationnelle.
+	Avant d'aller plus loin dans les implantations on a prouvé le déterminisme de la machine TTSI. C'est une preuve simple mais qui reste indispensable pour que notre machine abstraite fonctionnelle réactive puisse être utilisable.
 	\medbreak
+	
+	Dans un troisième temps on a ajouté la récursivité à la machine. En effet, on l'avait perdu avec le typage. On a implanté une commande $fix$. C'est un ajout que l'on aurait pu faire bien plus tôt mais il ne nous était pas encore indispensable. Le prochain point le nécessite.
+	\medbreak
+	
+	Dans un quatrième temps on a ajouté les types à notre machine. Les types sont des éléments quasi vitaux pour une machine abstraite fonctionnelle. On gère la construction et le filtrage sans ce soucier de ce que représente le type.
+	\medbreak
+	
+	Enfin on a ajouté les exceptions, qui sont vu comme des types dans notre machine. Cela permet d'éviter de créer un élément différent pour les exceptions. Cependant les exceptions ne se propagent pas.
+	\bigbreak
+	
+	
+	J'aimerai souligner tout le travail effectué durant le stage qui n'est pas présent dans le rapport ou seulement en Annexe. Beaucoup de versions intermédiaires de notre travail final existent ainsi que leurs implantations en OCaml.
+	\medbreak
+	
+	Notre machine commence à être assez complète, il nous manque cependant la preuve du déterminisme de la dernière version de la machine. Les ajouts restent simples à implanter dans notre machine donc encore beaucoup d'ajouts peuvent être faits dans le temps tant que nous restons dans la logique de fonctionnement prise depuis le début. Personnellement je ne vois pas ce que l'on pourrait ajouter à notre machine à part peut être une gestion des variables globales et locales plus explicite car cela reste assez flou.
+	\bigbreak
 	
 	Ce stage m'a permi d'entrevoir le monde de la recherche, ses avantages et ses inconvénients. Je pense avoir gagné en rigueur, grâce à l'écriture de la sémantique stricte ainsi que la preuve de déterminisme qui est en cours d'écriture, ainsi qu'en rapidité d'exécution grâce aux dates butoirs données pour faire chaque parties de la machine. Je suis content d'avoir postulé pour ce stage, le monde de la recherche est fascinant.
 	
@@ -3826,9 +3834,9 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\end{ex}
 	\newpage
 	
-	\subsection*{Format de la machine et règle en fonction du champs d'action de l'initialisation}
+	\subsection*{Format de la machine et règle en fonction du champs d'action de l'initialisation}\label{init}
 	
-	Un signal peut être initialiser pour 3 champs d'actions possibles : 
+	Un signal peut être initialisé pour 3 champs d'actions possibles : 
 	\begin{enumerate}
 		\item la machine 
 		\item le thread courant
@@ -3839,7 +3847,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	Le premier cas a été traité et présenté dans la version officiel. Il reste intéressant de voir les versions alternatives que peut engranger un simple changement de champs d'action. On va d'abord prendre au plus large pour aller au plus restreint, on passe donc à la restriction du thread courant.
 	\bigbreak
 	
-	\paragraph{Initialisation pour le thread courant}	Lorsque l'on va initialiser il va falloir garder en mémoire quel thread l'a fait. Ce point nous contraint à créer des identifiants pour les threads. Pour cela on va ajouter un entier dans notre machine que l'on va nommer \textit{producteur d'identifiant (IP)} et qui , comme son nom l'indique, produira un identifiant pour chaque thread créé. Cela va nous obliger à modifier un peu les threads tels que $T = \langle I,S,E,C,D\rangle$ avec l'identifiant $I$ ainsi que la règle du spawn qui va donner la règle suivant : 
+	\paragraph{Initialisation pour le thread courant}	Lorsque l'on va initialiser il va falloir garder en mémoire quel thread l'a fait. Ce point nous contraint à créer des identifiants pour les threads. Pour cela on va ajouter un entier dans notre machine que l'on va nommer \textit{producteur d'identifiant (IP)} et qui , comme son nom l'indique, produira un identifiant pour chaque thread créé. Cela va nous obliger à modifier un peu les threads tels que $T = \langle I,S,E,C,D\rangle$ avec l'identifiant $I$ ainsi que la règle du $spaw$n qui va donner la règle suivant : 
 	\smallbreak
 	$\langle \langle I,\langle\langle X,C'\rangle,E\rangle~S,E,spawn~C,D\rangle,TL,SI,IP \rangle 
 	\longrightarrow 
@@ -3854,9 +3862,9 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\end{enumerate}
 	\medbreak
 	
-	Les signaux vont devoir être différenciable eux aussi. On va utiliser des identifiants pour cela. Comme dit plus haut on ne souhaite pas que l'utilisateur est la main sur les identifiants on va donc devoir les créer. On pourrait simplement reprendre ce qui à été fait pour les threads, c'est-à-dire, utiliser un élément ajouter à la machine qui va nous servir de compteur. Cependant il faudrait un compteur par thread du coup ce n'est pas très efficace.
+	Les signaux vont devoir être différenciable eux aussi. On va utiliser des identifiants pour cela. Comme dit plus haut on ne souhaite pas que l'utilisateur est la main sur les identifiants on va donc devoir les créer. On pourrait simplement reprendre ce qui à été fait pour les threads, c'est-à-dire, utiliser un élément ajouter à la machine qui va nous servir de compteur. Cependant il faudrait un compteur par thread du coup ce ne serait pas très efficace.
 	\smallbreak
-	Nos signaux ne sont pas détruit lors du fonctionnement de la machine, ils restent jusqu'à la fin. Avec cela en tête, on peut modifier la liste en file et donc garder un ordre dans les signaux et finalement pouvoir donner un nouvelle identifiant.
+	Nos signaux ne sont pas détruit lors du fonctionnement de la machine, ils restent jusqu'à la fin. Avec cela en tête, on peut modifier la liste en file et donc garder un ordre dans les signaux et finalement pouvoir donner un nouvelle identifiant sans utiliser de compteur exterieur.
 	\medbreak
 	
 	Une difficulté s'ajoute à cela. On va devoir faire une recherche dans notre file, on va prendre les signaux deux par deux et si le premier a été initialisé par notre thread mais pas le second alors le second le devient.
@@ -3870,9 +3878,9 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\end{ex} 
 	\medbreak
 	
-	Quand on initialise un signal on doit savoir si le thread à déjà initialisé un signal auparavant. Car sinon on ne saura pas qu'il faut prendre le premier signal. Du coup il va falloir vérifier préalablement si le thread à déjà initialisé un signal.
+	Quand on initialise un signal on doit savoir si le thread a déjà initialisé un signal auparavant. Car sinon on ne saura pas qu'il faut prendre le premier signal. Du coup il va falloir vérifier préalablement si le thread a déjà initialisé un signal.
 	\begin{ex}
-		On cherche à vérifier si le thread $I$ à déjà initialisé un signal.
+		On cherche à vérifier si le thread $I$ a déjà initialisé un signal.
 		\smallbreak
 		\begin{enumerate}
 			\item Pour chaque $\langle s,il,emit\rangle$ de $SI$ :
@@ -3884,7 +3892,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	Si il n'y a pas de signal dans $SI$ on va créer un premier signal avec l'identifant 0. Si la file est impair alors on peut avoir le cas où le dernière élément de $SI$ contient aussi notre identifiant de thread il va donc falloir créer un nouveau signal en prenant l'identifiant du dernier signal et en l'incrémentant de un.
 	\begin{ex}
-		On cherche à initialise un signal pour le thread qui a pour identifiant $I$.
+		On cherche à initialiser un signal pour le thread qui a pour identifiant $I$.
 		\smallbreak
 		\begin{enumerate}
 			\item Pour chaque $\langle s,il,emit\rangle$ de $SI$ :
@@ -3899,21 +3907,25 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\longrightarrow 
 	\langle \langle I,id~S,E,C,D\rangle,TL,SI',IP \rangle$ 
 	\smallbreak 
-	avec $initialise~SI$ qui est une fonction qui modifie $SI$ en initialisant un signal pour un thread donné et qui retourne le couple identifiant, nouvelle file de signaux $(id,SI')$.
+	avec $initialise(SI,I)$, une fonction qui modifie $SI$ en initialisant un signal pour un thread donné $I$ et qui retourne le couple identifiant, nouvelle file de signaux $(id,SI')$.
 	\medbreak
 	 
 	Il est possible que ce ne soit pas encore très clair pour vous du coup je vous renvoie à l'adresse du git comprenant toutes mes implantations ainsi vous pourrez voir comment je l'ai implanté.
 	
 	\paragraph{Initialisation pour une chaîne de contrôle}
 	
-	Limité à une chaîne de contrôle va nous obliger à créer une nouvelle forme de sauvegarde. Je m'explique, on va utiliser une abstraction pour stocker la partie de la chaîne de contrôle pour lequel le signal va être initialisé. On va prendre le principe de la règle d'application qui est la suivante :
+	Limité à une chaîne de contrôle va nous obliger à créer une nouvelle forme de sauvegarde. Je m'explique, on va utiliser une abstraction pour stocker la partie de la chaîne de contrôle pour laquelle le signal va être initialisé. On va prendre le principe de la règle d'application qui est la suivante :
 	\smallbreak
 	$\langle \langle\langle X,C'\rangle,E'\rangle~V~S,E,ap~C,D\rangle \longrightarrow_{SECD} \langle \epsilon,E'[X \leftarrow V],C',\langle S,E,C,D\rangle\rangle$
 	\medbreak
 	
-	L'idée est que lorsque l'on va initialiser un signal on va sauvegarder la machine dans le dépôt pour se concentrer sur la chaîne de contrôle pour laquelle notre signal est initialiser. Le problème est de différencier les sauvegardes normales et les sauvegardes pour l'initialisation. Pour cela, on va créer une nouvelle forme de la sauvegarde qui contient l'identifiant de signal tel que :
+	L'idée est que lorsque l'on va initialiser un signal on va sauvegarder la machine dans le dépôt pour se concentrer sur la chaîne de contrôle pour laquelle notre signal est initialisé. Le problème est de différencier les sauvegardes normales et les sauvegardes pour l'initialisation. Pour cela, on va créer une nouvelle forme de la sauvegarde qui contient l'identifiant de signal telle que :
 	$D = \langle id,\langle S,E,C,D\rangle\rangle$ avec l'identifiant du signal initialisé $id$.
 	\medbreak
+	
+	Il va aussi falloir enlever l'initialisation en sortie de la chaîne de contrôle et donc la reprise de la sauvegarde. Pour cela on va ajouter un booléen pour chaque élément de la liste $IL$. Du coup on aura une file de couple $\langle i,init\rangle$ avec l'identifiant du thread $i$ et le booléen représentant l'initialisation $init$.
+	\bigbreak
+	
 	
 	La règle d'initialisation va donc être un peu et va donner : 
 	\smallbreak
@@ -3921,7 +3933,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\longrightarrow 
 	\langle \langle I,id,E',C',\langle id,\langle S,E,C,D\rangle\rangle\rangle,TL,SI',IP \rangle$ 
 	\smallbreak 
-	avec $initialise~SI$ qui est une fonction qui modifie $SI$ en initialisant un signal pour un thread donné et qui retourne le couple identifiant, nouvelle file de signaux $(id,SI')$.
+	avec $initialise(SI,I)$, une fonction qui modifie $SI$ en initialisant un signal pour un thread donné $I$ et qui retourne le couple identifiant, nouvelle file de signaux $(id,SI')$.
 	\newpage
 	
 	\subsection*{Les différentes versions faite pour rendre la machine SECD concurrente}
