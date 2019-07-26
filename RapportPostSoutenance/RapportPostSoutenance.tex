@@ -88,7 +88,7 @@ possibilité de retracer ma compréhension du $\lambda$-calcul afin qu'à la fin
 que moi ce langage. La première partie regroupe aussi toutes les recherches préliminaires effectuées dans le but de pouvoir cerner complètement le sujet
 du stage et de pouvoir effectuer un travail optimal.
 \smallbreak
-La deuxième partie traite du travail réalisé pour créer la machine abstraite demandée à partir d'une machine déjà existante. J'y explique les contraintes créées par l'ajout de la concurrence dans une machine abstraite pas à pas en prenant chaque point de la concurrence et en montrant comment on va l'appliquer sur notre machine. On commence d'abord par une concurrence basique sans partage de valeurs ensuite on ajoute un partage de valeurs via signaux. On continue avec la récursion et les types avec le filtrage qui leurs est lié. Et enfin un petit point sur les exceptions. Une partie sera consacrée au déterminisme de la machine à travers une preuve par induction.
+La deuxième partie traite du travail réalisé pour créer la machine abstraite demandée à partir d'une machine déjà existante. J'y explique les contraintes créées par l'ajout de la concurrence dans une machine abstraite en prenant chaque point de la concurrence et en montrant comment on va l'appliquer sur notre machine. On commence d'abord par une concurrence basique sans partage de valeurs ensuite on ajoute un partage de valeurs via signaux. On continue avec la récursion et les types avec le filtrage qui leurs est lié. Et enfin un petit point sur les exceptions. Une partie sera consacrée au déterminisme de la machine à travers une preuve par induction.
 \smallbreak
 Pour finir, je résumerai tous ce qui a été fait durant le stage jusqu'au rendu de ce rapport ainsi que les points qui sont à changer, à développer ou encore ce qu'il reste à faire. Un petit mot sera glissé par rapport aux sémantiques intermédiaires créées et leurs implantations en OCaml. Toutes ces implantations sont retrouvables sur mon git : https://github.com/JordanIschard/StageL3.git.
 \smallbreak
@@ -1249,7 +1249,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	
 	
 	\subparagraph{Le fonctionnement} 
-	Un petit point dessus histoire de ne pas laisser de zone d'ombre dans le fonctionnement de la machine. Les threads sont, par définition, des machines SECD. Du coup lorsqu'un thread sera exécuté, il fonctionnera comme une machine SECD classique avec les ajouts que l'on est entrain d'expliquer et il se finira comme une machine SECD aussi avec un autre état expliqué et donné plus tard dans la sémantique.
+	Un petit point dessus histoire de ne pas laisser de zone d'ombre dans le fonctionnement de la machine. Les threads sont des machines SECD. Du coup lorsqu'un thread sera exécuté, il fonctionnera comme une machine SECD classique avec les ajouts que l'on est entrain d'expliquer et il se finira comme une machine SECD aussi avec un autre état expliqué et donné plus tard dans la sémantique.
 	\bigbreak
 	
 	
@@ -1268,7 +1268,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\item[-] la pile d'exécution $S$, elle indépendante pour chaque thread et de plus il y a dans la pile d'exécution seulement ce que le thread est entrain de traiter or il est en création donc pas encore actif donc $S$ sera vide.
 		\medbreak
 		
-		\item[-] l'environnement $E$, il contient toutes les substitutions faisable par le thread courant, il y a potentiellement des substitutions que notre thread en cours de création va avoir besoin.
+		\item[-] l'environnement $E$, il contient toutes les substitutions faisables par le thread courant, il y a potentiellement des substitutions que notre thread en cours de création va avoir besoin.
 		\begin{ex}
 			L'exemple le plus concret vient de l'initialisation d'un signal. On va le voir plus tard mais l'initialisation va donner une substitution pour le thread courant. Or un signal est ,dans notre version final, initialisé pour tout le monde donc tout le monde doit pouvoir y accèder. On a donc besoin de l'environnement du thread courant ou un environnement général et un environnement privé. On va se contenter de prendre l'environnement du thread courant dans un premier temps.
 		\end{ex}
@@ -1276,7 +1276,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		
 		\item[-] la chaîne de contrôle $C$, on va devoir prendre une portion de la chaîne de contrôle du thread courant pour l'insérer dans le thread en cours de création. 
 		\begin{enumerate}
-			\item La première façon de faire est de délimiter une portion via deux mot-clé que j'ai nommé $bspawn$ et $espawn$. Quand la machine va tomber sur le $bspawn$ elle sait qu'elle va devoir prendre dans la chaîne de contrôle jusqu'à trouver un le mot-clé $espawn$. Cette façon de faire a été utilisée dans les premières versions de la machine cependant elle a un défaut majeur : ce ne sont pas des commandes et on ne travaille pas dans la pile d'exécution mais dans la chaîne de contrôle. C'est décalée par rapport au fonctionnement global de la machine.
+			\item La première façon de faire est de délimiter une portion via deux mots-clés que j'ai nommé $bspawn$ et $espawn$. Quand la machine va tomber sur le $bspawn$ elle sait qu'elle va devoir prendre dans la chaîne de contrôle jusqu'à trouver le mot-clé $espawn$. Cette façon de faire a été utilisée dans les premières versions de la machine cependant elle a un défaut majeur : ce ne sont pas des commandes et on ne travaille pas dans la pile d'exécution mais dans la chaîne de contrôle. C'est décalée par rapport au fonctionnement global de la machine.
 			\medbreak
 			
 			\item Le seconde façon de faire m'a été proposée par l'un de mes encadrants. On va utiliser les abstractions à notre avantage. La règle de l'abstraction est la suivante : 
@@ -1312,12 +1312,12 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	La forme d'un signal dans notre machine est développée dans la partie \textbf{L'initialisation}.
 	
 	\subparagraph{Le stockage}
-	Comme pour les threads, on doit se poser la question de la structure que l'on veut mais aussi de si l'on veut un ordre ou non. Plusieurs possibilités ont été explorées et sont directement liées, là aussi, on développe ce point dans la partie \textbf{L'initialisation}. Mais dans tous les cas on va devoir créer une liste qui va stocker au moins le fait qu'il est émis, il faudra donc forcément un élément que l'on va nommer $SI$ qui sera une liste prévue pour stocker les signaux.
+	Comme pour les threads, on doit se poser la question de la structure que l'on veut mais aussi de si l'on veut un ordre ou non. Plusieurs possibilités ont été explorées et sont directement liées, là aussi, à la partie \textbf{L'initialisation}. Dans tous les cas on va devoir créer une liste qui va stocker au moins le fait qu'il est émis, il faudra donc forcément un élément que l'on va nommer $SI$ qui sera une liste prévue pour stocker les signaux.
 	\bigbreak 
 	
 	
 	\subparagraph{L'initialisation}
-	La base est de pouvoir créer un signal ou plutôt de l'initialiser. Comment fonctionnement de l'initialisation diffère par rapport au champ d'action proposé ? 
+	La base est de pouvoir créer un signal ou plutôt de l'initialiser. Comment le fonctionnement de l'initialisation diffère par rapport au champ d'action proposé ? 
 	\medbreak
 	
 	On se retrouve avec trois possibilités de règle pour initialiser un signal :
@@ -1336,11 +1336,11 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 		\langle \emptyset,E[init \leftarrow s],C',\langle S,E,C,D\rangle\rangle$
 		\medbreak
 		
-		On remarque l'identifiant du signal est choisie par l'utilisateur. Cette règle fonctionne cependant plusieurs points sont problématiques. 
+		On remarque que l'identifiant du signal est choisie par l'utilisateur. Cette règle fonctionne cependant plusieurs points sont problématiques. 
 		\begin{enumerate}
 			\item L'identifiant ne devrait pas choisie par l'utilisateur.
 			\item La forme $\langle s,C'\rangle$ ressemble trop à une abstraction et peut être confondu si $s$ à la même forme q'une variable $X$. 
-			\item L'information de l'initialisation est stockée dans l'environnement mais l'émission est général et est donc stockée dans la liste des signaux qui sera de la forme $SI = \{...,s,..;\}$ avec $s$ le signal émis. Stocker à deux endroits des informations complémentaires sur un élément n'est pas optimal.
+			\item L'information de l'initialisation est stockée dans l'environnement mais l'émission est général et est donc stockée dans la liste des signaux qui sera de la forme $SI = \{...,s,...()\}$ avec $s$ le signal émis. Stocker à deux endroits des informations complémentaires sur un élément n'est pas optimal.
 		\end{enumerate}
 		\medbreak
 		
@@ -1381,7 +1381,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	\end{itemize}
 	\medbreak
 	
-	On va utiliser la dernière version dans la machine finale. En effet, les deux premières possibilités ont le grand défaut de donner la liberté d'avoir plusieurs variables (dans différents threads) pour un même identifiant. Je m'explique. Lorsque l'on va initialiser un signal pour un thread, on va lui retourner un identifiant que l'on va ensuite appliquer à une variable. Si autre thread initialise ce même signal pour lui il peut lui donner un nom de variable qui diffère du thread précédent ce qui peut créer des imcompréhensions. Des versions sont cependant trouvable avec leurs implantations, dans l'optique de leurs trouver une utilitée que je n'ai moi même pas vu . 
+	On va utiliser la dernière version dans la machine finale. En effet, les deux premières possibilités ont le grand défaut de donner la liberté d'avoir plusieurs variables (dans différents threads) pour un même identifiant. Je m'explique. Lorsque l'on va initialiser un signal pour un thread, on va lui retourner un identifiant que l'on va ensuite appliquer à une variable. Si autre thread initialise ce même signal pour lui il peut lui donner un nom de variable qui diffère du thread précédent ce qui peut créer des imcompréhensions. Des versions sont cependant trouvable avec leurs implantations, dans l'optique de leurs trouver une utilitée que je n'ai moi-même pas vu . 
 	\bigbreak
 	
 	
@@ -2343,7 +2343,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 	 \end{itemize}
 	\bigbreak
 	
-	On aura donc $\lambda vtf.(v~t~f)~p^{v}~\lambda x.(p^{t})~\lambda x.(p^{f})$ avec $x$ une variable quelconque. La représentation des booléens changera un peu et donnera cela : $true~=~\lambda xy.(x~a)$ et $false~=~\lambda xy.(y~a)$ avec $a$ une variable quelconque.
+	On aura donc $\lambda vtf.(v~t~f)~p^{v}~\lambda x.(p^{t})~\lambda x.(p^{f})$ avec $x$ une variable quelconque et $p^{v}$ , $p^{t}$, $p^{f}$ les paramètres de la conditionnelleS. La représentation des booléens changera un peu et donnera cela : $true~=~\lambda xy.(x~a)$ et $false~=~\lambda xy.(y~a)$ avec $a$ une variable quelconque.
 	\newpage
 	
 	
@@ -2729,7 +2729,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			\smallbreak 
 			$\langle\langle I,\langle\langle X,C'\rangle, E\rangle~S,E,spawn~C,D\rangle,TL,SI,IP\rangle 
 			\longrightarrow_{TTSI} 
-			\langle\langle I,IP~S,E,C,D\rangle,TL~\langle IP,S,E,C',D\rangle,SI,IP+1\rangle$
+			\langle\langle I,IP~S,E,C,D\rangle,TL~\langle IP,\epsilon,E,C',\emptyset\rangle,SI,IP+1\rangle$
 			\item[]
 			
 			\item[] \textbf{Ajouter dans un signal :} On ajoute une constante dans une liste de valeurs d'un signal et on met à vrai le booléen $emit$
@@ -3206,7 +3206,7 @@ car il est bien détaillé et assez accessible pour un novice comme moi.
 			\smallbreak 
 			$\langle\langle I,\langle\langle X,C'\rangle, E\rangle~S,E,spawn~C,D\rangle,TL,SI,IP\rangle 
 			\longrightarrow_{TTSIH} 
-			\langle\langle I,IP~S,E,C,D\rangle,TL~\langle IP,S,E,C',D\rangle,SI,IP+1\rangle$
+			\langle\langle I,IP~S,E,C,D\rangle,TL~\langle IP,\epsilon,E,C',\emptyset\rangle,SI,IP+1\rangle$
 			\item[]
 			
 			\item[] \textbf{Ajouter dans un signal :} On ajoute une constante dans une liste de valeurs d'un signal et on met à vrai le booléen $emit$
