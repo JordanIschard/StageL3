@@ -1,7 +1,7 @@
 open String ;;
 open Printf ;;
 open List ;;
-open Lang_secdCv3.ISWIM ;;
+open Lang_secdC.ISWIM ;;
 
 
 module SECDCv3Machine =
@@ -212,7 +212,7 @@ module SECDCv3Machine =
     exception UnknowHandlerState               (* Le format du gestionnaire d'erreur est invalide et/ou inconnu                     *)
     exception UnknowSSIState                   (* Le format de la liste de signaux partagés est invalide                            *)
 
-
+    exception BadVersion
 
 
 
@@ -236,32 +236,33 @@ module SECDCv3Machine =
     (* Convertit le langage ISWIM en langage SECD *)
     let rec secdLanguage_of_exprISWIM expression =
       match expression with
-          Const const                           ->   [Constant const]
+          Lang_secdC.ISWIM.Const const                           ->   [Constant const]
             
-        | Var var                               ->   [Variable var]
+        | Lang_secdC.ISWIM.Var var                               ->   [Variable var]
             
-        | App(expr1,expr2)                      ->   append (  append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
+        | Lang_secdC.ISWIM.App(expr1,expr2)                      ->   append (  append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
             
-        | Op(op,liste_expr)                     ->   append ( flatten( map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
+        | Lang_secdC.ISWIM.Op(op,liste_expr)                     ->   append ( flatten( map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
             
-        | Abs(abs,expr)                         ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
+        | Lang_secdC.ISWIM.Abs(abs,expr)                         ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
 
-        | Spawn expr                            ->   append [Bspawn] (append (secdLanguage_of_exprISWIM expr) [Espawn])
+        | Lang_secdC.ISWIM.Spawn expr                            ->   append [Bspawn] (append (secdLanguage_of_exprISWIM expr) [Espawn])
 
-        | Present_ISWIM (signal,expr1,expr2)    ->   [Present (signal,(secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr2))]
+        | Lang_secdC.ISWIM.Present (signal,expr1,expr2)    ->   [Present (signal,(secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr2))]
 
-        | Emit_ISWIM (signal)                   ->   [Emit (signal)]
+        | Lang_secdC.ISWIM.Emit signal                  ->   [Emit (signal)]
 
-        | Signal_ISWIM (signal,expr)            ->   [Signal (signal,(secdLanguage_of_exprISWIM expr))]
+        | Lang_secdC.ISWIM.InitFor (signal,expr)            ->   [Signal (signal,(secdLanguage_of_exprISWIM expr))]
 
-        | Throw_ISWIM error                     ->   [Throw(error)]
+        | Lang_secdC.ISWIM.Throw error                     ->   [Throw(error)]
 
-        | Catch_ISWIM(error,expr1,(abs,expr2))  ->   [Catch(error,(secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
+        | Lang_secdC.ISWIM.Catch(error,expr1,(abs,expr2))  ->   [Catch(error,(secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
 
-        | Put_ISWIM(signal,value)               ->   [Constant value ; Put(signal)]
+        | Lang_secdC.ISWIM.Put(signal,value)               ->   [Constant value ; Put(signal)]
 
-        | Get_ISWIM(signal,id_thread)           ->   [Constant id_thread ;Get(signal)]
+        | Lang_secdC.ISWIM.Get(signal,id_thread)           ->   [Constant id_thread ;Get(signal)]
 
+        | _                                                  ->   raise BadVersion
 
     (* Donne une chaîne de caractères contenant un message d'erreur par rapport à l'identifiant de l'erreur *)
     let error_message error =
@@ -538,7 +539,7 @@ module SECDCv3Machine =
 
         | (Stack_const b::t,nbr)      ->   b::(convert_stack_element_to_int_list t (nbr - 1)) 
 
-        | (_,nbr)                     ->   if nbr = 0 then raise NotAllConstants else raise OpFormatError
+        | (_,nbr)                     ->   if nbr = 0 then raise NotAllConstants else raise FormatOpErreur
 
 
     (* Retire un nombre n d'élément de la pile *)
@@ -741,7 +742,7 @@ module SECDCv3Machine =
 
     (* Donne la pile avec le calcul fait *)
     let calculate operator stack environment = 
-      let operand_number = getOperandNb operator in
+      let operand_number = getNbrOperande operator in
       let result = calcul operator (rev (convert_stack_element_to_int_list stack operand_number)) in
       match result with
           Abs(abs,expr)  ->   Closure((secdLanguage_of_exprISWIM (Abs(abs,expr))),environment)::(remove_elements stack operand_number) 
@@ -908,7 +909,7 @@ module SECDCv3Machine =
                   try     Machine( id , (calculate op s e) , e , c , d , tl , si , h , ip )
                   with    NotAllConstants        ->   Machine( id , s , e , Throw 12::c , d , tl , si , h , ip )
 
-                        | OpFormatError          ->   Machine( id , s , e , Throw 15::c , d , tl , si , h , ip )
+                        | FormatOpErreur         ->   Machine( id , s , e , Throw 15::c , d , tl , si , h , ip )
 
                         | InsufficientOperandNb  ->   Machine( id , s , e , Throw 14::c , d , tl , si , h , ip )
                 end

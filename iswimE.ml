@@ -8,22 +8,25 @@ module ISWIM =
 
     (**** Types ****)
     
-    type operateur = 
-      Add1 
-      | Sub1
-      | IsZero
-      | Add
-      | Sub
-      | Mult
-      | Div 
+     (* Type représentant les opérateurs reconnus par le langage *)
+     type operateur = 
+      Add1           (* ++   *)
+    | Sub1           (* --   *)
+    | IsZero         (* == 0 *)
+    | Add            (* +    *)
+    | Sub            (* -    *)
+    | Mult           (* *    *)
+    | Div            (* /    *)
 
-    type exprISWIM = 
-      Var of string 
-      | Abs of string * exprISWIM 
-      | App of exprISWIM * exprISWIM
-      | Op of operateur * exprISWIM list
-      | Const of int
-      | Erreur of string
+
+  (* Type représentant les éléments qui constitue le langage *)
+  type expr = 
+      Var of string                     (* une variable x,y,z,...         *)       
+    | Abs of string * expr              (* une abstraction lam x.t        *)
+    | App of expr * expr                (* une application ( a b )        *)
+    | Op of operateur * expr list       (* une opération [op ; el1 ; ...] *)
+    | Const of int                      (* une constante a,b,c,...        *)
+    | Erreur of string                  (* une erreur                     *)
 
 
 
@@ -85,7 +88,7 @@ module ISWIM =
        
         | Op (op,liste_expr)  ->   "("^(string_of_operateur op)^" "^(concat_string_liste ( map string_of_expr  liste_expr))^")"
        
-       | Erreur(erreur)      ->   erreur
+       | Erreur erreur        ->   erreur
 
 
     (* Affiche une expression *)
@@ -124,31 +127,31 @@ module ISWIM =
       match expression with
           Var var            ->   [var]
 
-        | Abs(abs,expr)      ->   liste_variable expr
+        | Abs(_,expr)        ->   liste_variable expr
 
         | App(expr1,expr2)   ->   append (liste_variable expr1) (liste_variable expr2)
 
-        | Const const        ->   []
+        | Const _        ->   []
 
         | Op(op,liste_expr)  ->   flatten( map liste_variable liste_expr)
 
-        | Erreur erreur      ->   []
+        | Erreur _      ->   []
 
 
     (* Donne l'ensemble des variables liées de l'expression *)
     let rec lie expression =
       match expression with
-          Var var            ->   []
-
+          Var _              ->   []
+ 
         | Abs(el,expr)       ->   el::lie expr
 
         | App(expr1,expr2)   ->   append (lie expr1) (lie expr2)
 
-        | Const const        ->   []
+        | Const _            ->   []
 
-        | Op(op,liste_expr)  ->   flatten( map lie liste_expr)
+        | Op(_,liste_expr)   ->   flatten( map lie liste_expr)
 
-        | Erreur erreur      ->   []
+        | Erreur _           ->   []
 
     
     (* Donne l'ensemble des variables libres de l'expression *)
@@ -158,15 +161,15 @@ module ISWIM =
         match expr with
             Var var            ->   if (mem var varlie) then [] else [var]
 
-          | Abs(el,expr)       ->   aux expr
+          | Abs(_,expr)        ->   aux expr
 
           | App(expr1,expr2)   ->   append (aux expr1) (aux expr2)
 
-          | Const const        ->   []
+          | Const _            ->   []
 
-          | Op(op,liste_expr)  ->   flatten( map aux liste_expr)
+          | Op(_,liste_expr)   ->   flatten( map aux liste_expr)
 
-          | Erreur erreur      ->   []
+          | Erreur _           ->   []
       in 
       aux expression
 
@@ -174,11 +177,7 @@ module ISWIM =
       (* Vérifie si l'expression est une variable *)
       let estVariable expr =
         match expr with
-            Const _   ->   true
-
-          | Var _     ->   true
-
-          | Abs(_,_)  ->   true
+            Const _ | Var _ | Abs(_,_)  ->   true
 
           | _         ->   false
 
@@ -227,7 +226,7 @@ module ISWIM =
     (**** La réduction ****)
 
 
-    (* Donne un nouveau nom de var (À améliorer pour éviter la liste finie) *)
+    (* Donne un nouveau nom de var à partir d'une liste finie *)
     let renommage liste_interdit =
       let variables = ["x";"y";"z";"w"] in
       let rec aux liste_interdit variables =

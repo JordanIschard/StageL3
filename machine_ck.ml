@@ -12,9 +12,9 @@ module CKMachine =
 
     (* Type représentant la continuation *)
     type k = 
-        Fun of exprISWIM * k 
-      | Arg of exprISWIM * k
-      | Opd of (exprISWIM list * operateur) * (exprISWIM list) * k
+        Fun of expr * k 
+      | Arg of expr * k
+      | Opd of (expr list * operateur) * (expr list) * k
       | MT
 
     (* Type représentant la machine CK *)

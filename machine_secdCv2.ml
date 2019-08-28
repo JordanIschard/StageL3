@@ -3,7 +3,7 @@ open Printf ;;
 open List ;;
 open Machine_cc.CCMachine ;;
 open Machine_cek.CEKMachine ;;
-open Lang_secdCv2.ISWIM ;;
+open Lang_secdC.ISWIM ;;
 
 
 module SECDCv2Machine =
@@ -89,6 +89,7 @@ module SECDCv2Machine =
     exception SignalNotInit
     exception StrangeStuck
     exception UnknowWaitState
+    exception BadVersion
 
 
     (**** Affichage ****)
@@ -96,28 +97,29 @@ module SECDCv2Machine =
     (* Convertit le langage ISWIM en langage SECD *)
     let rec secdLanguage_of_exprISWIM expression =
       match expression with
-          Const const                   ->   [Constant const]
+          Lang_secdC.ISWIM.Const const                   ->   [Constant const]
             
-        | Var var                       ->   [Variable var]
+        | Lang_secdC.ISWIM.Var var                       ->   [Variable var]
             
-        | App(expr1,expr2)              ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
+        | Lang_secdC.ISWIM.App(expr1,expr2)              ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
             
-        | Op(op,liste_expr)             ->   append (flatten( map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
+        | Lang_secdC.ISWIM.Op(op,liste_expr)             ->   append (flatten( map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
             
-        | Abs(abs,expr)                 ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
+        | Lang_secdC.ISWIM.Abs(abs,expr)                 ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
 
-        | Spawn_ISWIM(expr)             ->   append (append [Bspawn] (secdLanguage_of_exprISWIM expr)) [Espawn]
+        | Lang_secdC.ISWIM.Spawn expr             ->   append (append [Bspawn] (secdLanguage_of_exprISWIM expr)) [Espawn]
       
-        | Present_ISWIM(s,expr1,expr2)  ->   [Present(s,(secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr2))]
+        | Lang_secdC.ISWIM.Present(s,expr1,expr2)  ->   [Present(s,(secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr2))]
       
-        | Emit_ISWIM(s)                 ->   [Emit s]
+        | Lang_secdC.ISWIM.Emit s                 ->   [Emit s]
      
-        | Signal_ISWIM(s,expr)          ->   [Signal(s,(secdLanguage_of_exprISWIM expr))]
+        | Lang_secdC.ISWIM.InitFor(s,expr)          ->   [Signal(s,(secdLanguage_of_exprISWIM expr))]
 
-        | Throw_ISWIM erreur            ->   [Throw erreur]
+        | Lang_secdC.ISWIM.Throw erreur            ->   [Throw erreur]
 
-        | Catch_ISWIM(erreur,expr1,(abs,expr2))  ->   [Catch(erreur,(secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
+        | Lang_secdC.ISWIM.Catch(erreur,expr1,(abs,expr2))  ->   [Catch(erreur,(secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
 
+        | _                                                   ->   raise BadVersion
 
     (* Retourne un message par rapport à un identifiant d'erreur *)
     let message_of_erreur erreur =

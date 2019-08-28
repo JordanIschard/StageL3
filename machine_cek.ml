@@ -12,7 +12,7 @@ module CEKMachine =
     (**** Types ****)
 
     (* Type représentant une fermeture *)
-    type  fermeture =  Fermeture of exprISWIM * (string *  fermeture) list
+    type  fermeture =  Fermeture of expr * (string *  fermeture) list
 
     (* Type représentant la continuation *)
     type k = 

@@ -9,11 +9,11 @@ module CCMachine =
     (**** Types ****)
 
     (* Type représentant la chaîne de contrôle de la machine CC *)
-    type controle = exprISWIM
+    type controle = expr
 
 
     (* Type représentant le contexte de la machine CC *)
-    type contexte = exprISWIM list
+    type contexte = expr list
 
 
     (* Type représentant la machine CC *)

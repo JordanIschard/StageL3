@@ -1,7 +1,7 @@
 open String ;;
 open Printf ;;
 open List ;;
-open Lang_secdCv4.ISWIM ;;
+open Lang_secdC.ISWIM ;;
 
 
 module SECDCv4Machine =
@@ -213,7 +213,7 @@ module SECDCv4Machine =
     exception UnknowHandlerState               (* Le format du gestionnaire d'erreur est invalide et/ou inconnu                     *)
     exception UnknowSSIState                   (* Le format de la liste de signaux partagés est invalide                            *)
 
-
+    exception BadVersion
 
 
 
@@ -237,32 +237,33 @@ module SECDCv4Machine =
     (* Convertit le langage ISWIM en langage SECD *)
     let rec secdLanguage_of_exprISWIM expression =
       match expression with
-          Const const                           ->   [Constant const]
+          Lang_secdC.ISWIM.Const const                           ->   [Constant const]
           
-        | Var var                               ->   [Variable var]
+        | Lang_secdC.ISWIM.Var var                               ->   [Variable var]
             
-        | App(expr1,expr2)                      ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
+        | Lang_secdC.ISWIM.App(expr1,expr2)                      ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
             
-        | Op(op,liste_expr)                     ->   append (flatten(map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
+        | Lang_secdC.ISWIM.Op(op,liste_expr)                     ->   append (flatten(map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
             
-        | Abs(abs,expr)                         ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
+        | Lang_secdC.ISWIM.Abs(abs,expr)                         ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
 
-        | Spawn_ISWIM expr                      ->   append [Bspawn] (append (secdLanguage_of_exprISWIM expr) [Espawn])
+        | Lang_secdC.ISWIM.Spawn expr                      ->   append [Bspawn] (append (secdLanguage_of_exprISWIM expr) [Espawn])
 
-        | Present_ISWIM (signal,expr1,expr2)    ->   [Signal signal ; Present ((secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr2))]
+        | Lang_secdC.ISWIM.Present (signal,expr1,expr2)    ->   [Signal signal ; Present ((secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr2))]
 
-        | Emit_ISWIM (signal)                   ->   [Signal signal ; Emit]
+        | Lang_secdC.ISWIM.Emit (signal)                   ->   [Signal signal ; Emit]
 
-        | Signal_ISWIM signal                   ->   [Signal signal ; InitSignal]
+        | Lang_secdC.ISWIM.Init signal                   ->   [Signal signal ; InitSignal]
 
-        | Throw_ISWIM error                     ->   [Error error ; Throw]
+        | Lang_secdC.ISWIM.Throw error                     ->   [Error error ; Throw]
 
-        | Catch_ISWIM(error,expr1,(abs,expr2))  ->   [Error error ; Catch((secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
+        | Lang_secdC.ISWIM.Catch(error,expr1,(abs,expr2))  ->   [Error error ; Catch((secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
 
-        | Put_ISWIM(signal,value)               ->   [Constant value ; Signal signal ; Put]
+        | Lang_secdC.ISWIM.Put(signal,value)               ->   [Constant value ; Signal signal ; Put]
 
-        | Get_ISWIM(signal,id_thread)           ->   [Constant id_thread ; Signal signal ; Get]
+        | Lang_secdC.ISWIM.Get(signal,id_thread)           ->   [Constant id_thread ; Signal signal ; Get]
 
+        | _                                     -> raise BadVersion
 
     (* Donne une chaîne de caractères contenant un message d'erreur par rapport à l'identifiant de l'erreur *)
     let error_message error =

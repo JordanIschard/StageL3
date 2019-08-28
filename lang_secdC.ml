@@ -10,6 +10,7 @@ module ISWIM =
     
     type operateur = 
         Add1 
+      | HasNext
       | Sub1
       | IsZero
       | Add
@@ -17,20 +18,24 @@ module ISWIM =
       | Mult
       | Div 
 
-    type exprISWIM = 
+    type expr = 
         Var of string 
-      | Abs of string * exprISWIM 
-      | App of exprISWIM * exprISWIM
-      | Op of operateur * exprISWIM list
+      | Abs of string * expr 
+      | App of expr * expr
+      | Op of operateur * expr list
       | Const of int
-      | Spawn_ISWIM of exprISWIM
-      | Present_ISWIM of string * exprISWIM * exprISWIM
-      | Emit_ISWIM of string 
-      | Signal_ISWIM of string * exprISWIM
-      | Throw_ISWIM of int
-      | Catch_ISWIM of int * exprISWIM * (string * exprISWIM)
 
+      | Spawn of expr
+      | Present of string * expr * expr
+      | InitFor of string * expr
+      | Init of string
+      | Emit of string 
 
+      | Throw of int
+      | Catch of int * expr * (string * expr)
+
+      | Put of string * int
+      | Get of string * int
 
 
 
@@ -79,33 +84,42 @@ module ISWIM =
         | Mult    ->   "*"
         
         | Div     ->   "/"
+
+        | HasNext ->   "HasNext"
       
 
     (* Convertit une expression en chaîne de caractère *)
     let rec string_of_expr expr =
       match expr with 
-          Var var                       ->   var
+          Var var                           ->   var
 
-        | Const const                   ->   string_of_int const
+        | Const const                       ->   string_of_int const
 
-        | App(expr1,expr2)              ->   "("^(string_of_expr expr1)^" "^(string_of_expr expr2)^")"
+        | App(expr1,expr2)                  ->   "("^(string_of_expr expr1)^" "^(string_of_expr expr2)^")"
 
-        | Abs(abs,expr)                 ->   "(lam "^abs^"."^(string_of_expr expr)^")"
+        | Abs(abs,expr)                     ->   "(lam "^abs^"."^(string_of_expr expr)^")"
+            
+        | Op(op,liste_expr)                 ->   "("^(string_of_operateur op)^" "^(concat_string_liste ( map string_of_expr  liste_expr))^")"
         
-        | Op(op,liste_expr)             ->   "("^(string_of_operateur op)^" "^(concat_string_liste ( map string_of_expr  liste_expr))^")"
+        | Spawn expr                        ->   "spawn ("^(string_of_expr expr)^")"
 
-        | Spawn_ISWIM expr                    ->   "spawn ("^(string_of_expr expr)^")"
+        | Present (signal,expr1,expr2)      ->   "present "^signal^" in "^(string_of_expr expr1)^" "^(string_of_expr expr2)
 
-        | Present_ISWIM (signal,expr1,expr2)  ->   "present "^signal^" in "^(string_of_expr expr1)^" "^(string_of_expr expr2)
+        | Emit signal                       ->   "emit "^signal 
 
-        | Emit_ISWIM signal                   ->   "emit "^signal 
+        | InitFor (signal,expr)             ->   "signal "^signal^" in "^(string_of_expr expr)
 
-        | Signal_ISWIM(signal,expr)               ->   "signal "^signal^" in "^(string_of_expr expr)
+        | Init signal                       ->   "signal "^signal
 
-        | Throw_ISWIM erreur                      ->   "ERREUR"
+        | Throw erreur                      ->   "ERREUR"
      
-        | Catch_ISWIM (erreur,expr1,(abs,expr2))  ->   "try "^(string_of_expr expr1)^" catch ERREUR in ("^abs^","^(string_of_expr expr2)^")"
+        | Catch (erreur,expr1,(abs,expr2))  ->   "try "^(string_of_expr expr1)^" catch ERREUR in ("^abs^","^(string_of_expr expr2)^")"
 
+        | Put (signal,value)                ->   "put "^(string_of_int value)^" in "^signal
+
+        | Get (signal,id_thread)            ->   "get "^signal^" in "^(string_of_int id_thread)
+
+        
     (* Affiche une expression *)
     let afficherExpr expression = printf "%s\n" (string_of_expr expression) 
     
@@ -123,7 +137,7 @@ module ISWIM =
     (* Donne le nombre d'opérande requis pour utiliser l'opérateur *)
     let getNbrOperande op =
       match op with
-          Add1 | Sub1 | IsZero    ->   1
+          Add1 | Sub1 | IsZero | HasNext   ->   1
 
         | Add | Sub | Mult | Div  ->   2
 
@@ -133,6 +147,8 @@ module ISWIM =
         match (op,liste_expr) with
 
             (Add1,[h])     ->   Const (h+1)
+
+          | (HasNext,[h])  ->   Const 0
 
           | (Sub1,[h])     ->   Const (h-1)
 

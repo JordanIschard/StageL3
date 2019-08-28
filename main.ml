@@ -49,7 +49,7 @@ let expression6  = let open Iswim.ISWIM in App(Abs("x",App(Var "x",Var "x")), Ab
 let expression7  = let open Iswim.ISWIM in Op(Add4,[App(Abs("x",Var "x"),Const 2); App(Abs("x",Var "x"),Const 3); Const 4;App(Abs("x",Var "x"),Const 5)]);;
 
 (* Correspond à l'expression suivante : ( (lam x.lam y.( x y )) (lam y.( y y )) ) *)
-let expression8  = App_term(Abs_term("x",Abs_term("y",App_term(Var_term "x", Var_term "y"))),Abs_term("y",App_term(Var_term "y",Var_term "y")));;
+let expression8  = let open Lambda.LambdaCalcul in App(Abs("x",Abs("y",App(Var "x", Var "y"))),Abs("y",App(Var "y",Var "y")));;
 
 (* Correspond à l'expression suivante : ( (lam w.( w ( + 2 w ) )) 2 ) *)
 let expression9  = let open IswimE.ISWIM in (App((Abs("w",(App(Var "w",Op(Add,[Const 2;Var "w"]))))),Const 2)) ;;
@@ -261,14 +261,13 @@ printf "\n" ;;
 (**** Partie pour la machine SECD Concurrente V1 ****)
 
 (*  Correspond à l'expression suivante : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) *)
-let expression14 = let open Lang_secdCv1.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
+let expression14 = let open Lang_secdC.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
 
 (*  Correspond à l'expression suivante :  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) *)
-let expression15 = let open Lang_secdCv1.ISWIM in (App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1));;
+let expression15 = let open Lang_secdC.ISWIM in (App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1));;
 
 (*  Correspond à l'expression suivante :  Signal( signal , ( Spawn( Present( signal , ( + expression4 Signal( coucou , Present( coucou , 5 , 65 ) ) ) , 3 ) ) Spawn( emit signal ) ) ) *)
-let expression16 = let open Lang_secdCv1.ISWIM in 
-(Signal_ISWIM("signal",(App((Spawn_ISWIM(Present_ISWIM("signal",Op(Add,[expression14;Signal_ISWIM("coucou",Present_ISWIM("coucou",Const 5,Const 65))]),Const 3))),(Spawn_ISWIM(Emit_ISWIM "signal"))))));;
+let expression16 = let open Lang_secdC.ISWIM in (InitFor("signal",(App((Spawn(Present("signal",Op(Add,[expression14;InitFor("coucou",Present("coucou",Const 5,Const 65))]),Const 3))),(Spawn(Emit "signal"))))));;
 
 
 
@@ -294,20 +293,10 @@ printf "\n" ;;
 
 (**** Partie pour la machine SECD Concurrente V2 ****)
 
-(*  Correspond à l'expression suivante : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) *)
-let expression17 = let open Lang_secdCv2.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
-
-(*  Correspond à l'expression suivante :  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) *)
-let expression18 = let open Lang_secdCv2.ISWIM in (App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1));;
-
-(*  Correspond à l'expression suivante :  Signal( signal , ( Spawn( Present( signal , ( + expression4 Signal( coucou , Present( coucou , 5 , 65 ) ) ) , 3 ) ) Spawn( emit signal ) ) ) *)
-let expression19 = let open Lang_secdCv2.ISWIM in (Signal_ISWIM("signal",(App((Spawn_ISWIM(Present_ISWIM("signal",Op(Add,[expression17;Signal_ISWIM("coucou",
-Present_ISWIM("coucou",Const 5,Const 65))]),Const 3))),(Spawn_ISWIM(Emit_ISWIM "signal"))))));;
-
 (*  Correspond à l'expression suivante :  Catch( 6 , Signal( signal , ( Spawn( Present( signal , ( + expression4 Signal( coucou , Present( usdhfozeih , 5 , 65 ) ) ) , 3 ) ) Spawn( emit signal ) ) ) 
 , (lam uygig.7685) ) *)
-let expression20 = let open Lang_secdCv2.ISWIM in (Catch_ISWIM(6,Signal_ISWIM("signal",(App((Spawn_ISWIM(Present_ISWIM("signal",Op(Add,[expression17;
-Signal_ISWIM("coucou",Present_ISWIM("usdhfozeih",Const 5,Const 65))]),Const 3))),(Spawn_ISWIM(Emit_ISWIM "signal"))))),("uygig",Const 7685))) ;;
+let expression17 = let open Lang_secdC.ISWIM in (Catch(6,InitFor("signal",(App((Spawn(Present("signal",Op(Add,[expression14;
+InitFor("coucou",Present("usdhfozeih",Const 5,Const 65))]),Const 3))),(Spawn(Emit "signal"))))),("uygig",Const 7685))) ;;
 
 
 
@@ -316,20 +305,20 @@ Signal_ISWIM("coucou",Present_ISWIM("usdhfozeih",Const 5,Const 65))]),Const 3)))
 Printf.printf "\n\n\n\n\nTest de la Machine SECD concurrente version 2 \n\n" ;;
 
 printf "On teste l'expression ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) \n" ;;
-lancerSECDCv2 expression17 false;;
+lancerSECDCv2 expression14 false;;
 printf "\n" ;;
 
 printf "On teste l'expression  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) \n" ;;
-lancerSECDCv2 expression18 false;;
+lancerSECDCv2 expression15 false;;
 printf "\n" ;;
 
 printf "On teste l'expression  Signal( signal , ( Spawn( Present( signal , ( + expression17 Signal( coucou , Present( coucou , 5 , 65 ) ) ) , 3 ) ) Spawn( emit signal ) ) ) \n" ;;
-lancerSECDCv2 expression19 false;;
+lancerSECDCv2 expression16 false;;
 printf "\n" ;;
 
 printf "On teste l'expression  Catch( 6 , Signal( signal , ( Spawn( Present( signal , ( + expression17 Signal( coucou , Present( usdhfozeih , 5 , 65 ) ) ) , 3 ) ) Spawn( emit signal ) ) ) 
 , (lam uygig.7685) ) \n" ;;
-lancerSECDCv2 expression20 false;;
+lancerSECDCv2 expression17 false;;
 printf "\n" ;;
 
 
@@ -337,26 +326,11 @@ printf "\n" ;;
 
 
 (**** Partie pour la machine SECD Concurrente V3 ****)
-(* Elle *)
-
-(*  Correspond à l'expression suivante : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) *)
-let expression21 = let open Lang_secdCv3.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
-
-(*  Correspond à l'expression suivante :  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) *)
-let expression22 = let open Lang_secdCv3.ISWIM in (App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1));;
-
-(*  Correspond à l'expression suivante : signal s in ( Spawn( present s in ( + expression22 ( signal s1 in ( present s1 in 5 65 ) ) ) 3 ) Spawn( emit s ) ) *)
-let expression23 = let open Lang_secdCv3.ISWIM in (Signal_ISWIM("s",(App((Spawn(Present_ISWIM("s",Op(Add,[expression22;Signal_ISWIM("s1",Present_ISWIM("s1",Const 5,Const 65))]),Const 3)))
-,(Spawn(Emit_ISWIM "s"))))));;
-
-(*  Correspond à l'expression suivante : try ( signal s in ( Spawn( present s in ( + expression22 ( signal s1 in ( present s2 in 5 65 ) ) ) 3 ) Spawn( emit s ) ) ) catch 8 ( 7685 ) *)
-let expression24 = let open Lang_secdCv3.ISWIM in (Catch_ISWIM(8,Signal_ISWIM("s",(App((Spawn(Present_ISWIM("s",Op(Add,[expression22;Signal_ISWIM("s1",Present_ISWIM("s2",Const 5,Const 65))]),Const 3)))
-,(Spawn(Emit_ISWIM "s"))))),("uygig",Const 7685))) ;;
 
 (*  Correspond à l'expression suivante : signal s in ( Spawn( signal s1 in ( present s1 in ( 98 ( ( - get( s 2 ) get( s 2 ) ) get( s 2 ) ) ) ) ) ( Spawn( put( s 6 ) ( put( s 3 ) emit s ) ) 
 Spawn( signal s1 in ( present s1 in ( 98 ( ( - get( s 2 ) get( s 2 ) ) get( s 2 ) ) ) ) ) ) ) *)
-let expression25 = let open Lang_secdCv3.ISWIM in Signal_ISWIM("s",App(Spawn(Signal_ISWIM("s1",Present_ISWIM("s1",Const 98,App(Op(Sub,[Get_ISWIM("s",2);Get_ISWIM("s",2)]),Get_ISWIM("s",2)))))
-,App(Spawn(App(Put_ISWIM("s",6),App(Put_ISWIM("s",3),Emit_ISWIM "s"))),Spawn(Signal_ISWIM("s1",Present_ISWIM("s1",Const 98,App(Op(Add,[Get_ISWIM("s",2);Get_ISWIM("s",2)]),Get_ISWIM("s",2))))))));;
+let expression18 = let open Lang_secdC.ISWIM in InitFor("s",App(Spawn(InitFor("s1",Present("s1",Const 98,App(Op(Sub,[Get("s",2);Get("s",2)]),Get("s",2)))))
+,App(Spawn(App(Put("s",6),App(Put("s",3),Emit "s"))),Spawn(InitFor("s1",Present("s1",Const 98,App(Op(Add,[Get("s",2);Get("s",2)]),Get("s",2))))))));;
 
 
 
@@ -365,24 +339,24 @@ let expression25 = let open Lang_secdCv3.ISWIM in Signal_ISWIM("s",App(Spawn(Sig
 printf "\n\n\n\n\nTest de la Machine SECD concurrente version 3 \n\n" ;;
 
 printf "On teste l'expression ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) \n" ;;
-lancerSECDCv3 expression21 false;;
+lancerSECDCv3 expression14 false;;
 printf "\n" ;;
                               
 printf "On teste l'expression  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) \n" ;;
-lancerSECDCv3 expression22 false;;
+lancerSECDCv3 expression15 false;;
 printf "\n" ;;
                               
 printf "On teste l'expression  signal s in ( Spawn( present s in ( + expression23 ( signal s1 in ( present s1 in 5 65 ) ) ) 3 ) Spawn( emit s ) ) \n" ;;
-lancerSECDCv3 expression23 false;;
+lancerSECDCv3 expression16 false;;
 printf "\n" ;;
                               
 printf "On teste l'expression  try ( signal s in ( Spawn( present s in ( + expression23 ( signal s1 in ( present s2 in 5 65 ) ) ) 3 ) Spawn( emit s ) ) ) catch 8 ( 7685 ) \n" ;;
-lancerSECDCv3 expression24 false;;
+lancerSECDCv3 expression17 false;;
 printf "\n" ;;
                               
 printf "On teste l'expression  signal s in ( Spawn( signal s1 in ( present s1 in ( 98 ( ( - get( s 2 ) get( s 2 ) ) get( s 2 ) ) ) ) ) ( Spawn( put( s 6 ) ( put( s 3 ) emit s ) ) 
 Spawn( signal s1 in ( present s1 in ( 98 ( ( - get( s 2 ) get( s 2 ) ) get( s 2 ) ) ) ) ) ) ) \n" ;;
-lancerSECDCv3 expression25 false;;
+lancerSECDCv3 expression18 false;;
 printf "\n" ;;                          
 
 
@@ -390,20 +364,13 @@ printf "\n" ;;
 
 (**** Partie pour la machine SECD Concurrente V4 ****)
 
-(*  Correspond à l'expression suivante : ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) *)
-let expression27 = let open Lang_secdCv4.ISWIM in (App(Abs("w",Op(Sub,[App(Var "w",Const 1);Const 5])),App(Abs("x",App(Var "x",Const 10)),Abs("y",Abs("z",Op(Add,[Var "z";Var "y"]))))));;
+(*  Correspond à l'expression suivante :  Signal( signal , ( Spawn( Present( signal , ( + expression14 Signal( coucou , Present( coucou , 5 , 65 ) ) ) , 3 ) ) Spawn( emit signal ) ) ) *)
+let expression19 = let open Lang_secdC.ISWIM in (App(Init "signal",(App((Spawn(Present("signal",Op(Add,[expression14;App(Init "coucou",Present("coucou",Const 5,Const 65))]),Const 3))),(Spawn(Emit "signal")))))) ;;
 
-(*  Correspond à l'expression suivante :  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) *)
-let expression28 = let open Lang_secdCv4.ISWIM in (App(App(Abs("f",Abs("x",App(Var "f",Var "x"))),Abs("y",Op(Add,[Var "y";Var "y"]))),Const 1));;
-
-(*  Correspond à l'expression suivante :  Signal( signal , ( Spawn( Present( signal , ( + expression18 Signal( coucou , Present( coucou , 5 , 65 ) ) ) , 3 ) ) Spawn( emit signal ) ) ) *)
-let expression29 = let open Lang_secdCv4.ISWIM in (App(Signal_ISWIM "signal",(App((Spawn_ISWIM(Present_ISWIM("signal",Op(Add,[expression28;App(Signal_ISWIM "coucou"
-,Present_ISWIM("coucou",Const 5,Const 65))]),Const 3))),(Spawn_ISWIM(Emit_ISWIM "signal")))))) ;;
-
-(*  Correspond à l'expression suivante :  Catch( 6 , Signal( signal , ( Spawn( Present( signal , ( + expression18 Signal( coucou , Present( usdhfozeih , 5 , 65 ) ) ) , 3 ) ) Spawn( emit signal ) ) ) 
+(*  Correspond à l'expression suivante :  Catch( 6 , Signal( signal , ( Spawn( Present( signal , ( + expression14 Signal( coucou , Present( usdhfozeih , 5 , 65 ) ) ) , 3 ) ) Spawn( emit signal ) ) ) 
 , (lam uygig.7685) ) *)
-let expression30 = let open Lang_secdCv4.ISWIM in (Catch_ISWIM(12,App(Signal_ISWIM "signal",(App((Spawn_ISWIM(Present_ISWIM("signal",Op(Add,[expression28;App (Signal_ISWIM "coucou"
-,Present_ISWIM("usdhfozeih",Const 5,Const 65))]),Const 3))),(Spawn_ISWIM(Emit_ISWIM "signal"))))),("uygig",Const 7685))) ;;
+let expression20 = let open Lang_secdC.ISWIM in (Catch(12,App(Init "signal",(App((Spawn(Present("signal",Op(Add,[expression14;App (Init "coucou"
+,Present("usdhfozeih",Const 5,Const 65))]),Const 3))),(Spawn(Emit "signal"))))),("uygig",Const 7685))) ;;
 
 
 
@@ -412,20 +379,20 @@ let expression30 = let open Lang_secdCv4.ISWIM in (Catch_ISWIM(12,App(Signal_ISW
 Printf.printf "\n\n\n\n\nTest de la Machine SECD concurrente version 4 \n\n" ;;
 
 printf "On teste l'expression ( (lam w.( - ( w 1 ) 5 )) ( (lam x.( x 10 )) (lam y.lam z.( + z y )) ) ) \n" ;;
-lancerSECDCv4 expression27 false;;
+lancerSECDCv4 expression14 false;;
 Printf.printf "\n" ;;
 
 printf "On teste l'expression  ( ( (lam f.lam x.( f x )) (lam y.( + y y )) ) 1 ) \n" ;;
-lancerSECDCv4 expression28 false;;
+lancerSECDCv4 expression15 false;;
 Printf.printf "\n" ;;
 
 printf "On teste l'expression  Signal( signal , ( Spawn( Present( signal , ( + expression13 Signal( coucou , Present( coucou , 5 , 65 ) ) ) , 3 ) ) Spawn( emit signal ) ) ) \n" ;;
-lancerSECDCv4 expression29 false;;
+lancerSECDCv4 expression19 false;;
 Printf.printf "\n" ;;
 
 printf "On teste l'expression  Catch( 6 , Signal( signal , ( Spawn( Present( signal , ( + expression13 Signal( coucou , Present( usdhfozeih , 5 , 65 ) ) ) , 3 ) ) Spawn( emit signal ) ) ) 
 , (lam uygig.7685) ) \n" ;;
-lancerSECDCv4 expression30 false;;
+lancerSECDCv4 expression20 false;;
 Printf.printf "\n" ;;
 
 

@@ -8,22 +8,25 @@ module ISWIM =
 
     (**** Types ****)
     
+    (* Type représentant les opérateurs reconnus par le langage *)
     type operateur = 
-        Add1 
-      | Sub1
-      | IsZero
-      | Add
-      | Sub
-      | Mult
-      | Div 
-      | Add4
+        Add1           (* ++   *)
+      | Sub1           (* --   *)
+      | IsZero         (* == 0 *)
+      | Add            (* +    *)
+      | Sub            (* -    *)
+      | Mult           (* *    *)
+      | Div            (* /    *)
+      | Add4           (* ++++ *)
 
-    type exprISWIM = 
-        Var of string 
-      | Abs of string * exprISWIM 
-      | App of exprISWIM * exprISWIM
-      | Op of operateur * exprISWIM list
-      | Const of int
+
+    (* Type représentant les éléments qui constitue le langage *)
+    type expr = 
+        Var of string                     (* une variable x,y,z,...         *)       
+      | Abs of string * expr              (* une abstraction lam x.t        *)
+      | App of expr * expr                (* une application ( a b )        *)
+      | Op of operateur * expr list       (* une opération [op ; el1 ; ...] *)
+      | Const of int                      (* une constante a,b,c,...        *)
 
 
 
@@ -134,9 +137,9 @@ module ISWIM =
       
         | App(expr1,expr2)    ->   append (liste_variable expr1) (liste_variable expr2)
       
-        | Const const         ->   []
+        | Const _             ->   []
       
-        | Op (op,liste_expr)  ->   flatten( map liste_variable liste_expr)
+        | Op (_,liste_expr)   ->   flatten( map liste_variable liste_expr)
 
 
     (* Donne l'ensemble des variables liées de l'expression *)
@@ -166,7 +169,7 @@ module ISWIM =
         
           | Const const         ->   []
         
-          | Op (op,liste_expr)  ->   flatten( map aux liste_expr)
+          | Op (op,liste_expr)  ->   flatten (map aux liste_expr)
       in 
       aux expression
 
@@ -174,21 +177,17 @@ module ISWIM =
       (* Vérifie si l'expression est une variable *)
       let rec estVariable expr =
         match expr with
-            Const const     ->   true
+            Const _ | Var _ | Abs(_,_)  ->   true
           
-          | Var var         ->   true 
-          
-          | Abs(abs,expr1)  ->   true
-          
-          | _               ->   false
+          | _                           ->   false
 
 
       (* Vérifie si l'expression est une constante *)
       let rec estConst expr =
         match expr with
-            Const const  ->   true
-          
-          | _            ->   false
+            Const _  ->   true
+    
+          | _        ->   false
 
 
       (* Convertit une liste de constante en entier et lève une exception si la liste ne contient pas que des constantes*)
@@ -220,7 +219,7 @@ module ISWIM =
 
     (**** La réduction ****)
 
-    (* Donne un nouveau nom de var (À améliorer pour éviter la liste finie) *)
+    (* Donne un nouveau nom de var limité par la liste*)
     let renommage liste_interdit =
       let variables = ["x";"y";"z1";"w1"] in
       let rec aux liste_interdit variables =
@@ -316,9 +315,9 @@ module ISWIM =
       (* Créer une liste de pair qui correspond aux variables liées qui doivent être obligatoirement placés au même endroit *)
       let rec pre_alpha_eq expression1 expression2 =
         match (expression1,expression2) with
-          (Var var1,Var var2)                        ->   []
+          (Var _,Var _)                              ->   []
         
-        | (Const const1,Const const2)                ->   []
+        | (Const _,Const _)                          ->   []
 
         | (App(expr1 ,expr2),App(expr3,expr4))       ->   append (pre_alpha_eq expr1 expr3) (pre_alpha_eq expr2 expr4)
 
@@ -348,7 +347,7 @@ module ISWIM =
             
             | (App(expr1,expr2),App(expr3,expr4))        ->   (aux expr1 expr3) && (aux expr2 expr4)
 
-            | (Abs(abs1,expr1),Abs(abs2,expr2))          ->   (aux expr1 expr2)
+            | (Abs(_,expr1),Abs(_,expr2))          ->   (aux expr1 expr2)
 
             | (Op(op1,liste_expr1),Op(op2,liste_expr2))  -> 
                                       begin
