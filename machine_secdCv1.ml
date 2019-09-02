@@ -105,7 +105,18 @@ module SECDCv1Machine =
      
         | Lang_secdC.ISWIM.InitFor(s,expr)               ->   [Signal(s,(secdLanguage_of_exprISWIM expr))]
 
-        | _                                                ->   raise BadVersion
+        | _                                              ->   raise BadVersion
+
+
+    (* Convertit une chaîne de caractère en chaîne de caractère (utilisée pour faire un affichage générique) *)
+    let string_of_string elem = elem
+
+    (* Convertit une liste en chaîne de caractère *)
+    let rec string_of_a_list string_of_a l inter =
+      match l with
+        | []    ->   ""
+        | [h]   ->   (string_of_a h)
+        | h::t  ->   (string_of_a h)^inter^(string_of_a_list string_of_a t inter)
 
     (* Convertit la chaîne de contrôle en une chaîne de caractère *)
     let rec string_of_control_string expression =
@@ -135,32 +146,26 @@ module SECDCv1Machine =
 
     (* Convertit un environnement en chaîne de caractère *)
     let rec string_of_env env =
-      match env with
-          []                                    ->   ""
+      let aux elem = 
+        match elem with
+        | EnvFerm(var,(control_string,env))   ->   "<"^var^" ,<"^(string_of_control_string control_string)^","^(string_of_env env)^">>"
 
-        | [EnvFerm(var,(control_string,env))]   ->   "<"^var^" ,<"^(string_of_control_string control_string)^","^(string_of_env env)^">>"
+        | EnvVar(var,const)                   ->   "<"^var^" ,"^(string_of_int const)^">"
 
-        | EnvFerm(var,(control_string,env))::t  ->   "<"^var^" ,<"^(string_of_control_string control_string)^","^(string_of_env env)^">> , "^(string_of_env t)
-
-        | [EnvVar(var,const)]                   ->   "<"^var^" ,"^(string_of_int const)^">"
-
-        | EnvVar(var,const)::t                  ->   "<"^var^" ,"^(string_of_int const)^"> , "^(string_of_env t)
-
-        | [Init s]                              ->   "<"^s^",init>"
-
-        | Init s::t                             ->   "<"^s^",init> , "^(string_of_env t)
+        | Init s                              ->   "<"^s^",init>"
+      in (string_of_a_list aux env " , ") 
 
 
     (* Convertit une pile en chaîne de caractère *)
-    let rec string_of_stack stack =
-      match stack with
-          []                                    ->   ""
+    let string_of_stack stack =
+      let aux elem =
+        match elem with
+          | Fermeture(control_string,env)      ->   "["^(string_of_control_string control_string)^" , {"^(string_of_env env)^"}]"
 
-        | Fermeture(control_string,env)::t      ->   "["^(string_of_control_string control_string)^" , {"^(string_of_env env)^"}] "^(string_of_stack t)
+          | Stack_const b                      ->   (string_of_int b)
 
-        | Stack_const b::t                      ->   (string_of_int b)^" "^(string_of_stack t)
-
-        | Remp::t                               ->   "Remp "^(string_of_stack t)   
+          | Remp                               ->   "Remp"   
+      in (string_of_a_list aux stack " ")
 
 
     (* Convertit la sauvegarde en chaîne de caractère *)
@@ -172,33 +177,23 @@ module SECDCv1Machine =
 
     
     (* Convertit la file d'attente en chaîne de caractère *)
-    let rec string_of_wait wait = 
-      match wait with
-          []        ->   ""
-
-        | [thread]  ->   (string_of_dump thread)
-
-        | thread::t ->   (string_of_dump thread)^" , "^(string_of_wait t)
-
+    let string_of_wait wait = 
+      let aux elem =
+        match elem with
+          thread  ->   (string_of_dump thread)
+      in (string_of_a_list aux wait " , ")
     
+
     (* Convertit la liste de threads bloqués en chaîne de caractère *)
     let rec string_of_stuck stuck =
-      match stuck with
-          []             ->   ""
-
-        | [(s,thread)]   ->   "< "^s^","^(string_of_dump thread)^" >"
-
-        | (s,thread)::t  ->   "< "^s^","^(string_of_dump thread)^" > , "^(string_of_stuck t)
+      let aux elem =
+        match elem with
+          (s,thread)   ->   "< "^s^","^(string_of_dump thread)^" >"
+      in (string_of_a_list aux stuck " , ")
 
 
     (* Convertit la liste des signaux émis en chaîne de caractère *)
-    let rec string_of_signals signals =
-      match signals with
-          []    ->   ""
-
-        | [s]   ->   s
-
-        | s::t  ->   s^" , "^(string_of_signals t)
+    let string_of_signals signals = (string_of_a_list string_of_string signals " , ")
 
 
     (* Convertit une machine SECD concurrente version 1 en chaîne de caractère *)
@@ -234,7 +229,7 @@ module SECDCv1Machine =
 
         | EnvVar(var,b)::t           ->   if ( equal x var) then  Stack_const b else substitution x t
 
-        | Init s::t                  ->   substitution x t
+        | Init _::t                  ->   substitution x t
 
 
     (* Convertit une liste de  fermeture contenant des constante en liste d'entier *)

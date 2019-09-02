@@ -76,21 +76,9 @@ module ISWIM =
     (* Renvoie le nombre d'opérande pour un opérateur donné *)
     let nbr_operande op =
       match op with
-        | Add1       ->   1
+        | Add1 | Sub1 | IsZero     ->   1
 
-        | Sub1       ->   1
-
-        | IsZero     ->   1
-
-        | Add        ->   2
-
-        | Sub        ->   2
-
-        | Mult       ->   2
-
-        | Div        ->   2
-
-        | Egal       ->   2
+        | Add | Sub | Mult | Div | Egal       ->   2
 
 
     (* Renvoie le résultat d'un calcul *)

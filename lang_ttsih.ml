@@ -8,6 +8,7 @@ module ISWIM =
 
     (**** Types ****)
     
+    (* Opérateur du langage *)
     type operateur = 
         Add1 
       | Sub1
@@ -18,29 +19,31 @@ module ISWIM =
       | Div 
       | Egal
 
-    type exprISWIM = 
 
-        Var of string 
-      | Const of int
-      | Error of int 
+    (* Expression du langage *)
+    type expr = 
+ 
+        Var of string                           (* une variable x,y,z... *)
+      | Const of int                            (* une constante n,m,... *)
+      | Error of int                            (* une erreur e *)
 
-      | Abs of string * exprISWIM 
-      | App of exprISWIM * exprISWIM
-      | Op of operateur * exprISWIM list
+      | Abs of string * expr                    (* Abstraction de la forme : lam string.(expr) *)
+      | App of expr * expr                      (* Application de la forme : (expr1 expr2) *)
+      | Op of operateur * expr list             (* Opération de la forme : (op expr_list) *)
       
-      | Spawn of exprISWIM
-      | Present of string * exprISWIM * exprISWIM
-      | Signal
-      | Wait
+      | Spawn of expr                           (* Création de thread : (expr) avec expr la partie de la chaîne prise par le nouveau thread *)
+      | Present of string * expr * expr         (* Conditionnel pour un signal de la forme :  (string,expr,expr1) avec string le signal, expr la partie prise si le signal est émis et expr1 la partie prise si le signal n'est pas émis *)
+      | Signal                                  (* Initialise *)
+      | Wait                                    (* Met en attente *)
 
-      | Put of string * int
-      | Get of string * string * int
+      | Put of string * int                     (* Ajoute une valeur de la forme : (string,int) avec string le signal et int la valeur à ajouter *)
+      | Get of string * string * int            (* Prend une valeur de la forme : (string,string1,int) avec string le signal, string1 le thread et int l'élément neutre *)
       
-      | Catch of exprISWIM * (string * exprISWIM)
-      | Throw
+      | Catch of expr * (string * expr)         (* Gestionnaire d'exception de la forme :  (exp,(str,exp1)) avec exp le contenu protégé et (str,exp1) l'abstraction en cas d'erreur *)
+      | Throw                                   (* Lève une erreur *)
       
-      | If of exprISWIM * exprISWIM * exprISWIM
-      | Rec of string * exprISWIM
+      | If of expr * expr * expr                (* Conditionnel de la forme : (expr,expr1,expr2) avec expr la condition, expr1 le "alors" et expr2 le "sinon" *)
+      | Rec of string * expr                    (* Récursion de la forme : (string,expr) avec string la variable récursive et expr le corps de la fonction *)
 
 
 

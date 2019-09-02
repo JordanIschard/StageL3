@@ -145,15 +145,15 @@ module ISWIM =
     (* Donne l'ensemble des variables liées de l'expression *)
     let rec lie expression =
       match expression with
-          Var var             ->   []
+          Var _               ->   []
         
         | Abs (el,expr)       ->   el::lie expr
       
         | App (expr1,expr2)   ->   append (lie expr1) (lie expr2)
       
-        | Const const         ->   []
+        | Const _             ->   []
       
-        | Op (op,liste_expr)  ->   flatten( map lie liste_expr)
+        | Op (_,liste_expr)   ->   flatten( map lie liste_expr)
 
     
     (* Donne l'ensemble des variables libres de l'expression *)
@@ -167,9 +167,9 @@ module ISWIM =
         
           | App (expr1,expr2)   ->   append (aux expr1) (aux expr2)
         
-          | Const const         ->   []
+          | Const _             ->   []
         
-          | Op (op,liste_expr)  ->   flatten (map aux liste_expr)
+          | Op (_,liste_expr)   ->   flatten (map aux liste_expr)
       in 
       aux expression
 
@@ -177,9 +177,9 @@ module ISWIM =
       (* Vérifie si l'expression est une variable *)
       let rec estVariable expr =
         match expr with
-            Const _ | Var _ | Abs(_,_)  ->   true
+            Const _ | Var _ | Abs _  ->   true
           
-          | _                           ->   false
+          | _                        ->   false
 
 
       (* Vérifie si l'expression est une constante *)

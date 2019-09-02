@@ -15,9 +15,11 @@ module SECDMachine =
     type c =
         Constant of int 
       | Variable of string
+      | Pair of string * c list
+
       | Ap
       | Prim of operateur
-      | Pair of string * c list
+      
 
     (* Type représentant la chaîne de contrôle *)
     type control_string = c list
@@ -44,7 +46,7 @@ module SECDMachine =
       | Save of stack * env * control_string * dump
 
     (* Type représentant la machine SECD *)
-    type secd = MachineSECD of stack * env * control_string * dump
+    type secd = Machine of stack * env * control_string * dump
 
 
 
@@ -117,7 +119,7 @@ module SECDMachine =
     (* Convertit une machine SECD en chaîne de caractère *)
     let rec string_of_secdMachine machine =
       match machine with
-        MachineSECD(stack,env,control_string,dump)  ->
+        Machine(stack,env,control_string,dump)  ->
                                          "\n STACK   : "^(string_of_stack stack)
                                         ^"\n ENV     : ["^(string_of_env env)^"]"
                                         ^"\n CONTROL : "^(string_of_control_string control_string)
@@ -176,43 +178,43 @@ module SECDMachine =
     (**** Machine SECD ****)
 
     (* Applique une transition de la machine SECD pour un état donné *)
-    let transitionSECD machine =
+    let transition machine =
       match machine with
-          MachineSECD(s,e,Constant b::c,d)                          ->   MachineSECD(Stack_const b::s,e,c,d)
+          Machine(s,e,Constant b::c,d)                          ->   Machine(Stack_const b::s,e,c,d)
         
-        | MachineSECD(s,e,Variable x::c,d)                          ->   MachineSECD((substitution x e)::s,e,c,d)
+        | Machine(s,e,Variable x::c,d)                          ->   Machine((substitution x e)::s,e,c,d)
 
-        | MachineSECD(s,e,Pair(abs,expr)::c,d)                      ->   MachineSECD(Fermeture([Pair(abs,expr)],e)::s,e,c,d)
+        | Machine(s,e,Pair(abs,expr)::c,d)                      ->   Machine(Fermeture([Pair(abs,expr)],e)::s,e,c,d)
 
-        | MachineSECD(s,e,Prim op::c,d)                             ->   begin
+        | Machine(s,e,Prim op::c,d)                             ->   begin
                                                                             let (liste_entier,new_stack) = prendre_entier s (getNbrOperande op) in 
                                                                             let res = (secdLanguage_of_exprISWIM (calcul op liste_entier)) in
                                                                             match res with
-                                                                                [Constant b] ->  MachineSECD(Stack_const b::new_stack,e,c,d)
+                                                                                [Constant b] ->  Machine(Stack_const b::new_stack,e,c,d)
 
-                                                                              | [Pair(abs,c1)] -> MachineSECD(Fermeture([Pair(abs,c1)],e)::new_stack,e,c,d)
+                                                                              | [Pair(abs,c1)] -> Machine(Fermeture([Pair(abs,c1)],e)::new_stack,e,c,d)
 
                                                                               | _ -> raise EtatInconnu
                                                                           end
 
-        | MachineSECD(v::Fermeture([Pair(abs,c1)],e1)::s,e,Ap::c,d)  ->   MachineSECD([],(ajoutEnv e1 abs v),c1,Save(s,e,c,d))
+        | Machine(v::Fermeture([Pair(abs,c1)],e1)::s,e,Ap::c,d)  ->   Machine([],(ajoutEnv e1 abs v),c1,Save(s,e,c,d))
 
-        | MachineSECD(v::s,e,[],Save(s1,e1,c,d))                     ->   MachineSECD(v::s1,e1,c,d)
+        | Machine(v::s,e,[],Save(s1,e1,c,d))                     ->   Machine(v::s1,e1,c,d)
 
         | _                                                          ->   raise EtatInconnu
 
 
     (* Applique les règles de la machine SECD en affichant les étapes *)
-    let rec machineSECD machine afficher= 
-      match machine with
-          MachineSECD([Stack_const b],e,[],Vide)                ->   [Constant b]
+    let rec machine etat afficher= 
+      match etat with
+          Machine([Stack_const b],_,[],Vide)               ->   [Constant b]
         
-        | MachineSECD([Fermeture([Pair(abs,c)],e1)],e,[],Vide)  ->   [Pair(abs,c)]
+        | Machine([Fermeture([Pair(abs,c)],_)],_,[],Vide)  ->   [Pair(abs,c)]
 
-        | machine                                               ->   if (afficher) then (afficherSECD machine) else printf ""; machineSECD (transitionSECD machine) afficher
+        | indetermine                                      ->   if (afficher) then (afficherSECD indetermine) else printf ""; machine (transition indetermine) afficher
 
         
     (* Lance et affiche le résultat de l'expression *)
-    let lancerSECD expression afficher = printf "Le résultat est %s \n" (string_of_control_string (machineSECD (MachineSECD([],[],(secdLanguage_of_exprISWIM expression),Vide)) afficher))
+    let lancerSECD expression afficher = printf "Le résultat est %s \n" (string_of_control_string (machine (Machine([],[],(secdLanguage_of_exprISWIM expression),Vide)) afficher))
 
   end

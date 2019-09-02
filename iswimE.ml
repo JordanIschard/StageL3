@@ -177,7 +177,7 @@ module ISWIM =
       (* Vérifie si l'expression est une variable *)
       let estVariable expr =
         match expr with
-            Const _ | Var _ | Abs(_,_)  ->   true
+            Const _ | Var _ | Abs _  ->   true
 
           | _         ->   false
 
@@ -322,7 +322,7 @@ module ISWIM =
           match liste with
               []           ->   false
 
-            | Abs(_,_)::t  ->   true
+            | Abs _::t  ->   true
 
             | _::t         ->   aux t
         in
@@ -346,9 +346,9 @@ module ISWIM =
       (* Créer une liste de pair qui correspond aux variables liées qui doivent être obligatoirement placés au même endroit *)
       let rec pre_alpha_eq expression1 expression2 =
         match (expression1,expression2) with
-          (Var var1,Var var2)                        ->   []
+          (Var _,Var _)                              ->   []
         
-        | (Const const1,Const const2)                ->   []
+        | (Const _,Const _)                          ->   []
 
         | (App(expr1 ,expr2),App(expr3,expr4))       ->   append (pre_alpha_eq expr1 expr3) (pre_alpha_eq expr2 expr4)
 
@@ -379,7 +379,7 @@ module ISWIM =
             
             | (App(expr1,expr2),App(expr3,expr4))        ->   (aux expr1 expr3) && (aux expr2 expr4)
 
-            | (Abs(abs1,expr1),Abs(abs2,expr2))          ->   (aux expr1 expr2)
+            | (Abs(_,expr1),Abs(_,expr2))                ->   (aux expr1 expr2)
 
             | (Op(op1,liste_expr1),Op(op2,liste_expr2))  -> 
                   begin

@@ -52,8 +52,8 @@ module ISWIM =
       | Build of int * int * expr list          (* Build de la forme : (int,int1,expr_list) avec int l'id du constructeur, int1 le nombre de paramètre et expr_list une liste de taille égal au nombre de paramètre *)
       | Match of string * ( pat * expr ) list   (* Match de la forme : (string,(pattern,expr) list) avec string l'element à matcher, list une liste de filtres composées d'un pattern et une expr *)
 
-      | Catch of expr * (string * expr)
-      | Raise of string
+      | Catch of expr * (string * expr)         (* Gestionnaire d'exception de la forme :  (exp,(str,exp1)) avec exp le contenu protégé et (str,exp1) l'abstraction en cas d'erreur *)
+      | Raise of string                         (* Lève une erreur *)
 
 
     (* Vraie en lambda-calcul *)
@@ -91,21 +91,9 @@ module ISWIM =
     (* Renvoie le nombre d'opérande pour un opérateur donné *)
     let nbr_operande op =
       match op with
-        | Add1       ->   1
+        | Add1 | Sub1 | IsZero     ->   1
 
-        | Sub1       ->   1
-
-        | IsZero     ->   1
-
-        | Add        ->   2
-
-        | Sub        ->   2
-
-        | Mult       ->   2
-
-        | Div        ->   2
-
-        | Egal       ->   2
+        | Add | Sub | Mult | Div | Egal       ->   2
 
 
     (* Renvoie le résultat d'un calcul *)
