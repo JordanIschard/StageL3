@@ -104,5 +104,4 @@ Version de la machine TTSIH
 
 Partie sur les rapports
 
-Il y a deux rapports ainsi qu'un diaporama. Le premier rapport s'arrête une semaine avant la soutenance et le second jusqu'à la fin du stage. Le diaporama quand à lui 
-a servi de support durant la soutenance.
+Il y a deux rapports ainsi qu'un diaporama. Le premier rapport s'arrête une semaine avant la soutenance et le second jusqu'à la fin du stage. Le diaporama quand à lui a servi de support durant la soutenance.
