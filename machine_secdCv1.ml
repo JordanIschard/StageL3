@@ -17,42 +17,44 @@ module SECDCv1Machine =
 
     (* Type intermédiaire pour représenter la chaîne de contrôle *)
     type c =
-        Constant of int 
-      | Variable of string
-      | Ap
-      | Prim of operateur
-      | Pair of string * c list
-      | Bspawn                                   (* début du spawn *)
-      | Espawn                                   (* fin du spawn *)
-      | Emit of id                               (* emet s *)
-      | Present of id * c list * c list          (* present s in t1 t2 *)
-      | Signal of id * c list                    (* signal s in t *)
+        Constant of int                          (* une constante n,m,p... *)
+      | Variable of string                       (* une variable x,y,z... *)
+      | Pair of string * c list                  (* une abstraction lam str.(c_list) *)
+
+      | Ap                                       (* une commande représentant l'application *)
+      | Prim of operateur                        (* une commande représentant l'opération *)
+      | Emit of id                               (* une commande représentant l'émission de id *)
+      | Present of id * c list * c list          (* une commande représentant la conditionnelle sur un signal id *)
+      | Signal of id * c list                    (* une commande représentant l'initialisation du signal id pour la chaîne de contrôle c_list *)
+
+      | Bspawn                                   (* un délimitateur représentant le début de la commande spawn *)
+      | Espawn                                   (* un délimitateur représentant la fin de la commande spawn *)
 
     (* Type représentant la chaîne de contrôle *)
     type control_string = c list
 
     (* Type intermédiaire pour représenter l'environnement *)
     type e =  
-        EnvFerm of string * (control_string * e list) 
-      | EnvVar of string * int
-      | Init of id                                      (* (init,s) *)
+        EnvFerm of string * (control_string * e list)   (* élément de l'environnement composé d'une variable et d'une fermeture *)
+      | EnvVar of string * int                          (* élément de l'environnement composé d'une variable et d'une constante *)
+      | Init of id                                      (* élément de l'environnement stockant l'initialisation d'un signal id *)
 
     (* Type représentant l'environnement *)
     type env = e list
 
     (* Type intermédiaire pour représenter la pile *)
     type s =  
-        Fermeture of (control_string * env) 
-      | Stack_const of int
-      | Remp
+        Fermeture of (control_string * env)  (* une fermeture : pair composé d'une chaîne de contrôle et d'un environnement *)
+      | Stack_const of int                   (* une constante n,m,p... *)
+      | Remp                                 (* élément représentant une action effectué par une commande sans résultat à retourner *)
 
     (* Type représentant la pile *)
     type stack = s list
 
     (* Type représentant le dépôt *)
     type dump =
-        Vide
-      | Save of stack * env * control_string * dump
+        Vide                                            (* élément signifiant que le dépôt est vide *)
+      | Save of stack * env * control_string * dump     (* sauvegarde de la machine dans le dépôt *)
 
 
     (* Type représentant la liste de signaux émit *)
@@ -129,7 +131,7 @@ module SECDCv1Machine =
       
         | Ap::t                       ->   "ap "^(string_of_control_string t)
       
-        | Pair(abs,liste_expr)::t     ->   "< "^abs^"."^(string_of_control_string liste_expr)^"> "^(string_of_control_string t)
+        | Pair(abs,liste_expr)::t     ->   "<"^abs^"."^(string_of_control_string liste_expr)^"> "^(string_of_control_string t)
       
         | Prim op::t                  ->   "prim "^(string_of_operateur op)^" "^(string_of_control_string t)
 
@@ -139,9 +141,9 @@ module SECDCv1Machine =
       
         | Emit s::t                   ->   s^" emit "^(string_of_control_string t)  
       
-        | Present(s,expr1,expr2)::t   ->   "< "^s^","^(string_of_control_string expr1)^","^(string_of_control_string expr2)^" > "^(string_of_control_string t)  
+        | Present(s,expr1,expr2)::t   ->   "<"^s^","^(string_of_control_string expr1)^","^(string_of_control_string expr2)^" > "^(string_of_control_string t)  
         
-        | Signal(s,expr)::t           ->   "< "^s^","^(string_of_control_string expr)^" > "^(string_of_control_string t)
+        | Signal(s,expr)::t           ->   "<"^s^","^(string_of_control_string expr)^" > "^(string_of_control_string t)
       
 
     (* Convertit un environnement en chaîne de caractère *)
@@ -289,11 +291,11 @@ module SECDCv1Machine =
     (* Prends le choix qui représente l'absence d'un signal *)
     let rec secondChoix st =
       match st with
-          []                                                 ->   []
+          []                                      ->   []
 
-        | (signal,Save(s,e,Present(signal1,c1,c2)::c,d))::t  ->   append [Save(s,e,(append c2 c),d)] (secondChoix t)
+        | (_,Save(s,e,Present(_,c1,c2)::c,d))::t  ->   append [Save(s,e,(append c2 c),d)] (secondChoix t)
 
-        | _                                                  ->   raise StrangeStuck
+        | _                                       ->   raise StrangeStuck
 
 
     (* Emet un signal et vérifie si des threads sont en attente de cette émission *)
@@ -384,17 +386,17 @@ module SECDCv1Machine =
         | _                                                              ->   raise EtatInconnu
 
 
-    (* Applique les règles de la machine SECD en affichant les étapes *)
-    let rec machineSECDCv1 machine afficher= 
-      match machine with
-          Machine([Stack_const b],e,[],Vide,[],[],si)                ->   [Constant b]
+    (* Applique les règles de la machine SECD version 1 en affichant les étapes *)
+    let rec machine etat afficher= 
+      match etat with
+          Machine([Stack_const b],_,[],Vide,[],[],_)               ->   [Constant b]
         
-        | Machine([Fermeture([Pair(abs,c)],e1)],e,[],Vide,[],[],si)  ->   [Pair(abs,c)]
+        | Machine([Fermeture([Pair(abs,c)],_)],_,[],Vide,[],[],_)  ->   [Pair(abs,c)]
 
-        | machine                                                    ->   if (afficher) then (afficherSECDCv1 machine) else printf ""; machineSECDCv1 (transitionSECDCv1 machine) afficher
+        | indetermine                                              ->   if (afficher) then (afficherSECDCv1 indetermine) else printf ""; machine (transitionSECDCv1 indetermine) afficher
 
         
     (* Lance et affiche le résultat de l'expression *)
-    let lancerSECDCv1 expression afficher = printf "Le résultat est %s \n" (string_of_control_string (machineSECDCv1 (Machine([],[],(secdLanguage_of_exprISWIM expression),Vide,[],[],[])) afficher))
+    let lancerSECDCv1 expression afficher = printf "Le résultat est %s \n" (string_of_control_string (machine (Machine([],[],(secdLanguage_of_exprISWIM expression),Vide,[],[],[])) afficher))
 
   end

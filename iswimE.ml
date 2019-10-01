@@ -63,7 +63,7 @@ module ISWIM =
         | h::t  ->   h^" "^(concat_string_liste t)
 
 
-    (* Convertit un opérateur en chaîne de caractère *)
+    (* Convertit un opérateur en chaîne de caractères *)
     let string_of_operateur op =
       match op with
           Add1    ->   "++"
@@ -75,7 +75,7 @@ module ISWIM =
         | Div     ->   "/"
       
 
-    (* Convertit une expression en chaîne de caractère *)
+    (* Convertit une expression en chaîne de caractères *)
     let rec string_of_expr expr =
       match expr with 
           Var var             ->   var
@@ -88,14 +88,14 @@ module ISWIM =
        
         | Op (op,liste_expr)  ->   "("^(string_of_operateur op)^" "^(concat_string_liste ( map string_of_expr  liste_expr))^")"
        
-       | Erreur erreur        ->   erreur
+        | Erreur erreur        ->   erreur
 
 
     (* Affiche une expression *)
     let afficherExpr expression = printf "%s\n" (string_of_expr expression) 
     
 
-    (* Affiche une liste de pair de string *)
+    (* Affiche une liste de pairs de chaîne de caractères *)
     let rec afficherPairList liste =
       match liste with
           []          ->   printf "\n"
@@ -196,7 +196,7 @@ module ISWIM =
           | _         ->   false
 
 
-      (* Convertit une liste de constante en entier et lève une exception si la liste ne contient pas que des constantes*)
+      (* Convertit une liste de constantes en liste d'entiers et lève une exception si la liste ne contient pas seulement des constantes *)
       let rec convert_liste_expr_liste_int liste =
         match liste with
             []              ->   []
@@ -206,7 +206,7 @@ module ISWIM =
           | _               ->   raise NotConstErreur
 
 
-      (* Vérifie si l'élément fait partie de au moins un couple de la liste*)
+      (* Vérifie si l'élément fait partie de, au moins, un couple de la liste *)
       let rec estDansUnCouple elem liste =
         match liste with
             []          ->   false
@@ -226,7 +226,7 @@ module ISWIM =
     (**** La réduction ****)
 
 
-    (* Donne un nouveau nom de var à partir d'une liste finie *)
+    (* Donne un nouveau nom de variables à partir d'une liste finie *)
     let renommage liste_interdit =
       let variables = ["x";"y";"z";"w"] in
       let rec aux liste_interdit variables =
@@ -316,7 +316,7 @@ module ISWIM =
           | (_,_)          ->   raise FormatOpErreur
 
 
-      (* Applique une delta réduction sur l'expression*)
+      (* Applique une delta réduction sur l'expression *)
       let rec  delta_red expression =
         let rec aux liste =
           match liste with
@@ -343,7 +343,7 @@ module ISWIM =
             | Erreur erreur     ->   Erreur erreur
 
 
-      (* Créer une liste de pair qui correspond aux variables liées qui doivent être obligatoirement placés au même endroit *)
+      (* Créer une liste de pairs qui correspond aux variables liées qui doivent être obligatoirement placées au même endroit *)
       let rec pre_alpha_eq expression1 expression2 =
         match (expression1,expression2) with
           (Var _,Var _)                              ->   []
@@ -367,7 +367,7 @@ module ISWIM =
         | (_,_)                                      ->   raise EquivalenceImpossible
 
 
-      (* Teste les deux expressions avec les règles de l'apha équivalence*)
+      (* Teste les deux expressions avec les règles de l'apha équivalence *)
       let alpha_eq liste_pair_lie expression1 expression2 =
         let rec aux expr1 expr2 =
           match (expr1,expr2) with

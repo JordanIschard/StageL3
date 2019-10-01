@@ -223,36 +223,38 @@ module SECDCv3Machine =
 
     (**** Affichage ****)
 
-    (* Concatène une liste de chaîne de caractères en une seule chaîne de caractères *)
-    let rec concat_secd_list secd_list =
-      match secd_list with
-          []    ->   "" 
+    (* Convertit une chaîne de caractère en chaîne de caractère (utilisée pour faire un affichage générique) *)
+    let string_of_string elem = elem
 
-        | [h]     ->   h
-        
-        | h::t  ->   h^";"^(concat_secd_list t)
+
+    (* Convertit une liste en chaîne de caractère *)
+    let rec string_of_a_list string_of_a l inter =
+      match l with
+        | []    ->   ""
+        | [h]   ->   (string_of_a h)
+        | h::t  ->   (string_of_a h)^inter^(string_of_a_list string_of_a t inter)
 
 
     (* Convertit le langage ISWIM en langage SECD *)
     let rec secdLanguage_of_exprISWIM expression =
       match expression with
-          Lang_secdC.ISWIM.Const const                           ->   [Constant const]
-            
-        | Lang_secdC.ISWIM.Var var                               ->   [Variable var]
-            
-        | Lang_secdC.ISWIM.App(expr1,expr2)                      ->   append (  append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
-            
-        | Lang_secdC.ISWIM.Op(op,liste_expr)                     ->   append ( flatten( map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
-            
-        | Lang_secdC.ISWIM.Abs(abs,expr)                         ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
+          Lang_secdC.ISWIM.Const const                     ->   [Constant const]
+          
+        | Lang_secdC.ISWIM.Var var                         ->   [Variable var]
+          
+        | Lang_secdC.ISWIM.App(expr1,expr2)                ->   append (  append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
+          
+        | Lang_secdC.ISWIM.Op(op,liste_expr)               ->   append ( flatten( map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
+          
+        | Lang_secdC.ISWIM.Abs(abs,expr)                   ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
 
-        | Lang_secdC.ISWIM.Spawn expr                            ->   append [Bspawn] (append (secdLanguage_of_exprISWIM expr) [Espawn])
+        | Lang_secdC.ISWIM.Spawn expr                      ->   append [Bspawn] (append (secdLanguage_of_exprISWIM expr) [Espawn])
 
         | Lang_secdC.ISWIM.Present (signal,expr1,expr2)    ->   [Present (signal,(secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr2))]
 
-        | Lang_secdC.ISWIM.Emit signal                  ->   [Emit (signal)]
+        | Lang_secdC.ISWIM.Emit signal                     ->   [Emit (signal)]
 
-        | Lang_secdC.ISWIM.InitFor (signal,expr)            ->   [Signal (signal,(secdLanguage_of_exprISWIM expr))]
+        | Lang_secdC.ISWIM.InitFor (signal,expr)           ->   [Signal (signal,(secdLanguage_of_exprISWIM expr))]
 
         | Lang_secdC.ISWIM.Throw error                     ->   [Throw(error)]
 
@@ -262,12 +264,13 @@ module SECDCv3Machine =
 
         | Lang_secdC.ISWIM.Get(signal,id_thread)           ->   [Constant id_thread ;Get(signal)]
 
-        | _                                                  ->   raise BadVersion
+        | _                                                ->   raise BadVersion
+
 
     (* Donne une chaîne de caractères contenant un message d'erreur par rapport à l'identifiant de l'erreur *)
     let error_message error =
       match error with
-          0  ->  "ERREUR : Etrange..."                                           (* StrangeEnd            *)
+          0   ->  "ERREUR : Etrange..."                                           (* StrangeEnd            *)
 
         | 1   ->   "ERREUR : Format de la machine invalide :/"                   (* UnknowState           *)
         | 2   ->   "ERREUR : Format de la liste bloqué invalide"                 (* UnknowStuckState      *)
@@ -299,52 +302,50 @@ module SECDCv3Machine =
 
     (* Convertit la chaîne de contrôle en une chaîne de caractères *)
     let rec string_of_control_string expression =
-      match expression with
+      let string_of_cs_element element =
+        match element with
+          | Constant const                  ->   (string_of_int const)
+        
+          | Variable var                    ->   var
+        
+          | Ap                              ->   "AP"
+        
+          | Pair(abs,expr_list)             ->   "<"^abs^","^(string_of_control_string expr_list)^">"
+        
+          | Prim op                         ->   "PRIM "^(string_of_operateur op)
 
-          []                                 ->   ""
-      
-        | Constant const::t                  ->   (string_of_int const)^" "^(string_of_control_string t)
-      
-        | Variable var::t                    ->   var^" "^(string_of_control_string t)
-      
-        | Ap::t                              ->   "ap "^(string_of_control_string t)
-      
-        | Pair(abs,expr_list)::t             ->   "("^abs^",("^(string_of_control_string expr_list)^")) "^(string_of_control_string t)
-      
-        | Prim(op)::t                        ->   "prim "^(string_of_operateur op)^" "^(string_of_control_string t)
+          | Bspawn                          ->   "BSPAWN"
 
-        | Bspawn::t                          ->   "bspawn "^(string_of_control_string t)
+          | Espawn                          ->   "ESPAWN"
 
-        | Espawn::t                          ->   "espawn "^(string_of_control_string t)
+          | Present(signal,expr1,expr2)     ->   "PRESENT "^signal^" IN "^(string_of_control_string expr1)^(string_of_control_string expr2)
 
-        | Present(signal,expr1,expr2)::t     ->    "present "^signal^" in "^(string_of_control_string expr1)
-                                                  ^(string_of_control_string expr2)^(string_of_control_string t)
+          | Emit signal                     ->   "EMIT "^signal
 
-        | Emit signal::t                     ->   "emit "^signal^" "^(string_of_control_string t)
+          | Signal(signal,expr)             ->   "SIGNAL "^signal^" IN "^(string_of_control_string expr)
 
-        | Signal(signal,expr)::t             ->   "signal "^signal^" in "^(string_of_control_string expr)^(string_of_control_string t)
+          | Throw error                     ->   (error_message error)
 
-        | Throw(error)::t                    ->   (error_message error)^" "^(string_of_control_string t)
+          | Catch(error,expr1,(abs,expr2))  ->    "TRY "^(string_of_control_string expr1)^"CATCH "^(error_message error)
+                                                  ^" IN <"^abs^" , "^(string_of_control_string expr2)^">" 
 
-        | Catch(error,expr1,(abs,expr2))::t  ->    "try "^(string_of_control_string expr1)
-                                                  ^"catch "^(error_message error)
-                                                  ^" in ("^abs^" , "^(string_of_control_string expr2)^")"^(string_of_control_string t) 
+          | Error error                     ->   (error_message error)
 
-        | Error error::t                     ->   (error_message error)^" "^(string_of_control_string t)
+          | Put signal                      ->   signal^" PUT"
 
-        | Put signal::t                      ->   signal^" put "^(string_of_control_string t)
-       
-        | Get signal::t                      ->   signal^" get "^(string_of_control_string t)
+          | Get signal                      ->   signal^" GET"
+
+      in string_of_a_list string_of_cs_element expression " "
 
 
     (* Convertit un environnement en chaîne de caractères *)
     let rec string_of_environment environment =
-      match environment with
-          []                                      ->   ""
+      let aux element = 
+        match element with
+          | EnvClos(var,(control_string,env))  ->   "["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_environment env)^"]]"
 
-        | (EnvClos(var,(control_string,env)))::t  ->   "["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_environment env)^"]] , "^(string_of_environment t)
-
-        | (EnvVar(var,control_string))::t         ->   "["^var^" , "^(string_of_control_string control_string) ^"] , "^(string_of_environment t)
+          | EnvVar(var,control_string)         ->   "["^var^" , "^(string_of_control_string control_string) ^"]"
+      in string_of_a_list aux environment " , "
 
 
     (* Convertit une pile en chaîne de caractères *)
@@ -375,7 +376,7 @@ module SECDCv3Machine =
 
       
     (* Convertit un thread en chaîne de caractères *)
-    let rec string_of_thread thread =
+    let string_of_thread thread =
       match thread with
         Thread(id,stack,env,control_string,dump)  ->    "("^(string_of_int id)^" , "^(string_of_stack stack)^" , "
                                                        ^(string_of_environment env)^" , "^(string_of_control_string control_string)^" , "
@@ -383,27 +384,19 @@ module SECDCv3Machine =
 
 
     (* Convertit la liste des éléments en attente en chaîne de caractères *)
-    let rec string_of_wait wait =
-      match wait with 
-          []         ->   "" 
-        
-        | [thread]   ->   (string_of_thread thread)
-        
-        | thread::t  ->   (string_of_thread thread)^" , "^(string_of_wait t)
+    let string_of_wait wait = string_of_a_list string_of_thread wait " , "
 
 
     (* Convertit la liste des éléments bloqués en chaîne de caractères *)
-    let rec string_of_stuck stuck =
-      match stuck with 
-          []                  ->   "" 
-
-        | [(signal,thread)]   ->   "( "^signal^", "^(string_of_thread thread)^" )"
-
-        | (signal,thread)::t  ->   "( "^signal^", "^(string_of_thread thread)^" ) , "^(string_of_stuck t)
+    let string_of_stuck stuck =
+      let aux element =
+        match element with 
+          | (signal,thread)   ->   "( "^signal^", "^(string_of_thread thread)^" )"
+      in string_of_a_list aux stuck " , "
 
 
     (* Convertit la liste des threads en chaîne de caractères *)
-    let rec string_of_thread_list thread_list =
+    let string_of_thread_list thread_list =
       match thread_list with
         (wait,stuck)  ->    "\n     WAIT    : "^(string_of_wait wait)
                            ^"\n     STUCK   : "^(string_of_stuck stuck)
@@ -412,51 +405,44 @@ module SECDCv3Machine =
     
 
     (* Convertit une liste de signaux courant en chaîne de caractères *)
-    let rec string_of_cs cs_list =
-      match cs_list with
-          []                               ->   ""
-
-        | (id_thread,values,init)::t       ->    "("^(string_of_int id_thread)^",{"^(concat_secd_list(map string_of_int values))^"},"^(string_of_bool init)^") "^(string_of_cs t)
+    let string_of_cs cs_list =
+      let aux  element = 
+        match element with
+          | (id_thread,values,init)       ->    "("^(string_of_int id_thread)^",{"^(string_of_a_list string_of_int values " ")^"},"^(string_of_bool init)^")"
+      in string_of_a_list aux cs_list " "
 
 
     (* Convertit la liste des signaux courant liés à leurs threads en chaîne de caractères *)
-    let rec string_of_current_signals current_signals =
-      match current_signals with
-          []                                 ->   "" 
-
-        | [CS(id_signal,thread_list,emit)]   ->   "["^id_signal^" : {"^(string_of_cs thread_list)^","^(string_of_bool emit)^"}]"
-
-        | CS(id_signal,thread_list,emit)::t  ->   "["^id_signal^" : {"^(string_of_cs thread_list)^","^(string_of_bool emit)^"}] ; "^(string_of_current_signals t) 
+    let string_of_current_signals current_signals =
+      let aux element =
+        match element with
+          | CS(id_signal,thread_list,emit)   ->   "["^id_signal^" : {"^(string_of_cs thread_list)^","^(string_of_bool emit)^"}]"
+      in string_of_a_list aux current_signals " ; "
 
 
     (* Convertit la liste des signaux partagés en chaîne de caractères *)
-    let rec string_of_ssi ssi_list = 
-      let rec aux values =
-        match values with
-            []                                 ->   ""
-
-          | [(value,pointers)]                 ->   "("^( string_of_int value)^",{"^(concat_secd_list(map string_of_int pointers))^"})"
-
-          | (value,pointers)::t                ->   "("^( string_of_int value)^",{"^(concat_secd_list(map string_of_int pointers))^"});"^(aux t)
-      in
-      match ssi_list with
-          []                                   ->   ""
-
-        | (id_thread,values,thread_list)::t    ->   " ("^(string_of_int id_thread)^",["^(aux values)^"],{"^(concat_secd_list( map string_of_int thread_list))^"}) "^(string_of_ssi t)
+    let string_of_ssi ssi_list = 
+      let aux1 element =
+        let aux values =
+          match values with
+            | (value,pointers)                ->   "("^( string_of_int value)^",{"^(string_of_a_list string_of_int pointers " ")^"})"
+        in
+        match element with
+          | (id_thread,values,thread_list)    ->   " ("^(string_of_int id_thread)^",["^(string_of_a_list aux values ";")
+                                                  ^"],{"^(string_of_a_list string_of_int thread_list " ")^"})"
+      in string_of_a_list aux1 ssi_list " "
 
     
     (* Convertit la liste des signaux partagés lié à leurs threads en chaîne de caractères *)
-    let rec string_of_shared_signals shared_signals =
-      match shared_signals with
-          []                             ->   ""
-
-        | [SSI(id_signal,thread_list)]   ->   "["^id_signal^" : {"^(string_of_ssi thread_list)^"}]" 
-
-        | SSI(id_signal,thread_list)::t  ->   "["^id_signal^" : {"^(string_of_ssi thread_list)^"}] , "^(string_of_shared_signals t)  
+    let string_of_shared_signals shared_signals =
+      let aux element = 
+        match element with
+          | SSI(id_signal,thread_list)   ->   "["^id_signal^" : {"^(string_of_ssi thread_list)^"}]"
+      in string_of_a_list aux shared_signals " , "
 
 
     (* Convertit la liste de tous les signaux en chaîne de caractères *)
-    let rec string_of_signals signals =
+    let string_of_signals signals =
       match signals with
         (current_signals,shared_signals)  ->    "\n     CURRENT  : "^(string_of_current_signals current_signals)
                                                ^"\n     SHARED   : "^(string_of_shared_signals shared_signals)
@@ -482,7 +468,7 @@ module SECDCv3Machine =
 
 
     (* Convertit une machine SECD en chaîne de caractères *)
-    let rec string_of_secdMachine machine =
+    let string_of_secdMachine machine =
       match machine with
         Machine(id,stack,env,control_string,dump,thread_list,signals,handler,identifier_producer)  ->    
                                         "\n   ID      : "^(string_of_int id)
@@ -511,7 +497,7 @@ module SECDCv3Machine =
 
     (**** Fonctions utiles ****)
 
-    (* Substitue une variable à sa  fermeture liée *)
+    (* Substitue une variable à sa fermeture liée *)
     let rec substitution x env =
       match env with
           []                                    ->   raise NoSubPossible
@@ -532,7 +518,7 @@ module SECDCv3Machine =
         
 
 
-    (* Convertit une liste d'élément de la pile contenant des constantes en liste d'entier *)
+    (* Convertit une liste d'éléments de la pile contenant des constantes en liste d'entiers *)
     let rec convert_stack_element_to_int_list stack nbrOperande =
       match (stack,nbrOperande) with
           (_,0)                       ->   []
@@ -547,7 +533,7 @@ module SECDCv3Machine =
       match (stack,nbrOperand) with
           (stack,0)   ->   stack
 
-        | (h::t,nbr)  ->   if nbr > 0 then remove_elements t (nbr - 1) else raise InsufficientOperandNb
+        | (_::t,nbr)  ->   if nbr > 0 then remove_elements t (nbr - 1) else raise InsufficientOperandNb
 
         | ([],_)      ->   raise InsufficientOperandNb
 
@@ -636,38 +622,28 @@ module SECDCv3Machine =
                 | []                            ->   [CS(signal,[(id,[],true)],false)]
 
 
-    (* Retire la partie du spawn de la chaîne de contrôle *)
-    let rec remove_spawn control_string =
+    (* Prend la partie de la chaîne pour le thread et la retire de la chaîne de contrôle *)
+    let rec spawn control_string = 
       match control_string with
-          []         ->   raise EndSpawnNotFound
+          []         -> raise EndSpawnNotFound
 
-        | Espawn::t  ->   t
+        | Espawn::t  ->   ([],t)
 
-        | h::t       ->   remove_spawn t
-
-
-    (* Récupère la partie du spawn de la chaîne de contrôle *)
-    let rec recover_spawn control_string =
-      match control_string with
-          []         ->   raise EndSpawnNotFound
-        
-        | Espawn::t  ->   []
-        
-        | h::t       ->   h::(recover_spawn t)
+        | h::t       ->   let (recover,remove) = spawn t in (h::recover,remove)
 
  
     (* Dans le cas où le signal attendu n'est pas emit on applique le second choix*)
     let end_of_the_moment_thread thread_list =
       let rec aux stuck =
         match stuck with
-            []                                                          ->   []
+            []                                              ->   []
 
-          | (signal,Thread(id,s,e,((Present(signal1,c1,c2))::c),d))::t  ->   (Thread( id , s , e , (append c2 c) , d ))::(aux t)
+          | (_,Thread(id,s,e,((Present(_,_,c2))::c),d))::t  ->   (Thread( id , s , e , (append c2 c) , d ))::(aux t)
 
-          | _                                                           ->   raise UnknowStuckState
+          | _                                               ->   raise UnknowStuckState
       in
       match thread_list with
-        (wait,stuck)                                                    ->   ((aux stuck),[]) 
+        (_,stuck)                                        ->   ((aux stuck),[]) 
 
 
     (* Remet à zero les signaux en vidant la liste des valeurs et en mettant l'émission à faux *)
@@ -681,7 +657,7 @@ module SECDCv3Machine =
       match current_signals with
           []                              ->   []
 
-        | CS(signal,thread_list,emit)::t  ->   CS(signal,(aux thread_list),false)::(reset_current_signals t)
+        | CS(signal,thread_list,_)::t  ->   CS(signal,(aux thread_list),false)::(reset_current_signals t)
 
 
     (* Prends les signaux dans la liste des signaux courants et les mets dans la liste des signaux partagés *)
@@ -697,7 +673,7 @@ module SECDCv3Machine =
 
         | CS(signal,thread_list,true)::t   ->   SSI(signal,(aux thread_list))::(share t)
 
-        | CS(signal,thread_list,false)::t  ->  (share t)
+        | CS(_,_,false)::t                 ->  (share t)
 
 
     (* Quand l'instant est fini ont remet à zéro les signaux courant et on change les signaux partagés *)
@@ -706,27 +682,19 @@ module SECDCv3Machine =
         (current_signals,_)  ->   ((reset_current_signals current_signals),(share current_signals)) 
 
 
-    (* Donne la liste des éléments de stuck qui réagisse au signal*)
-    let rec wake_up signal stuck =
-      match stuck with
-          []                   ->   []
+    (* Prend les threads réveillés et les retire de la liste des threads bloqués *)
+    let rec reaction_of_signal signal stuck =
+      match stuck with 
+          [] -> ([],[])
 
-        | (signal1,thread)::t  ->   if (equal signal signal1) then thread::(wake_up signal t) else (wake_up signal t)
-
-
-    (* Donne la liste des éléments de stuck qui ne réagisse pas au signal *)
-    let rec remains_blocked signal stuck =
-      match stuck with
-          []                   ->   []
-
-        | (signal1,thread)::t  ->   if (equal signal signal1) then (remains_blocked signal t) else (signal1,thread)::(remains_blocked signal t)
+        | (signal1,thread)::t -> let (awake,still_stuck) = reaction_of_signal signal t in 
+                                  if (equal signal signal1) then (append awake [thread],still_stuck) else (awake,append still_stuck [(signal1,thread)])
 
 
-    (* Vérifie si l'émission d'un signal réveil des threads bloqués*)
-    let check_thread_list signal thread_list = 
-      match thread_list with
-        (wait,stuck)  ->   ((append wait (wake_up signal stuck)),(remains_blocked signal stuck))
-    
+    (* Applique les effets d'une émission sur la liste des threads *)
+    let reaction signal tl =
+      match tl with 
+        (w,st) -> let (new_w,new_st) = reaction_of_signal signal st  in (append w new_w,new_st)
 
     (* Mets vrai pour l'émission du signal dans liste de signaux *)
     let rec emit_signal current_signals id signal =
@@ -884,7 +852,7 @@ module SECDCv3Machine =
     (**** Machine SECD concurrente version 3 ****)
 
     (* Applique les règles de la machine SECD concurrente version 3 en affichant les étapes *)
-    let transitionSECDCv3 machine =
+    let transition machine =
       match machine with
 
           (* Constante *)
@@ -937,7 +905,7 @@ module SECDCv3Machine =
           (* Création d'un thread *)
         | Machine(id,s,e,Bspawn::c,d,(w,st),(cs,ssi),h,ip)                          
           ->    begin 
-                  try   Machine( id , Unit::s , e , (remove_spawn c) , d , (append w [Thread(ip,s,e,(recover_spawn c),d)],st) , ((clone id ip cs),ssi) , h , (ip+1) )
+                  try   let (cs_recover,cs_remove) = spawn c in Machine( id , Unit::s , e , cs_remove , d , (append w [Thread(ip,s,e,cs_recover,d)],st) , ((clone id ip cs),ssi) , h , (ip+1) )
                   with  EndSpawnNotFound  ->   Machine( id , s , e , Throw 11::c , d , (w,st) , (cs,ssi) , h , ip )
                 end
 
@@ -1013,7 +981,7 @@ module SECDCv3Machine =
           (* Émission d'un signal *)
         | Machine(id,s,e,Emit signal::c,d,tl,(cs,ssi),h,ip)                         
           ->    begin 
-                  try   Machine( id , Unit::s , e , c , d , (check_thread_list signal tl) , ((emit_signal cs id signal),ssi) , h , ip)
+                  try   let new_tl = reaction signal tl in Machine( id , Unit::s , e , c , d , new_tl , ((emit_signal cs id signal),ssi) , h , ip)
                   with  SignalNotInit  ->   Machine( id , s , e , Throw 8::c , d , tl , (cs,ssi) , h , ip ) 
                 end
 
@@ -1037,8 +1005,8 @@ module SECDCv3Machine =
   
 
     (* Applique les règles de la machine SECD concurrente version 3 en affichant les étapes *)
-    let rec machineSECDCv3 machine afficher= 
-      match machine with
+    let rec machine etat afficher= 
+      match etat with
           Machine(id,Stack_const b::s,e,[],Vide_D,([],[]),si,h,ip)                ->   [Constant b]
         
         | Machine(id,Closure([Pair(abs,c)],e1)::s,e,[],Vide_D,([],[]),si,h,ip)    ->   [Pair(abs,c)]
@@ -1047,10 +1015,10 @@ module SECDCv3Machine =
 
         | Machine(id,[],e,[Throw erreur],Vide_D,([],[]),si,h,ip)                  ->   [Throw erreur]
 
-        | machine                                                                 ->   if (afficher) then (afficherSECDCv3 machine) else printf ""; machineSECDCv3 (transitionSECDCv3 machine) afficher
+        | indetermine                                                             ->   if (afficher) then (afficherSECDCv3 indetermine) else printf ""; machine (transition indetermine) afficher
 
         
     (* Lance et affiche le résultat de l'expression *)
-    let lancerSECDCv3 expression afficher = printf "Le résultat est %s \n" (string_of_control_string (machineSECDCv3 (Machine(0,[],[],(secdLanguage_of_exprISWIM expression),Vide_D,([],[]),([],[]),Vide_H,1)) afficher ))
+    let lancerSECDCv3 expression afficher = printf "Le résultat est %s \n" (string_of_control_string (machine (Machine(0,[],[],(secdLanguage_of_exprISWIM expression),Vide_D,([],[]),([],[]),Vide_H,1)) afficher ))
     
   end

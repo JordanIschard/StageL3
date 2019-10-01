@@ -18,45 +18,48 @@ module SECDCv2Machine =
 
     (* Type intermédiaire pour représenter la chaîne de contrôle *)
     type c =
-        Constant of int 
-      | Variable of string
-      | Ap
-      | Prim of operateur
-      | Pair of string * c list
-      | Bspawn                                   (* début du spawn *)
-      | Espawn                                   (* fin du spawn *)
-      | Emit of id                               (* emet s *)
-      | Present of id * c list * c list          (* present s in t1 t2 *)
-      | Signal of id * c list                    (* signal s in t *)
-      | Throw of erreur
-      | Catch of erreur * c list * (variable * c list)
+        Constant of int                                  (* une constante n,m,p... *)
+      | Variable of string                               (* une variable x,y,z... *)
+      | Pair of string * c list                          (* une abstraction lam str.(c_list) *)
+            
+      | Ap                                               (* une commande représentant l'application *)
+      | Prim of operateur                                (* une commande représentant l'opération *)
+      | Emit of id                                       (* une commande représentant l'émission de id *)
+      | Present of id * c list * c list                  (* une commande représentant la conditionnelle sur un signal id *)
+      | Signal of id * c list                            (* une commande représentant l'initialisation du signal id pour la chaîne de contrôle c_list *)
+      | Throw of erreur                                  (* une commande représentant une erreur levé *)
+      | Catch of erreur * c list * (variable * c list)   (* une commande représentant la création d'un try and catch *)
+
+      | Bspawn                                           (* un délimitateur représentant le début de la commande spawn *)
+      | Espawn                                           (* un délimitateur représentant la fin de la commande spawn *)
+
 
     (* Type représentant la chaîne de contrôle *)
     type control_string = c list
 
     (* Type intermédiaire pour représenter l'environnement *)
     type e =  
-        EnvFerm of string * (control_string * e list) 
-      | EnvVar of string * int
-      | Init of id                                      (* (init,s) *)
+        EnvFerm of string * (control_string * e list)   (* élément de l'environnement composé d'une variable et d'une fermeture *)
+      | EnvVar of string * int                          (* élément de l'environnement composé d'une variable et d'une constante *)
+      | Init of id                                      (* élément de l'environnement stockant l'initialisation d'un signal id *)
 
     (* Type représentant l'environnement *)
     type env = e list
 
     (* Type intermédiaire pour représenter la pile *)
     type s =  
-        Fermeture of (control_string * env) 
-      | Stack_const of int
-      | Stack_throw of erreur
-      | Remp
+        Fermeture of (control_string * env)  (* une fermeture : pair composé d'une chaîne de contrôle et d'un environnement *)
+      | Stack_const of int                   (* une constante n,m,p... *)
+      | Stack_throw of erreur                (* une erreur levé dans la pile *)
+      | Remp                                 (* élément représentant une action effectué par une commande sans résultat à retourner *)
 
     (* Type représentant la pile *)
     type stack = s list
 
     (* Type représentant le dépôt *)
     type dump =
-        Vide
-      | Save of stack * env * control_string * dump
+        Vide                                          (* élément signifiant que le dépôt est vide *)
+      | Save of stack * env * control_string * dump   (* sauvegarde de la machine dans le dépôt *)
 
 
     (* Type représentant la liste de signaux émit *)
@@ -97,29 +100,29 @@ module SECDCv2Machine =
     (* Convertit le langage ISWIM en langage SECD *)
     let rec secdLanguage_of_exprISWIM expression =
       match expression with
-          Lang_secdC.ISWIM.Const const                   ->   [Constant const]
-            
-        | Lang_secdC.ISWIM.Var var                       ->   [Variable var]
-            
-        | Lang_secdC.ISWIM.App(expr1,expr2)              ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
-            
-        | Lang_secdC.ISWIM.Op(op,liste_expr)             ->   append (flatten( map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
-            
-        | Lang_secdC.ISWIM.Abs(abs,expr)                 ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
+          Lang_secdC.ISWIM.Const const                      ->   [Constant const]
 
-        | Lang_secdC.ISWIM.Spawn expr             ->   append (append [Bspawn] (secdLanguage_of_exprISWIM expr)) [Espawn]
-      
-        | Lang_secdC.ISWIM.Present(s,expr1,expr2)  ->   [Present(s,(secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr2))]
-      
-        | Lang_secdC.ISWIM.Emit s                 ->   [Emit s]
-     
-        | Lang_secdC.ISWIM.InitFor(s,expr)          ->   [Signal(s,(secdLanguage_of_exprISWIM expr))]
+        | Lang_secdC.ISWIM.Var var                          ->   [Variable var]
 
-        | Lang_secdC.ISWIM.Throw erreur            ->   [Throw erreur]
+        | Lang_secdC.ISWIM.App(expr1,expr2)                 ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
+
+        | Lang_secdC.ISWIM.Op(op,liste_expr)                ->   append (flatten( map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
+
+        | Lang_secdC.ISWIM.Abs(abs,expr)                    ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
+
+        | Lang_secdC.ISWIM.Spawn expr                       ->   append (append [Bspawn] (secdLanguage_of_exprISWIM expr)) [Espawn]
+
+        | Lang_secdC.ISWIM.Present(s,expr1,expr2)           ->   [Present(s,(secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr2))]
+
+        | Lang_secdC.ISWIM.Emit s                           ->   [Emit s]
+
+        | Lang_secdC.ISWIM.InitFor(s,expr)                  ->   [Signal(s,(secdLanguage_of_exprISWIM expr))]
+
+        | Lang_secdC.ISWIM.Throw erreur                     ->   [Throw erreur]
 
         | Lang_secdC.ISWIM.Catch(erreur,expr1,(abs,expr2))  ->   [Catch(erreur,(secdLanguage_of_exprISWIM expr1),(abs,(secdLanguage_of_exprISWIM expr2)))]
 
-        | _                                                   ->   raise BadVersion
+        | _                                                 ->   raise BadVersion
 
     (* Retourne un message par rapport à un identifiant d'erreur *)
     let message_of_erreur erreur =
@@ -136,67 +139,73 @@ module SECDCv2Machine =
         | _  ->   "ERREUR : Cette erreur n'existe pas "
 
 
+    (* Convertit une chaîne de caractère en chaîne de caractère (utilisée pour faire un affichage générique) *)
+    let string_of_string elem = elem
+
+
+    (* Convertit une liste en chaîne de caractère *)
+    let rec string_of_a_list string_of_a l inter =
+      match l with
+        | []    ->   ""
+        | [h]   ->   (string_of_a h)
+        | h::t  ->   (string_of_a h)^inter^(string_of_a_list string_of_a t inter)
+
+        
     (* Convertit la chaîne de contrôle en une chaîne de caractère *)
     let rec string_of_control_string expression =
-      match expression with
-          []                          ->   ""
-      
-        | Constant const::t           ->   (string_of_int const)^" "^(string_of_control_string t)
-      
-        | Variable var::t             ->   var^" "^(string_of_control_string t)
-      
-        | Ap::t                       ->   "ap "^(string_of_control_string t)
-      
-        | Pair(abs,liste_expr)::t     ->   "< "^abs^"."^(string_of_control_string liste_expr)^"> "^(string_of_control_string t)
-      
-        | Prim op::t                  ->   "prim "^(string_of_operateur op)^" "^(string_of_control_string t)
-
-        | Bspawn::t                   ->   "bspawn "^(string_of_control_string t)
+      let aux elem = 
+        match elem with
+          | Constant const          ->   (string_of_int const)
         
-        | Espawn::t                   ->   "espawn "^(string_of_control_string t)
-      
-        | Emit s::t                   ->   s^" emit "^(string_of_control_string t)  
-      
-        | Present(s,expr1,expr2)::t   ->   "< "^s^","^(string_of_control_string expr1)^","^(string_of_control_string expr2)^" > "^(string_of_control_string t)  
+          | Variable var             ->   var
         
-        | Signal(s,expr)::t           ->   "< "^s^","^(string_of_control_string expr)^" > "^(string_of_control_string t)
-      
-        | Throw erreur::t                     ->   (message_of_erreur erreur)^" "^(string_of_control_string t)
+          | Ap                       ->   "ap"
+        
+          | Pair(abs,liste_expr)     ->   "<"^abs^"."^(string_of_control_string liste_expr)^">"
+        
+          | Prim op                  ->   "prim "^(string_of_operateur op)
 
-        | Catch(erreur,expr1,(abs,expr2))::t  ->    "try "^(string_of_control_string expr1)^" catch "^(message_of_erreur erreur)
-                                                        ^" in <"^abs^" , "^(string_of_control_string expr2)^"> "^(string_of_control_string t) 
+          | Bspawn                   ->   "bspawn"
+        
+          | Espawn                   ->   "espawn"
+        
+          | Emit s                   ->   s^" emit"  
+        
+          | Present(s,expr1,expr2)   ->   "<"^s^","^(string_of_control_string expr1)^","^(string_of_control_string expr2)^" >"
+          
+          | Signal(s,expr)           ->   "<"^s^","^(string_of_control_string expr)^" >"
+        
+          | Throw erreur                     ->   (message_of_erreur erreur)
+
+          | Catch(erreur,expr1,(abs,expr2))  ->    "try "^(string_of_control_string expr1)^" catch "^(message_of_erreur erreur)
+                                                          ^" in <"^abs^" , "^(string_of_control_string expr2)^">"
+      in (string_of_a_list aux expression " ")
 
 
     (* Convertit un environnement en chaîne de caractère *)
     let rec string_of_env env =
-      match env with
-          []                                    ->   ""
+      let aux elem =
+        match elem with
+          | EnvFerm(var,(control_string,env))   ->   "<"^var^" ,<"^(string_of_control_string control_string)^","^(string_of_env env)^">>"
 
-        | [EnvFerm(var,(control_string,env))]   ->   "<"^var^" ,<"^(string_of_control_string control_string)^","^(string_of_env env)^">>"
+          | EnvVar(var,const)                   ->   "<"^var^" ,"^(string_of_int const)^">"
 
-        | EnvFerm(var,(control_string,env))::t  ->   "<"^var^" ,<"^(string_of_control_string control_string)^","^(string_of_env env)^">> , "^(string_of_env t)
-
-        | [EnvVar(var,const)]                   ->   "<"^var^" ,"^(string_of_int const)^">"
-
-        | EnvVar(var,const)::t                  ->   "<"^var^" ,"^(string_of_int const)^"> , "^(string_of_env t)
-
-        | [Init s]                              ->   "<"^s^",init>"
-
-        | Init s::t                             ->   "<"^s^",init> , "^(string_of_env t)
+          | Init s                              ->   "<"^s^",init>"
+      in (string_of_a_list aux env " , ")
 
 
     (* Convertit une pile en chaîne de caractère *)
-    let rec string_of_stack stack =
-      match stack with
-          []                                    ->   ""
+    let string_of_stack stack =
+      let aux elem =
+        match elem with
+          | Fermeture(control_string,env)      ->   "["^(string_of_control_string control_string)^" , {"^(string_of_env env)^"}]"
 
-        | Fermeture(control_string,env)::t      ->   "["^(string_of_control_string control_string)^" , {"^(string_of_env env)^"}] "^(string_of_stack t)
+          | Stack_const b                      ->   (string_of_int b)
 
-        | Stack_const b::t                      ->   (string_of_int b)^" "^(string_of_stack t)
+          | Stack_throw e                      ->   (message_of_erreur e)
 
-        | Stack_throw e::t                      ->   (message_of_erreur e)^" "^(string_of_stack t)
-
-        | Remp::t                               ->   "Remp "^(string_of_stack t)   
+          | Remp                               ->   "Remp"  
+      in (string_of_a_list aux stack " ")
 
 
     (* Convertit la sauvegarde en chaîne de caractère *)
@@ -208,33 +217,23 @@ module SECDCv2Machine =
 
     
     (* Convertit la file d'attente en chaîne de caractère *)
-    let rec string_of_wait wait = 
-      match wait with
-          []        ->   ""
-
-        | [thread]  ->   (string_of_dump thread)
-
-        | thread::t ->   (string_of_dump thread)^" , "^(string_of_wait t)
+    let string_of_wait wait = 
+      let aux elem =
+        match elem with
+          | thread  ->   (string_of_dump thread)
+      in (string_of_a_list aux wait " , ")
 
     
     (* Convertit la liste de threads bloqués en chaîne de caractère *)
-    let rec string_of_stuck stuck =
-      match stuck with
-          []             ->   ""
-
-        | [(s,thread)]   ->   "< "^s^","^(string_of_dump thread)^" >"
-
-        | (s,thread)::t  ->   "< "^s^","^(string_of_dump thread)^" > , "^(string_of_stuck t)
+    let string_of_stuck stuck =
+      let aux elem =
+        match elem with
+          | (s,thread)   ->   "< "^s^","^(string_of_dump thread)^" >"
+      in (string_of_a_list aux stuck " , ")
 
 
     (* Convertit la liste des signaux émis en chaîne de caractère *)
-    let rec string_of_signals signals =
-      match signals with
-          []    ->   ""
-
-        | [s]   ->   s
-
-        | s::t  ->   s^" , "^(string_of_signals t)
+    let string_of_signals signals = (string_of_a_list string_of_string signals " , ")
 
     
     (* Convertit le gestionnaire d'erreur en chaîne de caractères *)
@@ -355,11 +354,11 @@ module SECDCv2Machine =
     (* Prends le choix qui représente l'absence d'un signal *)
     let rec secondChoix st =
       match st with
-          []                                                 ->   []
+          []                                      ->   []
 
-        | (signal,Save(s,e,Present(signal1,c1,c2)::c,d))::t  ->   append [Save(s,e,(append c2 c),d)] (secondChoix t)
+        | (_,Save(s,e,Present(_,c1,c2)::c,d))::t  ->   append [Save(s,e,(append c2 c),d)] (secondChoix t)
 
-        | _                                                  ->   raise StrangeStuck
+        | _                                       ->   raise StrangeStuck
 
 
     (* Emet un signal et vérifie si des threads sont en attente de cette émission *)
@@ -476,13 +475,13 @@ module SECDCv2Machine =
     (* Applique les règles de la machine SECD concurrente version 2 en affichant les étapes *)
     let rec machineSECDCv2 machine afficher= 
       match machine with
-          Machine([Stack_const b],e,[],Vide,[],[],si,h)                ->   [Constant b]
+          Machine([Stack_const b],_,[],Vide,[],[],_,_)               ->   [Constant b]
         
-        | Machine([Fermeture([Pair(abs,c)],e1)],e,[],Vide,[],[],si,h)  ->   [Pair(abs,c)]
+        | Machine([Fermeture([Pair(abs,c)],_)],_,[],Vide,[],[],_,_)  ->   [Pair(abs,c)]
 
-        | Machine([Stack_throw erreur],e,[],Vide,[],[],si,h)           ->   [Throw erreur]
+        | Machine([Stack_throw erreur],_,[],Vide,[],[],_,_)          ->   [Throw erreur]
 
-        | machine                                                      ->   if (afficher) then (afficherSECDCv2 machine) else printf ""; machineSECDCv2 (transitionSECDCv2 machine) afficher
+        | machine                                                    ->   if (afficher) then (afficherSECDCv2 machine) else printf ""; machineSECDCv2 (transitionSECDCv2 machine) afficher
 
         
     (* Lance et affiche le résultat de l'expression *)

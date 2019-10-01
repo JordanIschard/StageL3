@@ -19,58 +19,60 @@ module MachineTTS =
 
     (**** Control string ****)
 
-    (* type intermédiaire qui va servir à représenter la chaîne de contrôle *)
-    type c =
-        Constant of int                                         (* constante b                    *)
-      | Variable of variable                                    (* variable X                     *)
-      | Pair of variable * c list                               (* abstraction                    *)
 
-      | Prim of operateur                                       (* opérateur                      *)
-      | Ap                                                      (* application                    *)
-      | Spawn                                                   (* création thread                *)
-      | Emit                                                    (* émet                           *)
-      | InitSignal                                              (* initialise un signal           *)
-      | Present                                                 (* test de présence d'un signal   *)
+    (* Ce type représente un élément de la chaîne de contrôle *)
+    type control_string_element =
+        Constant of int                                         (* une constante n,m,p... *)
+      | Variable of variable                                    (* une variable x,y,z... *)
+      | Pair of variable * control_string_element list          (* une abstraction lam str.(c_list) *)
+
+      | Prim of operateur                                       (* une commande représentant l'opération *)
+      | Ap                                                      (* une commande représentant l'application *)
+
+      | Spawn                                                   (* une commande représentant la création d'un thread *)
+      | Emit                                                    (* une commande représentant l'émission d'un signal *)
+      | InitSignal                                              (* une commande représentant l'initialisation d'un signal *)
+      | Present                                                 (* une commande représentant la conditionnelle sur un signal *)
       
      
 
-    (* Ce type représente la chaîne de contrôle de la machineTTS SECD, c'est notre entrée *)
-    type control_string = c list   
+    (* Ce type représente la chaîne de contrôle de la machineTTS , c'est notre entrée *)
+    type control_string = control_string_element list   
 
 
     
 
     (**** Environment ****)
 
-    (* type intermédiaire qui va servir à représenter l'environnement *)
-    type e =   
-        EnvClos of (variable * (control_string * e list))     (* (X,(C,Env))            *)
-      | EnvVar  of (variable * control_string)                (* (X,V) V une constante  *)
+    (* Ce type représente un élément de l'environnement *)
+    type environment_element =   
+        EnvClos of (variable * (control_string * environment_element list))     (* une fermeture (X,(C,Env)) *)
+      | EnvVar  of (variable * control_string)                                  (* (X,V) V une constante  *)
 
-    (* Ce type représente l'environnement de la machineTTS SECD, c'est notre liste de substitution *)
-    type environment = e list
+    (* Ce type représente l'environnement de la machineTTS , c'est notre liste de substitution *)
+    type environment = environment_element list
 
 
 
 
     (**** Stack ****)
 
-    (* type intermédiaire contenant une fermeture qui lie une abstraction à un environnement ou une constante ou encore un signal *)
-    type s =  
+    (* Ce type représente un élément de la pile d'exécution *)
+    type stack_element =  
         Stack_const of int                                    (* constante            *)
       | Closure of (control_string * environment)             (* fermeture (C,Env)    *)
 
     
-    (* Ce type représente la pile de la machineTTS SECD, c'est la où la machineTTS travaille *)
-    type stack = s list
+    (* Ce type représente la pile de la machineTTS, c'est la où la machineTTS travaille *)
+    type stack = stack_element list
 
 
 
 
     (**** Dump ****)
 
-    (* Ce type représente le dépôt de la machineTTS SECD, c'est-à-dire, l'endroit où l'on sauvegarde l'état 
-       de la machineTTS SECD pour travailler sur une autre partie de la chaîne de contrôle *)
+    (* Ce type représente le dépôt de la machineTTS, c'est-à-dire, l'endroit où l'on sauvegarde l'état 
+       de la machineTTS pour travailler sur une autre partie de la chaîne de contrôle *)
     type dump =
         Empty                                                        (* le dépôt est vide    *)
       | Save of stack * environment * control_string * dump          (* (s,e,c,d)            *)
@@ -108,7 +110,7 @@ module MachineTTS =
     (**** MachineTTS ****)
 
     (* Ce type représente la structure de la machineTTS *)
-    type ttsi = MachineTTS of thread * thread_list * signals             
+    type tts = Machine of thread * thread_list * signals             
 
 
 
@@ -132,7 +134,7 @@ module MachineTTS =
     exception UnknowStackState                 (* Le format de la pile est invalide et/ou inconnu                                   *)
     exception UnknowEnvState                   (* Le format de l'environnement est invalide et/ou inconnu                           *)
     exception UnknowStuckState                 (* Le format de la liste d'élément bloqués est invalide et/ou inconnu                *)
-    exception UnknowSignalState                   (* Le format de la liste de signaux partagés est invalide                         *)
+    exception UnknowSignalState                (* Le format de la liste de signaux partagés est invalide                         *)
 
     exception BadVersion
 
@@ -142,17 +144,13 @@ module MachineTTS =
     (**** Affichage ****)
 
     (* Concatène une liste de chaîne de caractères en une seule chaîne de caractères *)
-    let rec string_of_string_list string_list =
-      match string_list with
+    let rec string_of_a_list string_of_a a_list delimiteur =
+      match a_list with
           []    ->   "" 
 
-        | [h]     ->   h
+        | [h]   ->   string_of_a h
         
-        | h::t  ->   h^";"^(string_of_string_list t)
-
-    
-    (* Convertit une liste d'entier en une chaîne de caractères *)
-    let string_of_int_list int_list = string_of_string_list (map string_of_int int_list)
+        | h::t  ->   (string_of_a h)^delimiteur^(string_of_a_list string_of_a t delimiteur)
 
 
     (* Convertit le langage ISWIM en langage SECD *)
@@ -181,51 +179,49 @@ module MachineTTS =
 
     (* Convertit la chaîne de contrôle en une chaîne de caractères *)
     let rec string_of_control_string expression =
-      match expression with
+      let aux control_string_element = 
+        match control_string_element with
+          | Constant const                  ->   (string_of_int const)
+        
+          | Variable var                    ->   var
+        
+          | Ap                              ->   "AP"
+        
+          | Pair(abs,expr_list)             ->   "<"^abs^", "^(string_of_control_string expr_list)^">"
+        
+          | Prim(op)                        ->   "PRIM "^(string_of_operateur op)
 
-          []                                 ->   ""
-      
-        | Constant const::t                  ->   (string_of_int const)^" "^(string_of_control_string t)
-      
-        | Variable var::t                    ->   var^" "^(string_of_control_string t)
-      
-        | Ap::t                              ->   "ap "^(string_of_control_string t)
-      
-        | Pair(abs,expr_list)::t             ->   "<"^abs^", "^(string_of_control_string expr_list)^"> "^(string_of_control_string t)
-      
-        | Prim(op)::t                        ->   "prim "^(string_of_operateur op)^" "^(string_of_control_string t)
+          | Spawn                           ->   "SPAWN"
 
-        | Spawn::t                           ->   "spawn "^(string_of_control_string t)
+          | Present                         ->   "PRESENT"
 
-        | Present::t                         ->   "present "^(string_of_control_string t)
+          | Emit                            ->   "EMIT"
 
-        | Emit::t                            ->   "emit "^(string_of_control_string t)
+          | InitSignal                      ->   "INIT"
 
-        | InitSignal::t                      ->   "init "^(string_of_control_string t)
+      in  (string_of_a_list aux expression " ")
+
 
 
     (* Convertit un environnement en chaîne de caractères *)
     let rec string_of_environment environment =
-      match environment with
-          []                                      ->   ""
+      let rec aux environment_element = 
+        match environment_element with
+          | EnvClos(var,(control_string,env))  ->   "["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_environment env)^"]]"
 
-        | [(EnvClos(var,(control_string,env)))]   ->   "["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_environment env)^"]]"
+          | EnvVar(var,control_string)         ->   "["^var^" , "^(string_of_control_string control_string) ^"]"
 
-        | [(EnvVar(var,control_string))]          ->   "["^var^" , "^(string_of_control_string control_string) ^"]"
-
-        | (EnvClos(var,(control_string,env)))::t  ->   "["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_environment env)^"]] , "^(string_of_environment t)
-
-        | (EnvVar(var,control_string))::t         ->   "["^var^" , "^(string_of_control_string control_string) ^"] , "^(string_of_environment t)
+      in (string_of_a_list aux environment " , ")
 
 
     (* Convertit une pile en chaîne de caractères *)
     let rec string_of_stack stack =
-      match stack with
-          []                                ->   ""
+      let rec aux stack_element =
+        match stack_element with
+          | Stack_const b                ->   (string_of_int b)
 
-        | Stack_const b::t                  ->   (string_of_int b)^" "^(string_of_stack t)
-
-        | (Closure(control_string,env))::t  ->   "["^(string_of_control_string control_string)^" , {"^(string_of_environment env)^"}]"^(string_of_stack t)
+          | Closure(control_string,env)  ->   "["^(string_of_control_string control_string)^" , {"^(string_of_environment env)^"}]"
+      in (string_of_a_list aux stack " ")
         
 
     (* Convertit la sauvegarde en chaîne de caractères *)
@@ -247,22 +243,7 @@ module MachineTTS =
                                       
 
     (* Convertit la liste des threads en chaîne de caractères *)
-    let rec string_of_thread_list thread_list =
-      match thread_list with
-          []         ->   ""
-
-        | [Thread(stack,env,control_string,dump)]    ->    
-                                                       "\n   [ STACK   : "^(string_of_stack stack)
-                                                      ^"\n     ENV     : "^(string_of_environment env)
-                                                      ^"\n     CONTROL : "^(string_of_control_string control_string)
-                                                      ^"\n     DUMP    : "^(string_of_dump dump)^"]\n"
-
-        | Thread(stack,env,control_string,dump) ::t  ->    " 
-                                                        \n   [ STACK   : "^(string_of_stack stack)
-                                                      ^"\n     ENV     : "^(string_of_environment env)
-                                                      ^"\n     CONTROL : "^(string_of_control_string control_string)
-                                                      ^"\n     DUMP    : "^(string_of_dump dump)^"]"
-                                                      ^(string_of_thread_list t)
+    let string_of_thread_list thread_list = (string_of_a_list string_of_thread thread_list "\n")
 
 
     (* Convertit toutes les informations sur un signal en chaîne de caractères *)
@@ -278,17 +259,13 @@ module MachineTTS =
 
 
     (* Convertit la liste de tous les signaux en chaîne de caractères *)
-    let rec string_of_signals signals =
-      match signals with
-          []     ->   ""      
-
-        | si::t  ->   "\n"^(string_of_si si)^(string_of_signals t)
+    let string_of_signals signals = (string_of_a_list string_of_si signals "\n")
 
 
     (* Convertit une machine TTS en chaîne de caractères *)
     let rec string_of_machineTTS machineTTS =
       match machineTTS with
-        MachineTTS(thread,thread_list,signals)  ->    
+        Machine(thread,thread_list,signals)  ->    
                                         "\n   THREAD  : "^(string_of_thread thread)
                                        ^"\n   THREADS : "^(string_of_thread_list thread_list)
                                        ^"\n   SIGNALS : "^(string_of_signals signals)
@@ -356,9 +333,7 @@ module MachineTTS =
     let rec isEmit si signal = 
       let aux data =
         match data with
-            (true,_)      ->   true
-
-          | _             ->   false
+            (emit,_)      ->   emit
       in
       match si with
           []              ->   false
@@ -366,6 +341,7 @@ module MachineTTS =
         | (id_s,data)::t  ->   if (id_s = signal) then (aux data) else (isEmit t signal)
 
     
+    (* Emet un signal *)
     let rec emit_signal si signal =
       let aux data =
         match data with
@@ -390,11 +366,11 @@ module MachineTTS =
     (* Vérifie si la liste de thread bloqué de chaque signal est vide *)
     let rec isEnd si = 
       match si with
-          []                            ->   true
+          []                     ->   true
 
-        | (signal,(emit,[]))::t         ->   isEnd t
+        | (_,(_,[]))::t          ->   isEnd t
 
-        | _                             ->   false 
+        | _                      ->   false 
 
 
     (* Ajoute un thread dans la liste des threads bloqués d'un signal *)
@@ -414,7 +390,7 @@ module MachineTTS =
       match tl with
           [] -> []
 
-        | Thread(Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d)::t -> append [Thread(s,e,append c2 c,d)] (other_choice t)
+        | Thread(Closure([Pair(_,c2)],_)::_::_::s,e,_::c,d)::t -> append [Thread(s,e,append c2 c,d)] (other_choice t)
 
         | _ -> raise UnknowStuckState
     
@@ -466,99 +442,99 @@ module MachineTTS =
     let compute machine =
       match machine with
           (* On a une constante dans la chaîne de contrôle, on la place dans la pile *)
-        | MachineTTS(Thread(s,e,Constant b::c,d),tl,si)                    ->    MachineTTS( Thread( Stack_const b::s , e , c , d ) , tl , si )
+        | Machine(Thread(s,e,Constant b::c,d),tl,si)                    ->    Machine( Thread( Stack_const b::s , e , c , d ) , tl , si )
 
 
           (* On a une variable dans la chaîne de contrôle, on place sa substitution (stockée dans l'environnement) dans la pile *)
-        | MachineTTS(Thread(s,e,Variable x::c,d),tl,si)                    ->   MachineTTS( Thread( (substitution x e)::s , e , c , d ) , tl , si )
+        | Machine(Thread(s,e,Variable x::c,d),tl,si)                    ->   Machine( Thread( (substitution x e)::s , e , c , d ) , tl , si )
 
 
           (* On a prim dans la chaîne de contrôle, on prends le nombre d'élément nécessaire au bon fonctionnement de l'opérateur lié à prim dans la pile 
             et on effectue le calcul. On mets le résultat dans la pile *)
-        | MachineTTS(Thread(s,e,Prim op::c,d),tl,si)                       ->   MachineTTS( Thread( (compute s e op) , e , c , d ) , tl , si )                        
+        | Machine(Thread(s,e,Prim op::c,d),tl,si)                       ->   Machine( Thread( (compute s e op) , e , c , d ) , tl , si )                        
 
 
           (* On a une abstraction dans la chaîne de contrôle, on place une fermeture ,qui comporte l'abstraction et l'environnment courant, dans la pile *)
-        | MachineTTS(Thread(s,e,Pair(abs,c1)::c,d),tl,si)                  ->    MachineTTS( Thread( Closure([Pair(abs,c1)],e)::s , e , c , d ) , tl , si )
+        | Machine(Thread(s,e,Pair(abs,c1)::c,d),tl,si)                  ->    Machine( Thread( Closure([Pair(abs,c1)],e)::s , e , c , d ) , tl , si )
         
 
           (* On a Ap dans la chaîne de contrôle, on sauvegarde une partie de la machine TTS dans le dépôt, on prends l'environnement de la fermeture et on ajoute la nouvelle substitution *)
-        | MachineTTS(Thread(v::Closure([Pair(abs,c1)],e1)::s,e,Ap::c,d),tl,si)   
-          ->    MachineTTS( Thread(  [] , (add_env e1 abs v) , c1 , Save(s,e,c,d) ) , tl , si )
+        | Machine(Thread(v::Closure([Pair(abs,c1)],e1)::s,e,Ap::c,d),tl,si)   
+          ->    Machine( Thread(  [] , (add_env e1 abs v) , c1 , Save(s,e,c,d) ) , tl , si )
 
 
           (* On a la chaîne de contrôle vide et le dépôt à une sauvegarde, on prends la sauvegarde et on l'applique sur la machineTTS *)
-        | MachineTTS(Thread(v::s,e,[],Save(s1,e1,c,d)),tl,si)              ->    MachineTTS( Thread( v::s1 , e1 , c , d ) , tl , si )
+        | Machine(Thread(v::s,e,[],Save(s1,e1,c,d)),tl,si)              ->    Machine( Thread( v::s1 , e1 , c , d ) , tl , si )
         
         (* On a la chaîne de contrôle vide et le dépôt à une sauvegarde, on prends la sauvegarde et on l'applique sur la machineTTS *)
-        | MachineTTS(Thread(s,e,[],Save(s1,e1,c,d)),tl,si)                 ->    MachineTTS( Thread( s1 , e1 , c , d ) , tl , si )
+        | Machine(Thread(s,e,[],Save(s1,e1,c,d)),tl,si)                 ->    Machine( Thread( s1 , e1 , c , d ) , tl , si )
 
 
           (* On a Bspawn dans la chaîne de contrôle, on prends la partie de la chaîne de contrôle compris entre Bspawn et Espawn et le mets dans un nouveau thread *)
-        | MachineTTS(Thread(Closure([Pair(_,c1)],_)::s,e,Spawn::c,d),tl,si)
-          ->    MachineTTS( Thread(  s , e , c , d ) , (append tl [Thread(s,e,c1,d)]) , si )
+        | Machine(Thread(Closure([Pair(_,c1)],_)::s,e,Spawn::c,d),tl,si)
+          ->    Machine( Thread(  s , e , c , d ) , (append tl [Thread(s,e,c1,d)]) , si )
                                           
 
           (* On a un signal s in t dans la chaîne de contrôle, on remplace la chaîne de contrôle (que l'on stock dans le dépôt) par t et on sauvegarde dans le dépôt le reste plus le signal *)
-        | MachineTTS(Thread(s,e,InitSignal::c,d),tl,si)                   
-          ->    let (signal,new_si) = init_signal si in MachineTTS( Thread( signal::s , e , c , d ) , tl , new_si )
+        | Machine(Thread(s,e,InitSignal::c,d),tl,si)                   
+          ->    let (signal,new_si) = init_signal si in Machine( Thread( signal::s , e , c , d ) , tl , new_si )
 
 
-        | MachineTTS(Thread(Stack_const signal::s,e,Emit::c,d),tl,si)                   
-          ->    let (st,new_si) = emit_signal si signal in MachineTTS( Thread( s , e , c , d ) , append tl st , new_si )
+        | Machine(Thread(Stack_const signal::s,e,Emit::c,d),tl,si)                   
+          ->    let (st,new_si) = emit_signal si signal in Machine( Thread( s , e , c , d ) , append tl st , new_si )
 
           (* On a un present dans la chaîne de contrôle, on regarde si le signal est émit : si oui on prends la première possibilités sinon on le mets dans la liste de threads bloqués *)
-        | MachineTTS(Thread(Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d),tl,si)               
+        | Machine(Thread(Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d),tl,si)               
           ->    if (isEmit si signal)
-                  then MachineTTS( Thread( s , e , (append c1 c) , d ) , tl , si )
+                  then Machine( Thread( s , e , (append c1 c) , d ) , tl , si )
                   else let st = Thread(Closure([Pair(x2,c2)],e2)::Closure([Pair(x1,c1)],e1)::Stack_const signal::s,e,Present::c,d) in
                       begin 
                         match tl with
-                            []                        ->   MachineTTS( Thread( [] , [] , [] , Empty ) , [] , (add_stuck si signal st) )
+                            []                        ->   Machine( Thread( [] , [] , [] , Empty ) , [] , (add_stuck si signal st) )
 
-                          | Thread(s1,e1,c3,d1)::tl1  ->   MachineTTS( Thread( s1 , e1 , c3 , d1 ) , tl1 , (add_stuck si signal st) )
+                          | Thread(s1,e1,c3,d1)::tl1  ->   Machine( Thread( s1 , e1 , c3 , d1 ) , tl1 , (add_stuck si signal st) )
                       end
 
 
           (* On a rien dans la chaîne de contrôle et le dépôt est vide mais la liste d'attente à au moins un élément, on prends un thread dans la liste d'attente *)                         
-        | MachineTTS(Thread(s,e,[],Empty),Thread(s1,e1,c,d)::tl,si)    ->    MachineTTS( Thread( s1 , e1 , c , d ) , tl , si )
+        | Machine(Thread(s,e,[],Empty),Thread(s1,e1,c,d)::tl,si)    ->    Machine( Thread( s1 , e1 , c , d ) , tl , si )
 
 
           (* On a rien dans la chaîne de contrôle, le dépôt est vide et la liste d'attente aussi, 
             c'est la fin d'un instant où la fin du fonctionnement de la machine TTS si la liste de threads bloqués est vide *)
-        | MachineTTS(Thread(s,e,[],Empty),[],si)                           
+        | Machine(Thread(s,e,[],Empty),[],si)                           
           ->   if (isEnd si)
                   then match s with
             
-                        | Stack_const b::s1             ->   MachineTTS( Thread( [Stack_const b] , [] , [] , Empty ) , [] , [] )
+                        | Stack_const b::s1             ->   Machine( Thread( [Stack_const b] , [] , [] , Empty ) , [] , [] )
             
-                        | Closure([Pair(x,c)],env)::s1  ->   MachineTTS( Thread( [Closure([Pair(x,c)],env)] , [] , [] , Empty ) , [] , [] )
+                        | Closure([Pair(x,c)],env)::s1  ->   Machine( Thread( [Closure([Pair(x,c)],env)] , [] , [] , Empty ) , [] , [] )
 
-                        | []                            ->   MachineTTS( Thread( [] , [] , [] , Empty ) , [] , [] )
+                        | []                            ->   Machine( Thread( [] , [] , [] , Empty ) , [] , [] )
             
                         | _                             ->   raise UnknowStackState
 
-                  else  let (tl,new_si) = next_moment si in MachineTTS( Thread( s , e , [] , Empty ) , tl , new_si )
+                  else  let (tl,new_si) = next_moment si in Machine( Thread( s , e , [] , Empty ) , tl , new_si )
 
 
           (* On a Ap dans la chaîne de contrôle, on enlève Ap *)  
-        | MachineTTS(Thread(s,e,Ap::c,d),tl,si)                            ->    MachineTTS( Thread( s , e , c , d ) , tl , si )
+        | Machine(Thread(s,e,Ap::c,d),tl,si)                            ->    Machine( Thread( s , e , c , d ) , tl , si )
         
 
           (* Je ne connais pas cette état ... *)
-        | _                                                                ->    raise StrangeEnd
+        | _                                                             ->    raise StrangeEnd
 
 
     (* Applique les règles de la machine TTS en affichant ou non les étapes *)
-    let rec machineTTS machine afficher =
-      match machine with
-          MachineTTS(Thread(resultat,[],[],Empty),[],[])  ->   printf "Le résultat est %s \n" (string_of_stack resultat)
+    let rec machine etat afficher =
+      match etat with
+          Machine(Thread(resultat,[],[],Empty),[],[])  ->   printf "Le résultat est %s \n" (string_of_stack resultat)
 
-        | machine                                                ->   if afficher then afficherTTS machine else printf ""; machineTTS (compute machine) afficher 
+        | indetermine                                  ->   if afficher then afficherTTS indetermine else printf ""; machine (compute indetermine) afficher 
       
   
 
     (* Lance et affiche le résultat de l'expression *)
-    let startTTSv1 expression afficher = machineTTS (MachineTTS(Thread([],[],(secdLanguage_of_exprISWIM expression),Empty),[],[])) afficher
+    let startTTSv1 expression afficher = machine (Machine(Thread([],[],(secdLanguage_of_exprISWIM expression),Empty),[],[])) afficher
     
   end

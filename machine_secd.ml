@@ -5,7 +5,7 @@ open Machine_cc.CCMachine ;;
 open Machine_cek.CEKMachine ;;
 open Iswim.ISWIM ;;
 
-
+(* Module qui implémente la machine SECD *)
 module SECDMachine =
   struct
 
@@ -13,12 +13,12 @@ module SECDMachine =
 
     (* Type intermédiaire pour représenter la chaîne de contrôle *)
     type c =
-        Constant of int 
-      | Variable of string
-      | Pair of string * c list
+        Constant of int                    (* une constante n,m,p... *)
+      | Variable of string                 (* une variable x,y,z... *)
+      | Pair of string * c list            (* une abstraction lam str.(c_list) *)
 
-      | Ap
-      | Prim of operateur
+      | Ap                                 (* une commande représentant l'application *)
+      | Prim of operateur                  (* une commande représentant l'opération *)
       
 
     (* Type représentant la chaîne de contrôle *)
@@ -26,27 +26,27 @@ module SECDMachine =
 
     (* Type intermédiaire pour représenter l'environnement *)
     type e =  
-        EnvFerm of string * (control_string * e list) 
-      | EnvVar of string * int
+        EnvFerm of string * (control_string * e list)  (* un élément de l'environnement composé d'une variable et d'une fermeture *)
+      | EnvVar of string * int                         (* un élément de l'environnement composé d'une variable et d'une constante *)
 
     (* Type représentant l'environnement *)
     type env = e list
 
     (* Type intermédiaire pour représenter la pile *)
     type s =  
-        Fermeture of (control_string * env) 
-      | Stack_const of int
+        Fermeture of (control_string * env)  (* une fermeture : pair composé d'une chaîne de contrôle et d'un environnement *)
+      | Stack_const of int                   (* une constante n,m,p... *)
 
     (* Type représentant la pile *)
     type stack = s list
 
     (* Type représentant le dépôt *)
     type dump =
-        Vide
-      | Save of stack * env * control_string * dump
+        Vide                                           (* élément signifiant que le dépôt est vide *)
+      | Save of stack * env * control_string * dump    (* sauvegarde de la machine dans le dépôt *)
 
     (* Type représentant la machine SECD *)
-    type secd = Machine of stack * env * control_string * dump
+    type secd = Machine of stack * env * control_string * dump   
 
 
 
@@ -68,44 +68,50 @@ module SECDMachine =
         | Abs(abs,expr)      ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
 
 
+    (* Convertit une liste 'a en une chaîne de caractères *)
+    let rec string_of_a_list string_of_a a_list inter = 
+      match a_list with 
+        | []    ->   ""
+        
+        | [h]   ->   (string_of_a h)
+
+        | h::t  ->   (string_of_a h)^inter^(string_of_a_list string_of_a t inter)
+
+
     (* Convertit la chaîne de contrôle en une chaîne de caractère *)
     let rec string_of_control_string expression =
-      match expression with
-          []                       ->   ""
-      
-        | Constant const::t        ->   (string_of_int const)^" "^(string_of_control_string t)
-      
-        | Variable var::t          ->   var^" "^(string_of_control_string t)
-      
-        | Ap::t                    ->   "ap "^(string_of_control_string t)
-      
-        | Pair(abs,liste_expr)::t  ->   "< "^abs^"."^(string_of_control_string liste_expr)^"> "^(string_of_control_string t)
-      
-        | Prim op::t               ->   "prim "^(string_of_operateur op)^" "^(string_of_control_string t)
+      let rec string_of_cs_element element =  
+        match element with
+          | Constant const        ->   (string_of_int const)
+        
+          | Variable var          ->   var
+        
+          | Ap                    ->   "AP"
+        
+          | Pair(abs,liste_expr)  ->   "<"^abs^"."^(string_of_control_string liste_expr)^">"
+        
+          | Prim op               ->   "PRIM "^(string_of_operateur op)
+      in string_of_a_list string_of_cs_element expression " "
 
 
     (* Convertit un environnement en chaîne de caractère *)
     let rec string_of_env env =
-      match env with
-          []                                    ->   ""
+      let rec string_of_env_element element =
+        match element with
+          | EnvFerm(var,(control_string,env))   ->   "<"^var^" ,<"^(string_of_control_string control_string)^","^(string_of_env env)^">>"
 
-        | [EnvFerm(var,(control_string,env))]   ->   "<"^var^" ,<"^(string_of_control_string control_string)^","^(string_of_env env)^">>"
-
-        | EnvFerm(var,(control_string,env))::t  ->   "<"^var^" ,<"^(string_of_control_string control_string)^","^(string_of_env env)^">> , "^(string_of_env t)
-
-        | [EnvVar(var,const)]                   ->   "<"^var^" ,"^(string_of_int const)^">"
-
-        | EnvVar(var,const)::t                  ->   "<"^var^" ,"^(string_of_int const)^"> , "^(string_of_env t)
+          | EnvVar(var,const)                   ->   "<"^var^" ,"^(string_of_int const)^">"
+      in string_of_a_list string_of_env_element env " , "
 
 
     (* Convertit une pile en chaîne de caractère *)
     let rec string_of_stack stack =
-      match stack with
-          []                                     ->   ""
+      let rec string_of_stack_element element =
+        match element with
+          | Fermeture(control_string,env)       ->   "["^(string_of_control_string control_string)^" , {"^(string_of_env env)^"}]"
 
-        | Fermeture(control_string,env)::t       ->   "["^(string_of_control_string control_string)^" , {"^(string_of_env env)^"}] "^(string_of_stack t)
-
-        | Stack_const b::t                       ->   (string_of_int b)^" "^(string_of_stack t)
+          | Stack_const b                       ->   (string_of_int b)
+      in string_of_a_list string_of_stack_element stack "  "
 
 
     (* Convertit la sauvegarde en chaîne de caractère *)
@@ -136,7 +142,7 @@ module SECDMachine =
 
     (**** Fonctions utiles ****)
 
-    (* Substitue une variable à sa  fermeture liée *)
+    (* Substitue une variable à sa fermeture liée *)
     let rec substitution x env =
       match env with
           []                         ->   raise AucuneSubPossible
@@ -146,7 +152,7 @@ module SECDMachine =
         | EnvVar(var,b)::t           ->   if ( equal x var) then  Stack_const b else substitution x t
 
 
-    (* Convertit une liste de  fermeture contenant des constante en liste d'entier *)
+    (* Convertit une liste de fermeture contenant des constantes en liste d'entiers *)
     let rec prendre_entier stack nbrOperande =
       match (stack,nbrOperande) with
           (t,0)                   ->   ([],t)
@@ -156,7 +162,7 @@ module SECDMachine =
         | (_,_)                   ->   raise FormatOpErreur
 
 
-    (* Ajoute une  fermeture à l'environnement *)
+    (* Ajoute une fermeture à l'environnement *)
     let rec ajoutEnv env varARemp var =
       match (env,var) with
           ([],Stack_const b)               ->   [EnvVar(varARemp,b)]
@@ -201,7 +207,7 @@ module SECDMachine =
 
         | Machine(v::s,e,[],Save(s1,e1,c,d))                     ->   Machine(v::s1,e1,c,d)
 
-        | _                                                          ->   raise EtatInconnu
+        | _                                                      ->   raise EtatInconnu
 
 
     (* Applique les règles de la machine SECD en affichant les étapes *)

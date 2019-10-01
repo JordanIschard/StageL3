@@ -93,7 +93,7 @@ module CCMachine =
 
         | Machine(expr1,App(Var "[ ]",expr2)::contexte) ->  Machine(App(expr1,expr2),contexte) 
 
-        | _                                               ->  raise EtatInconnu
+        | _                                             ->  raise EtatInconnu
 
 
     (* Applique les règles de la machine CC en affichant les étapes *)

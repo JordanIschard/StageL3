@@ -78,14 +78,15 @@ module CEKMachine =
 
     (**** Fonctions utiles ****)
 
-    (* Convertit une expression en  fermeture *)
+    (* Convertit une expression en fermeture *)
     let rec  fermeture_of_expr env liste =
       match liste with
           []    ->   []
         
         | h::t  ->   (Fermeture(h,env))::(fermeture_of_expr env t)
 
-
+    
+    (* Ajoute une élément dans l'environnement *)
     let rec ajoutEnv env varARemp fermetureDeRemp =
       match env with
           []                   ->   [(varARemp, fermetureDeRemp)]
@@ -101,7 +102,7 @@ module CEKMachine =
         | _                               ->   false
 
 
-    (* Convertit une liste de  fermeture, contenant des constantes, en une liste d'entier *)
+    (* Convertit une liste de fermetures, contenant des constantes, en une liste d'entiers *)
     let rec convert_liste_fermeture_liste_int liste =
       match liste with
         []                               ->   []
@@ -119,7 +120,7 @@ module CEKMachine =
         | h::t  ->   (Fermeture(h,env),(map (fun x -> Fermeture(x,env)) t))
 
 
-    (* Substitue une variable par sa  fermeture qui lui est assignée dans l'environnement *)
+    (* Substitue une variable par sa fermeture qui lui est assignée dans l'environnement *)
     let rec substitution var env =
       match env with
           []                    ->   raise AucuneSubPossible
@@ -156,7 +157,7 @@ module CEKMachine =
         | _                                                                  ->   raise EtatInconnu
 
 
-    (* Applique les règles de la machine  en affichant les étapes *)
+    (* Applique les règles de la machine CEK en affichant les étapes *)
     let rec machine cek afficher= 
       match cek with
           Machine(Fermeture(Const b,_),MT)        ->   Const b

@@ -224,36 +224,36 @@ module SECDCv4Machine =
 
     (**** Affichage ****)
 
-    (* Concatène une liste de chaîne de caractères en une seule chaîne de caractères *)
-    let rec concat_secd_list secd_list =
-      match secd_list with
+    (* Convertit une 'a list en chaîne de caractères *)
+    let rec string_of_a_list string_of_a a_list inter =
+      match a_list with
           []    ->   "" 
 
-        | [h]     ->   h
+        | [h]   ->   string_of_a h
         
-        | h::t  ->   h^";"^(concat_secd_list t)
+        | h::t  ->   (string_of_a h)^inter^(string_of_a_list string_of_a t inter)
 
 
     (* Convertit le langage ISWIM en langage SECD *)
     let rec secdLanguage_of_exprISWIM expression =
       match expression with
-          Lang_secdC.ISWIM.Const const                           ->   [Constant const]
+          Lang_secdC.ISWIM.Const const                     ->   [Constant const]
           
-        | Lang_secdC.ISWIM.Var var                               ->   [Variable var]
+        | Lang_secdC.ISWIM.Var var                         ->   [Variable var]
             
-        | Lang_secdC.ISWIM.App(expr1,expr2)                      ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
+        | Lang_secdC.ISWIM.App(expr1,expr2)                ->   append (append (secdLanguage_of_exprISWIM expr1) (secdLanguage_of_exprISWIM expr2)) [Ap]
             
-        | Lang_secdC.ISWIM.Op(op,liste_expr)                     ->   append (flatten(map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
+        | Lang_secdC.ISWIM.Op(op,liste_expr)               ->   append (flatten(map secdLanguage_of_exprISWIM liste_expr)) [(Prim(op))]
             
-        | Lang_secdC.ISWIM.Abs(abs,expr)                         ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
+        | Lang_secdC.ISWIM.Abs(abs,expr)                   ->   [Pair(abs,(secdLanguage_of_exprISWIM expr))]
 
         | Lang_secdC.ISWIM.Spawn expr                      ->   append [Bspawn] (append (secdLanguage_of_exprISWIM expr) [Espawn])
 
         | Lang_secdC.ISWIM.Present (signal,expr1,expr2)    ->   [Signal signal ; Present ((secdLanguage_of_exprISWIM expr1),(secdLanguage_of_exprISWIM expr2))]
 
-        | Lang_secdC.ISWIM.Emit (signal)                   ->   [Signal signal ; Emit]
+        | Lang_secdC.ISWIM.Emit signal                     ->   [Signal signal ; Emit]
 
-        | Lang_secdC.ISWIM.Init signal                   ->   [Signal signal ; InitSignal]
+        | Lang_secdC.ISWIM.Init signal                     ->   [Signal signal ; InitSignal]
 
         | Lang_secdC.ISWIM.Throw error                     ->   [Error error ; Throw]
 
@@ -263,7 +263,7 @@ module SECDCv4Machine =
 
         | Lang_secdC.ISWIM.Get(signal,id_thread)           ->   [Constant id_thread ; Signal signal ; Get]
 
-        | _                                     -> raise BadVersion
+        | _                                                ->   raise BadVersion
 
     (* Donne une chaîne de caractères contenant un message d'erreur par rapport à l'identifiant de l'erreur *)
     let error_message error =
@@ -299,67 +299,66 @@ module SECDCv4Machine =
 
     (* Convertit la chaîne de contrôle en une chaîne de caractères *)
     let rec string_of_control_string expression =
-      match expression with
+      let aux element =
+        match element with
+          | Constant const                  ->   (string_of_int const)
+        
+          | Variable var                    ->   var
+        
+          | Ap                              ->   "AP"
 
-          []                                 ->   ""
-      
-        | Constant const::t                  ->   (string_of_int const)^" "^(string_of_control_string t)
-      
-        | Variable var::t                    ->   var^" "^(string_of_control_string t)
-      
-        | Ap::t                              ->   "ap "^(string_of_control_string t)
+          | Signal signal                   ->   signal
+        
+          | Pair(abs,expr_list)             ->   "<"^abs^","^(string_of_control_string expr_list)^">"
+        
+          | Prim op                         ->   "PRIM "^(string_of_operateur op)
 
-        | Signal signal::t                   ->   signal^" "^(string_of_control_string t)
-      
-        | Pair(abs,expr_list)::t             ->   "("^abs^",("^(string_of_control_string expr_list)^")) "^(string_of_control_string t)
-      
-        | Prim(op)::t                        ->   "prim "^(string_of_operateur op)^" "^(string_of_control_string t)
+          | Bspawn                          ->   "BSPAWN"
 
-        | Bspawn::t                          ->   "bspawn "^(string_of_control_string t)
+          | Espawn                          ->   "ESPAWN"
 
-        | Espawn::t                          ->   "espawn "^(string_of_control_string t)
+          | Present(expr1,expr2)            ->   "PRESENT "^(string_of_control_string expr1)^" "^(string_of_control_string expr2)
 
-        | Present(expr1,expr2)::t            ->    "present in "^(string_of_control_string expr1)^(string_of_control_string expr2)^(string_of_control_string t)
+          | Emit                            ->   "EMIT"
 
-        | Emit::t                            ->   "emit "^(string_of_control_string t)
+          | InitSignal                      ->   "INIT"
 
-        | InitSignal::t                      ->   "init "^(string_of_control_string t)
+          | Throw                           ->   "THROW"
 
-        | Throw::t                           ->   "throw "^(string_of_control_string t)
+          | Catch(expr1,(abs,expr2))        ->    "TRY "^(string_of_control_string expr1)^"CATCH <"^abs^" , "^(string_of_control_string expr2)^">"
 
-        | Catch(expr1,(abs,expr2))::t        ->    "try "^(string_of_control_string expr1)^"catch ("^abs^" , "^(string_of_control_string expr2)^")"^(string_of_control_string t) 
+          | Error error                     ->   (error_message error)
 
-        | Error error::t                     ->   (error_message error)^" "^(string_of_control_string t)
-
-        | Put::t                             ->   "put "^(string_of_control_string t)
-       
-        | Get::t                             ->   "get "^(string_of_control_string t)
+          | Put                             ->   "PUT"
+        
+          | Get                             ->   "GET"
+      in string_of_a_list aux expression " "
 
 
     (* Convertit un environnement en chaîne de caractères *)
     let rec string_of_environment environment =
-      match environment with
-          []                                      ->   ""
+      let aux element =
+        match element with
+          | EnvClos(var,(control_string,env))  ->   "["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_environment env)^"]]"
 
-        | (EnvClos(var,(control_string,env)))::t  ->   "["^var^" , ["^(string_of_control_string control_string) ^" , "^(string_of_environment env)^"]] , "^(string_of_environment t)
-
-        | (EnvVar(var,control_string))::t         ->   "["^var^" , "^(string_of_control_string control_string) ^"] , "^(string_of_environment t)
+          | EnvVar(var,control_string)         ->   "["^var^" , "^(string_of_control_string control_string) ^"]"
+      in string_of_a_list aux environment " , "
 
 
     (* Convertit une pile en chaîne de caractères *)
-    let rec string_of_stack stack =
-      match stack with
-          []                                ->   ""
+    let string_of_stack stack =
+      let aux element =
+        match element with
+          | Stack_signal signal            ->   signal
 
-        | Stack_signal signal::t            ->   signal^" "^(string_of_stack t)
+          | Stack_const b                  ->   (string_of_int b)
 
-        | Stack_const b::t                  ->   (string_of_int b)^" "^(string_of_stack t)
+          | Stack_error e                  ->   "Erreur "^(string_of_int e)
 
-        | Stack_error e::t                  ->   "Erreur "^(string_of_int e)^" "^(string_of_stack t)
+          | Stack_throw e                  ->   "Erreur levé "^(string_of_int e)
 
-        | Stack_throw e::t                  ->   "Erreur levé "^(string_of_int e)^" "^(string_of_stack t)
-
-        | (Closure(control_string,env))::t  ->   "["^(string_of_control_string control_string)^" , {"^(string_of_environment env)^"}]"^(string_of_stack t)
+          | (Closure(control_string,env))  ->   "["^(string_of_control_string control_string)^" , {"^(string_of_environment env)^"}]"
+      in string_of_a_list aux stack " "
         
 
     (* Convertit la sauvegarde en chaîne de caractères *)
@@ -373,30 +372,22 @@ module SECDCv4Machine =
 
       
     (* Convertit un thread en chaîne de caractères *)
-    let rec string_of_thread thread =
+    let string_of_thread thread =
       match thread with
         Thread(id,stack,env,control_string,dump)  ->    "("^(string_of_int id)^" , "^(string_of_stack stack)^" , "^(string_of_environment env)
                                                        ^" , "^(string_of_control_string control_string)^" , "^(string_of_dump dump)^")"
 
 
     (* Convertit la liste des éléments en attente en chaîne de caractères *)
-    let rec string_of_wait wait =
-      match wait with 
-          []         ->   "" 
-        
-        | [thread]   ->   (string_of_thread thread)
-        
-        | thread::t  ->   (string_of_thread thread)^" , "^(string_of_wait t)
-
+    let string_of_wait wait = string_of_a_list string_of_thread wait " , "
 
     (* Convertit la liste des éléments bloqués en chaîne de caractères *)
-    let rec string_of_stuck stuck =
-      match stuck with 
-          []                  ->   "" 
+    let string_of_stuck stuck =
+      let aux element = 
+        match element with 
+          | (signal,thread)   ->   "( "^signal^", "^(string_of_thread thread)^" )"
+      in string_of_a_list aux stuck " , "
 
-        | [(signal,thread)]   ->   "( "^signal^", "^(string_of_thread thread)^" )"
-
-        | (signal,thread)::t  ->   "( "^signal^", "^(string_of_thread thread)^" ) , "^(string_of_stuck t)
 
 
     (* Convertit la liste des threads en chaîne de caractères *)
@@ -405,51 +396,41 @@ module SECDCv4Machine =
         (wait,stuck)  ->    "\n     WAIT    : "^(string_of_wait wait)
                            ^"\n     STUCK   : "^(string_of_stuck stuck)
 
-    
-    
 
     (* Convertit une liste de signaux courant en chaîne de caractères *)
-    let rec string_of_cs cs_list =
-      match cs_list with
-          []                          ->    ""
-
-        | (id_thread,values)::t       ->    "("^(string_of_int id_thread)^",{"^(concat_secd_list(map string_of_int values))^"}) "^(string_of_cs t)
+    let string_of_cs cs_list =
+      let aux element =
+        match element with
+          | (id_thread,values)       ->    "("^(string_of_int id_thread)^",{"^(string_of_a_list string_of_int values " , ")^"})"
+      in string_of_a_list aux cs_list " "
 
 
     (* Convertit la liste des signaux courant liés à leurs threads en chaîne de caractères *)
-    let rec string_of_current_signals current_signals =
-      match current_signals with
-          []                                 ->   "" 
-
-        | [CS(id_signal,thread_list,emit)]   ->   "["^id_signal^" : {"^(string_of_cs thread_list)^","^(string_of_bool emit)^"}]"
-
-        | CS(id_signal,thread_list,emit)::t  ->   "["^id_signal^" : {"^(string_of_cs thread_list)^","^(string_of_bool emit)^"}] ; "^(string_of_current_signals t) 
+    let string_of_current_signals current_signals =
+      let aux element =
+        match element with
+          | CS(id_signal,thread_list,emit)   ->   "["^id_signal^" : {"^(string_of_cs thread_list)^","^(string_of_bool emit)^"}]"
+      in string_of_a_list aux current_signals " ; "
 
 
     (* Convertit la liste des signaux partagés en chaîne de caractères *)
-    let rec string_of_ssi ssi_list = 
-      let rec aux values =
-        match values with
-            []                                 ->   ""
-
-          | [(value,pointers)]                 ->   "("^( string_of_int value)^",{"^(concat_secd_list(map string_of_int pointers))^"})"
-
-          | (value,pointers)::t                ->   "("^( string_of_int value)^",{"^(concat_secd_list(map string_of_int pointers))^"});"^(aux t)
-      in
-      match ssi_list with
-          []                                   ->   ""
-
-        | (id_thread,values,thread_list)::t    ->   " ("^(string_of_int id_thread)^",["^(aux values)^"],{"^(concat_secd_list( map string_of_int thread_list))^"}) "^(string_of_ssi t)
+    let string_of_ssi ssi_list = 
+      let aux1 element =
+        let aux values =
+          match values with
+            | (value,pointers)                 ->   "("^( string_of_int value)^",{"^(string_of_a_list string_of_int pointers " , ")^"})"
+        in
+        match element with
+          (id_thread,values,thread_list)    ->   " ("^(string_of_int id_thread)^",["^(string_of_a_list aux values " , ")^"],{"^(string_of_a_list string_of_int thread_list " , ")^"})"
+      in string_of_a_list aux1 ssi_list " "
 
     
     (* Convertit la liste des signaux partagés lié à leurs threads en chaîne de caractères *)
-    let rec string_of_shared_signals shared_signals =
-      match shared_signals with
-          []                             ->   ""
-
-        | [SSI(id_signal,thread_list)]   ->   "["^id_signal^" : {"^(string_of_ssi thread_list)^"}]" 
-
-        | SSI(id_signal,thread_list)::t  ->   "["^id_signal^" : {"^(string_of_ssi thread_list)^"}] , "^(string_of_shared_signals t)  
+    let string_of_shared_signals shared_signals =
+      let aux element =
+        match element with
+          | SSI(id_signal,thread_list)   ->   "["^id_signal^" : {"^(string_of_ssi thread_list)^"}]" 
+      in string_of_a_list aux shared_signals " , "
 
 
     (* Convertit la liste de tous les signaux en chaîne de caractères *)
@@ -788,7 +769,7 @@ module SECDCv4Machine =
     (**** Machine SECD concurrente version 4 ****)
 
     (* Applique les règles de la machine SECD concurrente version 4 en affichant les étapes *)
-    let transitionSECDCv4 machine =
+    let transition machine =
       match machine with
 
           (* Constante *)
@@ -966,21 +947,21 @@ module SECDCv4Machine =
   
 
      (* Applique les règles de la machine SECD concurrente version 4 en affichant ou non les étapes *)
-     let rec machineSECDCv4 machine afficher =
-      match machine with
-          Machine(i,[Stack_const b],e,[],Vide_D,([],[]),si,h,ip)               ->   [Constant b]
+     let rec machine etat afficher =
+      match etat with
+          Machine(_,[Stack_const b],_,[],Vide_D,([],[]),_,_,_)               ->   [Constant b]
         
-        | Machine(i,[Closure([Pair(abs,c)],e1)],e,[],Vide_D,([],[]),si,h,ip)   ->   [Pair(abs,c)]
+        | Machine(_,[Closure([Pair(abs,c)],_)],_,[],Vide_D,([],[]),_,_,_)   ->   [Pair(abs,c)]
 
-        | Machine(i,[Stack_error erreur],e,[],Vide_D,([],[]),si,h,ip)          ->   [Variable (error_message erreur)]
+        | Machine(_,[Stack_error erreur],_,[],Vide_D,([],[]),_,_,_)          ->   [Variable (error_message erreur)]
         
-        | Machine(i,[Stack_throw erreur],e,[],Vide_D,([],[]),si,h,ip)          ->   [Variable ("Erreur levé : "^(error_message erreur))]
+        | Machine(_,[Stack_throw erreur],_,[],Vide_D,([],[]),_,_,_)          ->   [Variable ("Erreur levé : "^(error_message erreur))]
 
-        | machine                                                              ->   if (afficher) then (afficherSECDCv4 machine) else printf ""; machineSECDCv4 (transitionSECDCv4 machine) afficher
+        | indetermine                                                          ->   if (afficher) then (afficherSECDCv4 indetermine) else printf ""; machine (transition indetermine) afficher
       
   
 
     (* Lance et affiche le résultat de l'expression *)
-    let lancerSECDCv4 expression afficher = printf "Le résultat est %s \n" (string_of_control_string (machineSECDCv4 (Machine(0,[],[],(secdLanguage_of_exprISWIM expression),Vide_D,([],[]),([],[]),Vide_H,1)) afficher))
+    let lancerSECDCv4 expression afficher = printf "Le résultat est %s \n" (string_of_control_string (machine (Machine(0,[],[],(secdLanguage_of_exprISWIM expression),Vide_D,([],[]),([],[]),Vide_H,1)) afficher))
     
   end

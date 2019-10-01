@@ -20,7 +20,7 @@ module ISWIM =
       | Add4           (* ++++ *)
 
 
-    (* Type représentant les éléments qui constitue le langage *)
+    (* Type représentant les éléments qui constituent le langage *)
     type expr = 
         Var of string                     (* une variable x,y,z,...         *)       
       | Abs of string * expr              (* une abstraction lam x.t        *)
@@ -57,12 +57,12 @@ module ISWIM =
     (* Concatène tous les éléments d'une liste entre eux *)
     let rec concat_string_liste liste =
       match liste with
-          []    ->   ""
+          [] -> ""
         
-        | h::t  ->   h^" "^(concat_string_liste t)
+        | h::t -> h^" "^(concat_string_liste t)
 
 
-    (* Convertit un opérateur en chaîne de caractère *)
+    (* Convertit un opérateur en chaîne de caractères *)
     let string_of_operateur op =
       match op with
           Add1    ->   "++"
@@ -82,7 +82,7 @@ module ISWIM =
         | Add4    ->   "+ + +"
       
 
-    (* Convertit une expression en chaîne de caractère *)
+    (* Convertit une expression en chaîne de caractères *)
     let rec string_of_expr expr =
       match expr with 
           Var var             ->   var
@@ -100,7 +100,7 @@ module ISWIM =
     let afficherExpr expression = printf "%s\n" (string_of_expr expression) 
     
 
-    (* Affiche une liste de pair de string *)
+    (* Affiche une liste de pairs de chaîne de caractères *)
     let rec afficherPairList liste =
       match liste with
           []          ->   printf "\n"
@@ -190,7 +190,7 @@ module ISWIM =
           | _        ->   false
 
 
-      (* Convertit une liste de constante en entier et lève une exception si la liste ne contient pas que des constantes*)
+      (* Convertit une liste de constantes en entiers et lève une exception si la liste ne contient pas seulement des constantes *)
       let rec convert_liste_expr_liste_int liste =
         match liste with
             []              ->   []
@@ -200,7 +200,7 @@ module ISWIM =
           | _               ->   raise NotConstErreur
 
 
-      (* Vérifie si l'élément fait partie de au moins un couple de la liste*)
+      (* Vérifie si l'élément fait partie de, au moins, un couple de la liste *)
       let rec estDansUnCouple elem liste =
         match liste with
             [] -> false
@@ -219,7 +219,7 @@ module ISWIM =
 
     (**** La réduction ****)
 
-    (* Donne un nouveau nom de var limité par la liste*)
+    (* Donne un nouveau nom de variable limitée par une liste finie *)
     let renommage liste_interdit =
       let variables = ["x";"y";"z1";"w1"] in
       let rec aux liste_interdit variables =
@@ -272,7 +272,7 @@ module ISWIM =
         | Op(op,liste_expr)          ->   Op(op,(map beta_red liste_expr))
 
 
-      (* On applique le calcul sur une liste d'entier et lève une exception si le nombre de paramètre est erroné  *)
+      (* On applique le calcul sur une liste d'entiers et lève une exception si le nombre de paramètre est erroné *)
       let calcul op liste_expr =
         match (op,liste_expr) with
             (Add1,[h])     ->   Const (h+1)
@@ -294,7 +294,7 @@ module ISWIM =
           | (_,_)          ->   raise FormatOpErreur
 
 
-      (* Applique une delta réduction sur l'expression*)
+      (* Applique une delta réduction sur l'expression *)
       let rec  delta_red expression =
         match expression with 
             Var var             ->   Var var 
@@ -372,7 +372,7 @@ module ISWIM =
       (* Réduit en forme normale si c'est possible *)
       let rec n_red expression =
         (afficherExpr expression);
-        try   let newExpr = (delta_red (beta_red expression)) in if (equalExpr expression newExpr) then newExpr else n_red newExpr
+        try let newExpr = (delta_red (beta_red expression)) in if (equalExpr expression newExpr) then newExpr else n_red newExpr
         with  _ -> printf "Une erreur est survenue\n" ; Const 0
         
   end
