@@ -1,0 +1,34 @@
+\subsection*{Abréviations}
+
+	Afin de rendre le tout plus lisible, on va appliquer une succession d'abréviations que l'on décrit dans cette section.
+	
+	Premièrement, on va simplifier les résultats binaires en résultat fini:
+	\begin{align*}
+		A_1 \times ... \times A_n &\overset{\textbf{def}}{=}~(A_1 \times ... \times A_{n-1}) \times A_n & (n \geq 3)\\
+		\langle V_1 , ... , V_n\rangle &\overset{\textbf{def}}{=}~\langle\langle V_1 , ... , V_{n-1}\rangle , V_n\rangle & (n \geq 3)
+	\end{align*}
+	On comprend les résultats binaires, quand $n=2$, les résultats unaires, quand $n=1$ (simplement $A_1$), et le résultat vide, quand $n=0$ (\textbf{1}).
+	
+	On détermine les abréviations suivantes :
+	\begin{align*}
+		\textbf{f}(V_1,...,V_n) &\overset{\textbf{def}}{=}~\textbf{f}(\langle V_1,...,V_n\rangle)\\
+		l(V_1,...,V_n) &\overset{\textbf{def}}{=}~l(\langle V_1,...,V_n\rangle)\\
+		\textbf{op}_{V_1,...,V_n}(x:\beta.M) &\overset{\textbf{def}}{=}~\textbf{op}_{\langle V_1,...,V_n\rangle}(x:\beta.M)\\
+		k(V_1,...,V_n) &\overset{\textbf{def}}{=}~k(\langle V_1,...,V_n\rangle)
+	\end{align*}
+	
+	On va omettre les parenthèses vides : 
+	\begin{align*}
+		\textbf{f} &\overset{\textbf{def}}{=}~\textbf{f}() & l &\overset{\textbf{def}}{=}~l() & k &\overset{\textbf{def}}{=}~k()
+	\end{align*}
+	
+	On adapte aussi les destructeurs de tuples de taille finis. À la place d'un destructeur on va s'autoriser une écriture avec une association de multiple variables.
+	
+	\begin{exemple}
+		Par exemple : 
+		\[\textbf{op}_{x_1,...,x_n}(k) \mapsto M \overset{\textbf{def}}{=}~(\textbf{match}~x~\textbf{with}~\langle x_1,...,x_n\rangle \mapsto M)\]
+		\[\textbf{if}~V~\textbf{then}~M~\textbf{else}~N\overset{\textbf{def}}{=}~\textbf{match}~x~\textbf{with}~\{\textbf{true} \mapsto M,~\textbf{false} \mapsto N\} \]
+	\end{exemple}
+
+	Lorsqu'une opération ne retourne rien on va abrégé de la façon suivante : 
+	\[\textbf{op}_V() \overset{\textbf{def}}{=}~\textbf{op}_V(x:\textbf{0}.\textbf{match}~x~\textbf{with}~\{\})  \]

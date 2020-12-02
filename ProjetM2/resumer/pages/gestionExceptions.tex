@@ -1,0 +1,45 @@
+On commence l'étude sur la gestionnaire des exceptions, d'une part pour comprendre le principe et d'autre part c'est un effet simple. La section est écrite de manière informelle.
+\medbreak
+
+On considère un ensemble fini d'exceptions $\textbf{exc}$, un second ensemble $A$ et une monade d'exception $TA$ telle que $TA \overset{\textbf{def}}{=} A + \textbf{exc}$. Un calcul retournant une valeur $a \in A$ est modélisé par un élément $ta \in TA$. Cette monade a pour unité $\eta_A : A \rightarrow A + \textbf{exc}$, et le calcul $return(V)$ est interprété par $\eta_A(V)$ tandis que $\textbf{raise}_e()$ est interprété par $in_2(e)$.
+
+\subsection{Construction des gestionnaires étendus}
+
+	Benton et Kennedy ont généralisé la construction des gestionnaires avec la forme suivante :
+	\[M~\textbf{handled~with} \{\textbf{raise}_e() \mapsto N_e\}_{e \in \textbf{exc}}~\textbf{to}~ x:A.N(x)\]
+	
+	avec $\{...\}_{e \in \textbf{exc}}$ représentant l'ensemble des calculs, un pour chaque $e \in \textbf{exc}$. Dans cette construction, on effectue le calcul de $M \in A + \textbf{exc}$. Si on lève une exception $e \in \textbf{exc}$ alors on effectue un calcul $N_e$ qui retourne un élément de $B$ (où $B$ peut différer de $A$). Sachant que $N_e$ peut lui même lever une exception alors $N_e \in B + \textbf{exc}$. Les valeurs retournées par le gestionnaire sont passées dans une continuation défini par l'utilisateur $N : A \rightarrow B + \textbf{exc}$. La construction satisfait 2 équations :
+	\begin{align*}
+		\textbf{return} ~V~\textbf{handled~with} \{\textbf{raise}_e() \mapsto N_e\}_{e \in \textbf{exc}}~\textbf{to}~ x:A.N(x) &= N(V)\\
+		\textbf{raise}_{e'}()~\textbf{handled~with} \{\textbf{raise}_e() \mapsto N_e\}_{e \in \textbf{exc}}~\textbf{to}~ x:A.N(x) &= N_{e'}
+	\end{align*}
+	
+	Comme discuté dans \cite{DBLP:journals/jfp/BentonK01}, Cette construction permet d'écrire de façon simple un idiome de programmation qui était lourd à mettre en place. 
+	\smallbreak
+	Algébriquement le calcul $N_e$ donne un nouveau modèle $\mathcal{M}$ pour la théorie des exceptions. Le porteur de ce modèle est $B + \textbf{exc}$. Pour chaque $e \in \textbf{exc}$, $\textbf{raise}_e()$ est interprété par $N_e$. On peut voir d'après les deux équations ci-dessus que :
+	\[h(M) \overset{def}{=} M~\textbf{handled~with} \{\textbf{raise}_e() \mapsto N_e\}_{e \in \textbf{exc}}~\textbf{to}~ x:A.N(x)\]
+	
+	où $h : A + \textbf{exc} \rightarrow \mathcal{M}$ est l'homomorphisme unique qui étend $N$, i.e, tel que l'on a le diagramme de commutation suivant : 
+	
+	\begin{center}
+		\begin{tikzpicture}[description/.style={fill=white,inner sep=2pt}]
+		\matrix (m) [matrix of math nodes, row sep=3em,
+		column sep=2.5em, text height=1.5ex, text depth=0.25ex]
+		{ A & & A + \textbf{exc} \\
+			& \mathcal{M} & \\ };
+		\path[->,font=\scriptsize]
+		(m-1-1) edge node[auto] {$ \eta_A$} (m-1-3)
+		edge node[auto] {$ N $} (m-2-2)
+		(m-1-3) edge node[auto] {$ h $} (m-2-2);
+		\end{tikzpicture}
+	\end{center}
+	
+	Notons que tous les homomorphismes d'un modèle libre vers un modèle pour un porteur donné sont obtenus de cette manière. Donc la construction proposé par Benton et Kennedy est le plus général possible d'un point de vue algébrique.
+
+	\subsection{Gestion des effets algébriques arbitraires}
+	
+	Avec la construction étendue de Benton et Kennedy, on voit maintenant comment créer les gestionnaires pour les autres effets algébriques. Un \textbf{modèle d'une théorie d'équations} est une interprétation, i.e, un ensemble de tableaux associatifs, un pour chaque opération, qui satisfont les équations. Les gestionnaires permettent de telles interprétations. Comme avant, les calculs sont interprétés par le modèle libre et la construction des gestionnaires sont interprétés par l'homomorphisme induit. Avant, les exceptions étaient remplacés par un calcul du gestionnaire; maintenant les \textbf{opérations} sont remplacées par les tableaux associatifs du gestionnaire.
+	\smallbreak
+	Il est important de noter que toute interprétation ne donne pas forcément un modèle de la théorie des équations et que donc tous les gestionnaires ne sont pas forcément correctes. Plus que ça, la validité d'un gestionnaire peut être indéfini. Pour contourner le problème, il y a deux écoles. Soit on contraint l'utilisateur à des gestionnaires prédéfinies que l'on sait correcte; soit on laisse une totale liberté à l'utilisateur mais c'est à lui qui est responsable de la validité de ses gestionnaires. On adoptera la seconde dans ce papier.
+	
+	

@@ -1,0 +1,74 @@
+\usepackage[utf8]{inputenc}
+%\usepackage[T1]{fontenc}
+\usepackage{version}
+
+\usepackage{amssymb,amsmath,amsthm}
+\usepackage{graphicx}
+\usepackage{enumerate}
+\usepackage{tikz}
+\usetikzlibrary{matrix,arrows}
+\usepackage{todonotes}
+\usepackage{fullpage}
+\usepackage[french,linesnumbered,lined,boxed,commentsnumbered,ruled,vlined]{algorithm2e}
+
+\renewcommand{\contentsname}{Table des matières}   
+
+%\usepackage[ruled,vlined,linesnumbered,noresetcount]{algorithm2e}
+
+\SetKwInput{KwIn}{Entrée}%
+\SetKwInput{KwOut}{Sortie}%
+%\SetKwIF{Si}{SinonSi}{Sinon}{si}{alors}{sinon si}{sinon}{fin si}%
+%\SetKwFor{Tq}{tant que}{faire}{fin tq}%
+%\SetKwFor{For}{Pour}
+
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{calc}
+
+\usepackage[affil-it]{authblk}
+
+\renewcommand*{\Authsep}{, }
+\renewcommand*{\Authand}{, }
+\renewcommand*{\Authands}{, }
+
+\title{Résumé de l'article \textbf{Handling algebraic effects}}
+
+\author[1]{Jordan Ischard}
+
+\affil[1]{Université d'Orléans}
+
+\date{}
+
+% ===== ENVIRONMENTS ===== %
+\newtheorem{theorem}{Théorème}
+\newtheorem{lemma}{Lemme}
+\newtheorem{corollary}[theorem]{Corollaire}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}{Définition}
+\theoremstyle{definition}
+\newtheorem*{remark}{Remarque}
+\newtheorem{exemple}{Exemple}
+
+\newenvironment{proofclaim}{
+	\noindent \emph{Proof.}
+}{%
+	\hfill $\diamond$ \\
+}
+
+% ===== COMMANDE POUR DEFINIR UN PROBLEME ===== %
+\newcommand{\probleme}[4]{
+
+    \vspace{0.4cm}
+    \fbox{
+        \begin{minipage}{0.95 \linewidth}
+            \centerline{\textsc{\underline{#1}}}
+            \textbf{Entr\'ee} : #2 \\ \textbf{#4} : #3
+        \end{minipage}
+    }
+    \vspace{0.4cm}
+
+}
+
+\newcommand{\RMV}{\todo[inline]{Paragraphe à supprimer}}
+\renewcommand*{\proofname}{Preuve}

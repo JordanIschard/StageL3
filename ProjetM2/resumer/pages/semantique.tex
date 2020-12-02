@@ -1,0 +1,75 @@
+On va introduire la théorie des effets. La partie interprétation sera omit dans ce résumé car il fait appel à des notions de catégorie et des notions poussées sur les modèles. Je n'ai pas la présomption d'être en capacité de le comprendre entièrement et de l'expliquer.
+
+\subsection{La théorie des effets}
+
+	On va décrire les propriétés des effets avec des équation entre patrons $T$. Ils décrivent la forme général de tous les calculs sans présumer des types. On définit $T$ par :
+	\[T := z(V)~|~\textbf{match}~V~\textbf{with}~\langle x,y\rangle \mapsto T~|~\textbf{match}~V~\textbf{with}~\{l(x_l) \mapsto T_l\}_{l \in L}~|~\textbf{op}_V(x:\beta.T)\]
+	
+	avec $z$ appartenant à un ensemble de variable de patron. Dans les patrons, on se limite à la signature des valeurs. Ceux sont des valeurs qui peuvent être typées par $\Gamma \vdash V:\alpha$, avec $\Gamma$ le contexte des variables de valeurs liées à un type de signature. Les règles de typage sont, en omettant le contexte de continuation et les règles pour les types bloqués, les même que ceux pour leurs valeurs.
+	\medbreak
+	
+	On construit des patrons dans le contexte de variables de valeur, liée à un type de signature, et un contexte de patron
+	\[Z = z_1:\alpha_1,...,z_n:\alpha_n\] 
+	
+	avec $z_j$ une variable de patron liée à un type de signature d'arité $\alpha_j$. $z_j:\alpha_j$ ne représente pas une valeur de type $\alpha_j$ mais un calcul qui dépend d'une telle valeur.
+	Le jugement de typage pour un patron bien-formé est $\Gamma~|~Z \vdash T$ et est donné par les règles suivantes :
+	
+	\begin{align*}
+		&\dfrac{\Gamma \vdash V:\alpha}{\Gamma~|~Z \vdash z(V)}~~(z:\alpha \in Z) &
+		&\dfrac{\Gamma \vdash V : A \times B\quad\quad\Gamma~x:\alpha,y:\beta~|~Z \vdash T}{\Gamma~|~Z \vdash \textbf{match}~V~\textbf{with}~\langle x,y\rangle  \mapsto T} \\\\
+		&\dfrac{\Gamma \vdash V : \sum_{l \in L}\alpha_l\quad\quad\Gamma~,x_l:\alpha_l~|~Z \vdash T_l~~(l\in L)}{\Gamma~|~Z \vdash \textbf{match}~V~\textbf{with}~\{ l(x_l) \mapsto T_l\}_{l \in L}} &
+		&\dfrac{\Gamma \vdash V:\alpha\quad\quad\Gamma,x:\beta~|~Z \vdash T}{\Gamma~|~Z \vdash \textbf{op}_V(x:\beta.T)}~~(\textbf{op}:\alpha \rightarrow \beta)\\
+	\end{align*}
+	
+	Une théorie d'effet $\tau$ est un ensemble fini d'équation $\Gamma~|~Z \vdash T_1 = T_2$, avec $T_1$ et $T_2$ bien formé par rapport à $\Gamma$ et $Z$.
+	
+	\begin{exemple}
+		On reprend les symboles d'opérations de l'Exemple \ref{exStateExc}.
+		
+		\begin{enumerate}
+			\item[] \textbf{Exceptions:} La théorie d'effet est un ensemble vide, car les exceptions ne satisfont aucune équations non-trivial.
+			
+			\item[] \textbf{États:} La théorie d'effet est définie par les équations suivantes (on n'écrit pas les contextes pour une meilleur lecture) :
+			\begin{align*}
+				\textbf{get}_l(x.z) &= z\\	
+				\textbf{get}_l(x.\textbf{set}_{l,x}(z)) &= z\\	
+				\textbf{set}_{l,x}(\textbf{set}_{l,x'}(z)) &= \textbf{set}_{l,x'}(z)\\
+				\textbf{set}_{l,x}(\textbf{get}_{l}(x'.z(x'))) &= \textbf{set}_{l,x}(z(x))\\
+				\textbf{get}_{x}(x.\textbf{get}_{l}(x'.z(x,x'))) &= \textbf{get}_{l}(x.z(x,x))\\
+				\textbf{set}_{l,x}(\textbf{set}_{l',x'}(z)) &= 
+				\textbf{set}_{l',x'}(\textbf{set}_{l,x}(z)) & (l \neq l')\\
+				\textbf{set}_{l,x}(\textbf{get}_{l'}(x'.z(x'))) &= 
+				\textbf{get}_{l'}(x'.\textbf{set}_{l,x}(z(x'))) & (l \neq l')\\
+				\textbf{get}_{l}(x.\textbf{get}_{l'}(x'.z(x,x'))) &= 
+				\textbf{get}_{l'}(x'.\textbf{get}_{l}(x.z(x,x'))) & (l \neq l')
+			\end{align*}
+		
+			On a simplifié l'écriture des trois dernières équations. En effet on a ajouté sur le côté la condition $(l \neq l')$. Cela reste dans le cadre de la définition de la théorie d'effet, $T_1 = T_2~(l \neq l')$ abrège l'équation suivante :
+			\[T_1 = (\textbf{if}~l \neq_\textbf{loc} l'~\textbf{then}~T_2~\textbf{else}~T_1)\]
+			
+			\item[] \textbf{Non-déterminisme:} La théorie d'effet est définie par les équations suivants :  
+			\begin{align*}
+				\textbf{choose}(z,z) &=~z\\
+				\textbf{choose}(z_1,z_2) &=~\textbf{choose}(z_2,z_1)\\
+				\textbf{choose}(z_1,\textbf{choose}(z_2,z_3)) &=~\textbf{choose}(\textbf{choose}(z_1,z_2),z_3)
+			\end{align*}
+		
+			\item[] \textbf{Temps:} La théorie d'effet est définie par les équations suivants :  
+			\begin{align*}
+				\textbf{delay}_0(z)  &=~z\\
+				\textbf{delay}_{t_1}(\textbf{delay}_{t_2}(z)) &=~ \textbf{delay}_{t_1 + t_2}(z)
+			\end{align*}
+		
+		
+			\item[] \textbf{Exception destructrice:} La signature des exceptions destructives est l'union de la signature de l'état et de l'exception. La théorie d'effet comprend toute les équations de l'état plus les équations suivantes :  			
+			\begin{align*}
+				\textbf{get}_l(x.\textbf{raise}_e()) &=~\textbf{raise}_e()\\
+				\textbf{set}_{l,x}(\textbf{raise}_{e}()) &=~\textbf{raise}_{e}()
+			\end{align*}
+		
+			Comme \textbf{raise} n'évalue jamais la continuation, on écrit $\textbf{raise}_e()$ à la place de $\textbf{raise}_e(x:\textbf{0}.T)$.
+			\bigbreak
+			
+			Les équations ci-dessus implique que les opérations sur la mémoire suivit par une levée d'exception est la même chose que juste lever une exception. Cela implique que toutes les opérations sur la mémoire sont discutables si une exception apparaît. La théorie des exceptions destructives est discutée comme celle du "rollback" dans \cite{DBLP:journals/tcs/HylandPP06}.
+		\end{enumerate}
+	\end{exemple}

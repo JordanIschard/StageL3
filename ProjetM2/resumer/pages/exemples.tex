@@ -1,0 +1,117 @@
+On va montrer à travers une succession d'exemples la portée des gestionnaires d'effets algébriques. La notion de validité des exemples est traitée plus loin dans le résumé.
+
+\subsection{Non-déterminisme explicite}
+
+	L'évaluation d'un calcul non-déterminisme prend habituellement un seul chemin possible. Une alternative est de prendre tous les chemins possibles et d'autoriser qu'un chemin échoue. On utilisera cette alternative comme en Haskell. Pour cela, on ajoute un symbole d'opération \textbf{fail} (qui ne prend aucun paramètre) afin de représenter les chemins qui échouent.
+	
+	On considère un gestionnaire qui introduit le résultat d'un calcul dans une liste. On définit des listes de types basiques \textbf{b} par le symbole $\textbf{list}_\textbf{b}$. Ainsi que les symboles de fonctions: 
+	$\textbf{nil} : \textbf{1} \rightarrow \textbf{list}_\textbf{b}$, 
+	$\textbf{cons}: \textbf{b} \times \textbf{list}_\textbf{b} \rightarrow \textbf{list}_\textbf{b}$ et $\textbf{append} : \textbf{list}_\textbf{b} \times \textbf{list}_\textbf{b} \rightarrow \textbf{list}_\textbf{b}$.
+	\smallbreak
+	
+	On définit un calcul qui pour tout élément de type \textbf{b} retourne un élément de type $\textbf{list}_\textbf{b}$ tel que : 
+	\[\Gamma~|~K~\vdash~M~\textbf{handled~with}~H_{list}~\textbf{to}~x:\textbf{b}.\textbf{return~cons}(x,\textbf{nil}):F\textbf{list}_\textbf{b}\]
+
+	avec $H_{list}$ définit par :
+	\begin{align*}
+		\Gamma~|~K~\vdash~\{& \\
+		 &\textbf{fail}() \mapsto \textbf{return~nil},\\
+		 &\textbf{choose}(k_1,k_2) \mapsto k_1~\textbf{to}~l_1:\textbf{list}_\textbf{b}.k_2~\textbf{to}~l_2:\textbf{list}_\textbf{b}.\textbf{return}~\textbf{append}(l_1,l_2) \\
+		 &\}:F\textbf{list}_\textbf{b}~\textbf{handler}
+	\end{align*}
+
+	Voyons comment le gestionnaire fonctionne. 
+	\begin{enumerate}
+		\item[(1)] On considère que $M$ contient un symbole d'opération \textbf{choose}. Lorsque l'on va évaluer l'opération $\textbf{choose}(x,y)$, on va regarder si $M$ est géré. Ici, on a $H_{list}$. Ensuite on va voir dans $H_{list}$ si \textbf{choose} est géré. C'est le cas, on va donc calculer 
+		\[M_\textbf{choose} [x/k1,y/k2] = (k_1~\textbf{to}~l_1:\textbf{list}_\textbf{b}.k_2~\textbf{to}~l_2:\textbf{list}_\textbf{b}.\textbf{return}~\textbf{append}(l_1,l_2))[x/k1,y/k2]\]
+		
+		Deux choses à noter : la continuation n'est pas utilisé dans $M_\textbf{choose}$; on part du principe que les continuations $k_1$ et $k_2$ retourne un élément de type $\textbf{list}_\textbf{b}$.
+		
+		\item[(2)]On considère que $M$ contient un symbole d'opération \textbf{fail}. En suivant la même logique que ci-dessus, On va calculer
+		\[M_\textbf{fail} = \textbf{return~nil}\]
+		
+		Une fois encore la continuation n'est pas gardé. Il est important de noter qu'un chemin invalide retourne aussi un élément de type $\textbf{list}_\textbf{b}$.
+	\end{enumerate}
+\subsection{Timeout}
+
+	Le gestionnaire du \textit{timeout} donne un exemple de paramètre passé dans la continuation. On souhaite effectuer un calcul et attendre pour un certains temps donné. Si le calcul n'est pas compléter avant le temps donné alors on retourne une valeur par défaut. On représente le temps via une seule opération $\textbf{delay} : \textbf{nat} \rightarrow \textbf{1}$, telle que $\textbf{delay}_t(M)$ est le calcul qui attend un temps $t$ et ensuite effectue le calcul $M$. Pour tout type $A$, on a le gestionnaire $H_{timeout}$ suivant: 
+	\begin{align*}
+		\Gamma,x_0:A,t_{wait}:\textbf{nat}~|~K~\vdash~\{& \\
+		&\textbf{delay}_t(k:\textbf{nat} \rightarrow FA) \mapsto \lambda t_{spent} :\textbf{nat}.\\
+		&\textbf{if}~t+t_{spent} \leq t_{wait}\\
+		&\quad\textbf{then}~\textbf{delay}_t(k(t+t_{spent})~t_{spent})\\
+		&\quad\textbf{else}~\textbf{delay}_{t_{wait} - t_{spent}}(\textbf{return}~x_0) \\
+		&\}:\textbf{nat} \rightarrow FA~\textbf{handler}
+	\end{align*}
+	\newpage
+	
+	Le terme qui gère \textbf{delay} (que l'on va nommé $M_\textbf{delay}$) dépend de la variable $t_{spent}$, qui représente le temps que l'on a déjà attendu.
+	Si l'on souhaite utiliser ce gestionnaire, on va devoir lui spécifier un paramètre initial. On veut gérer $M:FA$ via $H_{timeout}$ or on a le calcul suivant :
+	\[\Gamma,x_0:A,t_{wait}:\textbf{nat}~|~K~\vdash~M~\textbf{handled~with}~H_{timeout}~\textbf{to}~x:A.\lambda t:\textbf{nat}.\textbf{return}~x:\textbf{nat} \rightarrow FA\]
+	
+	Le calcul géré est de type $\textbf{nat} \rightarrow FA$, on voit la nécessité du paramètre initial pour passer à un calcul géré de type $FA$.
+	\[\Gamma,x_0:A,t_{wait}:\textbf{nat}~|~K~\vdash~(M~\textbf{handled~with}~H_{timeout}~\textbf{to}~x:A.\lambda t:\textbf{nat}.\textbf{return}~x)~0:FA\]
+	
+	il est nécessaire d'ajouter une abstraction autour de $\textbf{return}~x$ car si on suppose que $M$ ne contient pas de symbole d'opération $\textbf{delay}$ alors on aura le calcul suivant : $(\lambda t:\textbf{nat}.\textbf{return}~x)~0:FA$. 
+	\bigbreak
+	
+	\begin{exemple}
+		On effectue le calcul ci-dessous avec $M = \textbf{delay}_5(t_2.(\textbf{return}~t_2 + 45))$ (on symbolisera le passage d'une étape de calcul via le symbole $\Rightarrow$ et les substitutions par $[x/y]$ où $x$ remplace $y$):
+		\begin{align*}
+			&~\lambda t_{wait}.(\lambda x_0.((M~\textbf{handled~with}~H_{timeout}~\textbf{to}~x.\lambda t.\textbf{return}~x)~0)~4)~20\\
+			\Rightarrow &~\lambda x_0.((M~\textbf{handled~with}~H_{timeout}~\textbf{to}~x.\lambda t.\textbf{return}~x)~0)~4~[20/t_{wait}]\\
+			\Rightarrow &~(M~\textbf{handled~with}~H_{timeout}~\textbf{to}~x.\lambda t.\textbf{return}~x)~0~[20/t_{wait},4/x_0]
+		\end{align*}
+		\bigbreak
+		\textbf{Rappel} : Pour évaluer un calcul géré, on évalue en premier $M$; ensuite on associe la valeur de retour de $M$ à $x$ et enfin on évalue $\lambda t.\textbf{return}~x$.
+		\bigbreak
+		Pour continuer on substitue $M$.
+		\[\Rightarrow (\textbf{delay}_5(t_2.(\textbf{return}~t_2 + 45))~\textbf{handled~with}~H_{timeout}~\textbf{to}~x.\lambda t.\textbf{return}~x)~0~[20/t_{wait},4/x_0]\]
+	
+		\textbf{delay} est un symbole d'opération géré par $H_{timeout}$. On va donc prendre le terme gérant $M_\textbf{delay}$. Pour alléger l'écriture des substitutions ci-après on définit $conti$ telle que 
+		\[conti = (\textbf{return}~t_2 + 45)[t + t_{spent}/t2]~\textbf{handled~with}~H_{timeout}~\textbf{to}~x.\lambda t.\textbf{return}~x~[20/t_{wait},4/x_0]\]
+		
+		
+		On se retrouve avec le calcul suivant :
+		\begin{align*}
+			\Rightarrow &~\textbf{(}\lambda t_{spent}.\textbf{if}~t+t_{spent} \leq t_{wait}~\textbf{then}~\textbf{delay}_t(k(t+t_{spent})~t_{spent})~\textbf{else}~\textbf{delay}_{t_{wait} - t_{spent}}(\textbf{return}~x_0)\\
+			&~[conti/k(t + t_{spent}),5/t]\textbf{)}~0~[20/t_{wait},4/x_0]\\\\
+			\Rightarrow &~\textbf{(}\lambda t_{spent}.\textbf{if}~5+t_{spent} \leq 20~\textbf{then}~\textbf{delay}_5(k(5+t_{spent})~t_{spent})~\textbf{else}~\textbf{delay}_{20 - t_{spent}}(\textbf{return}~4)\\
+			&~[conti/k(5 + t_{spent}),5/t]\textbf{)}~0~[20/t_{wait},4/x_0]\\\\
+			\Rightarrow &~\textbf{if}~5 \leq 20~\textbf{then}~\textbf{delay}_5(k(5)~0)~\textbf{else}~\textbf{delay}_{20}(\textbf{return}~4)~[0/t_{spent},conti/k(5),5/t,20/t_{wait},4/x_0]\\
+			\Rightarrow &~\textbf{delay}_5(k(5)~0) [conti/k(5),20/t_{wait},4/x_0]
+		\end{align*}
+		\bigbreak
+		
+		À ce niveau là, \textbf{delay} n'est pas géré donc on effectue juste l'opération.
+		\begin{align*}
+			\Rightarrow &~k(5)~0~[conti/k(5),20/t_{wait},4/x_0]\\
+			\Rightarrow &~\textbf{(}\textbf{return}~5 + 45 ~\textbf{handled~with}~H_{timeout}~\textbf{to}~x.\lambda t.\textbf{return}~x\textbf{)}~0~[20/t_{wait},4/x_0]\\
+			\Rightarrow &~\textbf{(}\lambda t.\textbf{return}~x\textbf{)}~0~[50/x,20/t_{wait},4/x_0]\\
+			\Rightarrow &~\textbf{return}~50~[0/t,50/x,20/t_{wait},4/x_0]
+		\end{align*}
+	\end{exemple}
+	
+\newpage
+\subsection{Rollback}
+
+	Quand un calcul provoque une levée d'exception, il est primordial d'annuler toute modification faite dans la mémoire. Ce comportement est nommé \textit{rollback}. On va supposer que l'on a qu'un seul emplacement (pour plus de simplicité) $l_0$. Un gestionnaire approprié pour le \textit{rollback}, $H_{rollback}$, est définit par : 
+	\[\Gamma,n_{init}:\textbf{nat}~|~K~\vdash~\{ \textbf{raise}_e(k) \mapsto \textbf{set}_{l_0,n_{init}}(M'~e) \} :\underline{C}~\textbf{handler}\]
+		
+	où $M' : \textbf{exc} \rightarrow \underline{C}$. On doit donner la valeur initial de l'emplacement $l_0$ pour le retour en arrière. Pour cela, on définit un calcul géré par $H_{rollback}$ par :
+	\[\Gamma~|~K~\vdash~\textbf{get}_{l_0}(n_{init}:\textbf{nat}.M~\textbf{handled~with}~H_{rollback}) :\underline{C}\]
+	Une alternative est un gestionnaire avec passage de paramètre, qui ne modifie pas la mémoire, mais garde la trace de tous les changements effectués dans $M$. Si aucune exception est levée alors on met à jour l'emplacement. Ce gestionnaire $H_{param-rollback}$ est défini par : 
+	\begin{align*}
+		\Gamma~|~K~\vdash~\{ &\\
+		&\textbf{get}_{l_0}(k:\textbf{nat} \rightarrow (\textbf{nat} \rightarrow \underline{C})) \mapsto \lambda n:\textbf{nat}.k(n)~n\\
+		&\textbf{set}_{l_0,n'}(k:\textbf{1} \rightarrow (\textbf{nat} \rightarrow \underline{C})) \mapsto \lambda n:\textbf{nat}.k()~n'\\
+		&\textbf{raise}_e() \mapsto \lambda n:\textbf{nat}.M'~e\\
+		&\} : \textbf{nat} \rightarrow \underline{C}~\textbf{handler}
+	\end{align*}
+ 
+ 	Il est utilisable sur le calcul $M$ suivant :
+ 	\[\Gamma~|~K~\vdash~\textbf{get}_{l_0}(n_{init}:\textbf{nat}.(M~\textbf{handled~with}~H_{rollback}~\textbf{to}~x:A.\lambda n:\textbf{nat}.\textbf{set}_{l_0,n}(\textbf{return}~x))~n_{init})\]
+ 	On récupère la valeur initial de l'emplacement $l_0$ que l'on associe à la variable $n_{init}$. Si aucune exception n'est levée alors on met à jour l'emplacement $l_0$.
+ 	
+ 	
+	

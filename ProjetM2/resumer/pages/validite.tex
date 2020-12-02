@@ -1,0 +1,83 @@
+Décider de la validité d'un gestionnaire est une question intéressante qui peut être pertinente pour les développeur de compilateur. Dans cette section, on va montrer quelques résultat sans donner leurs preuves.
+\newpage
+
+\begin{definition}
+	Un gestionnaire $\Gamma~|~K \vdash H:\underline{C}~\textbf{handler}$ est \textbf{simple} si
+	
+	\begin{enumerate}
+		\item[$\circ$] en réorganisant, $\Gamma$ a la forme 
+		\[x_1:\alpha_1,...,x_m:\alpha_m,f_1:U(\beta_1 \rightarrow \underline{C}),...,f_n:U(\beta_n \rightarrow \underline{C})\]
+		
+		\item[$\circ$] en réorganisant, $K$ a la forme
+		\[k_1':\beta_1' \rightarrow \underline{C},...,k_p':\beta_p' \rightarrow \underline{C}\]
+		
+		\item[$\circ$] et pour tout $\textbf{op}: \alpha \rightarrow \beta$, il y a un patron
+		\[x_1:\alpha_1,...,x_m:\alpha_m,x:\alpha~|~z_1:\beta_1,...,z_n:\beta_n,z_1':\beta_1',...,z_p':\beta_p',z:\beta \vdash T_\textbf{op}\]
+		
+		tel que le terme gérant 
+		\[\Gamma,x:\alpha~|~K,k:\beta \rightarrow \underline{C} \vdash M_\textbf{op}:\underline{C}\]
+		
+		est obtenu par la substitution de $T_\textbf{op}$ qui remplace tous les $x_i$ par eux-même, $x$ par lui-même, tous les $z_j$ par $(y_j:\beta_j.(\textbf{force}~f_j)~y_j)$, tous les $z_l'$ par $(y_l':\beta_l'.k_l'(y_l'))$ et $z$ par $(y:\beta.k(y))$.
+	\end{enumerate}
+\end{definition}
+
+Le gestionnaire $H_{Temporary}$ (Exemple \ref{get2}) est \textbf{simple}, aucun des gestionnaires avec des paramètres passés sont simple car ils contiennent tous une lambda abstraction dans leur terme gérant. Le gestionnaire d'exception 
+\[\{\textbf{raise}_{y:exc}(k:\textbf{0} \rightarrow \underline{C}) \mapsto \textbf{match}~y~\textbf{with}~\{e(z) \mapsto N_e\}_{e \in \textbf{exc}}\}\] 
+
+n'est pas simple. Toutefois, on peut utiliser le gestionnaire simple
+\[f:U(\textbf{exc} \rightarrow \underline{C}) \vdash \{\textbf{raise}_{e : \textbf{exc}}(k:\textbf{0} \rightarrow \underline{C}) \mapsto (\textbf{force}~f)~e\}\]
+
+avec  $f$ la fonction bloquée tel que 
+	\[f = \lambda y:\textbf{exc}.\textbf{match}~y~\textbf{with}~\{e(z) \mapsto N_e\}_{e \in \textbf{exc}}\]
+	
+	
+Ce gestionnaire a le même comportement que celui définit plus haut.
+
+\begin{remark}
+	Une signature est \textbf{simple} si elle n'a pas de types de base et pas de symboles de fonction. Les signatures données pour les exceptions est sont simple mais pas pour les états.
+\end{remark}
+
+\begin{theorem}
+	Le problème de décision, en prenant une signature simple, une théorie d'effet, un simple gestionnaire clos $\vdash H:F\textbf{0~handler}$, sachant que le gestionnaire est correct, est $\Pi_2$-$\textbf{complet}$.
+\end{theorem}
+
+La nature polymorphique des variables de patron signifie que les patrons peuvent définir une famille entière de gestionnaire, une pour chaque type de calcul. Cela nous amène à la définition d'une famille de gestionnaire uniformément simple.
+
+\begin{definition}
+	Une famille de gestionnaire $\{\Gamma_{\underline{C}}~|~K_{\underline{C}} \vdash H_{\underline{C}}:\underline{C}~\textbf{handler}\}_{\underline{C}}$, avec $\underline{C}$ l'ensemble des types de calcul, est \textbf{uniformément simple} si
+	
+	\begin{enumerate}
+		\item[$\circ$] en réorganisant, $\Gamma_{\underline{C}}$ a la forme 
+		\[x_1:\alpha_1,...,x_m:\alpha_m,f_1:U(\beta_1 \rightarrow \underline{C}),...,f_n:U(\beta_n \rightarrow \underline{C})\]
+		
+		\item[$\circ$] en réorganisant, $K_{\underline{C}}$ a la forme
+		\[k_1':\beta_1' \rightarrow \underline{C},...,k_p':\beta_p' \rightarrow \underline{C}\]
+		
+		\item[$\circ$] et pour tout $\textbf{op}: \alpha \rightarrow \beta$, il y a un patron
+		\[x_1:\alpha_1,...,x_m:\alpha_m,x:\alpha~|~z_1:\beta_1,...,z_n:\beta_n,z_1':\beta_1',...,z_p':\beta_p',z:\beta \vdash T_\textbf{op}\]
+		
+		tel que le terme gérant 
+		\[\Gamma_{\underline{C}},x:\alpha~|~K_{\underline{C}`},k:\beta \rightarrow \underline{C} \vdash M_\textbf{op}:\underline{C}\]
+		
+		est obtenu par la substitution de $T_\textbf{op}$ qui remplace tous les $x_i$ par eux-même, $x$ par lui-même, tous les $z_j$ par $(y_j:\beta_j.(\textbf{force}~f_j)~y_j)$, tous les $z_l'$ par $(y_l':\beta_l'.k_l'(y_l'))$ et $z$ par $(y:\beta.k(y))$.
+	\end{enumerate}
+\end{definition}
+\newpage
+
+Il est évident que tous les gestionnaires du famille uniformément simple sont simple. Corollairement, tous les gestionnaires simple, via l'aspect polymorphique des variables de patron, peuvent définir une famille uniformément simple. Dans ceux vu en amont, le gestionnaire $H_{Temporary}$ est uniformément simple. Tous ceux qui sont définit pour un type de calcul précis (ex \textbf{F0}) ne sont pas uniformément simple.
+
+\begin{definition}
+	Une famille de gestionnaires $\{\Gamma_{\underline{C}}~|~K_{\underline{C}} \vdash H_{\underline{C}}:\underline{C}~\textbf{handler}\}_{\underline{C}}$ pour une signature donnée, avec $\underline{C}$ l'ensemble des calculs, est \textbf{correct} si chaque gestionnaire de la famille est correct.
+\end{definition}
+
+Sachant qu'une famille de gestionnaires uniformément simple ne peut utiliser les propriétés d'un type de calcul spécifique, cela ne peut pas être aussi artificiel qu'une famille de gestionnaire arbitraire. On peut cependant s'attendre à ce que la preuve de la validité soit plus simple. La validité peut devenir \textbf{semi-décidable}.
+
+\begin{theorem}
+	Le problème de décision, avec une signature donnée, une théorie d'effet et une famille de gestionnaires $\{\vdash H_{\underline{C}}:\underline{C}~\textbf{handler}\}_{\underline{C}}$ close uniformément simple, sachant que la famille est correct, est $\sum_1$-\textbf{complet}.
+\end{theorem}
+
+Les théories d'effet, avec une signature simple, correspondent à des théories d'équations finies ordinaire. Ceci étant, on peut transférer la notion de décidabilité sur eux. Avec ça on peut dire :
+
+\begin{theorem}
+	Le problème de décision, avec une signature donnée, une théorie d'effet décidable et une famille de gestionnaires $\{\vdash H_{\underline{C}}:\underline{C}~\textbf{handler}\}_{\underline{C}}$ close uniformément simple, sachant que la famille est correct, est \textbf{décidable}.
+\end{theorem}
