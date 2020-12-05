@@ -1,8 +1,18 @@
-	Le pionnier dans la gestion des effets algébriques est \textbf{Eugenio Moggi}. Il proposa une représentation uniforme de calcul d'effets par les \textbf{Monades} \cite{DBLP:conf/ac/BentonHM00}.
+	Le pionnier dans la gestion des effets algébriques est \textbf{Eugenio Moggi}. Il proposa une représentation uniforme de calcul d'effets grâce aux \textbf{Monades} \cite{DBLP:conf/ac/BentonHM00}. 
+	Cette représentation est utilisé dans le langage \textbf{Haskell}.
 	
-	\begin{exemple}
-		On prend un ensemble de catégorie $A$. Un calcul qui retourne une valeur $a \in A$ est modélisé par $ta \in TA$ pour une monade $T$ correspondante.
-	\end{exemple}
+	\begin{definition}
+		Une \textbf{Monade} est une structure permettant de manipuler les langages fonctionnels purs
+		avec des traits impératifs.
+		On peut représenter une monade comme un triplet constitué de : 
+		\begin{enumerate}
+			\item un \textbf{constructeur de type} appelé \textit{type monadique}, qui associe au type $t$ le type $Mt$.
+			\item une \textbf{fonction $unit/return$} qui construit à partir d'un élément de type 
+			sous-jacent $a$ un autre élément de type monadique $Ma$. Cette fonction a la signature suivante : $unit/return~:~t \rightarrow Mt$.
+			\item une \textbf{fonction $bind$}, représenté par l'opérateur infixe $>>=$, associant à un type monadique
+			et une fonction d'association un autre type monadique. Cette opérateur à la signature suivante : $>>=~:~Mt \rightarrow (t \rightarrow Mu) \rightarrow Mu$.
+		\end{enumerate}
+	\end{definition}
 
 	Les effets et leurs gestions sont utiles pour représenter les exceptions, les états mémoires, le non-déterminisme, les I/O, etc. \textbf{Moggi} ne fut pas le seul à proposer une gestion des effets, en effet \textbf{Plotkin et Power} proposerons plus tard une représentation basée sur un ensemble d'opérations qui représente la sources des effets et une théorie d'équations, pour ces dites opérations, qui décrit leurs propriétés.
 	
@@ -15,19 +25,19 @@
 		On a deux possibilités : soit on continue avec le calcul donné par le première argument soit on continue avec le calcul donné par le second.
 	\end{exemple}
 
-	Les deux représentations permettent de géré les effets et on peut passer d'une représentation à l'autre. Les effets représentables par une monade et une représentation équationnelle sont appelés \textbf{effets Algébriques}. Tous les effets cités ci-dessus sont algébriques.
+	Les deux représentations permettent de géré les effets et il est possible de passer d'une représentation à l'autre pour la plupart des effets. Ces effets sont appelés \textbf{effets Algébriques}. Les exemples utilisés sont algébriques.
 	\medbreak
 	
 	La vision algébrique des effets a permis de les combiner et de raisonner dessus. Cependant, le gestionnaire d'exception apporte un challenge.
 	\smallbreak
 	
-	Soit la monade $\_ + \textbf{exc}$ pour l'ensemble des exceptions $\textbf{exc}$. Cette monade est représentée par une opération $\textbf{raise}_e()$ pour chaque $e \in \textbf{exc}$ et aucune équations. $\textbf{raise}_e()$ ne prend par d'arguments et il n'y a pas de continuation directement après une levée d'exception. Maintenant la monade définit, comment créer le gestionnaire d'exception ? L'approche la plus simple est la suivante:
+	Soit la monade $\_ + \textbf{exc}$ pour l'ensemble des exceptions $\textbf{exc}$. Cette monade est représentée par une opération $\textbf{raise}_e()$ pour chaque $e \in \textbf{exc}$ et aucune équations. $\textbf{raise}_e()$ ne prend par d'arguments et il n'y a pas de continuation directement après une levée d'exception. Maintenant la monade défini, comment créer le gestionnaire d'exception ? L'approche commune est la suivante:
 	\[\textbf{handle}_e(M,N)\]
 		
 	$M$ s'effectue à moins qu'une exception $e$ soit levée, dans ce cas on effectue $N$. Cette construction binaire manque d'une certaine propriété caractérisant les opérations spécifiés dans les équations qui les décrivent.
 	
 	\begin{exemple}
-		Ce qui est décrit ci-dessus correspond à l'opération de commutation avec le contexte d'évaluation $\varepsilon[\_]$.\\
+		Cette propriété correspond à l'opération de commutation avec le contexte d'évaluation $\varepsilon[\_]$.\\
 		On aimerait garder les équations suivantes : 
 		\begin{align*}
 			\varepsilon[\textbf{choose}(M,N)] &= \textbf{choose}(\varepsilon[M],\varepsilon[N]) & \varepsilon[\textbf{raise}_e()] &= \textbf{raise}_e()\\
@@ -44,7 +54,16 @@
 		\item la sémantique des gestionnaires est donné à l'aide d'homomorphismes uniques qui ciblent de tels modèles et est induit par la propriété universelle du modèle libre. 
 	\end{enumerate}
 
-	La construction habituelle des gestionnaires d'exceptions correspond à l'application d'un homomorphisme unique qui préserve la valeur de retour. Ici, on adopte une vision plus générale suggéré par Benton et Kennedy. Dans leur approche, la valeur de retour est passé à la continuation définit par l'utilisateur. Cette idée se généralise à tous les effets algébrique, permettant à un nouveau concept de programmation de gérer les effets algébriques. Conceptuellement, les opérations algébriques et les gestionnaires d'effets sont duals : le premier peut être nommé \textit{constructeur d'effets} car il crée l'effet et le second peut être nommé \textit{destructeur d'effets} car il produit un calcul en lien avec l'effet créé.
+	On souhaite adopte une vision générale suggéré par Benton et Kennedy. Dans leur approche, la valeur de retour est passé à la continuation définit par l'utilisateur. Cette idée se généralise à tous les effets algébrique, permettant à un nouveau concept de programmation de gérer les effets algébriques. 
+	
+	Conceptuellement, les opérations algébriques et les gestionnaires d'effets sont duals : le premier peut être nommé \textit{constructeur d'effets} car il crée l'effet et le second peut être nommé \textit{destructeur d'effets} car il produit un calcul en lien avec l'effet créé.
 	\smallbreak
 	
-	Le but est de résumer l'article en gardant le maximum d'informations tout en omettant les parties les plus compliqués ou en les simplifiant. On va suivre les sections présentent dans l'article de base. Les 3 premières sections seront résumé tout en restant assez authentique au matériau d'origine. La section 4 utilise la théorie des catégorie et parle de l'interprétation de la théorie des effets. Cette partie étant hors de ma portée je n'en parlerait pas. Après cela, les sections 5 et 6 parlent de la décidabilité et du raisonnement des gestionnaires. On restera assez proche de ce qui est dit dans l'article. Et enfin, la section 7 sera à peine évoqué car elle traite la récursion qui est certes intéressante mais pas centrale dans l'article. 
+	Le projet recherche a pour but de choisir un article et de le résumer. Mon résumé restera fidèle à l'article en gardant
+	la forme du papier tout en allègeant le fond. En effet, il m'est plus important de montrer le concept général via des exemples ainsi
+	que les résultats importants sur la validité des gestionnaires que d'expliquer la logique mathématique interne.
+
+	De plus, le projet recherche étant lié à un autre module projet, je vais ajouter une plus-value à mon résumer. Durant ma 
+	1ère année de master, j'ai eu l'occasion d'implémenter une représentation des effets algébrique dans un noyau de langage fonctionnel créé lors de mon stage de fin de licence. Je vais donc profiter d'une section supplémentaire pour comparer les deux approches.
+	
+	
