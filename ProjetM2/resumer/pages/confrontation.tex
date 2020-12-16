@@ -1,0 +1,79 @@
+La section qui va suivre va confronter le langage proposé dans l'article avec 
+le langage créé avec M. Dabrowski et Mme. Bousdira : \textbf{erpl}. C'est un langage
+fonctionnel avec des traits impératifs reprenant la syntaxe d'Ocaml. Les effets algébrique
+ont été ajouté dans ce langage mais avec une autre implémentation. Toute la partie qui va
+suivre sera informelle et les principes mathématiques seront écartés. Le but étant de confronter
+les idées et l'implémentation. Ainsi que les potentiels problèmes liés à une implémentation du
+langage proposé dans l'article.
+
+\subsection{Point sur la représentation des effets dans la syntaxe}
+
+L'article propose une extension du langage décrit dans \cite{DBLP:journals/lisp/Levy06} en ajoutant trois termes afin de gérer les effets algébrique :
+\begin{align*}
+    une~structure~de~gestion &:~~M~\textbf{handled~with}~H~\textbf{to}~x:A.N\\
+    une~operation~instigatrice~des~effets &:~~\textbf{op}_V(x:\beta.M)\\
+    un~gestionnaire &:~~\{\textbf{op}_{x:\alpha}(k:\beta \rightarrow \underline{C}) \mapsto M_\textbf{op}\}_{\textbf{op}:\alpha \rightarrow \beta}
+\end{align*}
+
+L'\textbf{erpl} propose, quant à lui, part du langage Ocaml en allègé et ajoute trois termes similaire :
+\begin{align*}
+    une~structure~de~gestion &:~~\textbf{handle}~M~\textbf{with}~H\\
+    une~operation~instigatrice~des~effets &:~~\textbf{perform}~V\\
+    un~gestionnaire &:~~\{l(x_l),(k:\beta \rightarrow \underline{C}) \mapsto M_\textbf{l}\}_{l \in L}
+\end{align*}
+
+Première remarque que l'on peut se faire est que pour deux langages différents ont a le même nombre de 
+termes ajouté. On peut interpréter cela comme l'ajout minimum nécessaire pour travailler avec des effets
+algébrique.
+
+\subsection{Représentation divergente}
+
+Il faut mettre au clair plusieurs point. 
+
+Premièrement, les deux langages n'ont pas été créé de la même façon.
+Le langage de l'article prend à coeur le côté mathématique de la gestion des effets, ce qui a pour conséquence
+un langage plus lourd mais aussi plus général. De son côté, le langage \textbf{erpl} a été conçu surtout pour 
+avoir un langage dérivant de l'Ocaml plus léger. Il n'avait pas pour but de généraliser un concept.
+
+Deuxièmement, le temps de travail sur les deux langages est tout à fait inégal. Le langage \textbf{erpl} est le fruit d'un 
+an de travail avec une pause entre deux.
+
+Dernièrement, les concept du langage \textbf{erpl} a été donnée par un chercheur mais l'implémentation a été laissé
+à un stagiaire, or je vais m'appuyer sur son travail pour confronter les langages. Il est possible que l'état actuel
+du langage diverge un peu de ce qui est voulu au final.
+
+Malgré cela, il est intéressant de voir la différence entre deux langages qui utilisent le même principe mais ayant des buts 
+différents.
+
+\paragraph{La structure de gestion} Il n'y a pas grande différence entre les deux langages sur ce point.
+On peut noter qu'aucun n'est tombé dans le travers de la structure de gestion binaire qui ne respecte pas
+les propriétés implicites (voir l'Exemple \ref{exEval}). 
+
+La seule différence notable est l'affectation du résultat de l'évaluation de la strucutre de  gestion
+à une variable $x$ utilisé pour un autre terme $N$.
+
+\[M~\textbf{handled~with}~H~\underline{\textbf{to}~x:A.N}\]
+
+Dans le langage \textbf{erpl}, on part du principe que la structure va se réduire à une valeur ou une fonction que l'on
+pourra associer si on veut. Si on veut avoir un terme équivalent à celui ci-dessus, on écrira :
+
+\[ \textbf{let}~x =~(\textbf{handle}~M~\textbf{with}~H)~\textbf{in}~N \]
+
+\paragraph{L'opération instigatrice} La source des effets est différents dans les deux langages.
+
+
+D'un côté, le langage de l'article a choisi les opérations $\textbf{op}_V(x:\beta.M)$ comme source des effets.
+Ce choix est intéressant et limitant à la fois. Il permet de limité les effets à un ensemble finis d'opérations
+prédéfinis par le créateur du langage. On a un contrôle plus fort sur ce qui provoque les effets et de plus leurs
+utilisation est totalement transparente. En effet, une opération à un double effet, soit il va effectuer ce que l'opération
+est censée faire soit elle va provoqué un effet (ce point sera rediscuté plus bas).
+
+De l'autre, le langage \textbf{erpl} s'inspire plus des \textbf{Monades} en prenant comme source les types. Cela ouvre
+plus de possible (une infinité même) car l'utilisateur peut créer un type et le voir comme un effet. Cependant, un type ne va
+pas "activé" un gestionnaire, pour palier à cela on a le mot-clé $\textbf{perform}$. En plus d'avoir plus de possibilités
+on peut décider quand un effet va être "activé" ou non via le mot-clé alors que dans le langage de l'article chaque opération 
+va être vérifié par un gestionnaire. 
+
+\subsection{Fonctionnement et exemple}
+
+\subsection{Difficultés inhérentes au langage proposé dans l'article}

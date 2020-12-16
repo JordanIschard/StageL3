@@ -1,14 +1,25 @@
 On commence l'étude sur la gestionnaire des exceptions, d'une part pour comprendre le principe et d'autre part c'est un effet simple. La section est écrite de manière informelle.
 \medbreak
 
-On considère un ensemble fini d'exceptions $\textbf{exc}$, un second ensemble $A$ et une monade d'exception $TA$ telle que $TA \overset{\textbf{def}}{=} A + \textbf{exc}$. Un calcul retournant une valeur $a \in A$ est modélisé par un élément $ta \in TA$. Cette monade a pour unité $\eta_A : A \rightarrow A + \textbf{exc}$, et le calcul $return(V)$ est interprété par $\eta_A(V)$ tandis que $\textbf{raise}_e()$ est interprété par $in_2(e)$.
+On considère un ensemble fini d'exceptions $\textbf{exc}$, un second ensemble $A$ et 
+une monade d'exception $TA$ telle que $TA \overset{\textbf{def}}{=} A + \textbf{exc}$ 
+(avec $A + \textbf{exc}$ l'union disjointe des deux ensembles). 
+
+Un calcul retournant une valeur $a \in A$ est modélisé par un élément $ta \in TA$. 
+Cette monade a pour unité $\eta_A : A \rightarrow A + \textbf{exc}$, et le calcul 
+$return(V)$ est interprété par $\eta_A(V)$ tandis que $\textbf{raise}_e()$ est 
+interprété par $in_2(e)$ (une fonction injection de $A + \textbf{exc}$ vers \textbf{exc}).
 
 \subsection{Construction des gestionnaires étendus}
 
 	Benton et Kennedy ont généralisé la construction des gestionnaires avec la forme suivante :
 	\[M~\textbf{handled~with} \{\textbf{raise}_e() \mapsto N_e\}_{e \in \textbf{exc}}~\textbf{to}~ x:A.N(x)\]
 	
-	avec $\{...\}_{e \in \textbf{exc}}$ représentant l'ensemble des calculs, un pour chaque $e \in \textbf{exc}$. Dans cette construction, on effectue le calcul de $M \in A + \textbf{exc}$. Si on lève une exception $e \in \textbf{exc}$ alors on effectue un calcul $N_e$ qui retourne un élément de $B$ (où $B$ peut différer de $A$). Sachant que $N_e$ peut lui même lever une exception alors $N_e \in B + \textbf{exc}$. Les valeurs retournées par le gestionnaire sont passées dans une continuation défini par l'utilisateur $N : A \rightarrow B + \textbf{exc}$. La construction satisfait 2 équations :
+	avec $\{...\}_{e \in \textbf{exc}}$ représentant l'ensemble des calculs, un pour chaque $e \in \textbf{exc}$. Dans cette construction, 
+	on effectue le calcul de $M \in A + \textbf{exc}$. Si on lève une exception 
+	$e \in \textbf{exc}$ alors on effectue un calcul $N_e$ qui retourne un élément de $B$
+	(où $B$ peut différer de $A$). Sachant que $N_e$ peut lui même lever une exception 
+	on en déduit que $N_e \in B + \textbf{exc}$. Les valeurs retournées par le gestionnaire sont passées dans une continuation défini par l'utilisateur $N : A \rightarrow B + \textbf{exc}$. La construction satisfait 2 équations :
 	\begin{align*}
 		\textbf{return} ~V~\textbf{handled~with} \{\textbf{raise}_e() \mapsto N_e\}_{e \in \textbf{exc}}~\textbf{to}~ x:A.N(x) &= N(V)\\
 		\textbf{raise}_{e'}()~\textbf{handled~with} \{\textbf{raise}_e() \mapsto N_e\}_{e \in \textbf{exc}}~\textbf{to}~ x:A.N(x) &= N_{e'}
@@ -34,7 +45,7 @@ On considère un ensemble fini d'exceptions $\textbf{exc}$, un second ensemble $
 		\end{tikzpicture}
 	\end{center}
 	
-	Notons que tous les homomorphismes d'un modèle libre vers un modèle pour un porteur donné sont obtenus de cette manière. Donc la construction proposé par Benton et Kennedy est le plus général possible d'un point de vue algébrique.
+	La construction proposé par Benton et Kennedy est le plus général possible d'un point de vue algébrique.
 
 	\subsection{Gestion des effets algébriques arbitraires}
 	
