@@ -63,17 +63,72 @@ pourra associer si on veut. Si on veut avoir un terme équivalent à celui ci-de
 
 
 D'un côté, le langage de l'article a choisi les opérations $\textbf{op}_V(x:\beta.M)$ comme source des effets.
-Ce choix est intéressant et limitant à la fois. Il permet de limité les effets à un ensemble finis d'opérations
-prédéfinis par le créateur du langage. On a un contrôle plus fort sur ce qui provoque les effets et de plus leurs
+Ce choix est intéressant et limitant à la fois. Il permet de limité les effets à un ensemble fini d'opérations décidé par le créateur du langage. On a un contrôle plus fort sur ce qui provoque les effets et de plus leurs
 utilisation est totalement transparente. En effet, une opération à un double effet, soit il va effectuer ce que l'opération
-est censée faire soit elle va provoqué un effet (ce point sera rediscuté plus bas).
+est censée faire soit elle va provoquer un effet (ce point sera rediscuté plus bas).
 
 De l'autre, le langage \textbf{erpl} s'inspire plus des \textbf{Monades} en prenant comme source les types. Cela ouvre
 plus de possible (une infinité même) car l'utilisateur peut créer un type et le voir comme un effet. Cependant, un type ne va
 pas "activé" un gestionnaire, pour palier à cela on a le mot-clé $\textbf{perform}$. En plus d'avoir plus de possibilités
-on peut décider quand un effet va être "activé" ou non via le mot-clé alors que dans le langage de l'article chaque opération 
-va être vérifié par un gestionnaire. 
+on peut décider quand un effet va être "activé" ou non via le mot-clé alors que dans le langage de l'article chaque, opération 
+va être vérifié par un gestionnaire. l'application d'un effet est cependant explicite dans le langage \textbf{erpl}.
+
+La gestion de la continuation est elle aussi différente, nous la développerons plus bas.
+
+\paragraph{Le gestionnaire} La différence du gestionnaire vient de la source de l'effet. À part ça, leur Fonctionnement
+est le même.
 
 \subsection{Fonctionnement et exemple}
 
+On rappelle le fonctionnement de la structure de gestion pour le langage de l'article. On suppose
+le terme suivant : 
+    \[M~\textbf{handled~with}~H~\textbf{to}~x:A.N\]
+avec $\textbf{op}_V(y.M') \in M$ et $\{\textbf{op}_z(k) \mapsto M_\textbf{op}\} \in H$. Lorsque l'effet
+est "activé", on évalue $M_\textbf{op}$ avec des subsitutions comme suit : 
+    \[M_\textbf{op}[V/z,M'[W/y]~\textbf{handled~with}~H~\textbf{to}~x:A.N/k(W)]\]
+\bigbreak
+
+Le langage \textbf{erpl} suit la même logique de subsitution. On définit le terme suivant :
+    \[\textbf{handle}~M~\textbf{with}~H\]
+avec $\textbf{perform}~l(x) \in M$ et $\{ l(y),k \mapsto M_l\} \in H$. On évalue l'"activation" de l'effet de
+la manière suivante : 
+    \[M_l[l(x)/l(y),\textbf{handle}~M[W/\textbf{perform}~l(x)]~\textbf{with}~H/k(W)]\]
+
+
+Les deux langages fonctionnent de manière similaire et il est possible de représenter le même effet
+avec les deux langages. Une restriction existe, à la différence du langage de l'article, en \textbf{erpl}
+un seul appel à la continuation est possible dans le terme gérant.
+
+\begin{exemple}
+    On va reproduire l'effet de l'Exemple \ref{get2} et recréer l'expression de l'Exemple \ref{get3}. 
+    Le langage \textbf{erpl} ayant ces termes proches de l'Ocaml, je vais simplifier l'exemple en 
+    écrivant la suite en \textbf{erpl} pour le confort de tous (les points spécifiques au langage seront expliqués).
+    
+
+    \begin{verbatim}
+        (** 
+            On commence par créer notre type qui va être source de l'effet. 
+            Pour cela on créer un type 
+        *)
+        type memory = Get of 'a ref -> 'a | Set of 'a ref * 'a -> unit;;
+
+        (**
+            Ensuite on définit l'expression. En erpl, un gestionnaire prend
+            une succession de filtre comme pour les match.
+        *)
+        let get = Get(fun x -> !x) and n = 20 in
+        handle ((fun x -> fun y -> x + y + 2) (perform (get,l))) (perform (get,l)) 
+        with (Get f,x),k -> k n ;;
+    \end{verbatim}
+
+\end{exemple}
+
 \subsection{Difficultés inhérentes au langage proposé dans l'article}
+
+Le langage utilise une propriété qui peut être compliqué à mettre en place. Lorsqu'une opération
+n'est pas géré, elle se gère elle-même. Intuitivement, lors de l'implémentation d'une telle propriété
+on peut se dire que l'on va créé un gestionnaire global qui va récupérer tous les effets non capté auparavant
+et lui appliquer son "effet de base". Hors si on ajoute ce gestionnaire global, c'est lors de la compilation et 
+ce gestionnaire sera dans le langage de base. Mais pour une opération comme $\textbf{get}$ ou encore $\textbf{delay}$ 
+cela implique un appel système. Cela pose problème. Il faudrait donc modifier la machine abstraite pour pouvoir
+implémenter cette option se qui rajoute un travail conséquent.
