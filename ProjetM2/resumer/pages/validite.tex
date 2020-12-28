@@ -37,6 +37,37 @@ Ce gestionnaire a le même comportement que celui définit plus haut.
 	Une signature est \textbf{simple} si elle n'a pas de types de base et pas de symboles de fonction. Les signatures données pour les exceptions est sont simple mais pas pour les états.
 \end{remark}
 
+\begin{remark}
+	Dans la suite, on va parler de la hiérarchie arithmétique. Un petit point s'impose.
+
+	Dans la théorie de la calculabilité, la hiérarchie arithmétique est une hiérarchie des sous-ensembles de $\mathbb{N}$ 
+	définissables dans le langage du premier ordre de l'arithmétique de Peano. Un ensemble d'entiers est classé suivant 
+	les alternances de quantificateurs d'une formule sous forme prénexe qui permet de le définir. 
+
+
+	L'alternance des quantificateurs est séparé en 2 classes : $\sum$ et $\Pi$. Au niveau 0, ces deux classes sont
+	identique. On peut définir, le reste des niveaux inductivement.
+	\medbreak
+
+	Pour un entier naturel n non nul:
+	\begin{enumerate}
+		\item[$\circ$] Si $A$ est une formule $\sum_0$ (ou $\Pi_0$), $\exists x~A$ est une formule $\sum_1$ 
+		et $\forall x~A$ une formule $\Pi_1$ ;
+		\item[$\circ$] Si $S$ est une formule $\sum_n$, si $P$ est une formule $\Pi_n$, et si $x$ est une variable 
+		quelconque alors :
+		\begin{itemize}
+			\item $\exists x$ $S$ reste $\sum_n$ ;
+			\item $\exists x$ $P$ est une formule $\sum_{n+1}$ ;
+			\item $\forall x$ $S$ est une formule $\Pi_{n+1}$ ;
+			\item $\forall x$ $P$ reste $\Pi_n$.
+		\end{itemize}
+	\end{enumerate}
+
+	
+	J'ai donné la définition de base, pour en savoir plus n'hésitez pas à aller voir le cours de \href{https://www.irif.fr/~roziere//m2cf2/}{l'irif}.
+    
+\end{remark}
+
 \begin{theorem}
 	Le problème de décision, en prenant une signature simple, une théorie d'effet, un simple gestionnaire clos $\vdash H:F\textbf{0~handler}$, sachant que le gestionnaire est correct, est $\Pi_2$-$\textbf{complet}$.
 \end{theorem}
@@ -62,7 +93,6 @@ La nature polymorphique des variables de patron signifie que les patrons peuvent
 		est obtenu par la substitution de $T_\textbf{op}$ qui remplace tous les $x_i$ par eux-même, $x$ par lui-même, tous les $z_j$ par $(y_j:\beta_j.(\textbf{force}~f_j)~y_j)$, tous les $z_l'$ par $(y_l':\beta_l'.k_l'(y_l'))$ et $z$ par $(y:\beta.k(y))$.
 	\end{enumerate}
 \end{definition}
-\newpage
 
 Il est évident que tous les gestionnaires du famille uniformément simple sont simple. Corollairement, tous les gestionnaires simple, via l'aspect polymorphique des variables de patron, peuvent définir une famille uniformément simple. Dans ceux vu en amont, le gestionnaire $H_{Temporary}$ est uniformément simple. Tous ceux qui sont définit pour un type de calcul précis (ex \textbf{F0}) ne sont pas uniformément simple.
 
