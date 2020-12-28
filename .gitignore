@@ -6,3 +6,6 @@
 *.fls
 *.synctex.gz
 *.toc
+*.nav
+*.out
+*.snm

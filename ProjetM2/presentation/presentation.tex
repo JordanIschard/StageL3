@@ -1,0 +1,81 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+
+
+%Information to be included in the title page:
+\title{Projet de recherche}
+\subtitle{Résumé de l'article \textbf{Handling Algebraic effects}}
+\author{Jordan Ischard}
+\institute{Université d'Orléans}
+\date{2020-2021}
+
+
+
+\begin{document}
+
+
+
+\AtBeginSection[]
+{
+  \begin{frame}
+    \frametitle{Sommaire}
+    \tableofcontents[currentsection,subsectionstyle=show/shaded/hide]
+  \end{frame}
+}
+
+\AtBeginSubsection
+{
+  \begin{frame} 
+	\frametitle{Sommaire}
+	\tableofcontents[sectionstyle=show/hide,subsectionstyle=show/shaded/hide]
+  \end{frame}
+}
+
+
+
+\frame{\titlepage}
+
+\section{COUCOU}
+
+\subsection{Salut}
+\begin{frame}
+\frametitle{Sample frame title}
+This is a text in the first frame. This is a text in the first frame. This is a text in the first frame.
+\end{frame}
+
+\subsection{Bonjour}
+\begin{frame}
+	\frametitle{Ceci est un test}
+
+	coucou\pause
+
+	c'est sympa nan ?\pause
+
+	moi je trouve x)
+\end{frame}
+
+
+\section{HELLO}
+\begin{frame}
+	\frametitle{Sample frame title}
+	
+	In this slide, some important text will be
+	\alert{highlighted} because it's important.
+	Please, don't abuse it.
+	
+	\begin{block}{Remark}
+	Sample text
+	\end{block}
+	
+	\begin{alertblock}{Important theorem}
+	Sample text in red box
+	\end{alertblock}
+	
+	\begin{examples}
+	Sample text in green box. The title of the block is "Examples".
+	\end{examples}
+\end{frame}
+
+
+\end{document}
