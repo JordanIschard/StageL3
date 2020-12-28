@@ -12,21 +12,26 @@
 	Les ensembles finis peuvent être représentés par le type de signature $\sum_{l \in L}\alpha_l$ et les ensembles infinis sont représentés par le type de base correspondant.
 	
 	\begin{exemple}
-		On peut représenter les booléens par  $\sum_{bool \in \{true,false\}} 1$ et un sous-ensemble d'entier par $\sum_{n \in \{1,...,m\}} 1$.
+		On peut représenter les booléens par  $\sum_{bool \in \{true,false\}} \textbf{1}$ et un sous-ensemble d'entier par $\sum_{n \in \{1,...,m\}}\textbf{1}$.
 	\end{exemple}
+	\bigbreak
+
 
 	On définit les symboles de fonctions typés par : $\textbf{f} : \alpha \rightarrow \beta$. Ils représentent les fonctions prédéfinies, telles que $+ : \textbf{nat} \times \textbf{nat} \rightarrow \textbf{nat}$ ou encore $< : \textbf{nat} \times \textbf{nat} \rightarrow \textbf{bool}$.
-	\smallbreak
+	\medbreak
+
 	Pour finir, on définit les symboles d'opérations typés par : $\textbf{op} : \alpha \rightarrow \beta$, tels que chaque $\beta$ est un type de signature d'arité et tels que $\textbf{op}$ a une théorie d'effet $\tau$. Les opérations deviennent la source des effets et la théorie d'effet indique leurs propriétés.
-	\\
+	
+
+
 	On interprète $\textbf{op} : \alpha \rightarrow \beta$ de la façon suivante :
 	$\textbf{op}$ accepte un paramètre $\alpha$ et après avoir exécuté l'effet approprié, son type de retour $\beta$ détermine la continuation.
 	\medbreak
 	
 	Maintenant que tout est définis, on peut créer une signature. Le choix de la signature va dépendre de ce que l'on veut représenter.
-	\newpage
+
 	\begin{exemple}\label{exStateExc}
-		On présente quelques exemple pris de \cite{DBLP:journals/tcs/HylandPP06}.
+		On présente quelques exemples prit de \cite{DBLP:journals/tcs/HylandPP06}.
 		\begin{enumerate}
 			\item[]\textbf{Exceptions} : On prend l'unique symbole d'opération $\textbf{raise} : \textbf{exc} \rightarrow \textbf{0}$ paramétré sur l'ensemble \textbf{exc} afin de lever une exception. Le symbole de l'opération est nul (\textbf{0}) car il n'y a pas de continuation après une levée d'exception. Il faut donc gérer les exceptions.
 			
@@ -48,7 +53,7 @@
 	
 \subsection{Termes}
 
-	On a défini les signatures et les types, il nous manque les termes. On va les définir en trois parties : les termes \textbf{valeur} $V,W$, les termes \textbf{calcul} $M,N$ et les termes \textbf{gestionnaire} $H$. Ils sont définit par :
+	On a définit les signatures et les types, il nous manque les termes. On va les définir en trois parties : les termes \textbf{valeur} $V,W$, les termes \textbf{calcul} $M,N$ et les termes \textbf{gestionnaire} $H$. Ils sont définit par :
 	\begin{align*}
 		V,W :=&~x~|~f(V)~|~\langle\rangle~|~\langle V,W\rangle~|~l(V)~|~\textbf{thunk}~M\\
 		M,N :=&~\textbf{match}~V~\textbf{with}~\langle x,y\rangle  \mapsto M~|~\textbf{match}~V~\textbf{with}~\{l(x_l)  \mapsto M_l\}_{l \in L}~|~\textbf{force}~V~|\\

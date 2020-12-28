@@ -6,13 +6,36 @@
 		avec des traits impératifs.
 		On peut représenter une monade comme un triplet constitué de : 
 		\begin{enumerate}
-			\item un \textbf{constructeur de type} appelé \textit{type monadique}, qui associe au type $t$ le type $Mt$.
-			\item une \textbf{fonction $unit/return$} qui construit à partir d'un élément de type 
-			sous-jacent $a$ un autre élément de type monadique $Ma$. Cette fonction a la signature suivante : $unit/return~:~t \rightarrow Mt$.
-			\item une \textbf{fonction $bind$}, représenté par l'opérateur infixe $>>=$, associant à un type monadique
-			et une fonction d'association un autre type monadique. Cette opérateur à la signature suivante : $>>=~:~Mt \rightarrow (t \rightarrow Mu) \rightarrow Mu$.
+			\item un \textbf{constructeur de type} appelé \textit{type monadique}, qui associe au type $\textbf{t}$ le type $\mathcal{M}\textbf{t}$.
+			\item une \textbf{fonction} \verb|unit/return| qui construit à partir d'un élément de type 
+			sous-jacent $\textbf{a}$ un autre élément de type monadique $\mathcal{M}\textbf{a}$. Cette fonction a la signature suivante : 
+			
+			\verb|unit/return|$~:~\textbf{t} \rightarrow \mathcal{M}\textbf{t}$.
+			\item une \textbf{fonction $bind$}, représenté par l'opérateur infixe \verb|>>=|, associant à un type monadique
+			et une fonction d'association un autre type monadique. Cette opérateur à la signature suivante : 
+			
+			\verb|>>=|$~:~\mathcal{M}\textbf{t} \rightarrow (\textbf{t} \rightarrow \mathcal{M}\textbf{u}) \rightarrow \mathcal{M}\textbf{u}$.
 		\end{enumerate}
 	\end{definition}
+	\bigbreak
+
+	\begin{exemple} Voici un exemple de \textbf{Monade} trouvé sur le \href{http://lyah.haskell.fr/pour-une-poignee-de-monades}{site d'Haskell france}. On représente 
+		une variable optionnelle.
+		\begin{verbatim}
+						instance Monad Maybe where
+						        -- La fonction qui construit notre type monadique
+						        return x = Just x
+						
+						        -- La fonction bind qui nous permet de travailler avec le type monadique
+				        Nothing >>= f = Nothing
+						        Just x >>= f  = f x
+								
+						        -- Au cas où, une erreur se lève on dit qu'il n'y a rien
+				        fail _ = Nothing
+		\end{verbatim}
+	\end{exemple}
+	\bigbreak
+	
 
 	Les effets et leurs gestions sont utiles pour représenter les exceptions, les états mémoires, le non-déterminisme, les I/O, etc. \textbf{Moggi} ne fut pas le seul à proposer une gestion des effets, en effet \textbf{Plotkin et Power} proposerons plus tard une représentation basée sur un ensemble d'opérations qui représente la sources des effets et une théorie d'équations, pour ces dites opérations, qui décrit leurs propriétés.
 	
@@ -25,7 +48,7 @@
 		On a deux possibilités : soit on continue avec le calcul donné par le première argument soit on continue avec le calcul donné par le second.
 	\end{exemple}
 
-	Les deux représentations permettent de géré les effets et il est possible de passer d'une représentation à l'autre pour la plupart des effets. Ces effets sont appelés \textbf{effets Algébriques}. Les exemples utilisés sont algébriques.
+	Les deux représentations permettent de gérer les effets et il est possible de passer d'une représentation à l'autre pour la plupart des effets. Ces effets sont appelés \textbf{effets Algébriques}. Les exemples utilisés sont algébriques.
 	\medbreak
 	
 	La vision algébrique des effets a permis de les combiner et de raisonner dessus. Cependant, le gestionnaire d'exception apporte un challenge.

@@ -8,7 +8,7 @@ une monade d'exception $TA$ telle que $TA \overset{\textbf{def}}{=} A + \textbf{
 Un calcul retournant une valeur $a \in A$ est modélisé par un élément $ta \in TA$. 
 Cette monade a pour unité $\eta_A : A \rightarrow A + \textbf{exc}$, et le calcul 
 $return(V)$ est interprété par $\eta_A(V)$ tandis que $\textbf{raise}_e()$ est 
-interprété par $in_2(e)$ (une fonction injection de $A + \textbf{exc}$ vers \textbf{exc}).
+interprété par $in_2(e)$ (une fonction injective de $A + \textbf{exc}$ vers \textbf{exc}).
 
 \subsection{Construction des gestionnaires étendus}
 
@@ -51,6 +51,6 @@ interprété par $in_2(e)$ (une fonction injection de $A + \textbf{exc}$ vers \t
 	
 	Avec la construction étendue de Benton et Kennedy, on voit maintenant comment créer les gestionnaires pour les autres effets algébriques. Un \textbf{modèle d'une théorie d'équations} est une interprétation, i.e, un ensemble de tableaux associatifs, un pour chaque opération, qui satisfont les équations. Les gestionnaires permettent de telles interprétations. Comme avant, les calculs sont interprétés par le modèle libre et la construction des gestionnaires sont interprétés par l'homomorphisme induit. Avant, les exceptions étaient remplacés par un calcul du gestionnaire; maintenant les \textbf{opérations} sont remplacées par les tableaux associatifs du gestionnaire.
 	\smallbreak
-	Il est important de noter que toute interprétation ne donne pas forcément un modèle de la théorie des équations et que donc tous les gestionnaires ne sont pas forcément correctes. Plus que ça, la validité d'un gestionnaire peut être indéfini. Pour contourner le problème, il y a deux écoles. Soit on contraint l'utilisateur à des gestionnaires prédéfinies que l'on sait correcte; soit on laisse une totale liberté à l'utilisateur mais c'est à lui qui est responsable de la validité de ses gestionnaires. On adoptera la seconde dans ce papier.
+	Il est important de noter que toute interprétation ne donne pas forcément un modèle de la théorie des équations et que donc tous les gestionnaires ne sont pas forcément correctes. Plus que ça, la validité d'un gestionnaire peut être indéfini. Pour contourner le problème, il y a deux écoles. Soit on contraint l'utilisateur à des gestionnaires prédéfinies que l'on sait correcte; soit on laisse une totale liberté à l'utilisateur mais c'est lui qui est responsable de la validité de ses gestionnaires. On adoptera la seconde dans ce papier.
 	
 	

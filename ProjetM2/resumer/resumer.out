@@ -1,0 +1,21 @@
+\BOOKMARK [1][-]{section.1}{Gestionnaire des exceptions}{}% 1
+\BOOKMARK [2][-]{subsection.1.1}{Construction des gestionnaires \351tendus}{section.1}% 2
+\BOOKMARK [2][-]{subsection.1.2}{Gestion des effets alg\351briques arbitraires}{section.1}% 3
+\BOOKMARK [1][-]{section.2}{Syntaxe}{}% 4
+\BOOKMARK [2][-]{subsection.2.1}{Signatures}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.2}{Types}{section.2}% 6
+\BOOKMARK [2][-]{subsection.2.3}{Termes}{section.2}% 7
+\BOOKMARK [2][-]{subsection.2.4}{Jugement de types}{section.2}% 8
+\BOOKMARK [1][-]{section.3}{Exemples}{}% 9
+\BOOKMARK [2][-]{subsection.3.1}{Non-d\351terminisme explicite}{section.3}% 10
+\BOOKMARK [2][-]{subsection.3.2}{Timeout}{section.3}% 11
+\BOOKMARK [2][-]{subsection.3.3}{Rollback}{section.3}% 12
+\BOOKMARK [1][-]{section.4}{S\351mantique}{}% 13
+\BOOKMARK [2][-]{subsection.4.1}{La th\351orie des effets}{section.4}% 14
+\BOOKMARK [1][-]{section.5}{Raisonnement \340 propos des gestionnaires}{}% 15
+\BOOKMARK [1][-]{section.6}{Validit\351 des gestionnaires}{}% 16
+\BOOKMARK [1][-]{section.7}{Confrontation}{}% 17
+\BOOKMARK [2][-]{subsection.7.1}{Point sur la repr\351sentation des effets dans la syntaxe}{section.7}% 18
+\BOOKMARK [2][-]{subsection.7.2}{Repr\351sentation divergente}{section.7}% 19
+\BOOKMARK [2][-]{subsection.7.3}{Fonctionnement et exemple}{section.7}% 20
+\BOOKMARK [2][-]{subsection.7.4}{Difficult\351s inh\351rentes au langage propos\351 dans l'article}{section.7}% 21
