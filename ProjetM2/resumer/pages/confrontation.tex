@@ -1,7 +1,11 @@
-La section qui va suivre va confronter le langage proposé dans l'article avec 
-le langage créé avec M. Dabrowski et Mme. Bousdira : \textbf{erpl}. C'est un langage
+$\empty$
+
+
+La section qui va suivre va confronter le langage proposé dans l'article avec le langage créé avec M. Dabrowski et Mme. Bousdira : \textbf{erpl}. C'est un langage
 fonctionnel avec des traits impératifs reprenant la syntaxe d'Ocaml. Les effets algébrique
-ont été ajouté dans ce langage mais avec une autre implémentation. Toute la partie qui va
+ont été ajouté dans ce langage mais avec une autre implémentation. 
+
+Toute la partie qui va
 suivre sera informelle et les principes mathématiques seront écartés. Le but étant de confronter
 les idées et l'implémentation. Ainsi que les potentiels problèmes liés à une implémentation du
 langage proposé dans l'article.
@@ -22,13 +26,16 @@ L'\textbf{erpl} propose, quant à lui, part du langage Ocaml en allègé et ajou
     un~gestionnaire &:~~\{l(x_l),(k:\beta \rightarrow \underline{C}) \mapsto M_\textbf{l}\}_{l \in L}
 \end{align*}
 
-Première remarque que l'on peut se faire est que pour deux langages différents ont a le même nombre de 
-termes ajouté. On peut interpréter cela comme l'ajout minimum nécessaire pour travailler avec des effets
-algébrique.
+\begin{remark}
+    Les deux langages différents ont a le même nombre de 
+    termes ajouté. On peut interpréter cela comme l'ajout minimum nécessaire pour travailler avec des effets
+    algébrique.
+\end{remark}
+
 
 \subsection{Représentation divergente}
 
-Il faut mettre au clair plusieurs point. 
+Il faut mettre au clair plusieurs points. 
 
 Premièrement, les deux langages n'ont pas été créé de la même façon.
 Le langage de l'article prend à coeur le côté mathématique de la gestion des effets, ce qui a pour conséquence
@@ -75,7 +82,7 @@ va être vérifié par un gestionnaire. l'application d'un effet est cependant e
 
 La gestion de la continuation est elle aussi différente, nous la développerons plus bas.
 
-\paragraph{Le gestionnaire} La différence du gestionnaire vient de la source de l'effet. À part ça, leur Fonctionnement
+\paragraph{Le gestionnaire} La différence du gestionnaire vient de la source de l'effet. À part ça, leurs onctionnement
 est le même.
 
 \subsection{Fonctionnement et exemple}
