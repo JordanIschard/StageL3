@@ -28,7 +28,7 @@
 {
   \begin{frame} 
 	\frametitle{Sommaire}
-	\tableofcontents[sectionstyle=show/hide,subsectionstyle=show/shaded/hide]
+	\tableofcontents[sectionstyle=show/shaded/hide,subsectionstyle=show/shaded/hide]
   \end{frame}
 }
 
@@ -36,27 +36,110 @@
 
 \frame{\titlepage}
 
-\section{COUCOU}
+\section{Introduction}
 
-\subsection{Salut}
+\subsection{Problème de l'impératif dans un langage fonctionnel}
 \begin{frame}
-\frametitle{Sample frame title}
-This is a text in the first frame. This is a text in the first frame. This is a text in the first frame.
+\frametitle{Ajout de principes impératifs dans un langage fonctionnel}
+
+	\begin{block}{But}
+		Ajouter des fonctionnalités en plus dans les langages fonctionnels
+	\end{block}
+
+	\begin{alertblock}{Problème}
+		Ajoute des effets de bords que les langages fonctionnels purs non pas.
+	\end{alertblock}
+
+	\begin{exampleblock}{Exemple}
+		On peut avoir des effets de bords pour les appels mémoires ou encore
+		les entrées/sorties.
+	\end{exampleblock}
+
+	\begin{block}{Idée}
+		Créer une structure qui va gérer ces effets.
+	\end{block}
 \end{frame}
 
-\subsection{Bonjour}
+\subsection{Proposition pour gérer les effets}
 \begin{frame}
-	\frametitle{Ceci est un test}
+	\frametitle{Réponses déjà proposées}
 
-	coucou\pause
+	\begin{block}{Les Monades}
+		Eugenio Moggi a proposé le principe de \alert{Monade} pour gérer les effets.
+	\end{block}
 
-	c'est sympa nan ?\pause
+	\begin{exampleblock}{Les Monades en Haskell}
+		coucou
+	\end{exampleblock}
 
-	moi je trouve x)
+	\begin{block}{Les théories d'équations}
+		Plotkin et Power ont proposé des opérations comme source des effets et une
+		\alert{théorie d'équation} pour décrire leurs propriétés.
+	\end{block}
+
+	\begin{block}{L'article}
+		On reprend le principe de Plotkin et Power et on crée des gestionnaires 
+		pour ces effets. 
+	\end{block}
 \end{frame}
 
+\section{Gestion des effets dans l'article}
 
-\section{HELLO}
+\subsection{Intuition et principe}
+\begin{frame}
+	\frametitle{Comment gérer les effets ?}
+	TODO : opérations comme source des effets etc.
+\end{frame}
+
+\subsection{Mise en place dans une syntaxe}
+\begin{frame}
+	\frametitle{Qu'ajoute-on pour mettre en place la gestion des effets ?}
+	TODO : syntaxe, sémantique et fonctionnement
+\end{frame}
+
+\subsection{Exemple}
+\begin{frame}
+	\frametitle{dérogation à la lecture seule}
+	TODO : l'exemple en gros
+\end{frame}
+
+\section{Validé des gestionnaires}
+
+\subsection{Gestionnaire générique indécidable}
+\begin{frame}
+	\frametitle{Les gestionnaires en général sont indécidable}
+	TODO : Trop complexe, obliger de décider entre laisser l'utilisateur faire tout
+	en partant du principe qu'il peut se louper ou le contraindre
+\end{frame}
+
+\subsection{Sous-ensemble décidable}
+\begin{frame}
+	\frametitle{Gestionnaire décidable sous certaines conditions}
+	TODO : principe de gestionnaire simple, de famille uniformément simple etc.
+\end{frame}
+
+\section{Confrontation}
+
+\subsection{Les divergences}
+\begin{frame}
+	\frametitle{Motivation et fonctionnement divergent}
+	TODO : motivation, source des effets etc.
+\end{frame}
+
+\subsection{Exemple de conversion entre langage}
+\begin{frame}
+	\frametitle{Passage du langage de l'article vers \textbf{erpl}}
+	TODO : l'exemple en gros
+\end{frame}
+
+\subsection{Difficulté d'implémentation}
+\begin{frame}
+	\frametitle{Une histoire d'appels systèmes}
+	TODO : expliquer le problème de l'appel système et du gestionnaire global implicite
+\end{frame}
+
+\section{Conclusion}
+
 \begin{frame}
 	\frametitle{Sample frame title}
 	
