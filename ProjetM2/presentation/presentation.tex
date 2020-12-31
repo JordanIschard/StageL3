@@ -1,6 +1,34 @@
 \documentclass{beamer}
 
 \usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{orange},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
 
 
 %Information to be included in the title page:
@@ -16,7 +44,7 @@
 
 
 
-\AtBeginSection[]
+\AtBeginSection
 {
   \begin{frame}
     \frametitle{Sommaire}
@@ -28,7 +56,7 @@
 {
   \begin{frame} 
 	\frametitle{Sommaire}
-	\tableofcontents[sectionstyle=show/shaded/hide,subsectionstyle=show/shaded/hide]
+	\tableofcontents[subsectionstyle=show/shaded/hide]
   \end{frame}
 }
 
@@ -42,44 +70,47 @@
 \begin{frame}
 \frametitle{Ajout de principes impératifs dans un langage fonctionnel}
 
-	\begin{block}{But}
+	\begin{block}{But}<1->
 		Ajouter des fonctionnalités en plus dans les langages fonctionnels
 	\end{block}
 
-	\begin{alertblock}{Problème}
+	\begin{alertblock}{Problème}<2->
 		Ajoute des effets de bords que les langages fonctionnels purs non pas.
 	\end{alertblock}
 
-	\begin{exampleblock}{Exemple}
+	\begin{exampleblock}{Exemple}<3->
 		On peut avoir des effets de bords pour les appels mémoires ou encore
 		les entrées/sorties.
 	\end{exampleblock}
 
-	\begin{block}{Idée}
+	\begin{block}{Idée}<4->
 		Créer une structure qui va gérer ces effets.
 	\end{block}
 \end{frame}
 
 \subsection{Proposition pour gérer les effets}
-\begin{frame}
+\begin{frame}[fragile]
 	\frametitle{Réponses déjà proposées}
 
-	\begin{block}{Les Monades}
+	\begin{block}{Les Monades}<1->
 		Eugenio Moggi a proposé le principe de \alert{Monade} pour gérer les effets.
 	\end{block}
 
-	\begin{exampleblock}{Les Monades en Haskell}
-		coucou
+	\begin{exampleblock}{Les Monades en Haskell}<2->
+		\begin{lstlisting}[language=Haskell]
+instance Monad Maybe where
+	return x = Just x
+			
+	Nothing >>= f = Nothing
+	Just x >>= f  = f x
+					
+	fail _ = Nothing
+		\end{lstlisting}
 	\end{exampleblock}
 
-	\begin{block}{Les théories d'équations}
+	\begin{block}{Les théories d'équations}<3->
 		Plotkin et Power ont proposé des opérations comme source des effets et une
 		\alert{théorie d'équation} pour décrire leurs propriétés.
-	\end{block}
-
-	\begin{block}{L'article}
-		On reprend le principe de Plotkin et Power et on crée des gestionnaires 
-		pour ces effets. 
 	\end{block}
 \end{frame}
 
@@ -88,19 +119,55 @@
 \subsection{Intuition et principe}
 \begin{frame}
 	\frametitle{Comment gérer les effets ?}
-	TODO : opérations comme source des effets etc.
+	\begin{block}{Intuition}<1->
+		Reprendre le principe de Plotkin et Power et l'associer aux travaux de Benton et Kennedy sur
+		les gestionnaires.
+	\end{block}
+
+	\begin{block}{Principe}<2->
+		Les effets vont avoir pour source des \alert{opérations} et vont être géré par 
+		un \alert{tableaux associatifs (map)} contenu dans un gestionnaire. 
+	\end{block}
 \end{frame}
 
 \subsection{Mise en place dans une syntaxe}
-\begin{frame}
+\begin{frame}[fragile]
 	\frametitle{Qu'ajoute-on pour mettre en place la gestion des effets ?}
-	TODO : syntaxe, sémantique et fonctionnement
+	\begin{block}{Syntaxe ajouté}<1->
+		On part de la syntaxe proposé par Levy dans son article sur \textit{call-by-push-value}.
+		\begin{align*}
+			source~de~l'effet~:~&\textbf{op}_V(x:\beta.M')\\
+			structure~de~gestion~:~&M~\textbf{handled~with}~H~to~x:A.N\\
+			gestionnaire~:~&\{\textbf{op}_{z:\alpha}(k:\beta \rightarrow \underline{C}) \mapsto M_{\textbf{op}}\}_{\textbf{op} : \alpha \rightarrow \beta}
+		\end{align*}
+	\end{block}
+
+	\begin{block}{Fonctionnement}<2->
+		On reprend la strucutre de gestion ci-dessus 
+		avec $\textbf{op}_V(y.M') \in M$ et $\{\textbf{op}_z(k) \mapsto M_ {\textbf{op}}\} \in H$.
+			\alert{\[M_{\textbf{op}}[V/z,M'[W/y]~\textbf{handled~with}~H~\textbf{to}~x:A.N/k(W)]\]}
+	\end{block}
 \end{frame}
 
 \subsection{Exemple}
 \begin{frame}
 	\frametitle{dérogation à la lecture seule}
-	TODO : l'exemple en gros
+	
+	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}<1->
+		Le gestionnaire définit pour l'effet est le suivant : 
+		\[H_{temporary} = \{\textbf{get}_{l:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(n)\}\]
+
+		Prenons l'expression suivante : 
+		\begin{align*}
+			& \textbf{let}~n:\textbf{nat}~\textbf{be}~20~\textbf{in}\\
+			& \textbf{get}_l(x:\textbf{nat}.get_l(y:\textbf{nat}.\textbf{return}~x+y))\\
+			&\textbf{handled~with}~H_{temporary}~\textbf{to}~z:A.\textbf{return}~z+2
+		\end{align*}
+	\end{exampleblock}
+
+	\begin{alertblock}{La réponse}<2->
+		C'est 42 ! 
+	\end{alertblock}
 \end{frame}
 
 \section{Validé des gestionnaires}
