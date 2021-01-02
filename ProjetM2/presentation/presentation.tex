@@ -170,6 +170,7 @@ instance Monad Maybe where
 
 	\only<2>{
 	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}
+		Le gestionnaire définit pour l'effet est le suivant : 
 		\[H_{temporary} = \{\textbf{get}_{l:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(\alert{n})\}\]
 
 		Prenons l'expression suivante : 
@@ -182,28 +183,31 @@ instance Monad Maybe where
 
 	\only<3>{
 	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}
+		Le gestionnaire définit pour l'effet est le suivant : 
 		\[\textcolor{orange}{H_{temporary}} = \{\alert{\textbf{get}_{y:\textbf{loc}}\textcolor{blue}{(k:\textbf{nat} \rightarrow \underline{C})}} \mapsto k(20)\}\]
 
 		Prenons l'expression suivante : 
 		\begin{align*}
-			& \alert{\textbf{get}_l(\textcolor{blue}{x:\textbf{nat}.\textbf{get}_l(y:\textbf{nat}.\textbf{return}~x+y)})}\\
+			& \alert{\textbf{get}_l\textcolor{blue}{(x:\textbf{nat}.\textbf{get}_l(y:\textbf{nat}.\textbf{return}~x+y))}}\\
 			&\textbf{handled~with}~\textcolor{orange}{H_{temporary}}~\textbf{to}~z:A.\textbf{return}~z+2
 		\end{align*}
 	\end{exampleblock}}
 
 	\only<4>{
 	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}
+		Le gestionnaire définit pour l'effet est le suivant : 
 		\[\textcolor{orange}{H_{temporary}} = \{\alert{\textbf{get}_{y:\textbf{loc}}\textcolor{blue}{(k:\textbf{nat} \rightarrow \underline{C})}} \mapsto k(20)\}\]
 
 		Prenons l'expression suivante : 
 		\begin{align*}
-			& \alert{\textbf{get}_l(\textcolor{blue}{y:\textbf{nat}.\textbf{return}~20+y})}\\
+			& \alert{\textbf{get}_l\textcolor{blue}{(y:\textbf{nat}.\textbf{return}~20+y)}}\\
 			&\textbf{handled~with}~\textcolor{orange}{H_{temporary}}~\textbf{to}~z:A.\textbf{return}~z+2
 		\end{align*}
 	\end{exampleblock}}
 
 	\only<5>{
 	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}
+		Le gestionnaire définit pour l'effet est le suivant : 
 		\[H_{temporary} = \{\textbf{get}_{y:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(20)\}\]
 
 		Prenons l'expression suivante : 
@@ -215,6 +219,7 @@ instance Monad Maybe where
 
 	\only<6-7>{
 	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}
+		Le gestionnaire définit pour l'effet est le suivant : 
 		\[H_{temporary} = \{\textbf{get}_{y:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(20)\}\]
 
 		Prenons l'expression suivante : 
@@ -257,30 +262,24 @@ instance Monad Maybe where
 \section{Confrontation}
 
 \subsection{Les divergences}
-\begin{frame}
+\begin{frame}[fragile]
 	\frametitle{Motivation et fonctionnement divergent}
-	\begin{columns}
-		\column{0.5\textwidth}
-		\begin{block}{Langage de l'article}
-			\begin{enumerate}
-				\item Créer pour voir l'aspect mathématique de la gestion d'effets algébriques
-				\item Temps de travail conséquent
-				\item La source d'un effet est une \alert{opération}
-				\item Activation \alert{implicite} de l'effet
-				\item Gestionnaire global implicite car l'activation est implicite
-			\end{enumerate}
-		\end{block}
-		\column{0.5\textwidth}
-		\begin{block}{Langage \textbf{erpl}}
-			\begin{enumerate}
-				\item Créer pour avoir une version allégé du langage Ocaml
-				\item Un an de travail séparé par 6 mois 
-				\item La source d'un effet est un \alert{type}
-				\item Activation \alert{explicite} de l'effet
-				\item Pas de gestionnaire global, tout activation sans gestionnaire provoque une erreur
-			\end{enumerate}
-		\end{block}
-	\end{columns}
+
+	\begin{table}
+		\begin{tabular}{ p{5cm} | p{5cm} }
+		Langage de l'article & Langage \textbf{erpl} \onslide<1->\\
+		\hline \hline
+		$\circ$ Créer pour voir l'aspect mathématique de la gestion d'effets algébriques & 
+		$\circ$ Créer pour avoir une version allégé du langage Ocaml \onslide<2-> \\ 
+		$\circ$ La source d'un effet est une \alert{opération} &
+		$\circ$ La source d'un effet est un \alert{type} \onslide<3->\\
+		$\circ$ Activation \alert{implicite} de l'effet &
+		$\circ$ Activation \alert{explicite} de l'effet \onslide<4->\\
+		$\circ$ Gestionnaire global implicite car l'activation est implicite & 
+		$\circ$ Pas de gestionnaire global, tout activation sans gestionnaire provoque une erreur 
+		\end{tabular}
+		\caption{Comparaison entre les deux langages}
+	\end{table}
 \end{frame}
 
 \subsection{Exemple de conversion entre langage}
@@ -331,7 +330,7 @@ let get = Get(fun x -> !x) and n = 20 in
 \section{Conclusion}
 \begin{frame}
 	\frametitle{Que peut-on conclure ?}
-	TODO : expliquer le problème de l'appel système et du gestionnaire global implicite
+	TODO : No se
 
 	
 \end{frame}
