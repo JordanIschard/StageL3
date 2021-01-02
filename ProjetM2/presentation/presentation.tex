@@ -12,10 +12,12 @@
 \lstdefinestyle{mystyle}{
     backgroundcolor=\color{backcolour},   
     commentstyle=\color{codegreen},
-    keywordstyle=\color{orange},
+	keywordstyle=\color{orange},
+	otherkeywords={handle,perform},
     numberstyle=\tiny\color{codegray},
     stringstyle=\color{codepurple},
-    basicstyle=\ttfamily\footnotesize,
+	basicstyle=\ttfamily\footnotesize,
+	identifierstyle=\color{blue},
     breakatwhitespace=false,         
     breaklines=true,                 
     captionpos=b,                    
@@ -29,7 +31,7 @@
 }
 
 \lstset{style=mystyle}
-
+\setbeamercovered{invisible}
 
 %Information to be included in the title page:
 \title{Projet de recherche}
@@ -153,21 +155,78 @@ instance Monad Maybe where
 \begin{frame}
 	\frametitle{dérogation à la lecture seule}
 	
-	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}<1->
+	\only<1>{
+	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}<1>
 		Le gestionnaire définit pour l'effet est le suivant : 
 		\[H_{temporary} = \{\textbf{get}_{l:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(n)\}\]
 
 		Prenons l'expression suivante : 
 		\begin{align*}
 			& \textbf{let}~n:\textbf{nat}~\textbf{be}~20~\textbf{in}\\
-			& \textbf{get}_l(x:\textbf{nat}.get_l(y:\textbf{nat}.\textbf{return}~x+y))\\
+			& \textbf{get}_l(x:\textbf{nat}.\textbf{get}_l(y:\textbf{nat}.\textbf{return}~x+y))\\
 			&\textbf{handled~with}~H_{temporary}~\textbf{to}~z:A.\textbf{return}~z+2
 		\end{align*}
-	\end{exampleblock}
+	\end{exampleblock}}
 
-	\begin{alertblock}{La réponse}<2->
+	\only<2>{
+	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}
+		\[H_{temporary} = \{\textbf{get}_{l:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(\alert{n})\}\]
+
+		Prenons l'expression suivante : 
+		\begin{align*}
+			& \alert{\textbf{let}~n:\textbf{nat}~\textbf{be}~20~\textbf{in}}\\
+			& \textbf{get}_l(x:\textbf{nat}.\textbf{get}_l(y:\textbf{nat}.\textbf{return}~x+y))\\
+			&\textbf{handled~with}~H_{temporary}~\textbf{to}~z:A.\textbf{return}~z+2
+		\end{align*}
+	\end{exampleblock}}
+
+	\only<3>{
+	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}
+		\[\textcolor{orange}{H_{temporary}} = \{\alert{\textbf{get}_{y:\textbf{loc}}\textcolor{blue}{(k:\textbf{nat} \rightarrow \underline{C})}} \mapsto k(20)\}\]
+
+		Prenons l'expression suivante : 
+		\begin{align*}
+			& \alert{\textbf{get}_l(\textcolor{blue}{x:\textbf{nat}.\textbf{get}_l(y:\textbf{nat}.\textbf{return}~x+y)})}\\
+			&\textbf{handled~with}~\textcolor{orange}{H_{temporary}}~\textbf{to}~z:A.\textbf{return}~z+2
+		\end{align*}
+	\end{exampleblock}}
+
+	\only<4>{
+	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}
+		\[\textcolor{orange}{H_{temporary}} = \{\alert{\textbf{get}_{y:\textbf{loc}}\textcolor{blue}{(k:\textbf{nat} \rightarrow \underline{C})}} \mapsto k(20)\}\]
+
+		Prenons l'expression suivante : 
+		\begin{align*}
+			& \alert{\textbf{get}_l(\textcolor{blue}{y:\textbf{nat}.\textbf{return}~20+y})}\\
+			&\textbf{handled~with}~\textcolor{orange}{H_{temporary}}~\textbf{to}~z:A.\textbf{return}~z+2
+		\end{align*}
+	\end{exampleblock}}
+
+	\only<5>{
+	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}
+		\[H_{temporary} = \{\textbf{get}_{y:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(20)\}\]
+
+		Prenons l'expression suivante : 
+		\begin{align*}
+			& \alert{\textbf{return}~20+20}\\
+			&\textbf{handled~with}~H_{temporary}~\textbf{to}~\alert{z:A.\textbf{return}~z+2}
+		\end{align*}
+	\end{exampleblock}}
+
+	\only<6-7>{
+	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}
+		\[H_{temporary} = \{\textbf{get}_{y:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(20)\}\]
+
+		Prenons l'expression suivante : 
+		\begin{align*}
+			& \alert{\textbf{return}~40+2}
+		\end{align*}
+	\end{exampleblock}}
+
+	\only<7>{
+	\begin{alertblock}{La réponse}
 		C'est 42 ! 
-	\end{alertblock}
+	\end{alertblock}}
 \end{frame}
 
 \section{Validé des gestionnaires}
@@ -175,8 +234,18 @@ instance Monad Maybe where
 \subsection{Gestionnaire générique indécidable}
 \begin{frame}
 	\frametitle{Les gestionnaires en général sont indécidable}
-	TODO : Trop complexe, obliger de décider entre laisser l'utilisateur faire tout
-	en partant du principe qu'il peut se louper ou le contraindre
+	\begin{block}{Limite des gestionnaires}<1->
+		En général la validité des gestionnaires est \alert{indécidable}.
+	\end{block}
+
+	\begin{block}{Comment palier à se problème}<2->
+		Deux approches sont possibles : 
+		\begin{enumerate}
+			\item Obliger l'utilisateur a utiliser des gestionnaires que l'on sait valide (donc prédéfinis dans le langage) : \alert{la responsabilité est au créateur du langage}
+			\item Laisser l'utilisateur faire comme il le souhaite tout en lui laissant la possibiliter de faire des gestionnaires
+			invalide : \alert{la responsabilité est à l'utilisateur}.
+		\end{enumerate}
+	\end{block}
 \end{frame}
 
 \subsection{Sous-ensemble décidable}
@@ -190,42 +259,83 @@ instance Monad Maybe where
 \subsection{Les divergences}
 \begin{frame}
 	\frametitle{Motivation et fonctionnement divergent}
-	TODO : motivation, source des effets etc.
+	\begin{columns}
+		\column{0.5\textwidth}
+		\begin{block}{Langage de l'article}
+			\begin{enumerate}
+				\item Créer pour voir l'aspect mathématique de la gestion d'effets algébriques
+				\item Temps de travail conséquent
+				\item La source d'un effet est une \alert{opération}
+				\item Activation \alert{implicite} de l'effet
+				\item Gestionnaire global implicite car l'activation est implicite
+			\end{enumerate}
+		\end{block}
+		\column{0.5\textwidth}
+		\begin{block}{Langage \textbf{erpl}}
+			\begin{enumerate}
+				\item Créer pour avoir une version allégé du langage Ocaml
+				\item Un an de travail séparé par 6 mois 
+				\item La source d'un effet est un \alert{type}
+				\item Activation \alert{explicite} de l'effet
+				\item Pas de gestionnaire global, tout activation sans gestionnaire provoque une erreur
+			\end{enumerate}
+		\end{block}
+	\end{columns}
 \end{frame}
 
 \subsection{Exemple de conversion entre langage}
-\begin{frame}
+\begin{frame}[fragile]
 	\frametitle{Passage du langage de l'article vers \textbf{erpl}}
-	TODO : l'exemple en gros
+
+	\begin{exampleblock}{Reprise de l'exemple précédent}<1->
+		$\textbf{let}~n:\textbf{nat}~\textbf{be}~20~\textbf{in}$\\
+		$\textbf{get}_l(x:\textbf{nat}.\textbf{get}_l(y:\textbf{nat}.\textbf{return}~x+y))$\\
+		$\textbf{handled~with}~\{\textbf{get}_{l:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(n)\}~\textbf{to}~z:A.\textbf{return}~z+2$
+	\end{exampleblock}
+
+	\begin{exampleblock}{Reprise de l'exemple converti en \textbf{erpl}}<2>
+
+		\begin{lstlisting}[language=caml]
+type memory = Get of 'a ref -> 'a 
+            | Set of 'a ref * 'a -> unit;;
+
+let get = Get(fun x -> !x) and n = 20 in
+          handle ((fun x -> fun y -> x + y + 2) 
+                 (perform (get,l))) (perform (get,l)) 
+          with (Get f,x),k -> k n ;;
+		\end{lstlisting}
+	\end{exampleblock}
 \end{frame}
 
 \subsection{Difficulté d'implémentation}
 \begin{frame}
 	\frametitle{Une histoire d'appels systèmes}
-	TODO : expliquer le problème de l'appel système et du gestionnaire global implicite
+	\begin{block}{Comment ça fonctionne ?}<1->
+		En prenant, le principe d'opération comme source d'effet on implique une gestion des opérations particuliers.
+
+		Quand on a pas de gestionnaire, les opérations se \textit{gèrent elles-même}.
+	\end{block}
+
+	\begin{block}{Idée}<2->
+		Créer un gestionnaire globale implicite ajouté à la compilation. 
+	\end{block}
+
+	\begin{alertblock}{Problèmes d'appels systèmes}<3->
+		Cela veut dire que notre
+		gestionnaire globale doit être capable de faire des appels systèmes et donc que le langage en soit capable.
+
+		\alert{Pas facilement intégrable !}
+	\end{alertblock}
 \end{frame}
 
 \section{Conclusion}
-
 \begin{frame}
-	\frametitle{Sample frame title}
+	\frametitle{Que peut-on conclure ?}
+	TODO : expliquer le problème de l'appel système et du gestionnaire global implicite
+
 	
-	In this slide, some important text will be
-	\alert{highlighted} because it's important.
-	Please, don't abuse it.
-	
-	\begin{block}{Remark}
-	Sample text
-	\end{block}
-	
-	\begin{alertblock}{Important theorem}
-	Sample text in red box
-	\end{alertblock}
-	
-	\begin{examples}
-	Sample text in green box. The title of the block is "Examples".
-	\end{examples}
 \end{frame}
+
 
 
 \end{document}
