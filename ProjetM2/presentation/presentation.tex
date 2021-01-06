@@ -15,7 +15,7 @@
 	keywordstyle=\color{orange},
 	otherkeywords={handle,perform},
     numberstyle=\tiny\color{codegray},
-    stringstyle=\color{codepurple},
+	stringstyle=\color{codepurple},
 	basicstyle=\ttfamily\footnotesize,
 	identifierstyle=\color{blue},
     breakatwhitespace=false,         
@@ -256,7 +256,23 @@ instance Monad Maybe where
 \subsection{Sous-ensemble décidable}
 \begin{frame}
 	\frametitle{Gestionnaire décidable sous certaines conditions}
-	TODO : principe de gestionnaire simple, de famille uniformément simple etc.
+	\begin{block}{Vers des gestionnaires plus simple}<1->
+		Il est possible de trouver un sous-ensemble de gestionnaire qui est \alert{décidable}.
+		
+		\pause\bigbreak
+
+		Il faut les conditions suivantes : 
+		\begin{enumerate}
+			\item<2-> Une signature d'opérations \alert{simple}
+			\item<3-> TODO
+			\item<4-> TODO
+		\end{enumerate}
+	\end{block}
+
+	\begin{block}{Gestionnaire simple}<5->
+		On parle de \alert{gestionnaire simple} et grâce à une réécriture des termes avec des 
+		patrons on peut même parler de \alert{famille de gestionnaire uniformément simple}.
+	\end{block}
 \end{frame}
 
 \section{Confrontation}
@@ -282,7 +298,7 @@ instance Monad Maybe where
 	\end{table}
 \end{frame}
 
-\subsection{Exemple de conversion entre langage}
+\subsection{Exemple de conversion entre langages}
 \begin{frame}[fragile]
 	\frametitle{Passage du langage de l'article vers \textbf{erpl}}
 
