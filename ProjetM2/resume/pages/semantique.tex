@@ -1,17 +1,14 @@
-On va introduire la théorie des effets. La partie interprétation sera omit dans ce résumé car il fait appel à des notions de catégorie et des notions poussées sur les modèles. Je n'ai pas la présomption d'être en capacité de le comprendre entièrement et de l'expliquer.
+La partie interprétation sera omit dans ce résumé car il fait appel à des notions de catégorie et des notions poussées sur les modèles. Je n'ai pas la prétention d'être en capacité de le comprendre entièrement et de l'expliquer.
 
 \subsection{La théorie des effets}
 
-	On va décrire les propriétés des effets avec des équation entre patrons $T$. Ils décrivent la forme général de tous les calculs sans présumer des types. On définit $T$ par :
+	Les propriétés des effets sont décrites avec des équation entre patrons $T$. Ils décrivent la forme général de tous les calculs sans présumer des types. $T$ est définit par :
 	\[T := z(V)~|~\textbf{match}~V~\textbf{with}~\langle x,y\rangle \mapsto T~|~\textbf{match}~V~\textbf{with}~\{l(x_l) \mapsto T_l\}_{l \in L}~|~\textbf{op}_V(x:\beta.T)\]
 	
-	avec $z$ appartenant à un ensemble de variable de patron. Dans les patrons, on se limite à la signature des valeurs. Ceux sont des valeurs qui peuvent être typées par $\Gamma \vdash V:\alpha$, avec $\Gamma$ le contexte des variables de valeurs liées à un type de signature. Les règles de typage sont, en omettant le contexte de continuation et les règles pour les types bloqués, les même que ceux pour leurs valeurs.
+	avec $z$ appartenant à un ensemble de variable de patron. Dans les patrons, on se limite à la signature des valeurs. Ceux sont des valeurs qui peuvent être typées par $\Gamma \vdash V:\alpha$, avec $\Gamma = x_1:\alpha_1,...,x_m:\alpha_m$.
 	\medbreak
 	
-	On construit des patrons dans le contexte de variables de valeur, liée à un type de signature, et un contexte de patron
-	\[Z = z_1:\alpha_1,...,z_n:\alpha_n\] 
-	
-	avec $z_j$ une variable de patron liée à un type de signature d'arité $\alpha_j$. $z_j:\alpha_j$ ne représente pas une valeur de type $\alpha_j$ mais un calcul qui dépend d'une telle valeur.
+	Les patrons sont construit dans le contexte de variables de valeur $\Gamma$ et un contexte de patron : $Z = z_1:\alpha_1,...,z_n:\alpha_n$. Attention, $z_j:\alpha_j$ ne représente pas une valeur de type $\alpha_j$ mais un calcul qui dépend d'une telle valeur.
 	Le jugement de typage pour un patron bien-formé est $\Gamma~|~Z \vdash T$ et est donné par les règles suivantes :
 	
 	\begin{align*}
@@ -43,9 +40,6 @@ On va introduire la théorie des effets. La partie interprétation sera omit dan
 				\textbf{get}_{l}(x.\textbf{get}_{l'}(x'.z(x,x'))) &= 
 				\textbf{get}_{l'}(x'.\textbf{get}_{l}(x.z(x,x'))) & (l \neq l')
 			\end{align*}
-		
-			On a simplifié l'écriture des trois dernières équations. En effet on a ajouté sur le côté la condition $(l \neq l')$. Cela reste dans le cadre de la définition de la théorie d'effet, $T_1 = T_2~(l \neq l')$ abrège l'équation suivante :
-			\[T_1 = (\textbf{if}~l \neq_\textbf{loc} l'~\textbf{then}~T_2~\textbf{else}~T_1)\]
 			
 			\item[] \textbf{Non-déterminisme:} La théorie d'effet est définie par les équations suivants :  
 			\begin{align*}
@@ -66,10 +60,8 @@ On va introduire la théorie des effets. La partie interprétation sera omit dan
 				\textbf{get}_l(x.\textbf{raise}_e()) &=~\textbf{raise}_e()\\
 				\textbf{set}_{l,x}(\textbf{raise}_{e}()) &=~\textbf{raise}_{e}()
 			\end{align*}
-		
-			Comme \textbf{raise} n'évalue jamais la continuation, on écrit $\textbf{raise}_e()$ à la place de $\textbf{raise}_e(x:\textbf{0}.T)$.
 			\bigbreak
 			
-			Les équations ci-dessus implique que les opérations sur la mémoire suivit par une levée d'exception est la même chose que juste lever une exception. Cela implique que toutes les opérations sur la mémoire sont discutables si une exception apparaît. La théorie des exceptions destructives est discutée comme celle du "rollback" dans \cite{DBLP:journals/tcs/HylandPP06}.
+			Les équations ci-dessus impliquent que les opérations sur la mémoire suivit par une levée d'exception est la même chose que juste lever une exception. Cela implique que toutes les opérations sur la mémoire sont discutables si une exception apparaît. La théorie des exceptions destructives est discutée comme celle du "rollback" dans \cite{DBLP:journals/tcs/HylandPP06}.
 		\end{enumerate}
 	\end{exemple}

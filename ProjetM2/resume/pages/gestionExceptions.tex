@@ -1,4 +1,5 @@
-On commence l'étude sur la gestionnaire des exceptions, d'une part pour comprendre le principe et d'autre part c'est un effet simple. La section est écrite de manière informelle.
+
+La structure du gestionnaire est important. Le choix se pose sur les travaux de \textbf{Benton et Kennedy}. Le principe est exprimé à travers un exemple sur un effet simple : les exceptions.
 \medbreak
 
 On considère un ensemble fini d'exceptions $\textbf{exc}$, un second ensemble $A$ et 
@@ -12,7 +13,7 @@ interprété par $in_2(e)$ (une fonction injective de $A + \textbf{exc}$ vers \t
 
 \subsection{Construction des gestionnaires étendus}
 
-	Benton et Kennedy ont généralisé la construction des gestionnaires avec la forme suivante :
+	Benton et Kennedy ont généralisé la construction des gestionnaires, dans \cite{DBLP:journals/jfp/BentonK01}, avec la forme suivante :
 	\[M~\textbf{handled~with} \{\textbf{raise}_e() \mapsto N_e\}_{e \in \textbf{exc}}~\textbf{to}~ x:A.N(x)\]
 	
 	avec $\{...\}_{e \in \textbf{exc}}$ représentant l'ensemble des calculs, un pour chaque $e \in \textbf{exc}$. Dans cette construction, 
@@ -25,7 +26,7 @@ interprété par $in_2(e)$ (une fonction injective de $A + \textbf{exc}$ vers \t
 		\textbf{raise}_{e'}()~\textbf{handled~with} \{\textbf{raise}_e() \mapsto N_e\}_{e \in \textbf{exc}}~\textbf{to}~ x:A.N(x) &= N_{e'}
 	\end{align*}
 	
-	Comme discuté dans \cite{DBLP:journals/jfp/BentonK01}, Cette construction permet d'écrire de façon simple un idiome de programmation qui était lourd à mettre en place. 
+	Comme discuté dans , Cette construction permet d'écrire de façon simple un idiome de programmation qui était lourd à mettre en place. 
 	\smallbreak
 	Algébriquement le calcul $N_e$ donne un nouveau modèle $\mathcal{M}$ pour la théorie des exceptions. Le porteur de ce modèle est $B + \textbf{exc}$. Pour chaque $e \in \textbf{exc}$, $\textbf{raise}_e()$ est interprété par $N_e$. On peut voir d'après les deux équations ci-dessus que :
 	\[h(M) \overset{def}{=} M~\textbf{handled~with} \{\textbf{raise}_e() \mapsto N_e\}_{e \in \textbf{exc}}~\textbf{to}~ x:A.N(x)\]
@@ -47,10 +48,27 @@ interprété par $in_2(e)$ (une fonction injective de $A + \textbf{exc}$ vers \t
 	
 	La construction proposé par Benton et Kennedy est le plus général possible d'un point de vue algébrique.
 
-	\subsection{Gestion des effets algébriques arbitraires}
+	\subsection{Gestion des effets algébriques}
 	
-	Avec la construction étendue de Benton et Kennedy, on voit maintenant comment créer les gestionnaires pour les autres effets algébriques. Un \textbf{modèle d'une théorie d'équations} est une interprétation, i.e, un ensemble de tableaux associatifs, un pour chaque opération, qui satisfont les équations. Les gestionnaires permettent de telles interprétations. Comme avant, les calculs sont interprétés par le modèle libre et la construction des gestionnaires sont interprétés par l'homomorphisme induit. Avant, les exceptions étaient remplacés par un calcul du gestionnaire; maintenant les \textbf{opérations} sont remplacées par les tableaux associatifs du gestionnaire.
+	La construction des gestionnaires étendus permet de traiter les effets algébrique. Cela équivaut à dire que les gestionnaires vu ci-dessus correspondent à des \textbf{modèles de théorie équationnelle}. 
+	La source des effets est l'ensemble des opérations comme dans la représentation de \textbf{Plotkin et Power}.
+	
+	
+	
+	%Avec la construction étendue de Benton et Kennedy, on voit maintenant comment créer les gestionnaires pour les autres effets algébriques. 
+	%Un \textbf{modèle d'une théorie d'équations} est une interprétation, i.e, un ensemble de tableaux associatifs, un pour chaque opération, qui satisfont les équations. 
+	%Les gestionnaires permettent de telles interprétations. 
+	%Comme avant, les calculs sont interprétés par le modèle libre et la construction des gestionnaires sont interprétés par l'homomorphisme induit. Avant, les exceptions étaient remplacés par un calcul du gestionnaire; maintenant les \textbf{opérations} sont remplacées par les tableaux associatifs du gestionnaire.
 	\smallbreak
-	Il est important de noter que toute interprétation ne donne pas forcément un modèle de la théorie des équations et que donc tous les gestionnaires ne sont pas forcément correctes. Plus que ça, la validité d'un gestionnaire peut être indéfini. Pour contourner le problème, il y a deux écoles. Soit on contraint l'utilisateur à des gestionnaires prédéfinies que l'on sait correcte; soit on laisse une totale liberté à l'utilisateur mais c'est lui qui est responsable de la validité de ses gestionnaires. On adoptera la seconde dans ce papier.
+	
+	
+	Toutes interprétations ne donnent pas forcément un modèle de la théorie équationnelle. Cela induit que certains gestionnaires sont incorrectes. 
+	Pour contourner le problème, il y a deux écoles.
+	\begin{enumerate}
+		\item l'utilisateur est contraint à utiliser une famille d'effet que le créateur du langage sait gérer;
+		\item l'utilisateur a une totale liberté et le créateur du langage autorise un gestionnaire à être incorrect.
+	\end{enumerate}
+	Dans l'article la seconde option est choisie.
+	%Soit on contraint l'utilisateur à des gestionnaires prédéfinies que l'on sait correcte; soit on laisse une totale liberté à l'utilisateur mais c'est lui qui est responsable de la validité de ses gestionnaires. On adoptera la seconde dans ce papier.
 	
 	

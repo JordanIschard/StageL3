@@ -1,7 +1,8 @@
-On s'intéresse à deux questions en particulières : Quels calculs sont égaux et quels gestionnaires sont corrects ? On va se contenter dans cette section des observations initiales sans donner une logique complète.
+Deux questions se posent : Quels calculs sont égaux ? Quels gestionnaires sont corrects ?
+%On s'intéresse à deux questions en particulières : Quels calculs sont égaux et quels gestionnaires sont corrects ? On va se contenter dans cette section des observations initiales sans donner une logique complète.
 \smallbreak
-
-On fixe une signature et une théorie d'effet $\tau$ avec ses interprétations. On considère une formule bien formée $\Gamma~|~K \vdash \varphi$. Elle est créée à partir de formules atomiques grâce aux connecteurs booléens habituelles ainsi que les quantificateurs existentielle et universelle appliqués sur les types de valeurs (ex : $\forall x:A.\varphi$) et sur les continuations (ex : $\forall k:\alpha \rightarrow \underline{C}.\varphi$).
+On fixe une signature et une théorie d'effet $\tau$ avec ses interprétations. On considère une formule bien formée $\Gamma~|~K \vdash \varphi$. Elle est créée à partir de formules atomiques grâce aux connecteurs booléens habituelles ainsi que les quantificateurs existentielle et universelle.
+%appliqués sur les types de valeurs (ex : $\forall x:A.\varphi$) et sur les continuations (ex : $\forall k:\alpha \rightarrow \underline{C}.\varphi$).
 
 \begin{remark}
 	Dans la suite on utilisera l'égalité, l'inégalité de Kleene ainsi que les assertions d'existence. On introduit donc les notations ainsi que leurs signification dans cette remarque.
@@ -11,49 +12,48 @@ On fixe une signature et une théorie d'effet $\tau$ avec ses interprétations. 
 		\item[] \textbf{égalité de kleene:} on la note $e \simeq e'$ et elle vrai si les expressions sont définies et équivalente ou les expressions sont indéfinies.
 		\item[] \textbf{inégalité de kleene:} on la note $e \lesssim e'$ et elle abrège la notation $e \downarrow~\Rightarrow~e \simeq e'$
 	\end{enumerate}
-\end{remark}
 
-On va appliquer ses assertions sur les termes de valeurs et de calculs. On pourra interprété $H\downarrow$ comme la validité du gestionnaire. 
+	On interprétera $H\downarrow$ comme la validité du gestionnaire. 
+\end{remark}
 \medbreak
 
 \begin{exemple}
-	On considère un ensemble d'équations qui garde la syntaxe et la sémantique évoqué jusqu'alors.
 	On peut définir une $\beta$-inéquation de Kleene avec la construction suivante : 
 	\[\textbf{return}~x~\textbf{to}~x:A. M \lesssim M\]
-	et l'$\eta$-équation pour la fonction suivante : 
+	De la même façon, l'$\eta$-équation peut se définir comme
 	$\lambda x:A.M~x \simeq M$
 \end{exemple}
 
-On définit des équations qui décrivent les comportements des opérations sur les types de produits et de fonctions : 
-\begin{align*}
-	\textbf{op}_V(x:\alpha.\langle M_l\rangle_{l \in L}) &\simeq \langle\textbf{op}_V(x:\alpha. M_l)\rangle_{l \in L}:\Pi_{l \in L} \underline{C}_l\\
-	\textbf{op}_V(x:\alpha.\lambda y:A.M) &\simeq \lambda y:A.\textbf{op}_V(x:\alpha. M_l):A \rightarrow \underline{C}
-\end{align*}
+%On définit des équations qui décrivent les comportements des opérations sur les types de produits et de fonctions : 
+%\begin{align*}
+	%\textbf{op}_V(x:\alpha.\langle M_l\rangle_{l \in L}) &\simeq \langle\textbf{op}_V(x:\alpha. M_l)\rangle_{l \in L}:\Pi_{l \in L} \underline{C}_l\\
+	%\textbf{op}_V(x:\alpha.\lambda y:A.M) &\simeq \lambda y:A.\textbf{op}_V(x:\alpha. M_l):A \rightarrow \underline{C}
+%\end{align*}
 
 
-On a aussi une équation qui définit la commutation entre les opérations et le séquençage:
-	\[\textbf{op}_V(x:\alpha.M)~\textbf{to}~y:A.N \simeq \textbf{op}_V(x:\alpha.M~\textbf{to}~y:A.N):\underline{C}\]
-\medbreak
+%On a aussi une équation qui définit la commutation entre les opérations et le séquençage:
+%	\[\textbf{op}_V(x:\alpha.M)~\textbf{to}~y:A.N \simeq \textbf{op}_V(x:\alpha.M~\textbf{to}~y:A.N):\underline{C}\]
+%\medbreak
 
 D'autres équations sont héritées directement de la théorie d'effet $\tau$. On prend le patron $T$ tel que $x_1:\alpha_1,...,x_m:\alpha_m|z_1:\beta_1,...,z_n:\beta_n \vdash T$ et les variables de continuations distinctes $k_1,...,k_n$. On réutilise la notation $T[k_1/z_1,...,k_n/z_n]$  qui représente le terme de calcul obtenu après avoir substitué toutes les variables $z_i$ par leurs continuations associées $k_i$. 
 \medbreak
-\textbf{Si} on prend $Gamma$ le contexte de valeurs contenant $x_1,\alpha_1,...,x_m:\alpha_m$ et $K$ le contexte des continuations contenant $k_1:\beta_1 \rightarrow \underline{C},...,k_n:\beta_n \rightarrow \underline{C}$ \textbf{alors} on peut typer les patrons par $\Gamma~|~K \vdash T[k_1/z_1,...,k_n/v_n]:\underline{C}$. On peut donc avoir :
+\textbf{Si} on prend $\Gamma = x_1,\alpha_1,...,x_m:\alpha_m$ et $K = k_1:\beta_1 \rightarrow \underline{C},...,k_n:\beta_n \rightarrow \underline{C}$ \textbf{alors} on peut typer les patrons par $\Gamma~|~K \vdash T[k_1/z_1,...,k_n/v_n]:\underline{C}$. On peut donc avoir :
 \[T_1[k_1/z_1,...,k_n/v_n] \simeq T_2[k_1/z_1,...,k_n/v_n]\]
 pour toutes équations 
 \[x_1:\alpha_1,...,x_m:\alpha_m|z_1:\beta_1,...,z_n:\beta_n \vdash T_1 = T_2\]
 dans $\tau$ et pour tout $k_1:\beta_1 \rightarrow \underline{C},...,k_n:\beta_n \rightarrow \underline{C}$.
-\newpage
 
 On définit deux inéquations pour la construction des gestionnaires. 
-Pour tout $H = {\textbf{op}_y(k) \mapsto M_\textbf{op}}_{\textbf{op}:\alpha \rightarrow \beta}$, les inéquations sont : 
+Pour tout $H = \{\textbf{op}_y(k) \mapsto M_\textbf{op}\}_{\textbf{op}:\alpha \rightarrow \beta}$, les inéquations sont : 
 \begin{align*}
 	\textbf{return}~x~\textbf{handled~with}~H~\textbf{to}~x:A.N  &\lesssim N\\
 	\textbf{op}_y(x':\beta.M)~\textbf{handled~with}~H~\textbf{to}~x:A.N&\lesssim M_\textbf{op}[x':\beta.M~\textbf{handled~with}~H~\textbf{to}~x:A.N/k]
 \end{align*}
 	
-où la substitution de la forme $x':\beta.M'/k$ remplace chaque occurrence du calcul $k(W)$ par $M'[V/x']$. On a le cas spécifique suivant
-	\[M~\textbf{to}~x:A.N \simeq M \textbf{handled~with}~\{\}~\textbf{to}~x:A.N\]
-qui montre que le séquençage est un cas spécifique du gestionnaire où toutes les opérations sont gérées par elles-même.
+où la substitution de la forme $x':\beta.M'/k$ remplace chaque occurrence du calcul $k(W)$ par $M'[V/x']$. 
+%On a le cas spécifique suivant
+%	\[M~\textbf{to}~x:A.N \simeq M \textbf{handled~with}~\{\}~\textbf{to}~x:A.N\]
+%qui montre que le séquençage est un cas spécifique du gestionnaire où toutes les opérations sont gérées par elles-même.
 
 
 Il y a d'autres équations pour les gestionnaires d'exceptions proposé par Benton et Kennedy \cite{DBLP:journals/jfp/BentonK01} et par Levy \cite{DBLP:journals/entcs/Levy06a}. On souhaiterai généraliser ces équations à nos gestionnaires. Il se trouve que ces équations échouent pour les gestionnaires généraux, cependant elles sont correctes pour certaines classes de gestionnaires (voir \cite{DBLP:conf/lics/PlotkinP08}). Par la suite on ne prendra pas en compte ce problème.

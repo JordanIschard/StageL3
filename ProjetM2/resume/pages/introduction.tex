@@ -6,15 +6,17 @@
 		avec des traits impératifs.
 		On peut représenter une monade comme un triplet constitué de : 
 		\begin{enumerate}
-			\item un \textbf{constructeur de type} appelé \textit{type monadique}, qui associe au type $\textbf{t}$ le type $\mathcal{M}\textbf{t}$.
+			\item un \textbf{constructeur de type} $\mathcal{M}$ appelé \textit{type monadique}, qui associe au type $\textbf{t}$ le type $\mathcal{M}\textbf{t}$.
 			\item une \textbf{fonction} \verb|unit/return| qui construit à partir d'un élément de type 
 			sous-jacent $\textbf{a}$ un autre élément de type monadique $\mathcal{M}\textbf{a}$. Cette fonction a la signature suivante : 
 			
 			\verb|unit/return|$~:~\textbf{t} \rightarrow \mathcal{M}\textbf{t}$.
-			\item une \textbf{fonction $bind$}, représenté par l'opérateur infixe \verb|>>=|, associant à un type monadique
-			et une fonction d'association un autre type monadique. Cette opérateur à la signature suivante : 
+			\item une \textbf{fonction $bind$}, représenté par l'opérateur infixe \verb|>>=|, associant à une valeur de type monadique
+			et une fonction d'association une autre valeur de type monadique. Cette opérateur à la signature suivante : 
 			
 			\verb|>>=|$~:~\mathcal{M}\textbf{t} \rightarrow (\textbf{t} \rightarrow \mathcal{M}\textbf{u}) \rightarrow \mathcal{M}\textbf{u}$.
+			
+			L'idée derrière cette fonction est que l'on doit passé par un calcul pour accéder et traiter une valeur de type monadique afin de continuer le calcul.
 		\end{enumerate}
 	\end{definition}
 	\bigbreak
@@ -22,6 +24,7 @@
 	\begin{exemple} Voici un exemple de \textbf{Monade} trouvé sur le \href{http://lyah.haskell.fr/pour-une-poignee-de-monades}{site d'Haskell france}. On représente 
 		une variable optionnelle.
 		\begin{verbatim}
+						-- Ici le constructeur de type est Maybe
 						instance Monad Maybe where
 						        -- La fonction qui construit notre type monadique
 						        return x = Just x
@@ -48,7 +51,7 @@
 		On a deux possibilités : soit on continue avec le calcul donné par le première argument soit on continue avec le calcul donné par le second.
 	\end{exemple}
 
-	Les deux représentations permettent de gérer les effets et il est possible de passer d'une représentation à l'autre pour la plupart des effets. Ces effets sont appelés \textbf{effets Algébriques}. Les exemples utilisés sont algébriques.
+	Les représentations respectives de \textbf{Moggi} et de \textbf{Plotkin et Power} permettent de gérer les effets et il est possible de passer d'une représentation à l'autre pour la plupart des effets. Typiquement les effets représentant les I/O et les états mémoires peuvent être exprimé dans les deux représentations. Les effets ayant cette caractéristique sont appelés \textbf{effets Algébriques}.
 	\medbreak
 	
 	La vision algébrique des effets a permis de les combiner et de raisonner dessus. Cependant, le gestionnaire d'exception apporte un challenge.
@@ -57,19 +60,8 @@
 	Soit la monade $\_ + \textbf{exc}$ pour l'ensemble des exceptions $\textbf{exc}$. Cette monade est représentée par une opération $\textbf{raise}_e()$ pour chaque $e \in \textbf{exc}$ et aucune équations. $\textbf{raise}_e()$ ne prend par d'arguments et il n'y a pas de continuation directement après une levée d'exception. Maintenant la monade défini, comment créer le gestionnaire d'exception ? L'approche commune est la suivante:
 	\[\textbf{handle}_e(M,N)\]
 		
-	$M$ s'effectue à moins qu'une exception $e$ soit levée, dans ce cas on effectue $N$. Cette construction binaire manque d'une certaine propriété caractérisant les opérations spécifiés dans les équations qui les décrivent.
-	
-	\begin{exemple}\label{exEval}
-		Cette propriété correspond à l'opération de commutation avec le contexte d'évaluation $\varepsilon[\_]$.\\
-		On aimerait garder les équations suivantes : 
-		\begin{align*}
-			\varepsilon[\textbf{choose}(M,N)] &= \textbf{choose}(\varepsilon[M],\varepsilon[N]) & \varepsilon[\textbf{raise}_e()] &= \textbf{raise}_e()\\
-		\end{align*}
-		mais pas : 
-		\[\varepsilon[\textbf{handle}(M,N)] = \textbf{handle}(\varepsilon[M],\varepsilon[N])\]
-	
-		Or les propriétés naturelles sont communes à toutes les opérations spécifiées par des équations, donc la solution proposée n'est pas suffisante.
-	\end{exemple} 
+	$M$ s'effectue à moins qu'une exception $e$ soit levée, dans ce cas on effectue $N$. Cette construction manque d'une certaine propriété caractérisant les opérations spécifiés dans les équations qui les décrivent.
+
 
 	Dans le papier on donne une explication algébrique des gestionnaires d'exceptions. L'idée principale est que :
 	\begin{enumerate}
@@ -77,16 +69,15 @@
 		\item la sémantique des gestionnaires est donné à l'aide d'homomorphismes uniques qui ciblent de tels modèles et est induit par la propriété universelle du modèle libre. 
 	\end{enumerate}
 
-	On souhaite adopte une vision générale suggéré par Benton et Kennedy. Dans leur approche, la valeur de retour est passé à la continuation définit par l'utilisateur. Cette idée se généralise à tous les effets algébrique, permettant à un nouveau concept de programmation de gérer les effets algébriques. 
-	
-	Conceptuellement, les opérations algébriques et les gestionnaires d'effets sont duals : le premier peut être nommé \textit{constructeur d'effets} car il crée l'effet et le second peut être nommé \textit{destructeur d'effets} car il produit un calcul en lien avec l'effet créé.
+	Il souhaite adopter une vision générale suggéré par Benton et Kennedy. Dans leur approche, la valeur de retour est passé à la continuation définit par l'utilisateur.
+	Conceptuellement, les opérations algébriques et les gestionnaires d'effets sont duals, on a le \textit{constructeur d'effets} qui crée l'effet et le \textit{destructeur d'effets} qui produit un calcul en lien avec l'effet détruit.
 	\smallbreak
 	
 	Le projet recherche a pour but de choisir un article et de le résumer. Mon résumé restera fidèle à l'article en gardant
-	la forme du papier tout en allègeant le fond. En effet, il m'est plus important de montrer le concept général via des exemples ainsi
+	la forme du papier tout en allégeant le fond. En effet, il m'est plus important de montrer le concept général via des exemples ainsi
 	que les résultats importants sur la validité des gestionnaires que d'expliquer la logique mathématique interne.
 
-	De plus, le projet recherche étant lié à un autre module projet, je vais ajouter une plus-value à mon résumer. Durant ma 
+	De plus, le projet recherche étant lié à un autre module projet, je vais ajouter une plus-valu à mon résumer. Durant ma 
 	1ère année de master, j'ai eu l'occasion d'implémenter une représentation des effets algébrique dans un noyau de langage fonctionnel créé lors de mon stage de fin de licence. Je vais donc profiter d'une section supplémentaire pour comparer les deux approches.
 	
 	

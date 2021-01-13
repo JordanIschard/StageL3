@@ -3,7 +3,9 @@
 	Les types de signature $\alpha,\beta$ sont définis par:
 	\[\alpha,\beta := \textbf{b}~|~\textbf{1}~|~\alpha \times \beta~|~\sum_{l \in L}\alpha_l\]
 			
-	où \textbf{b} représente l'ensemble des types de base, $L$ représente un sous-ensemble fini de label. On ne spécifie pas l'ensemble $L$ mais on assume que les labels que l'on va utiliser seront disponibles. Cependant, on spécifie un sous-ensemble de \textbf{b} comme un \textbf{type de base d'arité} ce qui nous permet d'introduire la définition suivante : 
+	où \textbf{b} représente l'ensemble des types de base, $1$ représente le type $unit$ et $L$ représente un sous-ensemble fini de label. 
+	%On ne spécifie pas l'ensemble $L$ mais on assume que les labels que l'on va utiliser seront disponibles. 
+	Cependant, Un sous-ensemble de \textbf{b} est spécifié comme un \textbf{type de base d'arité} ce qui permet d'introduire la définition suivante : 
 	
 	\begin{definition}
 		Un type de signature est un type de signature \textbf{d'arité} si et seulement si tous les types de base qu'il contient sont des types de base d'arité.
@@ -16,19 +18,16 @@
 	\end{exemple}
 	\bigbreak
 
+	Le symbole de fonction typé est défini par $\textbf{f} : \alpha \rightarrow \beta$. Il représente une fonction prédéfinie.
 
-	On définit les symboles de fonctions typés par : $\textbf{f} : \alpha \rightarrow \beta$. Ils représentent les fonctions prédéfinies, telles que $+ : \textbf{nat} \times \textbf{nat} \rightarrow \textbf{nat}$ ou encore $< : \textbf{nat} \times \textbf{nat} \rightarrow \textbf{bool}$.
-	\medbreak
-
-	Pour finir, on définit les symboles d'opérations typés par : $\textbf{op} : \alpha \rightarrow \beta$, tels que chaque $\beta$ est un type de signature d'arité et tels que $\textbf{op}$ a une théorie d'effet $\tau$. Les opérations deviennent la source des effets et la théorie d'effet indique leurs propriétés.
 	
-
-
-	On interprète $\textbf{op} : \alpha \rightarrow \beta$ de la façon suivante :
+	%On définit les symboles de fonctions typés par : $\textbf{f} : \alpha \rightarrow \beta$. Ils représentent les fonctions prédéfinies, telles que $+ : \textbf{nat} \times \textbf{nat} \rightarrow \textbf{nat}$ ou encore $< : \textbf{nat} \times \textbf{nat} \rightarrow \textbf{bool}$.
+	\medbreak
+	
+	Le symbole d'opération typé est défini par : $\textbf{op} : \alpha \rightarrow \beta$ tel que $\textbf{op}$ a une théorie d'effet $\tau$.
+	%Pour finir, on définit les symboles d'opérations typés par : $\textbf{op} : \alpha \rightarrow \beta$, tels que chaque $\beta$ est un type de signature d'arité et tels que $\textbf{op}$ a une théorie d'effet $\tau$. Les opérations deviennent la source des effets et la théorie d'effet indique leurs propriétés.
+	Il est évalué de la façon suivante :
 	$\textbf{op}$ accepte un paramètre $\alpha$ et après avoir exécuté l'effet approprié, son type de retour $\beta$ détermine la continuation.
-	\medbreak
-	
-	Maintenant que tout est définis, on peut créer une signature. Le choix de la signature va dépendre de ce que l'on veut représenter.
 
 	\begin{exemple}\label{exStateExc}
 		On présente quelques exemples prit de \cite{DBLP:journals/tcs/HylandPP06}.
@@ -41,7 +40,7 @@
 
 \subsection{Types}
 	
-	Le langage que l'on définit suit l'approche \textit{call-by-push-value} de Levy \cite{DBLP:journals/lisp/Levy06}. On a donc une séparation stricte entre les valeurs et les calculs. Ces types sont donnés par : 
+	Le langage que défini suit l'approche \textit{call-by-push-value} de Levy \cite{DBLP:journals/lisp/Levy06}, i.e, il y a une séparation stricte entre les valeurs et les calculs. Ces types sont donnés par : 
 	\begin{align*}
 		A,B &:= \textbf{b}~|~\textbf{1}~|~A \times B~|~\sum_{l \in L} A_l~|~U\underline{C}\\
 		\underline{C} &:= FA~|~\Pi_{l\in L}~\underline{C}_l~|~A \rightarrow\underline{C}
@@ -53,7 +52,7 @@
 	
 \subsection{Termes}
 
-	On a définit les signatures et les types, il nous manque les termes. On va les définir en trois parties : les termes \textbf{valeur} $V,W$, les termes \textbf{calcul} $M,N$ et les termes \textbf{gestionnaire} $H$. Ils sont définit par :
+	Les termes se sépare en trois sous-ensemble de termes : les termes \textbf{valeur} $V,W$, les termes \textbf{calcul} $M,N$ et les termes \textbf{gestionnaire} $H$. Ils sont défini par :
 	\begin{align*}
 		V,W :=&~x~|~f(V)~|~\langle\rangle~|~\langle V,W\rangle~|~l(V)~|~\textbf{thunk}~M\\
 		M,N :=&~\textbf{match}~V~\textbf{with}~\langle x,y\rangle  \mapsto M~|~\textbf{match}~V~\textbf{with}~\{l(x_l)  \mapsto M_l\}_{l \in L}~|~\textbf{force}~V~|\\
@@ -62,15 +61,17 @@
 		H :=&~\{\textbf{op}_{x:\alpha}(k:\beta \rightarrow \underline{C}) \mapsto M_\textbf{op} \}_{\textbf{op}:\alpha \rightarrow \beta}
 	\end{align*}
 	
-	avec $x,y$ appartenant à l'ensemble des variables de valeur et $k$ appartenant à l'ensemble des variables de continuation. $\{...\}_{l \in L}$ représente l'ensemble des calculs, un pour chaque $l \in L$. Même principe pour $\{...\}_{\textbf{op} : \alpha \rightarrow \beta}$.
+	avec $x,y$ appartenant à l'ensemble des variables de valeur et $k$ appartenant à l'ensemble des variables de continuation. $\{...\}_{l \in L}$ représente l'ensemble des calculs, un pour chaque $l \in L$. Même principe pour $\{...\}_{\textbf{op} : \alpha \rightarrow \beta}$. Les termes non-présents dans la syntaxe de base est expliqué ci-dessous. 
 
-	La syntaxe respecte celle présenté avec l'approche \textit{call-by-push-value} excepté pour la partie gestionnaire et la dernière ligne des termes \textbf{calcul}.
-	\smallbreak
+	%La syntaxe respecte celle présenté avec l'approche \textit{call-by-push-value} excepté pour la partie gestionnaire et la dernière ligne des termes \textbf{calcul}.
+	%\smallbreak
+	\bigbreak
+	%On a le terme d'une \textit{application d'opération}
+	%\[\textbf{op}_V(x:\beta .M)\]
+	L'\textit{application d'opération} symbolisé par $\textbf{op}_V(x:\beta .M)$ fonctionne de la manière suivante : l'opération \textbf{op} paramétré par $V$ est géré, ensuite on affecte le résultat à $x$ et enfin on évalue la continuation $M$. Si il n'y a pas de gestionnaire les opérations sont effectué de manière classique.
+		
 	
-	On a le terme d'une \textit{application d'opération}
-		\[\textbf{op}_V(x:\beta .M)\]
-	
-	 Elle fonctionne de la manière suivante : l'opération \textbf{op} paramétré par $V$ est effectuée, ensuite on affecte le résultat à $x$ et enfin on évalue la continuation $M$.
+	 %Elle fonctionne de la manière suivante : l'opération \textbf{op} paramétré par $V$ est effectuée, ensuite on affecte le résultat à $x$ et enfin on évalue la continuation $M$.
 
 	\begin{exemple}\label{get1}
 		Le calcul suivant incrémente le nombre $n$, le stocke dans l'emplacement $l$ et retourne l'ancienne valeur.
@@ -78,59 +79,65 @@
 	\end{exemple}
 	\bigbreak
 	
-	Ensuite, le terme du gestionnaire
-		\[\{\textbf{op}_{x:\alpha}(k:\beta \rightarrow \underline{C}) \mapsto M_\textbf{op} \}_{\textbf{op}:\alpha \rightarrow \beta}\]
+	Le terme du gestionnaire $\{\textbf{op}_{x:\alpha}(k:\beta \rightarrow \underline{C}) \mapsto M_\textbf{op} \}_{\textbf{op}:\alpha \rightarrow \beta}$ est défini par un ensemble fini de définitions d'opérations, un ensemble pour chaque opération. $M_\textbf{op}$ est dépendant de la variable $x$ et de la continuation $k$.
+	%Ensuite, le terme du gestionnaire
+	%	\[\{\textbf{op}_{x:\alpha}(k:\beta \rightarrow \underline{C}) \mapsto M_\textbf{op} \}_{\textbf{op}:\alpha \rightarrow \beta}\]
 		
-	est définit par un ensemble fini de définitions d'opérations qui gère les effets 
-		\[\textbf{op}_{x:\alpha}(k:\beta \rightarrow \underline{C}) \mapsto M_\textbf{op}\]
+	%est définit par un ensemble fini de définitions d'opérations qui gère les effets 
+	%	\[\textbf{op}_{x:\alpha}(k:\beta \rightarrow \underline{C}) \mapsto M_\textbf{op}\]
 			
-	une pour chaque \textbf{op}. Le terme gestionnaire $M_\textbf{op}$ est dépendant de la variable $x$ et de la continuation $k$. À noter que $k$ sera toujours utiliser de la manière suivante : $k(V)$ ou $V$ est la valeur appliqué à la continuation.
+	%une pour chaque \textbf{op}. Le terme gestionnaire $M_\textbf{op}$ est dépendant de la variable $x$ et de la continuation $k$. À noter que $k$ sera toujours utiliser de la manière suivante : $k(V)$ ou $V$ est la valeur appliqué à la continuation.
 	
 	\begin{exemple}\label{get2}
-		Bien que l'on ne peut pas modifier une valeur en lecture-seule (c'est un cas spécifique ou on ne peut pas utiliser l'opération \textbf{set}), il est tout de même possible d'évaluer un calcul avec une valeur temporairement modifiée. Pour faire cela, on crée un gestionnaire \textit{état-temporaire} qui dépend d'une variable $n$ (la dite variable temporaire) :
+		On ne veut pas modifier la valeur en mémoire mais quand tester pour une valeur arbitraire. Pour cela, on crée un gestionnaire \textit{état-temporaire} qui dépend d'une variable $n$ (la dite variable temporaire) :
 		\[H_{temporary} = \{\textbf{get}_{l:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(n)\}\]
-
+		%Bien que l'on ne peut pas modifier une valeur en lecture-seule (c'est un cas spécifique ou on ne peut pas utiliser l'opération \textbf{set}), il est tout de même possible d'évaluer un calcul avec une valeur temporairement modifiée. Pour faire cela, on crée un gestionnaire \textit{état-temporaire} qui dépend d'une variable $n$ (la dite variable temporaire) :
+		%\[H_{temporary} = \{\textbf{get}_{l:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(n)\}\]
 	\end{exemple}
+	\bigbreak
 
-	Finalement, on a le terme de calcul \textit{gestionnaire}
-		\[M~\textbf{handled}~\textbf{with}~H~\textbf{to}~x:A.N\]		
-
-	Il évalue $M$, gérant tous les calculs d'opérations grâce à $H$. Ensuite il associe le résultat à $x$ et enfin évalue $N$. C'est un point clé pour la compréhension de l'article, on va donc détailler. 
-	
-	On suppose que $M$ veut effectuer une opération $\textbf{op}_V(y.M')$ correspondant au terme de gérant $\textbf{op}_z(k) \mapsto M_\textbf{op} \in H$. On substitue l'évaluation de \textbf{op} par $M_\textbf{op}$ en associant $z$ avec $V$ et en remplaçant la continuation $k(W)$ pour chaque occurrence de celle-ci dans $M_\textbf{op}$ avec 
-		\[M'[W/y]~\textbf{handled}~\textbf{with}~H~\textbf{to}~x:A.N\]
+	Le gestionnaire symbolisé par $M~\textbf{handled}~\textbf{with}~H~\textbf{to}~x:A.N$ est évalué comme suit : on évalue $M$, gérant tous les calculs d'opérations grâce à $H$. Ensuite on associe le résultat à $x$ et enfin évalue $N$.
+	%Finalement, on a le terme de calcul \textit{gestionnaire}
+	%	\[M~\textbf{handled}~\textbf{with}~H~\textbf{to}~x:A.N\]		
+	%Il évalue $M$, gérant tous les calculs d'opérations grâce à $H$. Ensuite il associe le résultat à $x$ et enfin évalue $N$. C'est un point clé pour la compréhension de l'article, on va donc détailler. 
+	En cas de présence d'une opération $\textbf{op}_V(y.M')$ dans $M$ et de $\textbf{op}_z(k) \mapsto M_\textbf{op}$ dans $H$, $M_\textbf{op}[V/z]$ substitue $\textbf{op}$. Ensuite les continuations $k(W)$ présent dans $M_\textbf{op}$ sont substitués par  
+	\[M'[W/y]~\textbf{handled}~\textbf{with}~H~\textbf{to}~x:A.N\]
+	%On suppose que $M$ veut effectuer une opération $\textbf{op}_V(y.M')$ correspondant au terme de gérant $\textbf{op}_z(k) \mapsto M_\textbf{op} \in H$. On substitue l'évaluation de \textbf{op} par $M_\textbf{op}$ en associant $z$ avec $V$ et en remplaçant la continuation $k(W)$ pour chaque occurrence de celle-ci dans $M_\textbf{op}$ avec 
+		%\[M'[W/y]~\textbf{handled}~\textbf{with}~H~\textbf{to}~x:A.N\]
 
 	La continuation $k$ reçoit la valeur $W$ déterminé par $M_\textbf{op}$. Elle est ensuite géré de la même façon que $M$, ce qui n'est pas le cas de $M_\textbf{op}$. En effet $M_\textbf{op}$ n'est pas géré par $H$, donc ses opérations échappent à $H$ mais peuvent cependant être gérées par un autre gestionnaire imbriqué. 
 	
 	\begin{exemple}\label{get3}
 		On considère le gestionnaire d'état temporaire $H_{temporary}$ donné dans Exemple \ref{get2}. On prend la calcul suivant :
 		\begin{align*}
-			& \textbf{let}~n:\textbf{nat}~\textbf{be}~20~\textbf{in}\\
-			& \textbf{get}_l(x:\textbf{nat}.get_l(y:\textbf{nat}.\textbf{return}~x+y))\\
-			&\textbf{handled~with}~H_{temporary}~\textbf{to}~z:A.\textbf{return}~z+2
+		 &\textbf{let}~n:\textbf{nat}~\textbf{be}~20~\textbf{in}&\\
+		&\textbf{get}_l(x:\textbf{nat}.get_l(y:\textbf{nat}.\textbf{return}~x+y))~\textbf{handled~with}~H_{temporary}~\textbf{to}~z:A.\textbf{return}~z+2
 		\end{align*}
 	
-	Dans ce calcul on va associer $n$ avec la valeur $20$. Le premier \textbf{get} va être géré par $H_{temporary}$ et va donc associer $x$ avec la valeur de $n$ donc $20$. Le second \textbf{get} appartient à la continuation et est donc géré aussi par $H_{temporary}$, i.e, il va associer $y$ avec $20$ (par la même logique que le premier \textbf{get}). On retourne $x + y$ donc $20 + 20$ soit $40$ et on associe ce résultat à $z$. On retournera au final $42$.
+	Dans ce calcul on va associer $n$ avec la valeur $20$. Le premier \textbf{get} va être géré par $H_{temporary}$ et va donc associer $x$ avec la valeur de $n$ donc $20$. Le second \textbf{get} appartient à la continuation et est donc géré aussi par $H_{temporary}$, i.e, il va associer $y$ avec $20$ (par la même logique que le premier \textbf{get}). On retourne $x + y$ soit $40$ et on associe ce résultat à $z$. On retournera au final $42$.
 	\end{exemple}
 	
 \subsection{Jugement de types}
 
-	Tous les jugements de types sont fait dans le contexte de valeurs
-		\[\Gamma = x_1:A_1,...,x_m:A_m\]
-		
-	avec les variables de valeurs $x_i$ associées à un type de valeurs $A_i$ et dans le contexte de continuations
-		\[K = k_1:\alpha_1 \rightarrow \underline{C}_1,...,k_n:\alpha_n \rightarrow \underline{C}_n\]
-		
-	avec les variables $k_j$ associées à un type de continuation $\alpha_j \rightarrow \underline{C}_j$. 
-	\bigbreak
-	Les valeurs sont typés par $\Gamma~|~K \vdash V:A$, ensuite les calculs sont typés par $\Gamma~|~K \vdash M:\underline{C}$ et enfin les gestionnaires sont typés par $\Gamma~|~K \vdash H:\underline{C}~\textbf{handler}$.
-	\smallbreak 
+	Tous les jugements de types sont fait dans le contexte de valeurs : $\Gamma = x_1:A_1,...,x_m:A_m$ et dans le contexte de continuations : $K = k_1:\alpha_1 \rightarrow \underline{C}_1,...,k_n:\alpha_n \rightarrow \underline{C}_n$.
+	\\
 	Les valeurs sont typés en suivant les règles ci-dessous : 
+	%Tous les jugements de types sont fait dans le contexte de valeurs
+	%	\[\Gamma = x_1:A_1,...,x_m:A_m\]
+		
+	%avec les variables de valeurs $x_i$ associées à un type de valeurs $A_i$ et dans le contexte de continuations
+	%	\[K = k_1:\alpha_1 \rightarrow \underline{C}_1,...,k_n:\alpha_n \rightarrow \underline{C}_n\]
+		
+	%avec les variables $k_j$ associées à un type de continuation $\alpha_j \rightarrow \underline{C}_j$. 
+	%\bigbreak
+	%Les valeurs sont typés par $\Gamma~|~K \vdash V:A$, ensuite les calculs sont typés par $\Gamma~|~K \vdash M:\underline{C}$ et enfin les gestionnaires sont typés par $\Gamma~|~K \vdash H:\underline{C}~\textbf{handler}$.
+	%\smallbreak 
+	%Les valeurs sont typés en suivant les règles ci-dessous : 
 	\begin{align*}
 		&\Gamma~|~K \vdash x:A~(x:A \in \Gamma) & &\dfrac{\Gamma~|~K \vdash V:\alpha}{\Gamma~|~K \vdash f(V):\beta}~(\textbf{f}:\alpha \rightarrow \beta) & &\dfrac{\Gamma~|~K \vdash M:\underline{C}}{\Gamma~|~K \vdash \textbf{thunk}~M:U\underline{C}}\\\\
 		&\dfrac{\Gamma~|~K \vdash V:A\quad\quad\Gamma~|~K \vdash W:B}{\Gamma~|~K \vdash \langle V,W \rangle:A \times B} & &\dfrac{\Gamma~|~K \vdash V:A_l}{\Gamma~|~K \vdash l(V):\sum_{l \in L}A_l}~(l \in L) & &\Gamma~|~K \vdash \langle\rangle:\textbf{1}
 	\end{align*}
-	
+	\\
 	Les calculs sont typés en suivant les règles ci-dessous :
 	\[\dfrac{\Gamma~|~K \vdash V : A \times B\quad\quad\Gamma~x:A,y:B~|~K \vdash M:\underline{C}}{\Gamma~|~K \vdash \textbf{match}~V~\textbf{with}~\langle x,y\rangle  \mapsto M:\underline{C}}\]
 	\begin{align*}	
@@ -146,8 +153,7 @@
 		&\dfrac{\Gamma~|~K \vdash M_l:\underline{C}_l~~(l \in L)}{\Gamma~|~K \vdash \langle M_l\rangle_{l \in L}:\Pi_{l\in L}\underline{C}_l}\\
 	\end{align*}
 	\[\dfrac{\Gamma~|~K \vdash M:FA\quad\quad\Gamma~|~K \vdash H : \underline{C}~\textbf{handler}\quad\quad\Gamma,x:A~|~K \vdash N:\underline{C}}{\Gamma~|~K \vdash M~\textbf{handled}~\textbf{with}~H~\textbf{to}~x:A.N : \underline{C}}\]	
-	
-	
+	\\
 	Les gestionnaires sont typés en suivant la règle ci-dessous : 
 	\begin{align*}
 		\dfrac{\Gamma,x:\alpha~|~K,k:\beta \rightarrow \underline{C} \vdash M_\textbf{op}:\underline{C}~~(\textbf{op}: \alpha \rightarrow \beta)}{\Gamma~|~K \vdash \{\textbf{op}_{x : \alpha}(k:\beta \rightarrow \underline{C}) \mapsto M_\textbf{op}\}_{\textbf{op}:\alpha \rightarrow \beta}:\underline{C}~\textbf{handler}}
