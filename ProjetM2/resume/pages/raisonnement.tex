@@ -1,7 +1,8 @@
-Deux questions se posent : Quels calculs sont égaux ? Quels gestionnaires sont corrects ?
+Deux questions se posent : Quels calculs sont égaux ? Quels gestionnaires sont valides ?
 %On s'intéresse à deux questions en particulières : Quels calculs sont égaux et quels gestionnaires sont corrects ? On va se contenter dans cette section des observations initiales sans donner une logique complète.
 \smallbreak
-On fixe une signature et une théorie d'effet $\tau$ avec ses interprétations. On considère une formule bien formée $\Gamma~|~K \vdash \varphi$. Elle est créée à partir de formules atomiques grâce aux connecteurs booléens habituelles ainsi que les quantificateurs existentielle et universelle.
+On fixe une signature et une théorie d'effet $\tau$ avec ses interprétations. 
+%On considère une formule bien formée $\Gamma~|~K \vdash \varphi$. Elle est créée à partir de formules atomiques grâce aux connecteurs booléens habituelles ainsi que les quantificateurs existentielle et universelle.
 %appliqués sur les types de valeurs (ex : $\forall x:A.\varphi$) et sur les continuations (ex : $\forall k:\alpha \rightarrow \underline{C}.\varphi$).
 
 \begin{remark}
@@ -35,51 +36,53 @@ On fixe une signature et une théorie d'effet $\tau$ avec ses interprétations. 
 %	\[\textbf{op}_V(x:\alpha.M)~\textbf{to}~y:A.N \simeq \textbf{op}_V(x:\alpha.M~\textbf{to}~y:A.N):\underline{C}\]
 %\medbreak
 
-D'autres équations sont héritées directement de la théorie d'effet $\tau$. On prend le patron $T$ tel que $x_1:\alpha_1,...,x_m:\alpha_m|z_1:\beta_1,...,z_n:\beta_n \vdash T$ et les variables de continuations distinctes $k_1,...,k_n$. On réutilise la notation $T[k_1/z_1,...,k_n/z_n]$  qui représente le terme de calcul obtenu après avoir substitué toutes les variables $z_i$ par leurs continuations associées $k_i$. 
-\medbreak
-\textbf{Si} on prend $\Gamma = x_1,\alpha_1,...,x_m:\alpha_m$ et $K = k_1:\beta_1 \rightarrow \underline{C},...,k_n:\beta_n \rightarrow \underline{C}$ \textbf{alors} on peut typer les patrons par $\Gamma~|~K \vdash T[k_1/z_1,...,k_n/v_n]:\underline{C}$. On peut donc avoir :
-\[T_1[k_1/z_1,...,k_n/v_n] \simeq T_2[k_1/z_1,...,k_n/v_n]\]
-pour toutes équations 
-\[x_1:\alpha_1,...,x_m:\alpha_m|z_1:\beta_1,...,z_n:\beta_n \vdash T_1 = T_2\]
-dans $\tau$ et pour tout $k_1:\beta_1 \rightarrow \underline{C},...,k_n:\beta_n \rightarrow \underline{C}$.
+%D'autres équations sont héritées directement de la théorie d'effet $\tau$. On prend le patron $T$ tel que $x_1:\alpha_1,...,x_m:\alpha_m|z_1:\beta_1,...,z_n:\beta_n \vdash T$ et les variables de continuations distinctes $k_1,...,k_n$. On réutilise la notation $T[k_1/z_1,...,k_n/z_n]$  qui représente le terme de calcul obtenu après avoir substitué toutes les variables $z_i$ par leurs continuations associées $k_i$. 
+%\medbreak
+%\textbf{Si} on prend $\Gamma = x_1,\alpha_1,...,x_m:\alpha_m$ et $K = k_1:\beta_1 \rightarrow \underline{C},...,k_n:\beta_n \rightarrow \underline{C}$ \textbf{alors} on peut typer les patrons par $\Gamma~|~K \vdash T[k_1/z_1,...,k_n/v_n]:\underline{C}$. On peut donc avoir :
+%\[T_1[k_1/z_1,...,k_n/v_n] \simeq T_2[k_1/z_1,...,k_n/v_n]\]
+%pour toutes équations 
+%\[x_1:\alpha_1,...,x_m:\alpha_m|z_1:\beta_1,...,z_n:\beta_n \vdash T_1 = T_2\]
+%dans $\tau$ et pour tout $k_1:\beta_1 \rightarrow \underline{C},...,k_n:\beta_n \rightarrow \underline{C}$.
 
-On définit deux inéquations pour la construction des gestionnaires. 
+On définit deux inéquations qui font écho au équation de la section 1 sur les gestionnaire d'exception.\\ 
 Pour tout $H = \{\textbf{op}_y(k) \mapsto M_\textbf{op}\}_{\textbf{op}:\alpha \rightarrow \beta}$, les inéquations sont : 
 \begin{align*}
 	\textbf{return}~x~\textbf{handled~with}~H~\textbf{to}~x:A.N  &\lesssim N\\
 	\textbf{op}_y(x':\beta.M)~\textbf{handled~with}~H~\textbf{to}~x:A.N&\lesssim M_\textbf{op}[x':\beta.M~\textbf{handled~with}~H~\textbf{to}~x:A.N/k]
 \end{align*}
 	
-où la substitution de la forme $x':\beta.M'/k$ remplace chaque occurrence du calcul $k(W)$ par $M'[V/x']$. 
+où la substitution de la forme $x':\beta.M'/k$ remplace chaque occurrence du calcul $k(W)$ par $M'[V/x']$.
 %On a le cas spécifique suivant
 %	\[M~\textbf{to}~x:A.N \simeq M \textbf{handled~with}~\{\}~\textbf{to}~x:A.N\]
 %qui montre que le séquençage est un cas spécifique du gestionnaire où toutes les opérations sont gérées par elles-même.
 
 
-Il y a d'autres équations pour les gestionnaires d'exceptions proposé par Benton et Kennedy \cite{DBLP:journals/jfp/BentonK01} et par Levy \cite{DBLP:journals/entcs/Levy06a}. On souhaiterai généraliser ces équations à nos gestionnaires. Il se trouve que ces équations échouent pour les gestionnaires généraux, cependant elles sont correctes pour certaines classes de gestionnaires (voir \cite{DBLP:conf/lics/PlotkinP08}). Par la suite on ne prendra pas en compte ce problème.
-\smallbreak
+%Il y a d'autres équations pour les gestionnaires d'exceptions proposé par Benton et Kennedy \cite{DBLP:journals/jfp/BentonK01} et par Levy \cite{DBLP:journals/entcs/Levy06a}. On souhaiterai généraliser ces équations à nos gestionnaires. Il se trouve que ces équations échouent pour les gestionnaires généraux, cependant elles sont correctes pour certaines classes de gestionnaires (voir \cite{DBLP:conf/lics/PlotkinP08}). Par la suite on ne prendra pas en compte ce problème.
+%\smallbreak 
 
-On considère les assertions d'existences suivantes, elles définissent toutes les conditions pour une interprétation d'un terme d'exister.
-\begin{align*}
-	\textbf{return}~V \downarrow &\Leftrightarrow~V \downarrow\\
-	M~\textbf{to}~x:A.N \downarrow&\Leftrightarrow M\downarrow~\wedge~\forall x:A.N\downarrow\\
-	\lambda x:A.M\downarrow&\Leftrightarrow~\forall x:A.M\downarrow\\
-	\textbf{op}_V(x:\alpha.M)\downarrow&\Leftrightarrow~V\downarrow~\wedge~\forall x:\alpha.M\downarrow
-\end{align*}
+%On considère les assertions d'existences suivantes, elles définissent toutes les conditions pour une interprétation d'un terme d'exister.
+%\begin{align*}
+	%\textbf{return}~V \downarrow &\Leftrightarrow~V \downarrow\\
+	%M~\textbf{to}~x:A.N \downarrow&\Leftrightarrow M\downarrow~\wedge~\forall x:A.N\downarrow\\
+	%\lambda x:A.M\downarrow&\Leftrightarrow~\forall x:A.M\downarrow\\
+	%\textbf{op}_V(x:\alpha.M)\downarrow&\Leftrightarrow~V\downarrow~\wedge~\forall x:\alpha.M\downarrow
+%\end{align*}
+%\smallbreak
 
-Afin de définir l'existence d'un gestionnaire, on doit d'abord être capable de remplacer les opérations dans des patrons par leurs définitions dans le gestionnaire.\\
-On définit le gestionnaire $\Gamma~|~H \vdash : \underline{C}~\textbf{handler}$, avec $H~=~\{\textbf{op}_{x:\alpha}(k:\beta \rightarrow \underline{C}) \mapsto M_\textbf{op}\}_{\textbf{op}:\alpha \rightarrow \beta}$ et un contexte de variable de patron $Z$. Ensuite on prend $K'$ le contexte de continuation tel que  $\forall z:\alpha \in Z~:~k_z : \alpha \rightarrow \underline{C}$. Enfin, pour tout les termes de patrons $\Gamma'~|~Z \vdash T$ on définit récursivement les termes de calculs $\Gamma,\Gamma'~|~K,K' \vdash T^H : \underline{C}$ par :
-\begin{align*}
-	z(V)^H &=~ k_z(V)\\
-	(\textbf{match}~V~\textbf{with}~\langle x_1,x_2\rangle \mapsto T)^H &=~\textbf{match}~V~\textbf{with}~\langle x_1,x_2\rangle \mapsto T^H\\
-	(\textbf{match}~V~\textbf{with}~\{ l(x_l) \mapsto T_l\}_{l \in L})^H &=~\textbf{match}~V~\textbf{with}~\{ l(x_l) \mapsto T_l^H\}_{l \in L}\\
-	\textbf{op}_V(y:\beta.T)^H &=~M_\textbf{op}[V/x,y:\beta.T^H/k]
-\end{align*}
+%Afin de définir l'existence d'un gestionnaire, on doit d'abord être capable de remplacer les opérations dans des patrons par leurs définitions dans le gestionnaire.\\
+%On définit le gestionnaire $\Gamma~|~H \vdash : \underline{C}~\textbf{handler}$, avec $H~=~\{\textbf{op}_{x:\alpha}(k:\beta \rightarrow \underline{C}) \mapsto M_\textbf{op}\}_{\textbf{op}:\alpha \rightarrow \beta}$ et un contexte de variable de patron $Z$. Ensuite on prend $K'$ le contexte de continuation tel que  $\forall z:\alpha \in Z~:~k_z : \alpha \rightarrow \underline{C}$. Enfin, pour tout les termes de patrons $\Gamma'~|~Z \vdash T$ on définit récursivement les termes de calculs $\Gamma,\Gamma'~|~K,K' \vdash T^H : \underline{C}$ par :
+%\begin{align*}
+%	z(V)^H &=~ k_z(V)\\
+%	(\textbf{match}~V~\textbf{with}~\langle x_1,x_2\rangle \mapsto T)^H &=~\textbf{match}~V~\textbf{with}~\langle x_1,x_2\rangle \mapsto T^H\\
+%	(\textbf{match}~V~\textbf{with}~\{ l(x_l) \mapsto T_l\}_{l \in L})^H &=~\textbf{match}~V~\textbf{with}~\{ l(x_l) \mapsto T_l^H\}_{l \in L}\\
+%	\textbf{op}_V(y:\beta.T)^H &=~M_\textbf{op}[V/x,y:\beta.T^H/k]
+%\end{align*}
 
-On a l'équivalence suivante
-	\[H\downarrow~\Leftrightarrow~\bigwedge\{\forall x:\alpha.M_\textbf{op}\downarrow~|~\textbf{op}: \alpha \rightarrow \beta\}~\land~\bigwedge\{T_1^H \simeq T_2^H~~|~~\Gamma'~|~Z \vdash T_1 = T_2 \in \tau\}\]
+%On a l'équivalence suivante
+Voici l'équivalence qui permet d'admettre l'existence d'un gestionnaire et sa validité.
+	\[H\downarrow~\Leftrightarrow~\bigwedge\{\forall x:\alpha.M_\textbf{op}\downarrow~|~\textbf{op}: \alpha \rightarrow \beta\}~\land~\bigwedge\{T_1^H \simeq T_2^H~~|~~\Gamma~|~Z \vdash T_1 = T_2 \in \tau\}\]
 
-qui affirme que le gestionnaire est correct si les opérations sont définit et respect les équations de la théorie des effets. On regarde maintenant la construction du gestionnaire en elle-même et on remarque l'équivalence suivante :
+elle affirme que le gestionnaire est valide si les opérations sont définit et respect les équations de la théorie des effets. $T^H$ représente un patron ayant un gestionnaire. La construction du gestionnaire en elle-même amène à l'équivalence suivante :
 
 	\[M~\textbf{handled~with}~H~\textbf{to}~x:A.N\downarrow~\Leftrightarrow~ M\downarrow~\land~H\downarrow~\land~\forall x:A.N\downarrow\]
  
