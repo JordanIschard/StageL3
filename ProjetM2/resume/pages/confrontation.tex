@@ -27,7 +27,7 @@ L'\textbf{erpl} propose, quant à lui, part du langage Ocaml en allègé et ajou
 \end{align*}
 
 \begin{remark}
-    Les deux langages différents ont a le même nombre de 
+    Les deux langages différents ont le même nombre de 
     termes ajouté. On peut interpréter cela comme l'ajout minimum nécessaire pour travailler avec des effets
     algébrique.
 \end{remark}
@@ -54,7 +54,7 @@ différents.
 
 \paragraph{La structure de gestion} Il n'y a pas grande différence entre les deux langages sur ce point.
 On peut noter qu'aucun n'est tombé dans le travers de la structure de gestion binaire qui ne respecte pas
-les propriétés implicites (voir l'Exemple \ref{exEval}). 
+les propriétés implicites. 
 
 La seule différence notable est l'affectation du résultat de l'évaluation de la strucutre de  gestion
 à une variable $x$ utilisé pour un autre terme $N$.
@@ -70,8 +70,8 @@ pourra associer si on veut. Si on veut avoir un terme équivalent à celui ci-de
 
 
 D'un côté, le langage de l'article a choisi les opérations $\textbf{op}_V(x:\beta.M)$ comme source des effets.
-Ce choix est intéressant et limitant à la fois. Il permet de limité les effets à un ensemble fini d'opérations décidé par le créateur du langage. On a un contrôle plus fort sur ce qui provoque les effets et de plus leurs
-utilisation est totalement transparente. En effet, une opération à un double effet, soit il va effectuer ce que l'opération
+Ce choix est intéressant et limitant à la fois. Il permet de limiter les effets à un ensemble fini d'opérations décidé par le créateur du langage. On a un contrôle plus fort sur ce qui provoque les effets et de plus leurs
+utilisation est totalement transparente. En effet, une opération à un double utilité, soit il va effectuer ce que l'opération
 est censée faire soit elle va provoquer un effet (ce point sera rediscuté plus bas).
 
 De l'autre, le langage \textbf{erpl} s'inspire plus des \textbf{Monades} en prenant comme source les types. Cela ouvre
@@ -115,7 +115,7 @@ un seul appel à la continuation est possible dans le terme gérant.
     \begin{verbatim}
         (** 
             On commence par créer notre type qui va être source de l'effet. 
-            Pour cela on créer un type 
+            Pour cela on créer un type memory.
         *)
         type memory = Get of 'a ref -> 'a | Set of 'a ref * 'a -> unit;;
 
@@ -134,8 +134,8 @@ un seul appel à la continuation est possible dans le terme gérant.
 
 Le langage utilise une propriété qui peut être compliqué à mettre en place. Lorsqu'une opération
 n'est pas géré, elle se gère elle-même. Intuitivement, lors de l'implémentation d'une telle propriété
-on peut se dire que l'on va créé un gestionnaire global qui va récupérer tous les effets non capté auparavant
+on peut se dire que l'on va créer un gestionnaire global qui va récupérer tous les effets non captés auparavant
 et lui appliquer son "effet de base". Hors si on ajoute ce gestionnaire global, c'est lors de la compilation et 
 ce gestionnaire sera dans le langage de base. Mais pour une opération comme $\textbf{get}$ ou encore $\textbf{delay}$ 
 cela implique un appel système. Cela pose problème. Il faudrait donc modifier la machine abstraite pour pouvoir
-implémenter cette option se qui rajoute un travail conséquent.
+implémenter cette option, ce qui rajoute un travail conséquent.
