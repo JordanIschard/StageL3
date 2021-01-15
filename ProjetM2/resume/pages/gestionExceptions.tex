@@ -26,8 +26,6 @@ interprété par $in_2(e)$ (une fonction injective de $A + \textbf{exc}$ vers \t
 		\textbf{raise}_{e'}()~\textbf{handled~with} \{\textbf{raise}_e() \mapsto N_e\}_{e \in \textbf{exc}}~\textbf{to}~ x:A.N(x) &= N_{e'}
 	\end{align*}
 	
-	Comme discuté dans , Cette construction permet d'écrire de façon simple un idiome de programmation qui était lourd à mettre en place. 
-	\smallbreak
 	Algébriquement le calcul $N_e$ donne un nouveau modèle $\mathcal{M}$ pour la théorie des exceptions. Le porteur de ce modèle est $B + \textbf{exc}$. Pour chaque $e \in \textbf{exc}$, $\textbf{raise}_e()$ est interprété par $N_e$. On peut voir d'après les deux équations ci-dessus que :
 	\[h(M) \overset{def}{=} M~\textbf{handled~with} \{\textbf{raise}_e() \mapsto N_e\}_{e \in \textbf{exc}}~\textbf{to}~ x:A.N(x)\]
 	
@@ -63,9 +61,9 @@ interprété par $in_2(e)$ (une fonction injective de $A + \textbf{exc}$ vers \t
 	
 	
 	Toutes interprétations ne donnent pas forcément un modèle de la théorie équationnelle. Cela induit que certains gestionnaires sont incorrectes. 
-	Pour contourner le problème, il y a deux écoles.
+	Pour contourner le problème, il y a deux écoles :
 	\begin{enumerate}
-		\item l'utilisateur est contraint à utiliser une famille d'effet que le créateur du langage sait gérer;
+		\item l'utilisateur est contraint à utiliser une famille de gestionnaire que le créateur du langage sait correct;
 		\item l'utilisateur a une totale liberté et le créateur du langage autorise un gestionnaire à être incorrect.
 	\end{enumerate}
 	Dans l'article la seconde option est choisie.

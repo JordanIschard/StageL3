@@ -1,22 +1,22 @@
 	Le pionnier dans la gestion des effets algébriques est \textbf{Eugenio Moggi}. Il proposa une représentation uniforme de calcul d'effets grâce aux \textbf{Monades} \cite{DBLP:conf/ac/BentonHM00}. 
-	Cette représentation est utilisé dans le langage \textbf{Haskell}.
+	Cette représentation est utilisée dans le langage \textbf{Haskell}.
 	
 	\begin{definition}
 		Une \textbf{Monade} est une structure permettant de manipuler les langages fonctionnels purs
 		avec des traits impératifs.
 		On peut représenter une monade comme un triplet constitué de : 
 		\begin{enumerate}
-			\item un \textbf{constructeur de type} $\mathcal{M}$ appelé \textit{type monadique}, qui associe au type $\textbf{t}$ le type $\mathcal{M}\textbf{t}$.
+			\item un \textbf{constructeur de type} $M$ appelé \textit{type monadique}, qui associe au type $\textbf{t}$ le type $M\textbf{t}$.
 			\item une \textbf{fonction} \verb|unit/return| qui construit à partir d'un élément de type 
-			sous-jacent $\textbf{a}$ un autre élément de type monadique $\mathcal{M}\textbf{a}$. Cette fonction a la signature suivante : 
+			sous-jacent $\textbf{a}$ un autre élément de type monadique $M\textbf{a}$. Cette fonction à la signature suivante : 
 			
-			\verb|unit/return|$~:~\textbf{t} \rightarrow \mathcal{M}\textbf{t}$.
-			\item une \textbf{fonction $bind$}, représenté par l'opérateur infixe \verb|>>=|, associant à une valeur de type monadique
+			\verb|unit/return|$~:~\textbf{t} \rightarrow M\textbf{t}$.
+			\item une \textbf{fonction} $\verb|bind|$, symbolisé par \verb|>>=|, associant à une valeur de type monadique
 			et une fonction d'association une autre valeur de type monadique. Cette opérateur à la signature suivante : 
 			
-			\verb|>>=|$~:~\mathcal{M}\textbf{t} \rightarrow (\textbf{t} \rightarrow \mathcal{M}\textbf{u}) \rightarrow \mathcal{M}\textbf{u}$.
+			\verb|>>=|$~:~M\textbf{t} \rightarrow (\textbf{t} \rightarrow M\textbf{u}) \rightarrow M\textbf{u}$.
 			
-			L'idée derrière cette fonction est que l'on doit passé par un calcul pour accéder et traiter une valeur de type monadique afin de continuer le calcul.
+			L'idée derrière cette fonction est que l'on doit passer par un calcul pour accéder et traiter une valeur de type monadique afin de continuer le calcul.
 		\end{enumerate}
 	\end{definition}
 	\bigbreak
@@ -63,13 +63,12 @@
 	$M$ s'effectue à moins qu'une exception $e$ soit levée, dans ce cas on effectue $N$. Cette construction manque d'une certaine propriété caractérisant les opérations spécifiés dans les équations qui les décrivent.
 
 
-	Dans l'article, une explication algébrique des gestionnaires d'exceptions est donné. L'idée principale est que :
+	Dans l'article, une explication algébrique des gestionnaires d'exceptions est donnée. L'idée principale est que :
 	\begin{enumerate}
 		\item les gestionnaires correspondent à des modèles de théorie équationnelle;
-		\item la sémantique des gestionnaires est donné à l'aide d'homomorphismes uniques qui ciblent de tels modèles et est induit par la propriété universelle du modèle libre. 
+		\item la sémantique des gestionnaires est donnée à l'aide d'homomorphismes uniques qui ciblent de tels modèles et est induit par la propriété universelle du modèle libre. 
 	\end{enumerate}
-
-	Il souhaite adopter une vision générale suggéré par Benton et Kennedy. Dans leur approche, la valeur de retour est passé à la continuation définit par l'utilisateur.
+		
 	Conceptuellement, les opérations algébriques et les gestionnaires d'effets sont duals, on a le \textit{constructeur d'effets} qui crée l'effet et le \textit{destructeur d'effets} qui produit un calcul en lien avec l'effet détruit.
 	\smallbreak
 	

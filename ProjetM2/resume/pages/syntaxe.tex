@@ -5,7 +5,8 @@
 			
 	où \textbf{b} représente l'ensemble des types de base, $1$ représente le type $unit$ et $L$ représente un sous-ensemble fini de label. 
 	%On ne spécifie pas l'ensemble $L$ mais on assume que les labels que l'on va utiliser seront disponibles. 
-	Cependant, Un sous-ensemble de \textbf{b} est spécifié comme un \textbf{type de base d'arité} ce qui permet d'introduire la définition suivante : 
+	%Cependant, 
+	Un sous-ensemble de \textbf{b} est spécifié comme un \textbf{type de base d'arité} ce qui permet d'introduire la définition suivante : 
 	
 	\begin{definition}
 		Un type de signature est un type de signature \textbf{d'arité} si et seulement si tous les types de base qu'il contient sont des types de base d'arité.
@@ -40,7 +41,7 @@
 
 \subsection{Types}
 	
-	Le langage que défini suit l'approche \textit{call-by-push-value} de Levy \cite{DBLP:journals/lisp/Levy06}, i.e, il y a une séparation stricte entre les valeurs et les calculs. Ces types sont donnés par : 
+	Le langage défini suit l'approche \textit{call-by-push-value} de Levy \cite{DBLP:journals/lisp/Levy06}, i.e, il y a une séparation stricte entre les valeurs et les calculs. Ces types sont donnés par : 
 	\begin{align*}
 		A,B &:= \textbf{b}~|~\textbf{1}~|~A \times B~|~\sum_{l \in L} A_l~|~U\underline{C}\\
 		\underline{C} &:= FA~|~\Pi_{l\in L}~\underline{C}_l~|~A \rightarrow\underline{C}
@@ -79,7 +80,7 @@
 	\end{exemple}
 	\bigbreak
 	
-	Le terme du gestionnaire $\{\textbf{op}_{x:\alpha}(k:\beta \rightarrow \underline{C}) \mapsto M_\textbf{op} \}_{\textbf{op}:\alpha \rightarrow \beta}$ est défini par un ensemble fini de définitions d'opérations, un ensemble pour chaque opération. $M_\textbf{op}$ est dépendant de la variable $x$ et de la continuation $k$.
+	Le \textit{terme du gestionnaire} $\{\textbf{op}_{x:\alpha}(k:\beta \rightarrow \underline{C}) \mapsto M_\textbf{op} \}_{\textbf{op}:\alpha \rightarrow \beta}$ est défini par un ensemble fini de définitions d'opérations, un ensemble pour chaque opération. $M_\textbf{op}$ est dépendant de la variable $x$ et de la continuation $k$.
 	%Ensuite, le terme du gestionnaire
 	%	\[\{\textbf{op}_{x:\alpha}(k:\beta \rightarrow \underline{C}) \mapsto M_\textbf{op} \}_{\textbf{op}:\alpha \rightarrow \beta}\]
 		
@@ -89,18 +90,18 @@
 	%une pour chaque \textbf{op}. Le terme gestionnaire $M_\textbf{op}$ est dépendant de la variable $x$ et de la continuation $k$. À noter que $k$ sera toujours utiliser de la manière suivante : $k(V)$ ou $V$ est la valeur appliqué à la continuation.
 	
 	\begin{exemple}\label{get2}
-		On ne veut pas modifier la valeur en mémoire mais quand tester pour une valeur arbitraire. Pour cela, on crée un gestionnaire \textit{état-temporaire} qui dépend d'une variable $n$ (la dite variable temporaire) :
+		On ne veut pas modifier la valeur en mémoire mais quand même tester pour une valeur arbitraire. Pour cela, on crée un gestionnaire \textit{état-temporaire} qui dépend d'une variable $n$ (la dite variable temporaire) :
 		\[H_{temporary} = \{\textbf{get}_{l:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(n)\}\]
 		%Bien que l'on ne peut pas modifier une valeur en lecture-seule (c'est un cas spécifique ou on ne peut pas utiliser l'opération \textbf{set}), il est tout de même possible d'évaluer un calcul avec une valeur temporairement modifiée. Pour faire cela, on crée un gestionnaire \textit{état-temporaire} qui dépend d'une variable $n$ (la dite variable temporaire) :
 		%\[H_{temporary} = \{\textbf{get}_{l:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(n)\}\]
 	\end{exemple}
 	\bigbreak
 
-	Le gestionnaire symbolisé par $M~\textbf{handled}~\textbf{with}~H~\textbf{to}~x:A.N$ est évalué comme suit : on évalue $M$, gérant tous les calculs d'opérations grâce à $H$. Ensuite on associe le résultat à $x$ et enfin évalue $N$.
+	Le \textit{gestionnaire} symbolisé par $M~\textbf{handled}~\textbf{with}~H~\textbf{to}~x:A.N$ est évalué comme suit : on évalue $M$, gérant tous les calculs d'opérations grâce à $H$. Ensuite on associe le résultat à $x$ et enfin évalue $N$.
 	%Finalement, on a le terme de calcul \textit{gestionnaire}
 	%	\[M~\textbf{handled}~\textbf{with}~H~\textbf{to}~x:A.N\]		
 	%Il évalue $M$, gérant tous les calculs d'opérations grâce à $H$. Ensuite il associe le résultat à $x$ et enfin évalue $N$. C'est un point clé pour la compréhension de l'article, on va donc détailler. 
-	En cas de présence d'une opération $\textbf{op}_V(y.M')$ dans $M$ et de $\textbf{op}_z(k) \mapsto M_\textbf{op}$ dans $H$, $M_\textbf{op}[V/z]$ substitue $\textbf{op}$. Ensuite les continuations $k(W)$ présent dans $M_\textbf{op}$ sont substitués par  
+	En cas de présence d'une opération $\textbf{op}_V(y.M')$ dans $M$ et de $\textbf{op}_z(k) \mapsto M_\textbf{op}$ dans $H$, $M_\textbf{op}[V/z]$ substitue $\textbf{op}$. Ensuite Chaque occurrence de la continuation $k(W)$ présent dans $M_\textbf{op}$ est substitué par  
 	\[M'[W/y]~\textbf{handled}~\textbf{with}~H~\textbf{to}~x:A.N\]
 	%On suppose que $M$ veut effectuer une opération $\textbf{op}_V(y.M')$ correspondant au terme de gérant $\textbf{op}_z(k) \mapsto M_\textbf{op} \in H$. On substitue l'évaluation de \textbf{op} par $M_\textbf{op}$ en associant $z$ avec $V$ et en remplaçant la continuation $k(W)$ pour chaque occurrence de celle-ci dans $M_\textbf{op}$ avec 
 		%\[M'[W/y]~\textbf{handled}~\textbf{with}~H~\textbf{to}~x:A.N\]

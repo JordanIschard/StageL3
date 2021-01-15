@@ -2,7 +2,7 @@ La partie interprétation sera omit dans ce résumé car il fait appel à des no
 
 \subsection{La théorie des effets}
 
-	Les propriétés des effets sont décrites avec des équation entre patrons $T$. Ils décrivent la forme général de tous les calculs sans présumer des types. $T$ est définit par :
+	Les propriétés des effets sont décrites avec des équation entre patrons $T$. Ils décrivent la forme général de tous les calculs sans présumer des types. $T$ est défini par :
 	\[T := z(V)~|~\textbf{match}~V~\textbf{with}~\langle x,y\rangle \mapsto T~|~\textbf{match}~V~\textbf{with}~\{l(x_l) \mapsto T_l\}_{l \in L}~|~\textbf{op}_V(x:\beta.T)\]
 	
 	avec $z$ appartenant à un ensemble de variable de patron. Dans les patrons, on se limite à la signature des valeurs. Ceux sont des valeurs qui peuvent être typées par $\Gamma \vdash V:\alpha$, avec $\Gamma = x_1:\alpha_1,...,x_m:\alpha_m$.
