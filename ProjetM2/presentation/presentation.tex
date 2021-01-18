@@ -104,15 +104,16 @@ instance Monad Maybe where
 	return x = Just x
 			
 	Nothing >>= f = Nothing
-	Just x >>= f  = f x
-					
-	fail _ = Nothing
-		\end{lstlisting}
+	Just x >>= f  = f x\end{lstlisting}
 	\end{exampleblock}
 
 	\begin{block}{Les théories d'équations}<3->
-		Plotkin et Power ont proposé des opérations comme source des effets et une
+		Plotkin et Power ont proposé des \alert{opérations} comme source des effets et une
 		\alert{théorie d'équation} pour décrire leurs propriétés.
+	\end{block}
+
+	\begin{block}{Un effet Algébrique}<4->
+		C'est un effet qui peut être représenté par les deux modèles proposés.
 	\end{block}
 \end{frame}
 
@@ -129,6 +130,9 @@ instance Monad Maybe where
 	\begin{block}{Principe}<2->
 		Les effets vont avoir pour source des \alert{opérations} et vont être géré par 
 		un \alert{tableaux associatifs (map)} contenu dans un gestionnaire. 
+		\smallbreak
+		
+		De plus, on ajoute une \alert{théorie d'effet} qui explicite les propriétés des effets.
 	\end{block}
 \end{frame}
 
@@ -138,16 +142,17 @@ instance Monad Maybe where
 	\begin{block}{Syntaxe ajouté}<1->
 		On part de la syntaxe proposé par Levy dans son article sur \textit{call-by-push-value}.
 		\begin{align*}
-			source~de~l'effet~:~&\textbf{op}_V(x:\beta.M')\\
-			structure~de~gestion~:~&M~\textbf{handled~with}~H~to~x:A.N\\
-			gestionnaire~:~&\{\textbf{op}_{z:\alpha}(k:\beta \rightarrow \underline{C}) \mapsto M_{\textbf{op}}\}_{\textbf{op} : \alpha \rightarrow \beta}
+			source~de~l'effet~:~&\textbf{op}_V(x.M')\\
+			structure~de~gestion~:~&M~\textbf{handled~with}~H~to~x.N\\
+			gestionnaire~:~&\{\textbf{op}_{z}(k) \mapsto M_{\textbf{op}}\}_{\textbf{op}}
 		\end{align*}
 	\end{block}
 
 	\begin{block}{Fonctionnement}<2->
 		On reprend la strucutre de gestion ci-dessus 
 		avec $\textbf{op}_V(y.M') \in M$ et $\{\textbf{op}_z(k) \mapsto M_ {\textbf{op}}\} \in H$.
-			\alert{\[M_{\textbf{op}}[V/z,M'[W/y]~\textbf{handled~with}~H~\textbf{to}~x:A.N/k(W)]\]}
+			\alert{\[M_{\textbf{op}}[V/z,M'[W/y]~\textbf{handled~with}~H~\textbf{to}~x.N/k(W)]\]}
+		Si l'opération n'est pas géré par $H$ alors elle se \alert{gère elle-même}.
 	\end{block}
 \end{frame}
 
@@ -158,69 +163,69 @@ instance Monad Maybe where
 	\only<1>{
 	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}<1>
 		Le gestionnaire définit pour l'effet est le suivant : 
-		\[H_{temporary} = \{\textbf{get}_{l:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(n)\}\]
+		\[H_{temporary} = \{\textbf{get}_{z}(k) \mapsto k(n)\}\]
 
 		Prenons l'expression suivante : 
 		\begin{align*}
-			& \textbf{let}~n:\textbf{nat}~\textbf{be}~20~\textbf{in}\\
-			& \textbf{get}_l(x:\textbf{nat}.\textbf{get}_l(y:\textbf{nat}.\textbf{return}~x+y))\\
-			&\textbf{handled~with}~H_{temporary}~\textbf{to}~z:A.\textbf{return}~z+2
+			& \textbf{let}~n~\textbf{be}~20~\textbf{in}\\
+			& \textbf{get}_l(x.\textbf{get}_l(y.\textbf{return}~x+y))\\
+			&\textbf{handled~with}~H_{temporary}~\textbf{to}~z.\textbf{return}~z+2
 		\end{align*}
 	\end{exampleblock}}
 
 	\only<2>{
 	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}
 		Le gestionnaire définit pour l'effet est le suivant : 
-		\[H_{temporary} = \{\textbf{get}_{l:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(\alert{n})\}\]
+		\[H_{temporary} = \{\textbf{get}_{z}(k) \mapsto k(\alert{n})\}\]
 
 		Prenons l'expression suivante : 
 		\begin{align*}
-			& \alert{\textbf{let}~n:\textbf{nat}~\textbf{be}~20~\textbf{in}}\\
-			& \textbf{get}_l(x:\textbf{nat}.\textbf{get}_l(y:\textbf{nat}.\textbf{return}~x+y))\\
-			&\textbf{handled~with}~H_{temporary}~\textbf{to}~z:A.\textbf{return}~z+2
+			& \alert{\textbf{let}~n~\textbf{be}~20~\textbf{in}}\\
+			& \textbf{get}_l(x.\textbf{get}_l(y.\textbf{return}~x+y))\\
+			&\textbf{handled~with}~H_{temporary}~\textbf{to}~z.\textbf{return}~z+2
 		\end{align*}
 	\end{exampleblock}}
 
 	\only<3>{
 	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}
 		Le gestionnaire définit pour l'effet est le suivant : 
-		\[\textcolor{orange}{H_{temporary}} = \{\alert{\textbf{get}_{y:\textbf{loc}}\textcolor{blue}{(k:\textbf{nat} \rightarrow \underline{C})}} \mapsto k(20)\}\]
+		\[\textcolor{orange}{H_{temporary}} = \{\alert{\textbf{get}_{z}\textcolor{blue}{(k)}} \mapsto k(20)\}\]
 
 		Prenons l'expression suivante : 
 		\begin{align*}
-			& \alert{\textbf{get}_l\textcolor{blue}{(x:\textbf{nat}.\textbf{get}_l(y:\textbf{nat}.\textbf{return}~x+y))}}\\
-			&\textbf{handled~with}~\textcolor{orange}{H_{temporary}}~\textbf{to}~z:A.\textbf{return}~z+2
+			& \alert{\textbf{get}_l\textcolor{blue}{(x.\textbf{get}_l(y.\textbf{return}~x+y))}}\\
+			&\textbf{handled~with}~\textcolor{orange}{H_{temporary}}~\textbf{to}~z.\textbf{return}~z+2
 		\end{align*}
 	\end{exampleblock}}
 
 	\only<4>{
 	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}
 		Le gestionnaire définit pour l'effet est le suivant : 
-		\[\textcolor{orange}{H_{temporary}} = \{\alert{\textbf{get}_{y:\textbf{loc}}\textcolor{blue}{(k:\textbf{nat} \rightarrow \underline{C})}} \mapsto k(20)\}\]
+		\[\textcolor{orange}{H_{temporary}} = \{\alert{\textbf{get}_{z}\textcolor{blue}{(k)}} \mapsto k(20)\}\]
 
 		Prenons l'expression suivante : 
 		\begin{align*}
-			& \alert{\textbf{get}_l\textcolor{blue}{(y:\textbf{nat}.\textbf{return}~20+y)}}\\
-			&\textbf{handled~with}~\textcolor{orange}{H_{temporary}}~\textbf{to}~z:A.\textbf{return}~z+2
+			& \alert{\textbf{get}_l\textcolor{blue}{(y.\textbf{return}~20+y)}}\\
+			&\textbf{handled~with}~\textcolor{orange}{H_{temporary}}~\textbf{to}~z.\textbf{return}~z+2
 		\end{align*}
 	\end{exampleblock}}
 
 	\only<5>{
 	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}
 		Le gestionnaire définit pour l'effet est le suivant : 
-		\[H_{temporary} = \{\textbf{get}_{y:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(20)\}\]
+		\[H_{temporary} = \{\textbf{get}_{z}(k) \mapsto k(20)\}\]
 
 		Prenons l'expression suivante : 
 		\begin{align*}
 			& \alert{\textbf{return}~20+20}\\
-			&\textbf{handled~with}~H_{temporary}~\textbf{to}~\alert{z:A.\textbf{return}~z+2}
+			&\textbf{handled~with}~H_{temporary}~\textbf{to}~\alert{z.\textbf{return}~z+2}
 		\end{align*}
 	\end{exampleblock}}
 
 	\only<6-7>{
 	\begin{exampleblock}{Valeur Temporaire sans modification dans la mémoire}
 		Le gestionnaire définit pour l'effet est le suivant : 
-		\[H_{temporary} = \{\textbf{get}_{y:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(20)\}\]
+		\[H_{temporary} = \{\textbf{get}_{z}(k) \mapsto k(20)\}\]
 
 		Prenons l'expression suivante : 
 		\begin{align*}
@@ -235,6 +240,26 @@ instance Monad Maybe where
 \end{frame}
 
 \section{Validé des gestionnaires}
+
+\subsection{Quand est-ce qu'un gestionnaire est valide ?}
+\begin{frame}
+	\frametitle{Quand est-ce qu'un gestionnaire est valide ?}
+	
+	\begin{block}{Comment exprimer la validité ?}<1->
+		La validité d'un gestionnaire est exprimé à travers l'assertion d'existence, d'égalité et d'inégalité de \textit{Kleene}.
+	\end{block}
+
+	\begin{block}{La validité d'un gestionnaire}<2->
+		On l'exprime de cette manière :
+		\\
+		$H\downarrow~\Leftrightarrow~\bigwedge\{\forall x.M_{\textbf{op}\downarrow}\}~\land~\bigwedge\{T_1^H \simeq T_2^H~~|~~\Gamma~|~Z \vdash T_1 = T_2 \in \tau\}$
+	\end{block}
+		
+	\begin{block}{La validité d'une structure de gestion}<3->
+		$M~\textbf{handled~with}~H~\textbf{to}~x.N\downarrow~\Leftrightarrow~ M\downarrow~\land~H\downarrow~\land~\forall x.N\downarrow$
+	\end{block}
+	
+\end{frame}
 
 \subsection{Gestionnaire générique indécidable}
 \begin{frame}
@@ -251,29 +276,33 @@ instance Monad Maybe where
 			invalide : \alert{la responsabilité est à l'utilisateur}.
 		\end{enumerate}
 	\end{block}
-\end{frame}
 
-\subsection{Sous-ensemble décidable}
-\begin{frame}
-	\frametitle{Gestionnaire décidable sous certaines conditions}
-	\begin{block}{Vers des gestionnaires plus simple}<1->
+	\begin{block}{Vers des gestionnaires plus simple}<3->
 		Il est possible de trouver un sous-ensemble de gestionnaire qui est \alert{décidable}.
-		
-		\pause\bigbreak
-
-		Il faut les conditions suivantes : 
-		\begin{enumerate}
-			\item<2-> Une signature d'opérations \alert{simple}
-			\item<3-> TODO
-			\item<4-> TODO
-		\end{enumerate}
-	\end{block}
-
-	\begin{block}{Gestionnaire simple}<5->
-		On parle de \alert{gestionnaire simple} et grâce à une réécriture des termes avec des 
-		patrons on peut même parler de \alert{famille de gestionnaire uniformément simple}.
 	\end{block}
 \end{frame}
+
+%\subsection{Sous-ensemble décidable}
+%\begin{frame}
+%	\frametitle{Gestionnaire décidable sous certaines conditions}
+%	\begin{block}{Vers des gestionnaires plus simple}<1->
+%		Il est possible de trouver un sous-ensemble de gestionnaire qui est \alert{décidable}.
+%		
+%		\pause\bigbreak
+%
+%		Il faut les conditions suivantes : 
+%		\begin{enumerate}
+%			\item<2-> Une signature d'opérations \alert{simple}
+%			\item<3-> TODO
+%			\item<4-> TODO
+%		\end{enumerate}
+%	\end{block}
+%
+%	\begin{block}{Gestionnaire simple}<5->
+%		On parle de \alert{gestionnaire simple} et grâce à une réécriture des termes avec des 
+%		patrons on peut même parler de \alert{famille de gestionnaire uniformément simple}.
+%	\end{block}
+%\end{frame}
 
 \section{Confrontation}
 
@@ -303,9 +332,9 @@ instance Monad Maybe where
 	\frametitle{Passage du langage de l'article vers \textbf{erpl}}
 
 	\begin{exampleblock}{Reprise de l'exemple précédent}<1->
-		$\textbf{let}~n:\textbf{nat}~\textbf{be}~20~\textbf{in}$\\
-		$\textbf{get}_l(x:\textbf{nat}.\textbf{get}_l(y:\textbf{nat}.\textbf{return}~x+y))$\\
-		$\textbf{handled~with}~\{\textbf{get}_{l:\textbf{loc}}(k:\textbf{nat} \rightarrow \underline{C}) \mapsto k(n)\}~\textbf{to}~z:A.\textbf{return}~z+2$
+		$\textbf{let}~n~\textbf{be}~20~\textbf{in}$\\
+		$\textbf{get}_l(x.\textbf{get}_l(y.\textbf{return}~x+y))$\\
+		$\textbf{handled~with}~\{\textbf{get}_{l}(k) \mapsto k(n)\}~\textbf{to}~z.\textbf{return}~z+2$
 	\end{exampleblock}
 
 	\begin{exampleblock}{Reprise de l'exemple converti en \textbf{erpl}}<2>
@@ -315,9 +344,9 @@ type memory = Get of 'a ref -> 'a
             | Set of 'a ref * 'a -> unit;;
 
 let get = Get(fun x -> !x) and n = 20 in
-          handle ((fun x -> fun y -> x + y + 2) 
-                 (perform (get,l))) (perform (get,l)) 
-          with (Get f,x),k -> k n ;;
+          handle (fun x -> fun y -> x + y + 2) 
+                 ((perform get) l) ((perform get) l) 
+          with (Get f),k -> k (fun x -> n) ;;
 		\end{lstlisting}
 	\end{exampleblock}
 \end{frame}
